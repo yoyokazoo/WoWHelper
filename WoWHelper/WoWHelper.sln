@@ -5,6 +5,8 @@ VisualStudioVersion = 17.5.33502.453
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoWHelper", "WoWHelper.csproj", "{7035A0B6-5E32-4423-9F7F-4DD144034F2A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WoWHelperUnitTests", "..\WoWHelperUnitTests\WoWHelperUnitTests.csproj", "{4A977C6E-8119-46DD-A24F-ADAD12C54E9C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{7035A0B6-5E32-4423-9F7F-4DD144034F2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7035A0B6-5E32-4423-9F7F-4DD144034F2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7035A0B6-5E32-4423-9F7F-4DD144034F2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A977C6E-8119-46DD-A24F-ADAD12C54E9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A977C6E-8119-46DD-A24F-ADAD12C54E9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A977C6E-8119-46DD-A24F-ADAD12C54E9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A977C6E-8119-46DD-A24F-ADAD12C54E9C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
