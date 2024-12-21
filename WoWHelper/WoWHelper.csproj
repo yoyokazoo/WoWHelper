@@ -126,8 +126,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Code\WorldState\WoWWorldStateImageConstants.cs" />
     <Compile Include="Code\WoWPlayer.cs" />
-    <Compile Include="Code\WoWWorldState.cs" />
+    <Compile Include="Code\WorldState\WoWWorldState.cs" />
     <Compile Include="Code\Shared\TessaractSingleton.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
