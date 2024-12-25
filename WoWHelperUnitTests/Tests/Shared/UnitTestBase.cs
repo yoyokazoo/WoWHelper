@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Tesseract;
 using WoWHelper;
+using WoWHelper.Code.Goap.WoWGoap;
 using WoWHelper.Shared;
 
 namespace WoWHelperUnitTests
@@ -13,6 +14,8 @@ namespace WoWHelperUnitTests
     public class UnitTestBase
     {
         public WoWPlayer Player { get; set; }
+        public WoWPlanner Planner { get; set; }
+        public WoWWorldState WorldState { get; set; }
 
         [AssemblyInitialize]
         public void InitializeTesseractEngine()

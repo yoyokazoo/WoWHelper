@@ -10,7 +10,7 @@ namespace WoWHelper.Code.Goap.WoWGoap
     {
         public WoWIdleGoal() : base(0) { }
 
-        public override bool IsValid()
+        public override bool IsValid(WoWWorldState worldState)
         {
             return true;
         }
