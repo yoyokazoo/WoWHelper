@@ -38,5 +38,9 @@ namespace WoWHelperUnitTests.Tests.GoapTests
             var goal = planner.PickGoal();
             Assert.AreEqual(killGoal, goal);
         }
+
+        // make sure PickGoal only picks from valid goals
+
+
     }
 }
