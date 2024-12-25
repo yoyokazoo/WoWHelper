@@ -129,6 +129,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Tests\GoapTests\GoapUnitTests.cs" />
     <Compile Include="Tests\Shared\CustomAssertions.cs" />
     <Compile Include="Tests\Shared\UnitTestBase.cs" />
     <Compile Include="Tests\WorldStateTests\WoWWorldstateTests.cs" />

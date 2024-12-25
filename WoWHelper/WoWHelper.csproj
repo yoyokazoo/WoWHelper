@@ -126,6 +126,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Code\Goap\GoapAction.cs" />
+    <Compile Include="Code\Goap\GoapGoal.cs" />
+    <Compile Include="Code\Goap\GoapPlanner.cs" />
+    <Compile Include="Code\Goap\GoapWorldState.cs" />
+    <Compile Include="Code\Goap\WoWGoap\WoWActionType.cs" />
+    <Compile Include="Code\Goap\WoWGoap\WoWGoalType.cs" />
+    <Compile Include="Code\Goap\WoWGoap\WoWKillEnemyGoal.cs" />
+    <Compile Include="Code\Goap\WoWGoap\WoWIdleGoal.cs" />
+    <Compile Include="Code\Goap\WoWGoap\WoWPlanner.cs" />
     <Compile Include="Code\WorldState\WoWWorldStateImageConstants.cs" />
     <Compile Include="Code\WoWPlayer.cs" />
     <Compile Include="Code\WorldState\WoWWorldState.cs" />
