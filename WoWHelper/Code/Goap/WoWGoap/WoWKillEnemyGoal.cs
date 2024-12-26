@@ -4,7 +4,7 @@
     {
         public WoWKillEnemyGoal() : base (100) { }
 
-        public override bool IsValid(WoWWorldState worldState)
+        public override bool IsValid(GoapWorldState worldState)
         {
             // WorldState has an enemy nearby
             return false;

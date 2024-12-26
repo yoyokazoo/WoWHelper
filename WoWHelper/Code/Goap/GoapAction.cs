@@ -11,18 +11,18 @@ namespace WoWHelper.Code.Goap
             ActionToPerform = actionToPerform;
         }
 
-        public virtual bool IsValid(WoWWorldState worldState)
+        public virtual bool IsValid(GoapWorldState worldState)
         {
             return false;
         }
 
-        public virtual float GetCost(WoWWorldState worldState)
+        public virtual float GetCost(GoapWorldState worldState)
         {
             return float.MaxValue;
         }
 
         // This will need to be updated.  Needs to take into account world state, current path, etc.
-        public virtual float GetBenefit(WoWWorldState worldState)
+        public virtual float GetBenefit(GoapWorldState worldState)
         {
             return 0.0f;
         }

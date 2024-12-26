@@ -13,7 +13,7 @@ namespace WoWHelper.Code.Goap
         }
 
         // Let's always have a goal, even if that goal is to idle.
-        public GoapGoal PickGoal(WoWWorldState worldStates)
+        public GoapGoal PickGoal(GoapWorldState worldState)
         {
             float highestPriority = float.MinValue;
             GoapGoal highestPriGoal = null;

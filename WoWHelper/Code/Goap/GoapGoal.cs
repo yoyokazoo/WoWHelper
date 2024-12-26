@@ -10,7 +10,7 @@
             Priority = priority;
         }
 
-        public virtual bool IsValid(WoWWorldState worldStates)
+        public virtual bool IsValid(GoapWorldState worldState)
         {
             return false;
         }

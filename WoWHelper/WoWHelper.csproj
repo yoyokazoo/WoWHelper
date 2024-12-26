@@ -127,9 +127,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Code\Goap\GoapAction.cs" />
+    <Compile Include="Code\Goap\GoapAgent.cs" />
     <Compile Include="Code\Goap\GoapGoal.cs" />
     <Compile Include="Code\Goap\GoapPlanner.cs" />
     <Compile Include="Code\Goap\GoapWorldState.cs" />
+    <Compile Include="Code\Goap\WoWGoap\Actions\WoWLightAttackAction.cs" />
+    <Compile Include="Code\Goap\WoWGoap\Agents\WoWTestKillEnemyAgent.cs" />
     <Compile Include="Code\Goap\WoWGoap\WoWActionType.cs" />
     <Compile Include="Code\Goap\WoWGoap\WoWGoalType.cs" />
     <Compile Include="Code\Goap\WoWGoap\WoWKillEnemyGoal.cs" />
@@ -177,7 +180,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\Tesseract.5.2.0\build\Tesseract.targets" Condition="Exists('packages\Tesseract.5.2.0\build\Tesseract.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
