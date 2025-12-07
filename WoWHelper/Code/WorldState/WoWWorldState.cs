@@ -31,6 +31,8 @@ namespace WoWHelper
 
             WorldStateUpdateFailures[nameof(PlayerHpPercent)] = 0;
             WorldStateUpdateFailures[nameof(ResourcePercent)] = 0;
+            WorldStateUpdateFailures[nameof(MapX)] = 0;
+            WorldStateUpdateFailures[nameof(MapY)] = 0;
             WorldStateUpdateFailures[nameof(FacingDegrees)] = 0;
 
             TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
@@ -42,6 +44,8 @@ namespace WoWHelper
 
             UpdatePlayerHpPercent(bmp);
             UpdateResourcePercent(bmp);
+            UpdateMapX(bmp);
+            UpdateMapY(bmp);
             UpdateFacingDegrees(bmp);
         }
 
@@ -79,6 +83,42 @@ namespace WoWHelper
             {
                 Console.WriteLine($"Unable to parse {text} (trimmed: {textTrimmed}) to an int.  Perhaps the Trim method needs a new character?");
                 WorldStateUpdateFailures[nameof(ResourcePercent)]++;
+            }
+        }
+
+        public void UpdateMapX(Bitmap bmp)
+        {
+            string text = WoWWorldStateImageConstants.MAP_X_POSITION.GetText(TesseractEngineSingleton.Instance, bmp);
+            string textTrimmed = Trim(text);
+            var success = float.TryParse(textTrimmed, out float mapX);
+
+            if (success)
+            {
+                MapX = mapX;
+                WorldStateUpdateFailures[nameof(MapX)] = 0;
+            }
+            else
+            {
+                Console.WriteLine($"Unable to parse {text} (trimmed: {textTrimmed}) to a float.  Perhaps the Trim method needs a new character?");
+                WorldStateUpdateFailures[nameof(MapX)]++;
+            }
+        }
+
+        public void UpdateMapY(Bitmap bmp)
+        {
+            string text = WoWWorldStateImageConstants.MAP_Y_POSITION.GetText(TesseractEngineSingleton.Instance, bmp);
+            string textTrimmed = Trim(text);
+            var success = float.TryParse(textTrimmed, out float mapY);
+
+            if (success)
+            {
+                MapY = mapY;
+                WorldStateUpdateFailures[nameof(MapY)] = 0;
+            }
+            else
+            {
+                Console.WriteLine($"Unable to parse {text} (trimmed: {textTrimmed}) to a float.  Perhaps the Trim method needs a new character?");
+                WorldStateUpdateFailures[nameof(MapY)]++;
             }
         }
 

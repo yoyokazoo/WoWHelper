@@ -9,7 +9,7 @@ namespace WoWHelper.Code
 {
     public static class Pathfinding
     {
-        public static double GetDirectionInDegrees(Vector2 waypoint1, Vector2 waypoint2)
+        public static float GetDirectionInDegrees(Vector2 waypoint1, Vector2 waypoint2)
         {
             float dx = waypoint2.X - waypoint1.X;
             float dy = waypoint2.Y - waypoint1.Y;
@@ -33,23 +33,7 @@ namespace WoWHelper.Code
             // for debugging
             directionInRadians += Math.PI * 1.5;
 
-            return directionInDegrees;
-        }
-
-        // 0 is Left, 1 is Right
-        // Dragging mouse to Right reduces degrees, dragging mouse to Left increases degrees
-        public static int GetDirectionToDragMouse(float currentDegrees, float desiredDegrees)
-        {
-            float deltaDegrees = desiredDegrees - currentDegrees;
-
-            if ((deltaDegrees <= 0 && deltaDegrees >= -180) || (deltaDegrees >= 0 && deltaDegrees >= 180))
-            {
-                return 1;
-            }
-            else
-            {
-                return 0;
-            }
+            return (float)directionInDegrees;
         }
 
         public static float GetDegreesToMove(float currentDegrees, float desiredDegrees)

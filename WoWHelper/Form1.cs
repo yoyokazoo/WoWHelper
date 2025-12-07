@@ -53,9 +53,9 @@ namespace WoWHelper
             Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 800));
             Player.UpdateFromBitmap(wowBitmap);
 
-            var direction = Pathfinding.GetDirectionToDragMouse(Player.WorldState.FacingDegrees, 150f);
+            //var direction = Pathfinding.GetDirectionToDragMouse(Player.WorldState.FacingDegrees, 150f);
 
-            await MoveToHeadingTask(Player);
+            await MoveThroughWaypointsTask(Player);
 
             return true;
         }
@@ -85,9 +85,43 @@ namespace WoWHelper
             return true;
         }
 
-        public static async Task<bool> MoveToHeadingTask(WoWPlayer player)
+        public static async Task<bool> MoveThroughWaypointsTask(WoWPlayer player)
         {
-            float desiredDegrees = 200f;
+            List<Vector2> waypoints = new List<Vector2>();
+            //waypoints.Add(new Vector2(52f, 47f));
+            waypoints.Add(new Vector2(53.13f, 46.48f));
+            waypoints.Add(new Vector2(53.48f, 45.56f));
+            waypoints.Add(new Vector2(52.01f, 45.12f));
+
+            float waypointTolerance = 0.03f;
+
+            // foreach
+            do
+            {
+                Vector2 currentLocation = new Vector2(player.WorldState.MapX, player.WorldState.MapY);
+                Vector2 nextWaypoint = waypoints[0];
+                float desiredDegrees = Pathfinding.GetDirectionInDegrees(currentLocation, nextWaypoint);
+
+                await MoveToHeadingTask(player, desiredDegrees);
+                await WalkForwardTask(player);
+
+                Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 800));
+                player.UpdateFromBitmap(wowBitmap);
+                wowBitmap.Dispose();
+            } while (Math.Abs(waypoints[0].X - player.WorldState.MapX) > waypointTolerance || Math.Abs(waypoints[0].Y - player.WorldState.MapY) > waypointTolerance);
+
+            return true;
+        }
+
+        public static async Task<bool> WalkForwardTask(WoWPlayer player)
+        {
+            Keyboard.KeyDown(Keys.W); await Task.Delay(5000);
+            Keyboard.KeyUp(Keys.W); await Task.Delay(50);
+            return true;
+        }
+
+        public static async Task<bool> MoveToHeadingTask(WoWPlayer player, float desiredDegrees)
+        {
             float degreeTolerance = 5f;
 
             Mouse.ButtonDown(Mouse.MouseKeys.Right); await Task.Delay(50);
