@@ -35,5 +35,43 @@ namespace WoWHelper.Code
 
             return directionInDegrees;
         }
+
+        // 0 is Left, 1 is Right
+        // Dragging mouse to Right reduces degrees, dragging mouse to Left increases degrees
+        public static int GetDirectionToDragMouse(float currentDegrees, float desiredDegrees)
+        {
+            float deltaDegrees = desiredDegrees - currentDegrees;
+
+            if ((deltaDegrees <= 0 && deltaDegrees >= -180) || (deltaDegrees >= 0 && deltaDegrees >= 180))
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        public static float GetDegreesToMove(float currentDegrees, float desiredDegrees)
+        {
+            float deltaDegrees = desiredDegrees - currentDegrees;
+
+            if (deltaDegrees <= 0 && deltaDegrees >= -180)
+            {
+                return deltaDegrees;
+            }
+            else if (deltaDegrees >= 0 && deltaDegrees >= 180)
+            {
+                return deltaDegrees - 360;
+            }
+            else if (deltaDegrees <= 0 && deltaDegrees <= -180)
+            {
+                return deltaDegrees + 360;
+            }
+            else//if (deltaDegrees >= 0 && deltaDegrees >= 180)
+            {
+                return deltaDegrees;
+            }
+        }
     }
 }

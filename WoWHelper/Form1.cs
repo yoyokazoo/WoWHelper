@@ -1,4 +1,5 @@
-﻿using System;
+﻿using InputManager;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsGameAutomationTools.Images;
+using WoWHelper.Code;
 
 namespace WoWHelper
 {
@@ -41,17 +43,19 @@ namespace WoWHelper
         }
 
 
-
+        WoWPlayer Player = null;
         async Task<bool> CoreGameplayLoopTask()
         {
-            WoWPlayer player = new WoWPlayer();
+            Player = new WoWPlayer();
 
             await FocusOnWindowTask();
 
-            Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 400));
-            player.UpdateFromBitmap(wowBitmap);
+            Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 800));
+            Player.UpdateFromBitmap(wowBitmap);
 
-            Console.WriteLine($"Done ({player.WorldState.PlayerHpPercent}) ({player.WorldState.ResourcePercent})");
+            var direction = Pathfinding.GetDirectionToDragMouse(Player.WorldState.FacingDegrees, 150f);
+
+            await MoveToHeadingTask(Player);
 
             return true;
         }
@@ -78,6 +82,33 @@ namespace WoWHelper
             ScreenCapture.SetForegroundWindow(h);
 
             await Task.Delay(750);
+            return true;
+        }
+
+        public static async Task<bool> MoveToHeadingTask(WoWPlayer player)
+        {
+            float desiredDegrees = 200f;
+            float degreeTolerance = 5f;
+
+            Mouse.ButtonDown(Mouse.MouseKeys.Right); await Task.Delay(50);
+
+            while (Math.Abs(player.WorldState.FacingDegrees - desiredDegrees) > degreeTolerance)
+            {
+                float degreesToMove = Pathfinding.GetDegreesToMove(player.WorldState.FacingDegrees, desiredDegrees);
+
+                int speed = Math.Abs(degreesToMove) > 40 ? 30 : 5;
+
+                int direction = degreesToMove <= 0 ? 1 : -1;
+                int verticalDirection = 0;// ((int)degreesToMove % 3) - 1;
+
+                Mouse.MoveRelative(speed * direction, verticalDirection);
+
+                Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 800));
+                player.UpdateFromBitmap(wowBitmap);
+                wowBitmap.Dispose();
+            }
+
+            Mouse.ButtonUp(Mouse.MouseKeys.Right); await Task.Delay(50);
             return true;
         }
     }

@@ -20,5 +20,16 @@ namespace WoWHelperUnitTests
             var direction = Pathfinding.GetDirectionInDegrees(waypoint1, waypoint2);
             AssertExtensions.DoublesAreAlmostEqual(expectedDirection, direction);
         }
+
+        [DataTestMethod]
+        [DataRow(250f, 200f, -50f)]
+        [DataRow(9f, 330f, -39f)]
+        [DataRow(40f, 107f, 67f)]
+        [DataRow(340f, 40f, 60f)]
+        public void VerifyGetDirectionToDragMouse(float currentDegrees, float desiredDegrees, float expectedDegrees)
+        {
+            var degreesToMove = Pathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
+            AssertExtensions.DoublesAreAlmostEqual(expectedDegrees, degreesToMove);
+        }
     }
 }
