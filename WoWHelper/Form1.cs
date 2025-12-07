@@ -88,61 +88,132 @@ namespace WoWHelper
         public static async Task<bool> MoveThroughWaypointsTask(WoWPlayer player)
         {
             List<Vector2> waypoints = new List<Vector2>();
-            //waypoints.Add(new Vector2(52f, 47f));
+            waypoints.Add(new Vector2(52f, 47f));
             waypoints.Add(new Vector2(53.13f, 46.48f));
             waypoints.Add(new Vector2(53.48f, 45.56f));
             waypoints.Add(new Vector2(52.01f, 45.12f));
+            waypoints.Add(new Vector2(52f, 47f));
 
-            float waypointTolerance = 0.03f;
+            float waypointTolerance = 0.07f;
 
-            // foreach
-            do
+            int maxWait = 1000;
+            int minWait = 110;
+
+            foreach (var waypoint in waypoints)
             {
-                Vector2 currentLocation = new Vector2(player.WorldState.MapX, player.WorldState.MapY);
-                Vector2 nextWaypoint = waypoints[0];
-                float desiredDegrees = Pathfinding.GetDirectionInDegrees(currentLocation, nextWaypoint);
+                bool startedWalking = false;
 
-                await MoveToHeadingTask(player, desiredDegrees);
-                await WalkForwardTask(player);
+                while (Math.Abs(waypoint.X - player.WorldState.MapX) > waypointTolerance || Math.Abs(waypoint.Y - player.WorldState.MapY) > waypointTolerance)
+                {
+                    Vector2 currentLocation = new Vector2(player.WorldState.MapX, player.WorldState.MapY);
+                    float desiredDegrees = Pathfinding.GetDirectionInDegrees(currentLocation, waypoint);
 
-                Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 800));
-                player.UpdateFromBitmap(wowBitmap);
-                wowBitmap.Dispose();
-            } while (Math.Abs(waypoints[0].X - player.WorldState.MapX) > waypointTolerance || Math.Abs(waypoints[0].Y - player.WorldState.MapY) > waypointTolerance);
+                    await MoveToHeadingTask(player, desiredDegrees);
+
+                    if (startedWalking == false)
+                    {
+                        await StartWalkForwardTask(player);
+                        startedWalking = true;
+                    }
+
+                    int wait = Vector2.Distance(currentLocation, waypoint) > 0.2 ? maxWait : minWait;
+                    await Task.Delay(wait);
+
+                    Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 800));
+                    player.UpdateFromBitmap(wowBitmap);
+                    wowBitmap.Dispose();
+                }
+
+                if (startedWalking == true)
+                {
+                    await EndWalkForwardTask(player);
+                }
+            }
 
             return true;
         }
 
-        public static async Task<bool> WalkForwardTask(WoWPlayer player)
+        public static async Task<bool> StartWalkForwardTask(WoWPlayer player)
         {
-            Keyboard.KeyDown(Keys.W); await Task.Delay(5000);
-            Keyboard.KeyUp(Keys.W); await Task.Delay(50);
+            await Task.Delay(0);
+            Keyboard.KeyDown(Keys.W);
+            return true;
+        }
+
+        public static async Task<bool> EndWalkForwardTask(WoWPlayer player)
+        {
+            await Task.Delay(0);
+            Keyboard.KeyUp(Keys.W);
             return true;
         }
 
         public static async Task<bool> MoveToHeadingTask(WoWPlayer player, float desiredDegrees)
         {
-            float degreeTolerance = 5f;
+            int minSpeed = 3;
+            int maxSpeed = 100;
 
-            Mouse.ButtonDown(Mouse.MouseKeys.Right); await Task.Delay(50);
+            if (minSpeed <= 0) throw new ArgumentOutOfRangeException(nameof(minSpeed));
+            if (maxSpeed < minSpeed) throw new ArgumentOutOfRangeException(nameof(maxSpeed));
 
-            while (Math.Abs(player.WorldState.FacingDegrees - desiredDegrees) > degreeTolerance)
+            const float degreeTolerance = 5f;
+            // Angle at which you’re already at max speed; tweak if desired
+            const float maxSpeedAngle = 180f;
+
+            bool mouseDown = false;
+
+            try
             {
-                float degreesToMove = Pathfinding.GetDegreesToMove(player.WorldState.FacingDegrees, desiredDegrees);
+                while (true)
+                {
+                    float currentDegrees = player.WorldState.FacingDegrees;
+                    float degreesToMove = Pathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
+                    float absDegreesToMove = Math.Abs(degreesToMove);
 
-                int speed = Math.Abs(degreesToMove) > 40 ? 30 : 5;
+                    // Exit condition
+                    if (absDegreesToMove <= degreeTolerance)
+                        break;
 
-                int direction = degreesToMove <= 0 ? 1 : -1;
-                int verticalDirection = 0;// ((int)degreesToMove % 3) - 1;
+                    if (mouseDown == false)
+                    {
+                        Mouse.ButtonDown(Mouse.MouseKeys.Right);
+                        await Task.Delay(50);
+                        mouseDown = true;
+                    }
 
-                Mouse.MoveRelative(speed * direction, verticalDirection);
+                    // Map angle difference -> [0,1] where 0 = on target, 1 = far away (>= maxSpeedAngle)
+                    float t = absDegreesToMove / maxSpeedAngle;
+                    if (t > 1f) t = 1f;
+                    if (t < 0f) t = 0f;
 
-                Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 800));
-                player.UpdateFromBitmap(wowBitmap);
-                wowBitmap.Dispose();
+                    // Interpolate between minSpeed and maxSpeed
+                    int speed = (int)Math.Round(minSpeed + (maxSpeed - minSpeed) * t);
+
+                    // Ensure at least minSpeed in case of rounding
+                    if (speed < minSpeed) speed = minSpeed;
+                    if (speed > maxSpeed) speed = maxSpeed;
+
+                    int direction = degreesToMove <= 0 ? 1 : -1;
+                    int verticalDirection = 0;
+
+                    Mouse.MoveRelative(speed * direction, verticalDirection);
+
+                    using (Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 800)))
+                    {
+                        player.UpdateFromBitmap(wowBitmap);
+                    }
+
+                    //await Task.Delay(110);
+                }
+            }
+            finally
+            {
+                if (mouseDown == true)
+                {
+                    Mouse.ButtonUp(Mouse.MouseKeys.Right);
+                    await Task.Delay(50);
+                }
             }
 
-            Mouse.ButtonUp(Mouse.MouseKeys.Right); await Task.Delay(50);
             return true;
         }
     }
