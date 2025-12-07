@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using WindowsGameAutomationTools.Images;
 using WoWHelper.Shared;
 
 namespace WoWHelper
@@ -8,47 +9,58 @@ namespace WoWHelper
     public class WoWWorldState
     {
         public bool Initialized { get; private set; }
-        public int HpPercent { get; private set; }
+        public int PlayerHpPercent { get; private set; }
         public int ResourcePercent { get; private set; }
+        public int TargetHpPercent { get; private set; }
+        public float MapX { get; private set; }
+        public float MapY { get; private set; }
+        public float FacingDegrees { get; private set; }
 
         public Dictionary<string, int> WorldStateUpdateFailures { get; private set; }
 
         public WoWWorldState()
         {
             Initialized = false;
-            HpPercent = -1;
+            PlayerHpPercent = -1;
             ResourcePercent = -1;
+            TargetHpPercent = -1;
+            MapX = -1;
+            MapY = -1;
+            FacingDegrees = -1;
             WorldStateUpdateFailures = new Dictionary<string, int>();
 
-            WorldStateUpdateFailures[nameof(HpPercent)] = 0;
+            WorldStateUpdateFailures[nameof(PlayerHpPercent)] = 0;
             WorldStateUpdateFailures[nameof(ResourcePercent)] = 0;
+            WorldStateUpdateFailures[nameof(FacingDegrees)] = 0;
 
-            TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789");
+            TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
         }
 
         public void UpdateFromBitmap(Bitmap bmp)
         {
             Initialized = true;
 
-            UpdateHpPercent(bmp);
+            UpdatePlayerHpPercent(bmp);
             UpdateResourcePercent(bmp);
+            UpdateFacingDegrees(bmp);
         }
 
-        public void UpdateHpPercent(Bitmap bmp)
+        public void UpdatePlayerHpPercent(Bitmap bmp)
         {
-            string text = WoWWorldStateImageConstants.HP_PERCENT_POSITION.GetText(TesseractEngineSingleton.Instance, bmp);
+            //Bitmap bmpSnippet = new Bitmap()
+            string text = WoWWorldStateImageConstants.PLAYER_HP_PERCENT_POSITION.GetText(TesseractEngineSingleton.Instance, bmp);
             string textTrimmed = Trim(text);
             var success = int.TryParse(textTrimmed, out int hpPercent);
 
             if (success)
             {
-                HpPercent = hpPercent;
-                WorldStateUpdateFailures[nameof(HpPercent)] = 0;
+                PlayerHpPercent = hpPercent;
+                WorldStateUpdateFailures[nameof(PlayerHpPercent)] = 0;
             }
             else
             {
                 Console.WriteLine($"Unable to parse {text} (trimmed: {textTrimmed}) to an int.  Perhaps the Trim method needs a new character?");
-                WorldStateUpdateFailures[nameof(HpPercent)]++;
+                WorldStateUpdateFailures[nameof(PlayerHpPercent)]++;
             }
         }
 
@@ -70,44 +82,28 @@ namespace WoWHelper
             }
         }
 
+        public void UpdateFacingDegrees(Bitmap bmp)
+        {
+            string text = WoWWorldStateImageConstants.FACING_DEGREES_POSITION.GetText(TesseractEngineSingleton.Instance, bmp);
+            string textTrimmed = Trim(text);
+            var success = float.TryParse(textTrimmed, out float facingDegrees);
+
+            if (success)
+            {
+                FacingDegrees = facingDegrees;
+                WorldStateUpdateFailures[nameof(FacingDegrees)] = 0;
+            }
+            else
+            {
+                Console.WriteLine($"Unable to parse {text} (trimmed: {textTrimmed}) to a float.  Perhaps the Trim method needs a new character?");
+                WorldStateUpdateFailures[nameof(FacingDegrees)]++;
+            }
+        }
+
         // TODO: performance test various methods, optimize for CPU speed
         public string Trim(string untrimmedString)
         {
             return untrimmedString.Trim();
-            //return untrimmedString.Trim(' ', '\t', '\n', '(', ')', '%', '\'', '‘');
-
-            /*
-             * string RemoveNonIntegers(string input)
-                {
-                    return new string(input.Where(char.IsDigit).ToArray());
-                }
-             * */
-
-            /* 
-             * string RemoveNonIntegers(string input)
-            {
-            var sb = new StringBuilder();
-
-            foreach (char c in input)
-            {
-            if (char.IsDigit(c))
-            {
-            sb.Append(c);
-            }
-            }
-
-            return sb.ToString();
-            }
-            }
-            }
-            */
-
-            /*
-             * string RemoveNonIntegers(string input)
-                {
-                    return Regex.Replace(input, @"\D", ""); // Replace all non-digit characters (\D) with an empty string
-                }
-             * */
         }
     }
 }

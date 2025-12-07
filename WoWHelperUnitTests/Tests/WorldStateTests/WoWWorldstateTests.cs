@@ -8,21 +8,19 @@ namespace WoWHelperUnitTests
     [TestClass]
     public class WoWWorldstateTests : UnitTestBase
     {
-        [DataTestMethod]
-        [DataRow(100, "..\\..\\Source Images\\HpPercent100.bmp")]
-        [DataRow(98, "..\\..\\Source Images\\HpPercent98.bmp")]
+        [TestMethod]
+        [DataRow(100, "..\\..\\Source Images\\CustomUI.bmp")]
         public void VerifyHpPercentage(int expected, string fileName)
         {
             string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
 
             Player.UpdateFromBitmap(new Bitmap(filePath));
 
-            Assert.AreEqual(expected, Player.WorldState.HpPercent);
+            Assert.AreEqual(expected, Player.WorldState.PlayerHpPercent);
         }
 
-        [DataTestMethod]
-        [DataRow(0, "..\\..\\Source Images\\HpPercent100.bmp")]
-        [DataRow(31, "..\\..\\Source Images\\HpPercent98.bmp")]
+        [TestMethod]
+        [DataRow(100, "..\\..\\Source Images\\CustomUI.bmp")]
         public void VerifyResourcePercentage(int expected, string fileName)
         {
             string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
@@ -30,6 +28,17 @@ namespace WoWHelperUnitTests
             Player.UpdateFromBitmap(new Bitmap(filePath));
 
             Assert.AreEqual(expected, Player.WorldState.ResourcePercent);
+        }
+
+        [TestMethod]
+        [DataRow(3.42f, "..\\..\\Source Images\\CustomUI.bmp")]
+        public void VerifyHeading(float expected, string fileName)
+        {
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+
+            Player.UpdateFromBitmap(new Bitmap(filePath));
+
+            Assert.AreEqual(expected, Player.WorldState.FacingDegrees);
         }
     }
 }

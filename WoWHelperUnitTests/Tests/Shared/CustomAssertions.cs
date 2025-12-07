@@ -1,16 +1,15 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-internal static class CustomAssert
+public static class AssertExtensions
 {
-    public static void DoublesAreAlmostEqual(this Assert assert, double expected, double actual)
+    public static void DoublesAreAlmostEqual(double expected, double actual, double tolerance = 0.01)
     {
-        bool almostEqual = Math.Abs(expected - actual) < .01;
-        if (almostEqual)
-        {
+        double diff = Math.Abs(expected - actual);
+        if (diff <= tolerance)
             return;
-        }
 
-        throw new AssertFailedException($"Expected: {expected} Actual: {actual}");
+        throw new AssertFailedException(
+            $"Expected: {expected}, Actual: {actual}, Diff: {diff}, Tolerance: {tolerance}");
     }
 }
