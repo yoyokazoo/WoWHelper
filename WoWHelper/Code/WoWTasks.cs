@@ -14,24 +14,7 @@ namespace WoWHelper.Code
 {
     public class WoWTasks
     {
-        async Task<bool> CoreGameplayLoopTaskASDF()
-        {
-            /*
-            WoWPlayer player = new WoWPlayer();
-
-            await FocusOnWindowTask();
-
-            Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 800));
-            player.UpdateFromBitmap(wowBitmap);
-
-            //var direction = Pathfinding.GetDirectionToDragMouse(Player.WorldState.FacingDegrees, 150f);
-
-            await MoveThroughWaypointsTask(player);
-
-            return true;
-            */
-            return true;
-        }
+        const Keys CHARGE_KEY = Keys.D1;
 
         public static Bitmap GetEQBitmap()
         {
@@ -60,11 +43,32 @@ namespace WoWHelper.Code
 
         public static async Task<bool> CheckForValidTargetTask()
         {
-            Keyboard.KeyPress(Keys.Tab);
+            for (int i = 0; i < 3; i++)
+            {
+                Keyboard.KeyPress(Keys.Tab);
+
+                await Task.Delay(250);
+
+                WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+
+                if(worldState.CanChargeTarget)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static async Task<bool> TryToChargeTask()
+        {
+            Keyboard.KeyPress(CHARGE_KEY);
+
+            await Task.Delay(250);
 
             WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
 
-            return true;
+            return worldState.IsInCombat;
         }
 
         public static async Task<bool> MoveThroughWaypointsTask()
