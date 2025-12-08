@@ -135,6 +135,7 @@
     <Compile Include="Code\WoWPlayer.cs" />
     <Compile Include="Code\WorldState\WoWWorldState.cs" />
     <Compile Include="Code\Shared\TessaractSingleton.cs" />
+    <Compile Include="Code\WoWTasks.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

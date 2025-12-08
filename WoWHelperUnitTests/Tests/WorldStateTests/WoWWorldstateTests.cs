@@ -40,5 +40,17 @@ namespace WoWHelperUnitTests
 
             Assert.AreEqual(expected, Player.WorldState.FacingDegrees);
         }
+
+        [TestMethod]
+        [DataRow(false, "..\\..\\Source Images\\CustomUI.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\CanCharge.bmp")]
+        public void VerifyCanChargeTarget(bool expected, string fileName)
+        {
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+
+            Player.UpdateFromBitmap(new Bitmap(filePath));
+
+            Assert.AreEqual(expected, Player.WorldState.CanChargeTarget);
+        }
     }
 }

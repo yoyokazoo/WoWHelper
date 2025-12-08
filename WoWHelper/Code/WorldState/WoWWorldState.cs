@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using WindowsGameAutomationTools.ImageDetection;
 using WindowsGameAutomationTools.Images;
 using WoWHelper.Shared;
 
@@ -16,6 +17,10 @@ namespace WoWHelper
         public float MapY { get; private set; }
         public float FacingDegrees { get; private set; }
 
+        public bool IsInRange { get; private set; }
+        public bool IsInCombat { get; private set; }
+        public bool CanChargeTarget { get; private set; }
+
         public Dictionary<string, int> WorldStateUpdateFailures { get; private set; }
 
         public WoWWorldState()
@@ -27,6 +32,11 @@ namespace WoWHelper
             MapX = -1;
             MapY = -1;
             FacingDegrees = -1;
+
+            IsInRange = false;
+            IsInCombat = false;
+            CanChargeTarget = false;
+
             WorldStateUpdateFailures = new Dictionary<string, int>();
 
             WorldStateUpdateFailures[nameof(PlayerHpPercent)] = 0;
@@ -38,6 +48,17 @@ namespace WoWHelper
             TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
         }
 
+        public static WoWWorldState GetWoWWorldState()
+        {
+            WoWWorldState currentState = new WoWWorldState();
+
+            Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 800));
+            currentState.UpdateFromBitmap(wowBitmap);
+            wowBitmap.Dispose();
+
+            return currentState;
+        }
+
         public void UpdateFromBitmap(Bitmap bmp)
         {
             Initialized = true;
@@ -47,6 +68,10 @@ namespace WoWHelper
             UpdateMapX(bmp);
             UpdateMapY(bmp);
             UpdateFacingDegrees(bmp);
+
+            UpdateIsInRange(bmp);
+            UpdateIsInCombat(bmp);
+            UpdateCanChargeTarget(bmp);
         }
 
         public void UpdatePlayerHpPercent(Bitmap bmp)
@@ -138,6 +163,24 @@ namespace WoWHelper
                 Console.WriteLine($"Unable to parse {text} (trimmed: {textTrimmed}) to a float.  Perhaps the Trim method needs a new character?");
                 WorldStateUpdateFailures[nameof(FacingDegrees)]++;
             }
+        }
+
+        public void UpdateIsInRange(Bitmap bmp)
+        {
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.IS_IN_RANGE_POSITION.X, WoWWorldStateImageConstants.IS_IN_RANGE_POSITION.Y);
+            IsInRange = ColorComparison.ColorsExactlyMatch(WoWWorldStateImageConstants.TRUE_COLOR, color);
+        }
+
+        public void UpdateIsInCombat(Bitmap bmp)
+        {
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.IS_IN_COMBAT_POSITION.X, WoWWorldStateImageConstants.IS_IN_COMBAT_POSITION.Y);
+            IsInCombat = ColorComparison.ColorsExactlyMatch(WoWWorldStateImageConstants.TRUE_COLOR, color);
+        }
+
+        public void UpdateCanChargeTarget(Bitmap bmp)
+        {
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.CAN_CHARGE_TARGET_POSITION.X, WoWWorldStateImageConstants.CAN_CHARGE_TARGET_POSITION.Y);
+            CanChargeTarget = ColorComparison.ColorsExactlyMatch(WoWWorldStateImageConstants.TRUE_COLOR, color);
         }
 
         // TODO: performance test various methods, optimize for CPU speed
