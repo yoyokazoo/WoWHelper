@@ -71,6 +71,28 @@ namespace WoWHelper.Code
             return worldState.IsInCombat;
         }
 
+        public static async Task<bool> MoveTowardsWaypointTask(WoWWorldState worldState, Vector2 waypoint)
+        {
+            // return false if you haven't arrived at the waypoint yet
+            // return true if you've arrived at the waypoint
+
+            Vector2 currentLocation = new Vector2(worldState.MapX, worldState.MapY);
+            float desiredDegrees = Pathfinding.GetDirectionInDegrees(currentLocation, waypoint);
+            float degreesDifference = (worldState.FacingDegrees - desiredDegrees) % 180f;
+
+            float incorrectDirectionDegreesTolerance = 5f;
+
+            if (Math.Abs(degreesDifference) > incorrectDirectionDegreesTolerance)
+            {
+                return await MoveToHeadingTask(desiredDegrees);
+            }
+            else
+            {
+                Console.WriteLine($"Moving to be implemented");
+                return true;
+            }
+        }
+
         public static async Task<bool> MoveThroughWaypointsTask()
         {
             WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
