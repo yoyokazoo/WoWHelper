@@ -1,0 +1,7 @@
+## Interface: 11307
+## Title: Yoyokazoo UI
+## Notes: Make commonly used UI show up in a single place
+## Version: 1.0.0
+## Author: Peter Beckfield
+
+YoyokazooUI.lua
