@@ -17,7 +17,7 @@ namespace WoWHelperUnitTests
             var waypoint1 = new Vector2(x1, y1);
             var waypoint2 = new Vector2(x2, y2);
 
-            var direction = Pathfinding.GetDirectionInDegrees(waypoint1, waypoint2);
+            var direction = Pathfinding.GetDesiredDirectionInDegrees(waypoint1, waypoint2);
             AssertExtensions.DoublesAreAlmostEqual(expectedDirection, direction);
         }
 

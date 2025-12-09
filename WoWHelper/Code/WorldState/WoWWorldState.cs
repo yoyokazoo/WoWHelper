@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Numerics;
 using WindowsGameAutomationTools.ImageDetection;
 using WindowsGameAutomationTools.Images;
 using WoWHelper.Shared;
@@ -15,6 +16,7 @@ namespace WoWHelper
         public int TargetHpPercent { get; private set; }
         public float MapX { get; private set; }
         public float MapY { get; private set; }
+        public Vector2 PlayerLocation { get; private set; }
         public float FacingDegrees { get; private set; }
 
         public bool IsInRange { get; private set; }
@@ -30,6 +32,7 @@ namespace WoWHelper
             TargetHpPercent = -1;
             MapX = -1;
             MapY = -1;
+            PlayerLocation = Vector2.Zero;
             FacingDegrees = -1;
 
             IsInRange = false;
@@ -60,6 +63,7 @@ namespace WoWHelper
             UpdateTargetHpPercent(bmp);
             UpdateMapX(bmp);
             UpdateMapY(bmp);
+            PlayerLocation = new Vector2(MapX, MapY);
             UpdateFacingDegrees(bmp);
 
             UpdateIsInRange(bmp);

@@ -37,109 +37,42 @@ namespace WoWHelper.Code
 
         #region Movement Tasks
 
-
-
-        #endregion
-
-        public static async Task<bool> CheckForValidTargetTask()
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                Keyboard.KeyPress(Keys.Tab);
-
-                await Task.Delay(250);
-
-                WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
-
-                if(worldState.CanChargeTarget)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public static async Task<bool> TryToChargeTask()
-        {
-            WoWWorldState worldState;
-
-            int loopNum = 0;
-            do
-            {
-                if (loopNum > 0)
-                {
-                    Keyboard.KeyDown(Keys.A);
-                    await Task.Delay(250);
-                    Keyboard.KeyUp(Keys.A);
-                }
-
-                Keyboard.KeyPress(WoWInput.CHARGE_KEY);
-
-                await Task.Delay(250);
-
-                worldState = WoWWorldState.GetWoWWorldState();
-
-                loopNum++;
-            } while (!worldState.IsInCombat && worldState.CanChargeTarget);
-
-            // give some time for the charge to land
-            await Task.Delay(500);
-
-            return worldState.IsInCombat;
-        }
-
+        // Returns true if we've reached the waypoint
+        // Returns false if we haven't yet reached the waypoint
+        // Rotates towards the waypoint or walks towards the waypoint, depending
         public static async Task<bool> MoveTowardsWaypointTask(WoWWorldState worldState, Vector2 waypoint)
         {
-            // return false if you haven't arrived at the waypoint yet, return true if you've arrived at the waypoint?
-
-            Vector2 currentLocation = new Vector2(worldState.MapX, worldState.MapY);
-            float desiredDegrees = Pathfinding.GetDirectionInDegrees(currentLocation, waypoint);
+            float waypointDistance = Vector2.Distance(worldState.PlayerLocation, waypoint);
+            float desiredDegrees = Pathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint);
             float degreesDifference = Pathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
+            
 
-            float incorrectDirectionDegreesTolerance = 20f;
-            float waypointDistanceTolerance = 0.07f;
+            //Console.WriteLine($"Heading towards waypoint {waypoint}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
-            Console.WriteLine($"Heading towards waypoint {waypoint}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
-
-            if (Math.Abs(waypoint.X - worldState.MapX) <= waypointDistanceTolerance && Math.Abs(waypoint.Y - worldState.MapY) <= waypointDistanceTolerance)
+            if (waypointDistance <= Pathfinding.WAYPOINT_DISTANCE_TOLERANCE)
             {
-                Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
+                //Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
                 await EndWalkForwardTask();
                 return true;
             }
 
-            if (Math.Abs(degreesDifference) > incorrectDirectionDegreesTolerance)
+            if (Math.Abs(degreesDifference) > Pathfinding.GetWaypointDegreesTolerance())
             {
-                Console.WriteLine($"degreesDifference too large, rotating to heading");
+                //Console.WriteLine($"degreesDifference too large, rotating to heading");
                 await EndWalkForwardTask();
-                await MoveToHeadingTask(desiredDegrees);
+                await RotateToDirectionTask(desiredDegrees);
                 return false;
             }
             else
             {
                 // if we're already walking, ignore this
-                Console.WriteLine($"Start walking forward");
+                //Console.WriteLine($"Start walking forward");
                 await StartWalkForwardTask();
                 return false;
             }
         }
 
-        public static async Task<bool> StartWalkForwardTask()
-        {
-            await Task.Delay(0);
-            Keyboard.KeyDown(Keys.W);
-            return true;
-        }
-
-        public static async Task<bool> EndWalkForwardTask()
-        {
-            await Task.Delay(0);
-            Keyboard.KeyUp(Keys.W);
-            return true;
-        }
-
-        public static async Task<bool> MoveToHeadingTask(float desiredDegrees)
+        public static async Task<bool> RotateToDirectionTask(float desiredDegrees)
         {
             WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
 
@@ -210,5 +143,73 @@ namespace WoWHelper.Code
 
             return true;
         }
+
+        public static async Task<bool> StartWalkForwardTask()
+        {
+            await Task.Delay(0);
+            Keyboard.KeyDown(WoWInput.MOVE_FORWARD);
+            return true;
+        }
+
+        public static async Task<bool> EndWalkForwardTask()
+        {
+            await Task.Delay(0);
+            Keyboard.KeyUp(WoWInput.MOVE_FORWARD);
+            return true;
+        }
+
+        #endregion
+
+        public static async Task<bool> CheckForValidTargetTask()
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                Keyboard.KeyPress(Keys.Tab);
+
+                await Task.Delay(250);
+
+                WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+
+                if(worldState.CanChargeTarget)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static async Task<bool> TryToChargeTask()
+        {
+            WoWWorldState worldState;
+
+            int loopNum = 0;
+            do
+            {
+                if (loopNum > 0)
+                {
+                    Keyboard.KeyDown(Keys.A);
+                    await Task.Delay(250);
+                    Keyboard.KeyUp(Keys.A);
+                }
+
+                Keyboard.KeyPress(WoWInput.CHARGE_KEY);
+
+                await Task.Delay(250);
+
+                worldState = WoWWorldState.GetWoWWorldState();
+
+                loopNum++;
+            } while (!worldState.IsInCombat && worldState.CanChargeTarget);
+
+            // give some time for the charge to land
+            await Task.Delay(500);
+
+            return worldState.IsInCombat;
+        }
+
+        
+
+        
     }
 }

@@ -9,7 +9,10 @@ namespace WoWHelper.Code
 {
     public static class Pathfinding
     {
-        public static float GetDirectionInDegrees(Vector2 waypoint1, Vector2 waypoint2)
+        public const float WAYPOINT_DEGREES_TOLERANCE = 20f;
+        public const float WAYPOINT_DISTANCE_TOLERANCE = 0.1f;
+
+        public static float GetDesiredDirectionInDegrees(Vector2 waypoint1, Vector2 waypoint2)
         {
             float dx = waypoint2.X - waypoint1.X;
             float dy = waypoint2.Y - waypoint1.Y;
@@ -56,6 +59,12 @@ namespace WoWHelper.Code
             {
                 return deltaDegrees;
             }
+        }
+
+        public static float GetWaypointDegreesTolerance()
+        {
+            // TODO: take in distance, as distance gets smaller, tolerance gets larger so we don't keep stopping to make minute adjustments
+            return WAYPOINT_DEGREES_TOLERANCE;
         }
     }
 }
