@@ -14,22 +14,7 @@ namespace WoWHelper.Code
 {
     public class WoWTasks
     {
-        public const Keys CHARGE_KEY = Keys.D1;
-        public const Keys HEROIC_STRIKE_KEY = Keys.D2;
-
-        public static Bitmap GetEQBitmap()
-        {
-            //ScreenCapture.
-            //return ScreenCapture.CaptureWindowBM(GetEQWindowHandle());
-            return null;
-        }
-
-        public static IntPtr GetWindowHandle()
-        {
-            //if (currentCharacterName != null) { return eqWindowHandles[currentCharacterName]; }
-            //var processes = Process.GetProcesses();
-            return Process.GetProcessesByName("WowClassic").FirstOrDefault().MainWindowHandle;
-        }
+        #region Windows Management Tasks
 
         public static async Task<bool> FocusOnWindowTask()
         {
@@ -41,6 +26,20 @@ namespace WoWHelper.Code
             await Task.Delay(750);
             return true;
         }
+
+        #endregion
+
+        #region Combat Tasks
+
+
+
+        #endregion
+
+        #region Movement Tasks
+
+
+
+        #endregion
 
         public static async Task<bool> CheckForValidTargetTask()
         {
@@ -75,7 +74,7 @@ namespace WoWHelper.Code
                     Keyboard.KeyUp(Keys.A);
                 }
 
-                Keyboard.KeyPress(CHARGE_KEY);
+                Keyboard.KeyPress(WoWInput.CHARGE_KEY);
 
                 await Task.Delay(250);
 
@@ -124,54 +123,6 @@ namespace WoWHelper.Code
                 await StartWalkForwardTask();
                 return false;
             }
-        }
-
-        public static async Task<bool> MoveThroughWaypointsTask()
-        {
-            WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
-
-            List<Vector2> waypoints = new List<Vector2>();
-            waypoints.Add(new Vector2(52f, 47f));
-            waypoints.Add(new Vector2(53.13f, 46.48f));
-            waypoints.Add(new Vector2(53.48f, 45.56f));
-            waypoints.Add(new Vector2(52.01f, 45.12f));
-            waypoints.Add(new Vector2(52f, 47f));
-
-            float waypointTolerance = 0.07f;
-
-            int maxWait = 1000;
-            int minWait = 110;
-
-            foreach (var waypoint in waypoints)
-            {
-                bool startedWalking = false;
-
-                while (Math.Abs(waypoint.X - worldState.MapX) > waypointTolerance || Math.Abs(waypoint.Y - worldState.MapY) > waypointTolerance)
-                {
-                    Vector2 currentLocation = new Vector2(worldState.MapX, worldState.MapY);
-                    float desiredDegrees = Pathfinding.GetDirectionInDegrees(currentLocation, waypoint);
-
-                    await MoveToHeadingTask(desiredDegrees);
-
-                    if (startedWalking == false)
-                    {
-                        await StartWalkForwardTask();
-                        startedWalking = true;
-                    }
-
-                    int wait = Vector2.Distance(currentLocation, waypoint) > 0.2 ? maxWait : minWait;
-                    await Task.Delay(wait);
-
-                    worldState = WoWWorldState.GetWoWWorldState();
-                }
-
-                if (startedWalking == true)
-                {
-                    await EndWalkForwardTask();
-                }
-            }
-
-            return true;
         }
 
         public static async Task<bool> StartWalkForwardTask()

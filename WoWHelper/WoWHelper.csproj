@@ -133,6 +133,7 @@
     <Compile Include="Code\Pathfinding.cs" />
     <Compile Include="Code\Shared\KeyPoller.cs" />
     <Compile Include="Code\WorldState\WoWWorldStateImageConstants.cs" />
+    <Compile Include="Code\WoWInput.cs" />
     <Compile Include="Code\WoWPlayer.cs" />
     <Compile Include="Code\WorldState\WoWWorldState.cs" />
     <Compile Include="Code\Shared\TessaractSingleton.cs" />

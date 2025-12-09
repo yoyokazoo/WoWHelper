@@ -15,8 +15,8 @@ namespace WoWHelper
 {
     public class WoWPlayer
     {
-        private static long TIME_BETWEEN_TAB_MILLIS = (long)(2 * 1000); // 2 seconds
-        private long lastTabTime = 0;
+        private static long TIME_BETWEEN_FIND_TARGET_MILLIS = (long)(2 * 1000); // 2 seconds
+        private long lastFindTargetTime = 0;
 
         // TODO: Switch to a system where we use cancellation tokens to exit normal operation and go into "oh shit I got aggroed by something?"
         //private CancellationTokenSource CancellationTokenSource {  get; set; }
@@ -187,7 +187,8 @@ namespace WoWHelper
         async Task<bool> CoreCombatLoopTask()
         {
             Console.WriteLine("Kicking off core combat loop");
-            WoWWorldState worldState;
+            WoWWorldState previousWorldState = null;
+            WoWWorldState worldState = null;
 
             // combat wiggle in case camera is pointed wrong direction
             Keyboard.KeyDown(Keys.S);
@@ -199,18 +200,22 @@ namespace WoWHelper
             Keyboard.KeyUp(Keys.W);
 
             // always kick things off with heroic strike macro to /startattack
-            Keyboard.KeyPress(WoWTasks.HEROIC_STRIKE_KEY);
+            Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
 
+            
             // true if mob killed, false if we need to do emergency stuff? or do emergency stuff in here?
             do
             {
                 await Task.Delay(250);
 
+                previousWorldState = worldState;
                 worldState = WoWWorldState.GetWoWWorldState();
+
+                //if (previousWorldState?)
 
                 if (!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= 15)
                 {
-                    Keyboard.KeyPress(WoWTasks.HEROIC_STRIKE_KEY);
+                    Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
                 }
 
             } while (worldState.IsInCombat);
@@ -229,10 +234,10 @@ namespace WoWHelper
             int loops = 0;
             while (loops < maxLoops)
             {
-                if (!CurrentTimeInsideDuration(lastTabTime, TIME_BETWEEN_TAB_MILLIS))
+                if (!CurrentTimeInsideDuration(lastFindTargetTime, TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
-                    Keyboard.KeyPress(Keys.Tab);
-                    lastTabTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    Keyboard.KeyPress(WoWInput.FIND_TARGET);
+                    lastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
 
                 // always wait a bit for the UI to update, then grab it?
