@@ -20,8 +20,7 @@ namespace WoWHelper
         public bool IsInRange { get; private set; }
         public bool IsInCombat { get; private set; }
         public bool CanChargeTarget { get; private set; }
-
-        public Dictionary<string, int> WorldStateUpdateFailures { get; private set; }
+        public bool HeroicStrikeQueued { get; private set; }
 
         public WoWWorldState()
         {
@@ -36,16 +35,9 @@ namespace WoWHelper
             IsInRange = false;
             IsInCombat = false;
             CanChargeTarget = false;
+            HeroicStrikeQueued = false;
 
-            WorldStateUpdateFailures = new Dictionary<string, int>();
-
-            WorldStateUpdateFailures[nameof(PlayerHpPercent)] = 0;
-            WorldStateUpdateFailures[nameof(ResourcePercent)] = 0;
-            WorldStateUpdateFailures[nameof(MapX)] = 0;
-            WorldStateUpdateFailures[nameof(MapY)] = 0;
-            WorldStateUpdateFailures[nameof(FacingDegrees)] = 0;
-
-            TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
+            //TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
         }
 
         public static WoWWorldState GetWoWWorldState()
@@ -65,6 +57,7 @@ namespace WoWHelper
 
             UpdatePlayerHpPercent(bmp);
             UpdateResourcePercent(bmp);
+            UpdateTargetHpPercent(bmp);
             UpdateMapX(bmp);
             UpdateMapY(bmp);
             UpdateFacingDegrees(bmp);
@@ -72,121 +65,86 @@ namespace WoWHelper
             UpdateIsInRange(bmp);
             UpdateIsInCombat(bmp);
             UpdateCanChargeTarget(bmp);
+            UpdateHeroicStrikeQueued(bmp);
+        }
+
+        // Returns the R component of the color
+        public static int GetIntFromColor(Color color)
+        {
+            return color.R * 255 + color.G;
+        }
+
+        // Returns the R component as the whole number part, and the G component as the fractional part.
+        // Only works for numbers <= 255.99
+        public static float GetFloatFromColor(Color color)
+        {
+            return color.R * 255.0f + color.G + (color.B / 255.0f);
+        }
+
+        // Return true if color is exactly green, false otherwise
+        public static bool GetBoolFromColor(Color color)
+        {
+            return color.R == 0 && color.G == 255 && color.B == 0;
         }
 
         public void UpdatePlayerHpPercent(Bitmap bmp)
         {
-            //Bitmap bmpSnippet = new Bitmap()
-            string text = WoWWorldStateImageConstants.PLAYER_HP_PERCENT_POSITION.GetText(TesseractEngineSingleton.Instance, bmp);
-            string textTrimmed = Trim(text);
-            var success = int.TryParse(textTrimmed, out int hpPercent);
-
-            if (success)
-            {
-                PlayerHpPercent = hpPercent;
-                WorldStateUpdateFailures[nameof(PlayerHpPercent)] = 0;
-            }
-            else
-            {
-                Console.WriteLine($"Unable to parse {text} (trimmed: {textTrimmed}) to an int.  Perhaps the Trim method needs a new character?");
-                WorldStateUpdateFailures[nameof(PlayerHpPercent)]++;
-            }
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.PLAYER_HP_PERCENT_POSITION.X, WoWWorldStateImageConstants.PLAYER_HP_PERCENT_POSITION.Y);
+            PlayerHpPercent = GetIntFromColor(color);
         }
 
         public void UpdateResourcePercent(Bitmap bmp)
         {
-            string text = WoWWorldStateImageConstants.RESOURCE_PERCENT_POSITION.GetText(TesseractEngineSingleton.Instance, bmp);
-            string textTrimmed = Trim(text);
-            var success = int.TryParse(textTrimmed, out int resourcePercent);
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.RESOURCE_PERCENT_POSITION.X, WoWWorldStateImageConstants.RESOURCE_PERCENT_POSITION.Y);
+            ResourcePercent = GetIntFromColor(color);
+        }
 
-            if (success)
-            {
-                ResourcePercent = resourcePercent;
-                WorldStateUpdateFailures[nameof(ResourcePercent)] = 0;
-            }
-            else
-            {
-                Console.WriteLine($"Unable to parse {text} (trimmed: {textTrimmed}) to an int.  Perhaps the Trim method needs a new character?");
-                WorldStateUpdateFailures[nameof(ResourcePercent)]++;
-            }
+        public void UpdateTargetHpPercent(Bitmap bmp)
+        {
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.TARGET_PERCENT_POSITION.X, WoWWorldStateImageConstants.TARGET_PERCENT_POSITION.Y);
+            TargetHpPercent = GetIntFromColor(color);
         }
 
         public void UpdateMapX(Bitmap bmp)
         {
-            string text = WoWWorldStateImageConstants.MAP_X_POSITION.GetText(TesseractEngineSingleton.Instance, bmp);
-            string textTrimmed = Trim(text);
-            var success = float.TryParse(textTrimmed, out float mapX);
-
-            if (success)
-            {
-                MapX = mapX;
-                WorldStateUpdateFailures[nameof(MapX)] = 0;
-            }
-            else
-            {
-                Console.WriteLine($"Unable to parse {text} (trimmed: {textTrimmed}) to a float.  Perhaps the Trim method needs a new character?");
-                WorldStateUpdateFailures[nameof(MapX)]++;
-            }
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.MAP_X_POSITION.X, WoWWorldStateImageConstants.MAP_X_POSITION.Y);
+            MapX = GetFloatFromColor(color);
         }
 
         public void UpdateMapY(Bitmap bmp)
         {
-            string text = WoWWorldStateImageConstants.MAP_Y_POSITION.GetText(TesseractEngineSingleton.Instance, bmp);
-            string textTrimmed = Trim(text);
-            var success = float.TryParse(textTrimmed, out float mapY);
-
-            if (success)
-            {
-                MapY = mapY;
-                WorldStateUpdateFailures[nameof(MapY)] = 0;
-            }
-            else
-            {
-                Console.WriteLine($"Unable to parse {text} (trimmed: {textTrimmed}) to a float.  Perhaps the Trim method needs a new character?");
-                WorldStateUpdateFailures[nameof(MapY)]++;
-            }
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.MAP_Y_POSITION.X, WoWWorldStateImageConstants.MAP_Y_POSITION.Y);
+            MapY = GetFloatFromColor(color);
         }
 
         public void UpdateFacingDegrees(Bitmap bmp)
         {
-            string text = WoWWorldStateImageConstants.FACING_DEGREES_POSITION.GetText(TesseractEngineSingleton.Instance, bmp);
-            string textTrimmed = Trim(text);
-            var success = float.TryParse(textTrimmed, out float facingDegrees);
-
-            if (success)
-            {
-                FacingDegrees = facingDegrees;
-                WorldStateUpdateFailures[nameof(FacingDegrees)] = 0;
-            }
-            else
-            {
-                Console.WriteLine($"Unable to parse {text} (trimmed: {textTrimmed}) to a float.  Perhaps the Trim method needs a new character?");
-                WorldStateUpdateFailures[nameof(FacingDegrees)]++;
-            }
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.FACING_DEGREES_POSITION.X, WoWWorldStateImageConstants.FACING_DEGREES_POSITION.Y);
+            FacingDegrees = GetFloatFromColor(color);
         }
 
         public void UpdateIsInRange(Bitmap bmp)
         {
             Color color = bmp.GetPixel(WoWWorldStateImageConstants.IS_IN_RANGE_POSITION.X, WoWWorldStateImageConstants.IS_IN_RANGE_POSITION.Y);
-            IsInRange = ColorComparison.ColorsExactlyMatch(WoWWorldStateImageConstants.TRUE_COLOR, color);
+            IsInRange = GetBoolFromColor(color);
         }
 
         public void UpdateIsInCombat(Bitmap bmp)
         {
             Color color = bmp.GetPixel(WoWWorldStateImageConstants.IS_IN_COMBAT_POSITION.X, WoWWorldStateImageConstants.IS_IN_COMBAT_POSITION.Y);
-            IsInCombat = ColorComparison.ColorsExactlyMatch(WoWWorldStateImageConstants.TRUE_COLOR, color);
+            IsInCombat = GetBoolFromColor(color);
         }
 
         public void UpdateCanChargeTarget(Bitmap bmp)
         {
             Color color = bmp.GetPixel(WoWWorldStateImageConstants.CAN_CHARGE_TARGET_POSITION.X, WoWWorldStateImageConstants.CAN_CHARGE_TARGET_POSITION.Y);
-            CanChargeTarget = ColorComparison.ColorsExactlyMatch(WoWWorldStateImageConstants.TRUE_COLOR, color);
+            CanChargeTarget = GetBoolFromColor(color);
         }
 
-        // TODO: performance test various methods, optimize for CPU speed
-        public string Trim(string untrimmedString)
+        public void UpdateHeroicStrikeQueued(Bitmap bmp)
         {
-            return untrimmedString.Trim();
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.HEROIC_STRIKE_QUEUED_POSITION.X, WoWWorldStateImageConstants.HEROIC_STRIKE_QUEUED_POSITION.Y);
+            HeroicStrikeQueued = GetBoolFromColor(color);
         }
     }
 }

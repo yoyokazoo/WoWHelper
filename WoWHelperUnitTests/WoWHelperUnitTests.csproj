@@ -276,6 +276,9 @@
     <Content Include="Source Images\CustomUI.bmp" />
     <Content Include="Source Images\HpPercent100.bmp" />
     <Content Include="Source Images\HpPercent98.bmp" />
+    <Content Include="Source Images\NumbersAsColors.bmp" />
+    <Content Include="Source Images\NumbersAsColors2.bmp" />
+    <Content Include="Source Images\numbersAsColors3.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\WoWHelper\packages\MSTest.Analyzers.4.0.2\analyzers\dotnet\cs\MSTest.Analyzers.CodeFixes.dll" />

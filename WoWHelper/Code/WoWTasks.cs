@@ -14,7 +14,8 @@ namespace WoWHelper.Code
 {
     public class WoWTasks
     {
-        const Keys CHARGE_KEY = Keys.D1;
+        public const Keys CHARGE_KEY = Keys.D1;
+        public const Keys HEROIC_STRIKE_KEY = Keys.D2;
 
         public static Bitmap GetEQBitmap()
         {
@@ -62,34 +63,66 @@ namespace WoWHelper.Code
 
         public static async Task<bool> TryToChargeTask()
         {
-            Keyboard.KeyPress(CHARGE_KEY);
+            WoWWorldState worldState;
 
-            await Task.Delay(250);
+            int loopNum = 0;
+            do
+            {
+                if (loopNum > 0)
+                {
+                    Keyboard.KeyDown(Keys.A);
+                    await Task.Delay(250);
+                    Keyboard.KeyUp(Keys.A);
+                }
 
-            WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+                Keyboard.KeyPress(CHARGE_KEY);
+
+                await Task.Delay(250);
+
+                worldState = WoWWorldState.GetWoWWorldState();
+
+                loopNum++;
+            } while (!worldState.IsInCombat && worldState.CanChargeTarget);
+
+            // give some time for the charge to land
+            await Task.Delay(500);
 
             return worldState.IsInCombat;
         }
 
         public static async Task<bool> MoveTowardsWaypointTask(WoWWorldState worldState, Vector2 waypoint)
         {
-            // return false if you haven't arrived at the waypoint yet
-            // return true if you've arrived at the waypoint
+            // return false if you haven't arrived at the waypoint yet, return true if you've arrived at the waypoint?
 
             Vector2 currentLocation = new Vector2(worldState.MapX, worldState.MapY);
             float desiredDegrees = Pathfinding.GetDirectionInDegrees(currentLocation, waypoint);
-            float degreesDifference = (worldState.FacingDegrees - desiredDegrees) % 180f;
+            float degreesDifference = Pathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
 
-            float incorrectDirectionDegreesTolerance = 5f;
+            float incorrectDirectionDegreesTolerance = 20f;
+            float waypointDistanceTolerance = 0.07f;
+
+            Console.WriteLine($"Heading towards waypoint {waypoint}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
+
+            if (Math.Abs(waypoint.X - worldState.MapX) <= waypointDistanceTolerance && Math.Abs(waypoint.Y - worldState.MapY) <= waypointDistanceTolerance)
+            {
+                Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
+                await EndWalkForwardTask();
+                return true;
+            }
 
             if (Math.Abs(degreesDifference) > incorrectDirectionDegreesTolerance)
             {
-                return await MoveToHeadingTask(desiredDegrees);
+                Console.WriteLine($"degreesDifference too large, rotating to heading");
+                await EndWalkForwardTask();
+                await MoveToHeadingTask(desiredDegrees);
+                return false;
             }
             else
             {
-                Console.WriteLine($"Moving to be implemented");
-                return true;
+                // if we're already walking, ignore this
+                Console.WriteLine($"Start walking forward");
+                await StartWalkForwardTask();
+                return false;
             }
         }
 
@@ -160,12 +193,12 @@ namespace WoWHelper.Code
             WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
 
             int minSpeed = 3;
-            int maxSpeed = 100;
+            int maxSpeed = 10;
 
             if (minSpeed <= 0) throw new ArgumentOutOfRangeException(nameof(minSpeed));
             if (maxSpeed < minSpeed) throw new ArgumentOutOfRangeException(nameof(maxSpeed));
 
-            const float degreeTolerance = 5f;
+            const float degreeTolerance = 20f;
             // Angle at which you’re already at max speed; tweak if desired
             const float maxSpeedAngle = 180f;
 
@@ -178,6 +211,8 @@ namespace WoWHelper.Code
                     float currentDegrees = worldState.FacingDegrees;
                     float degreesToMove = Pathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
                     float absDegreesToMove = Math.Abs(degreesToMove);
+
+                    Console.WriteLine($"Desired Degrees: {desiredDegrees} Facing Degrees: {worldState.FacingDegrees} Degrees to Move: {degreesToMove}");
 
                     // Exit condition
                     if (absDegreesToMove <= degreeTolerance)
@@ -206,6 +241,7 @@ namespace WoWHelper.Code
                     int verticalDirection = 0;
 
                     Mouse.MoveRelative(speed * direction, verticalDirection);
+                    //await Task.Delay(200);
 
                     worldState = WoWWorldState.GetWoWWorldState();
 

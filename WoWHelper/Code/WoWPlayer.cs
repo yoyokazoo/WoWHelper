@@ -1,4 +1,5 @@
-﻿using System;
+﻿using InputManager;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -14,8 +15,8 @@ namespace WoWHelper
 {
     public class WoWPlayer
     {
-        private static long FARMING_LIMIT_TIME_MILLIS = (long)(8.5 * 60 * 60 * 1000);
-        private long lastFarmingLimitTime = 0;
+        private static long TIME_BETWEEN_TAB_MILLIS = (long)(2 * 1000); // 2 seconds
+        private long lastTabTime = 0;
 
         // TODO: Switch to a system where we use cancellation tokens to exit normal operation and go into "oh shit I got aggroed by something?"
         //private CancellationTokenSource CancellationTokenSource {  get; set; }
@@ -27,16 +28,35 @@ namespace WoWHelper
 
         public int CurrentWaypointIndex { get; private set; }
         public List<Vector2> Waypoints = new List<Vector2> {
+            /*
+             * Boars level 1
             new Vector2(44.21f, 63.86f),
             new Vector2(44.41f, 59.83f),
             new Vector2(45.78f, 60.20f),
             new Vector2(45.27f, 62.75f)
+            */
+            /*
+             * Imps Level 5
+            new Vector2(43.66f, 56.64f),
+            new Vector2(46.79f, 57.88f),
+            new Vector2(44.52f, 59.48f)
+            */
+            // Boars level 7
+            new Vector2(52.01f, 54.60f),
+            new Vector2(52.61f, 57.03f),
+            new Vector2(53.12f, 62.92f),
+            new Vector2(51.78f, 66.50f),
+            new Vector2(54.44f, 66.99f),
+            new Vector2(54.48f, 62.45f),
+            new Vector2(54.00f, 58.09f),
+            new Vector2(53.34f, 53.85f)
         };
 
         public enum PlayerState
         {
             WAITING_TO_FOCUS,
             FOCUSED_ON_WINDOW,
+            WAIT_UNTIL_BATTLE_READY,
             CHECK_FOR_VALID_TARGET,
             TRY_TO_CHARGE_TARGET,
             IN_CORE_COMBAT_LOOP,
@@ -59,8 +79,8 @@ namespace WoWHelper
         {
             WorldState = new WoWWorldState();
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
-            CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT; // first WP auto picked at index 0
-            CurrentWaypointIndex = 0;
+            CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
+            CurrentWaypointIndex = -1;
         }
 
         public void UpdateFromBitmap(Bitmap bmp)
@@ -68,7 +88,7 @@ namespace WoWHelper
             WorldState.UpdateFromBitmap(bmp);
         }
 
-        async Task<PlayerState> ChangeStateBasedOnTaskResult(Task<bool> task, PlayerState successState, PlayerState failureState)
+        async Task<TState> ChangeStateBasedOnTaskResult<TState>(Task<bool> task, TState successState, TState failureState) where TState : Enum
         {
             bool taskResult = await task;
             return taskResult ? successState : failureState;
@@ -86,24 +106,22 @@ namespace WoWHelper
 
         public void KickOffCoreLoop()
         {
-            cancellationTokenSource = new CancellationTokenSource();
-            var token = cancellationTokenSource.Token;
-
             KeyPoller.EscPressed += () => {
                 Console.WriteLine("ESC detected!");
                 // set cancellation flag or perform cleanup
+                Environment.Exit(0);
             };
 
             KeyPoller.Start();
 
 
-            //_ = CoreGameplayLoopTask();
-            _ = CorePathfindingLoopTask();
+            _ = CoreGameplayLoopTask();
+            //_ = CorePathfindingLoopTask();
         }
 
         async Task<bool> CoreGameplayLoopTask()
         {
-            lastFarmingLimitTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            //lastFarmingLimitTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             Console.WriteLine("Kicking off core gameplay loop");
             PlayerState currentPlayerState = PlayerState.WAITING_TO_FOCUS;
@@ -122,11 +140,15 @@ namespace WoWHelper
                         Console.WriteLine("Focused on window");
                         currentPlayerState = PlayerState.CHECK_FOR_VALID_TARGET;
                         break;
+                    case PlayerState.WAIT_UNTIL_BATTLE_READY:
+                        Console.WriteLine("Waiting until battle ready");
+                        currentPlayerState = PlayerState.CHECK_FOR_VALID_TARGET;
+                        break;
                     case PlayerState.CHECK_FOR_VALID_TARGET:
                         Console.WriteLine("Checking for valid target");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(WoWTasks.CheckForValidTargetTask(),
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(CorePathfindingLoopTask(),
                             PlayerState.TRY_TO_CHARGE_TARGET,
-                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                            PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
                     case PlayerState.TRY_TO_CHARGE_TARGET:
                         Console.WriteLine("Trying to charge target");
@@ -141,8 +163,18 @@ namespace WoWHelper
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.TARGET_DEFEATED:
-                        Console.WriteLine("Target defeated");
-                        currentPlayerState = PlayerState.EXITING_CORE_GAMEPLAY_LOOP;
+                        Console.WriteLine("Target defeated, trying to loot");
+
+                        // loot
+                        Mouse.Move(1720, 720);
+                        Mouse.PressButton(Mouse.MouseKeys.Right);
+                        await Task.Delay(1000);
+
+                        // skin
+                        Mouse.PressButton(Mouse.MouseKeys.Right);
+                        await Task.Delay(2500);
+
+                        currentPlayerState = PlayerState.WAIT_UNTIL_BATTLE_READY;
                         break;
                 }
             }
@@ -157,12 +189,30 @@ namespace WoWHelper
             Console.WriteLine("Kicking off core combat loop");
             WoWWorldState worldState;
 
+            // combat wiggle in case camera is pointed wrong direction
+            Keyboard.KeyDown(Keys.S);
+            await Task.Delay(400);
+            Keyboard.KeyUp(Keys.S);
+
+            Keyboard.KeyDown(Keys.W);
+            await Task.Delay(20);
+            Keyboard.KeyUp(Keys.W);
+
+            // always kick things off with heroic strike macro to /startattack
+            Keyboard.KeyPress(WoWTasks.HEROIC_STRIKE_KEY);
+
             // true if mob killed, false if we need to do emergency stuff? or do emergency stuff in here?
             do
             {
                 await Task.Delay(250);
 
                 worldState = WoWWorldState.GetWoWWorldState();
+
+                if (!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= 15)
+                {
+                    Keyboard.KeyPress(WoWTasks.HEROIC_STRIKE_KEY);
+                }
+
             } while (worldState.IsInCombat);
 
             return true;
@@ -172,34 +222,67 @@ namespace WoWHelper
         {
             Console.WriteLine("Kicking off core pathfinding loop");
 
+            await WoWTasks.FocusOnWindowTask();
+
             // Count loops of the waypoints, if we haven't found a target in N loops, error out
             int maxLoops = 1000;
             int loops = 0;
             while (loops < maxLoops)
             {
+                if (!CurrentTimeInsideDuration(lastTabTime, TIME_BETWEEN_TAB_MILLIS))
+                {
+                    Keyboard.KeyPress(Keys.Tab);
+                    lastTabTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                }
+
                 // always wait a bit for the UI to update, then grab it?
-                //await Task.Delay(250);
-                //WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+                await Task.Delay(250);
+                WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+
+                if (worldState.CanChargeTarget || worldState.IsInCombat)
+                {
+                    await WoWTasks.EndWalkForwardTask();
+                    // return true if we can charge, false if we're already in combat
+                    return !worldState.IsInCombat;
+                }
 
                 loops++;
                 switch (CurrentPathfindingState)
                 {
                     case PathfindingState.PICKING_NEXT_WAYPOINT:
-                        Console.WriteLine($"Picking next waypoint.  Current Waypoint = {Waypoints[CurrentWaypointIndex]}");
-                        CurrentWaypointIndex += 1;
-                        CurrentWaypointIndex %= Waypoints.Count;
+                        Console.WriteLine($"Picking next waypoint");
+                        if (CurrentWaypointIndex == -1)
+                        {
+                            // we've never picked a waypoint yet, so find the closest one
+                            Vector2 playerLocation = new Vector2(worldState.MapX, worldState.MapY);
+                            CurrentWaypointIndex = Waypoints
+                                .Select((p, i) => (dist: Vector2.Distance(playerLocation, p), index: i))
+                                .OrderBy(t => t.dist)
+                                .First()
+                                .index;
+                        }
+                        else
+                        {
+                            // otherwise cycle through them
+                            CurrentWaypointIndex += 1;
+                            CurrentWaypointIndex %= Waypoints.Count;
+                        }
+                            
                         CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
                         break;
                     case PathfindingState.MOVING_TOWARDS_WAYPOINT:
-                        WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+                        //WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
                         await WoWTasks.MoveTowardsWaypointTask(worldState, Waypoints[CurrentWaypointIndex]);
+
+                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(WoWTasks.MoveTowardsWaypointTask(worldState, Waypoints[CurrentWaypointIndex]),
+                            PathfindingState.PICKING_NEXT_WAYPOINT,
+                            PathfindingState.MOVING_TOWARDS_WAYPOINT);
                         break;
                 }
             }
 
-            Console.WriteLine("Exited Core Gameplay");
-            //await EQTask.CampTask();
-            return true;
+            Console.WriteLine("Exited Pathfinding loop.  Too many loops without a successful target find.");
+            return false;
         }
     }
 }
