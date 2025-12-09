@@ -31,7 +31,35 @@ namespace WoWHelper.Code
 
         #region Combat Tasks
 
+        public static async Task<bool> TryToChargeTask()
+        {
+            WoWWorldState worldState;
 
+            // break this apart a bit?  Smaller discrete charge task and then all the "rotation, wait for charge to land" cruft around it
+            int loopNum = 0;
+            do
+            {
+                if (loopNum > 0)
+                {
+                    Keyboard.KeyDown(WoWInput.TURN_LEFT);
+                    await Task.Delay(500);
+                    Keyboard.KeyUp(WoWInput.TURN_LEFT);
+                }
+
+                Keyboard.KeyPress(WoWInput.CHARGE_KEY);
+
+                await Task.Delay(250);
+
+                worldState = WoWWorldState.GetWoWWorldState();
+
+                loopNum++;
+            } while (!worldState.IsInCombat && worldState.CanChargeTarget);
+
+            // give some time for the charge to land
+            await Task.Delay(500);
+
+            return worldState.IsInCombat;
+        }
 
         #endregion
 
@@ -43,20 +71,19 @@ namespace WoWHelper.Code
         public static async Task<bool> MoveTowardsWaypointTask(WoWWorldState worldState, Vector2 waypoint)
         {
             float waypointDistance = Vector2.Distance(worldState.PlayerLocation, waypoint);
-            float desiredDegrees = Pathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint);
-            float degreesDifference = Pathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
-            
+            float desiredDegrees = WoWPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint);
+            float degreesDifference = WoWPathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
 
             //Console.WriteLine($"Heading towards waypoint {waypoint}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
-            if (waypointDistance <= Pathfinding.WAYPOINT_DISTANCE_TOLERANCE)
+            if (waypointDistance <= WoWPathfinding.WAYPOINT_DISTANCE_TOLERANCE)
             {
                 //Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
                 await EndWalkForwardTask();
                 return true;
             }
 
-            if (Math.Abs(degreesDifference) > Pathfinding.GetWaypointDegreesTolerance())
+            if (Math.Abs(degreesDifference) > WoWPathfinding.GetWaypointDegreesTolerance())
             {
                 //Console.WriteLine($"degreesDifference too large, rotating to heading");
                 await EndWalkForwardTask();
@@ -74,32 +101,21 @@ namespace WoWHelper.Code
 
         public static async Task<bool> RotateToDirectionTask(float desiredDegrees)
         {
-            WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
-
-            int minSpeed = 3;
-            int maxSpeed = 10;
-
-            if (minSpeed <= 0) throw new ArgumentOutOfRangeException(nameof(minSpeed));
-            if (maxSpeed < minSpeed) throw new ArgumentOutOfRangeException(nameof(maxSpeed));
-
-            const float degreeTolerance = 20f;
-            // Angle at which you’re already at max speed; tweak if desired
-            const float maxSpeedAngle = 180f;
-
             bool mouseDown = false;
 
             try
             {
                 while (true)
                 {
+                    WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+
                     float currentDegrees = worldState.FacingDegrees;
-                    float degreesToMove = Pathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
+                    float degreesToMove = WoWPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
                     float absDegreesToMove = Math.Abs(degreesToMove);
 
                     Console.WriteLine($"Desired Degrees: {desiredDegrees} Facing Degrees: {worldState.FacingDegrees} Degrees to Move: {degreesToMove}");
 
-                    // Exit condition
-                    if (absDegreesToMove <= degreeTolerance)
+                    if (absDegreesToMove <= WoWPathfinding.GetWaypointDegreesTolerance())
                         break;
 
                     if (mouseDown == false)
@@ -110,26 +126,15 @@ namespace WoWHelper.Code
                     }
 
                     // Map angle difference -> [0,1] where 0 = on target, 1 = far away (>= maxSpeedAngle)
-                    float t = absDegreesToMove / maxSpeedAngle;
-                    if (t > 1f) t = 1f;
-                    if (t < 0f) t = 0f;
+                    float t = absDegreesToMove / WoWPathfinding.MAX_SPEED_ANGLE;
 
                     // Interpolate between minSpeed and maxSpeed
-                    int speed = (int)Math.Round(minSpeed + (maxSpeed - minSpeed) * t);
-
-                    // Ensure at least minSpeed in case of rounding
-                    if (speed < minSpeed) speed = minSpeed;
-                    if (speed > maxSpeed) speed = maxSpeed;
+                    int speed = (int)Math.Round(WoWPathfinding.MIN_ROTATION_SPEED + (WoWPathfinding.MAX_ROTATION_SPEED - WoWPathfinding.MIN_ROTATION_SPEED) * t);
 
                     int direction = degreesToMove <= 0 ? 1 : -1;
                     int verticalDirection = 0;
 
                     Mouse.MoveRelative(speed * direction, verticalDirection);
-                    //await Task.Delay(200);
-
-                    worldState = WoWWorldState.GetWoWWorldState();
-
-                    //await Task.Delay(110);
                 }
             }
             finally
@@ -159,57 +164,5 @@ namespace WoWHelper.Code
         }
 
         #endregion
-
-        public static async Task<bool> CheckForValidTargetTask()
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                Keyboard.KeyPress(Keys.Tab);
-
-                await Task.Delay(250);
-
-                WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
-
-                if(worldState.CanChargeTarget)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public static async Task<bool> TryToChargeTask()
-        {
-            WoWWorldState worldState;
-
-            int loopNum = 0;
-            do
-            {
-                if (loopNum > 0)
-                {
-                    Keyboard.KeyDown(Keys.A);
-                    await Task.Delay(250);
-                    Keyboard.KeyUp(Keys.A);
-                }
-
-                Keyboard.KeyPress(WoWInput.CHARGE_KEY);
-
-                await Task.Delay(250);
-
-                worldState = WoWWorldState.GetWoWWorldState();
-
-                loopNum++;
-            } while (!worldState.IsInCombat && worldState.CanChargeTarget);
-
-            // give some time for the charge to land
-            await Task.Delay(500);
-
-            return worldState.IsInCombat;
-        }
-
-        
-
-        
     }
 }

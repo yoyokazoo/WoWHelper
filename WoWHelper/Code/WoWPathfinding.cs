@@ -7,10 +7,14 @@ using System.Threading.Tasks;
 
 namespace WoWHelper.Code
 {
-    public static class Pathfinding
+    public static class WoWPathfinding
     {
         public const float WAYPOINT_DEGREES_TOLERANCE = 20f;
         public const float WAYPOINT_DISTANCE_TOLERANCE = 0.1f;
+
+        public const int MIN_ROTATION_SPEED = 3;
+        public const int MAX_ROTATION_SPEED = 10;
+        public const float MAX_SPEED_ANGLE = 180f;
 
         public static float GetDesiredDirectionInDegrees(Vector2 waypoint1, Vector2 waypoint2)
         {
