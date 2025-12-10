@@ -31,6 +31,32 @@ namespace WoWHelper.Code
 
         #region Combat Tasks
 
+        public static async Task<bool> RecoverAfterFightTask()
+        {
+            WoWWorldState worldState;
+            bool startedEatingFood = false;
+
+            do
+            {
+                worldState = WoWWorldState.GetWoWWorldState();
+
+                if (worldState.PlayerHpPercent < 85)
+                {
+                    Keyboard.KeyPress(WoWInput.EAT_FOOD_KEY);
+                    startedEatingFood = true;
+
+                }
+                await Task.Delay(200);
+            } while (worldState.PlayerHpPercent < 100 && !worldState.IsInCombat); // and charge is cooling down
+
+            if (!worldState.IsInCombat)
+            {
+                await ScootForwardsTask();
+            }
+
+            return !worldState.IsInCombat;
+        }
+
         public static async Task<bool> TryToChargeTask()
         {
             WoWWorldState worldState;
@@ -72,32 +98,32 @@ namespace WoWHelper.Code
             float desiredDegrees = WoWPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint);
             float degreesDifference = WoWPathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
 
-            //Console.WriteLine($"Heading towards waypoint {waypoint}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
+            Console.WriteLine($"Heading towards waypoint {waypoint}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
             if (waypointDistance <= WoWPathfinding.WAYPOINT_DISTANCE_TOLERANCE)
             {
-                //Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
+                Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
                 await EndWalkForwardTask();
                 return true;
             }
 
-            if (Math.Abs(degreesDifference) > WoWPathfinding.GetWaypointDegreesTolerance())
+            if (Math.Abs(degreesDifference) > WoWPathfinding.GetWaypointDegreesTolerance(waypointDistance))
             {
-                //Console.WriteLine($"degreesDifference too large, rotating to heading");
-                await EndWalkForwardTask();
-                await RotateToDirectionTask(desiredDegrees);
+                Console.WriteLine($"degreesDifference too large, rotating to heading");
+                //await EndWalkForwardTask();
+                await RotateToDirectionTask(desiredDegrees, waypointDistance);
                 return false;
             }
             else
             {
                 // if we're already walking, ignore this
-                //Console.WriteLine($"Start walking forward");
+                Console.WriteLine($"Start walking forward");
                 await StartWalkForwardTask();
                 return false;
             }
         }
 
-        public static async Task<bool> RotateToDirectionTask(float desiredDegrees)
+        public static async Task<bool> RotateToDirectionTask(float desiredDegrees, float distance)
         {
             bool mouseDown = false;
 
@@ -113,7 +139,7 @@ namespace WoWHelper.Code
 
                     Console.WriteLine($"Desired Degrees: {desiredDegrees} Facing Degrees: {worldState.FacingDegrees} Degrees to Move: {degreesToMove}");
 
-                    if (absDegreesToMove <= WoWPathfinding.GetWaypointDegreesTolerance())
+                    if (absDegreesToMove <= WoWPathfinding.GetWaypointDegreesTolerance(distance))
                         break;
 
                     if (mouseDown == false)
@@ -161,9 +187,17 @@ namespace WoWHelper.Code
             return true;
         }
 
+        public static async Task<bool> ScootForwardsTask()
+        {
+            Keyboard.KeyDown(WoWInput.MOVE_FORWARD);
+            await Task.Delay(100);
+            Keyboard.KeyUp(WoWInput.MOVE_FORWARD);
+            return true;
+        }
+
         public static async Task<bool> ScootBackwardsTask()
         {
-            Keyboard.KeyUp(WoWInput.MOVE_BACK);
+            Keyboard.KeyDown(WoWInput.MOVE_BACK);
             await Task.Delay(1000);
             Keyboard.KeyUp(WoWInput.MOVE_BACK);
             return true;

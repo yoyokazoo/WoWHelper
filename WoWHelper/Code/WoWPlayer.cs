@@ -139,11 +139,13 @@ namespace WoWHelper
                         break;
                     case PlayerState.FOCUSED_ON_WINDOW:
                         Console.WriteLine("Focused on window");
-                        currentPlayerState = PlayerState.CHECK_FOR_VALID_TARGET;
+                        currentPlayerState = PlayerState.WAIT_UNTIL_BATTLE_READY;
                         break;
                     case PlayerState.WAIT_UNTIL_BATTLE_READY:
                         Console.WriteLine("Waiting until battle ready");
-                        currentPlayerState = PlayerState.CHECK_FOR_VALID_TARGET;
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(WoWTasks.RecoverAfterFightTask(),
+                            PlayerState.CHECK_FOR_VALID_TARGET,
+                            PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
                     case PlayerState.CHECK_FOR_VALID_TARGET:
                         Console.WriteLine("Checking for valid target");
@@ -155,7 +157,7 @@ namespace WoWHelper
                         Console.WriteLine("Trying to charge target");
                         currentPlayerState = await ChangeStateBasedOnTaskResult(WoWTasks.TryToChargeTask(),
                             PlayerState.IN_CORE_COMBAT_LOOP,
-                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                            PlayerState.CHECK_FOR_VALID_TARGET);
                         break;
                     case PlayerState.IN_CORE_COMBAT_LOOP:
                         Console.WriteLine("In core combat loop");
@@ -212,7 +214,7 @@ namespace WoWHelper
                 previousWorldState = worldState;
                 worldState = WoWWorldState.GetWoWWorldState();
 
-                if (previousWorldState?.AttackerCount > worldState.AttackerCount)
+                if (previousWorldState?.AttackerCount > worldState.AttackerCount && worldState.AttackerCount > 0)
                 {
                     // one of the mobs just died, scoot back to make sure the next mob is in front of you, and heroic strike to startattack
                     await WoWTasks.ScootBackwardsTask();
@@ -230,13 +232,11 @@ namespace WoWHelper
                 }
 
                 // turning off temporarily to see how the scooting strat works
-                /*
                 if (worldState.FacingWrongWay)
                 {
                     // let's try this first, rather than scooting back
-                    await WoWTasks.TurnABitToTheLeftTask();
+                    await WoWTasks.ScootBackwardsTask();
                 }
-                */
 
             } while (worldState.IsInCombat);
 
@@ -250,14 +250,23 @@ namespace WoWHelper
             await WoWTasks.FocusOnWindowTask();
 
             // Count loops of the waypoints, if we haven't found a target in N loops, error out
-            int maxLoops = 1000;
-            int loops = 0;
-            while (loops < maxLoops)
+            int maxTargetChecks = 1000;
+            int targetChecks = 0;
+            while (targetChecks < maxTargetChecks)
             {
                 if (!CurrentTimeInsideDuration(lastFindTargetTime, TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
-                    Keyboard.KeyPress(WoWInput.FIND_TARGET);
+                    //if (targetChecks % 2 == 0)
+                    //{
+                    //    Keyboard.KeyPress(WoWInput.FIND_TARGET_MACRO);
+                    //}
+                    //else
+                    //{
+                        Keyboard.KeyPress(WoWInput.TAB_TARGET);
+                    //}
+                    
                     lastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    targetChecks++;
                 }
 
                 // always wait a bit for the UI to update, then grab it?
@@ -271,7 +280,6 @@ namespace WoWHelper
                     return !worldState.IsInCombat;
                 }
 
-                loops++;
                 switch (CurrentPathfindingState)
                 {
                     case PathfindingState.PICKING_NEXT_WAYPOINT:
