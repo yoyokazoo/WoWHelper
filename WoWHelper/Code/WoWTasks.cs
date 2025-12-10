@@ -161,6 +161,14 @@ namespace WoWHelper.Code
             return true;
         }
 
+        public static async Task<bool> ScootBackwardsTask()
+        {
+            Keyboard.KeyUp(WoWInput.MOVE_BACK);
+            await Task.Delay(1000);
+            Keyboard.KeyUp(WoWInput.MOVE_BACK);
+            return true;
+        }
+
         public static async Task<bool> TurnABitToTheLeftTask()
         {
             Keyboard.KeyDown(WoWInput.TURN_LEFT);

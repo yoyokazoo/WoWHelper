@@ -36,6 +36,7 @@ namespace WoWHelper
         public static readonly Point MAP_X_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 3));
         public static readonly Point MAP_Y_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 4));
         public static readonly Point FACING_DEGREES_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 5));
+        public static readonly Point ATTACKER_COUNT_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 6));
 
         public static readonly Point IS_IN_RANGE_POSITION = new Point(BOOL_LEFT_COORD, BOOL_TOP_COORD + (BOOL_SECTION_HEIGHT * 0));
         public static readonly Point IS_IN_COMBAT_POSITION = new Point(BOOL_LEFT_COORD, BOOL_TOP_COORD + (BOOL_SECTION_HEIGHT * 1));

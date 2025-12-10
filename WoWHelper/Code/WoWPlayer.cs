@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
+using WoWHelper.Code.WorldState;
 
 namespace WoWHelper
 {
@@ -211,18 +212,31 @@ namespace WoWHelper
                 previousWorldState = worldState;
                 worldState = WoWWorldState.GetWoWWorldState();
 
-                //if (previousWorldState?)
+                if (previousWorldState?.AttackerCount > worldState.AttackerCount)
+                {
+                    // one of the mobs just died, scoot back to make sure the next mob is in front of you, and heroic strike to startattack
+                    await WoWTasks.ScootBackwardsTask();
+                    Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
+                }
 
-                if (!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= 15)
+                if (worldState.PlayerHpPercent <= WoWGameplayConstants.HEALING_POTION_HP_THRESHOLD)
+                {
+                    Keyboard.KeyPress(WoWInput.HEALING_POTION_KEY);
+                }
+
+                if (!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WoWGameplayConstants.HEROIC_STRIKE_RAGE_COST)
                 {
                     Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
                 }
 
+                // turning off temporarily to see how the scooting strat works
+                /*
                 if (worldState.FacingWrongWay)
                 {
                     // let's try this first, rather than scooting back
                     await WoWTasks.TurnABitToTheLeftTask();
                 }
+                */
 
             } while (worldState.IsInCombat);
 

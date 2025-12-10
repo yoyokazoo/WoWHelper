@@ -18,6 +18,7 @@ namespace WoWHelper
         public float MapY { get; private set; }
         public Vector2 PlayerLocation { get; private set; }
         public float FacingDegrees { get; private set; }
+        public int AttackerCount { get; private set; }
 
         public bool IsInRange { get; private set; }
         public bool IsInCombat { get; private set; }
@@ -36,6 +37,7 @@ namespace WoWHelper
             MapY = -1;
             PlayerLocation = Vector2.Zero;
             FacingDegrees = -1;
+            AttackerCount = -1;
 
             IsInRange = false;
             IsInCombat = false;
@@ -69,6 +71,7 @@ namespace WoWHelper
             UpdateMapY(bmp);
             PlayerLocation = new Vector2(MapX, MapY);
             UpdateFacingDegrees(bmp);
+            UpdateAttackerCount(bmp);
 
             UpdateIsInRange(bmp);
             UpdateIsInCombat(bmp);
@@ -131,6 +134,12 @@ namespace WoWHelper
         {
             Color color = bmp.GetPixel(WoWWorldStateImageConstants.FACING_DEGREES_POSITION.X, WoWWorldStateImageConstants.FACING_DEGREES_POSITION.Y);
             FacingDegrees = GetFloatFromColor(color);
+        }
+
+        public void UpdateAttackerCount(Bitmap bmp)
+        {
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.ATTACKER_COUNT_POSITION.X, WoWWorldStateImageConstants.ATTACKER_COUNT_POSITION.Y);
+            AttackerCount = GetIntFromColor(color);
         }
 
         public void UpdateIsInRange(Bitmap bmp)

@@ -130,6 +130,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Code\WorldState\WoWGameplayConstants.cs" />
     <Compile Include="Code\WoWPathfinding.cs" />
     <Compile Include="Code\Shared\KeyPoller.cs" />
     <Compile Include="Code\WorldState\WoWWorldStateImageConstants.cs" />

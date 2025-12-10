@@ -38,5 +38,17 @@ namespace WoWHelperUnitTests
 
             Assert.AreEqual(expected, Player.WorldState.FacingWrongWay);
         }
+
+        [TestMethod]
+        [DataRow(0, "..\\..\\Source Images\\numbersAsColors3.bmp")]
+        [DataRow(1, "..\\..\\Source Images\\FacingWrongWay.bmp")]
+        public void VerifyAttackerCount(int expected, string fileName)
+        {
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+
+            Player.UpdateFromBitmap(new Bitmap(filePath));
+
+            Assert.AreEqual(expected, Player.WorldState.AttackerCount);
+        }
     }
 }
