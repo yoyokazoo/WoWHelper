@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Numerics;
 using WindowsGameAutomationTools.ImageDetection;
 
@@ -6,6 +7,9 @@ namespace WoWHelper
 {
     public static class WoWWorldStateImageConstants
     {
+        public const int WIDTH_OF_SCREEN_TO_SLICE = 1650;
+        public const int HEIGHT_OF_SCREEN_TO_SLICE = 800;
+
         // Center of color box in text column
         public const int TEXT_LEFT_COORD = 75;
         public const int TEXT_TOP_COORD = 200;
@@ -15,6 +19,16 @@ namespace WoWHelper
         public const int BOOL_LEFT_COORD = TEXT_LEFT_COORD + TEXT_BOX_WIDTH;
         public const int BOOL_TOP_COORD = TEXT_TOP_COORD;
         public const int BOOL_SECTION_HEIGHT = TEXT_BOX_HEIGHT;
+
+        public static readonly Color FACING_WRONG_WAY_COLOR = Color.FromArgb(255, 25, 25);
+
+        public static readonly ImageMatchColorPositions FACING_WRONG_WAY_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {
+            new ColorPosition(1529, 217, FACING_WRONG_WAY_COLOR),
+            new ColorPosition(1606, 219, FACING_WRONG_WAY_COLOR),
+            new ColorPosition(1647, 218, FACING_WRONG_WAY_COLOR),
+        });
+
+        //public static readonly ImageMatchMultiOffsetMultiColorPositions asdf = new ImageMatchMultiOffsetMultiColorPositions()
 
         public static readonly Point PLAYER_HP_PERCENT_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 0));
         public static readonly Point RESOURCE_PERCENT_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 1));

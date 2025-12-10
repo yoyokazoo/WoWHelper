@@ -218,6 +218,12 @@ namespace WoWHelper
                     Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
                 }
 
+                if (worldState.FacingWrongWay)
+                {
+                    // let's try this first, rather than scooting back
+                    await WoWTasks.TurnABitToTheLeftTask();
+                }
+
             } while (worldState.IsInCombat);
 
             return true;

@@ -24,6 +24,8 @@ namespace WoWHelper
         public bool CanChargeTarget { get; private set; }
         public bool HeroicStrikeQueued { get; private set; }
 
+        public bool FacingWrongWay { get; private set; }
+
         public WoWWorldState()
         {
             Initialized = false;
@@ -40,6 +42,8 @@ namespace WoWHelper
             CanChargeTarget = false;
             HeroicStrikeQueued = false;
 
+            FacingWrongWay = false;
+
             //TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
         }
 
@@ -47,7 +51,7 @@ namespace WoWHelper
         {
             WoWWorldState currentState = new WoWWorldState();
 
-            Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 800));
+            Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, WoWWorldStateImageConstants.WIDTH_OF_SCREEN_TO_SLICE, WoWWorldStateImageConstants.HEIGHT_OF_SCREEN_TO_SLICE));
             currentState.UpdateFromBitmap(wowBitmap);
             wowBitmap.Dispose();
 
@@ -70,6 +74,8 @@ namespace WoWHelper
             UpdateIsInCombat(bmp);
             UpdateCanChargeTarget(bmp);
             UpdateHeroicStrikeQueued(bmp);
+
+            UpdateFacingWrongWay(bmp);
         }
 
         // Returns the R component of the color
@@ -149,6 +155,11 @@ namespace WoWHelper
         {
             Color color = bmp.GetPixel(WoWWorldStateImageConstants.HEROIC_STRIKE_QUEUED_POSITION.X, WoWWorldStateImageConstants.HEROIC_STRIKE_QUEUED_POSITION.Y);
             HeroicStrikeQueued = GetBoolFromColor(color);
+        }
+
+        public void UpdateFacingWrongWay(Bitmap bmp)
+        {
+            FacingWrongWay = WoWWorldStateImageConstants.FACING_WRONG_WAY_POSITIONS.MatchesSourceImage(bmp);
         }
     }
 }

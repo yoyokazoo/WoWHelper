@@ -41,9 +41,7 @@ namespace WoWHelper.Code
             {
                 if (loopNum > 0)
                 {
-                    Keyboard.KeyDown(WoWInput.TURN_LEFT);
-                    await Task.Delay(500);
-                    Keyboard.KeyUp(WoWInput.TURN_LEFT);
+                    await TurnABitToTheLeftTask();
                 }
 
                 Keyboard.KeyPress(WoWInput.CHARGE_KEY);
@@ -160,6 +158,15 @@ namespace WoWHelper.Code
         {
             await Task.Delay(0);
             Keyboard.KeyUp(WoWInput.MOVE_FORWARD);
+            return true;
+        }
+
+        public static async Task<bool> TurnABitToTheLeftTask()
+        {
+            Keyboard.KeyDown(WoWInput.TURN_LEFT);
+            await Task.Delay(500);
+            Keyboard.KeyUp(WoWInput.TURN_LEFT);
+
             return true;
         }
 

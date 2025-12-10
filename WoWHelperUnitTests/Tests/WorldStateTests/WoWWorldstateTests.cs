@@ -26,5 +26,17 @@ namespace WoWHelperUnitTests
             Assert.IsFalse(Player.WorldState.IsInCombat);
             Assert.IsTrue(Player.WorldState.CanChargeTarget);
         }
+
+        [TestMethod]
+        [DataRow(false, "..\\..\\Source Images\\numbersAsColors3.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\FacingWrongWay.bmp")]
+        public void VerifyFacingWrongWay(bool expected, string fileName)
+        {
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+
+            Player.UpdateFromBitmap(new Bitmap(filePath));
+
+            Assert.AreEqual(expected, Player.WorldState.FacingWrongWay);
+        }
     }
 }
