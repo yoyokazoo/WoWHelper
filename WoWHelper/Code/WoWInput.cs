@@ -13,6 +13,7 @@ namespace WoWHelper.Code
         public const Keys CHARGE_KEY = Keys.D2;
         public const Keys HEROIC_STRIKE_KEY = Keys.D3;
         public const Keys EAT_FOOD_KEY = Keys.D4;
+        public const Keys DYNAMITE_KEY = Keys.D5;
         public const Keys HEALING_POTION_KEY = Keys.D6;
 
         public const Keys TURN_LEFT = Keys.A;

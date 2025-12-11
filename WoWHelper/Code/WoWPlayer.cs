@@ -87,9 +87,11 @@ namespace WoWHelper
 
         public void KickOffCoreLoop()
         {
-            KeyPoller.EscPressed += () => {
+            KeyPoller.EscPressed += async () => {
                 Console.WriteLine("ESC detected!");
                 // set cancellation flag or perform cleanup
+                Keyboard.KeyPress(WoWInput.MOVE_BACK);
+                
                 Environment.Exit(0);
             };
 
@@ -172,6 +174,7 @@ namespace WoWHelper
             Console.WriteLine("Kicking off core combat loop");
             WoWWorldState previousWorldState = null;
             WoWWorldState worldState = null;
+            bool thrownDynamite = false;
 
             // combat wiggle in case camera is pointed wrong direction
             Keyboard.KeyDown(Keys.S);
@@ -193,6 +196,18 @@ namespace WoWHelper
 
                 previousWorldState = worldState;
                 worldState = WoWWorldState.GetWoWWorldState();
+
+                if (worldState.AttackerCount > 1 && !thrownDynamite)
+                {
+                    // 3440, 1440
+                    Mouse.Move(1770, 770);
+                    await Task.Delay(50);
+                    Keyboard.KeyPress(WoWInput.DYNAMITE_KEY);
+                    await Task.Delay(50);
+                    Mouse.PressButton(Mouse.MouseKeys.Left);
+                    await Task.Delay(1000);
+                    thrownDynamite = true;
+                }
 
                 if (previousWorldState?.AttackerCount > worldState.AttackerCount && worldState.AttackerCount > 0)
                 {

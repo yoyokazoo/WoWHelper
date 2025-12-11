@@ -40,8 +40,10 @@ namespace WoWHelper.Code
             {
                 worldState = WoWWorldState.GetWoWWorldState();
 
-                if (worldState.PlayerHpPercent < 85)
+                if (worldState.PlayerHpPercent < 85 && !startedEatingFood)
                 {
+                    //Console.WriteLine($"PlayerHpPercent = {worldState.PlayerHpPercent} ({startedEatingFood}), eating.");
+                    //if (worldState.PlayerHpPercent == 0) ScreenCapture.SaveTestDesktopScreenshot("hp percent zero.bmp");
                     Keyboard.KeyPress(WoWInput.EAT_FOOD_KEY);
                     startedEatingFood = true;
 
