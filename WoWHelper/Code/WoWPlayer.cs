@@ -209,7 +209,9 @@ namespace WoWHelper
                     thrownDynamite = true;
                 }
 
-                if (previousWorldState?.AttackerCount > worldState.AttackerCount && worldState.AttackerCount > 0)
+                bool attackerJustDied = previousWorldState?.AttackerCount > worldState.AttackerCount && worldState.AttackerCount > 0;
+                bool inCombatButNotAutoAttacking = worldState.IsInCombat && !worldState.IsAutoAttacking;
+                if (attackerJustDied || inCombatButNotAutoAttacking)
                 {
                     // one of the mobs just died, scoot back to make sure the next mob is in front of you, and heroic strike to startattack
                     await WoWTasks.ScootBackwardsTask();
@@ -219,6 +221,11 @@ namespace WoWHelper
                 if (worldState.PlayerHpPercent <= WoWGameplayConstants.HEALING_POTION_HP_THRESHOLD)
                 {
                     Keyboard.KeyPress(WoWInput.HEALING_POTION_KEY);
+                }
+
+                if (!worldState.BattleShoutActive && worldState.ResourcePercent >= WoWGameplayConstants.BATTLE_SHOUT_RAGE_COST)
+                {
+                    Keyboard.KeyPress(WoWInput.BATTLE_SHOUT_KEY);
                 }
 
                 if (!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WoWGameplayConstants.HEROIC_STRIKE_RAGE_COST)

@@ -42,5 +42,6 @@ namespace WoWHelper
         public static readonly Point IS_IN_COMBAT_POSITION = new Point(BOOL_LEFT_COORD, BOOL_TOP_COORD + (BOOL_SECTION_HEIGHT * 1));
         public static readonly Point CAN_CHARGE_TARGET_POSITION = new Point(BOOL_LEFT_COORD, BOOL_TOP_COORD + (BOOL_SECTION_HEIGHT * 2));
         public static readonly Point HEROIC_STRIKE_QUEUED_POSITION = new Point(BOOL_LEFT_COORD, BOOL_TOP_COORD + (BOOL_SECTION_HEIGHT * 3));
+        public static readonly Point MULTI_BOOL_ONE_POSITION = new Point(BOOL_LEFT_COORD, BOOL_TOP_COORD + (BOOL_SECTION_HEIGHT * 4));
     }
 }

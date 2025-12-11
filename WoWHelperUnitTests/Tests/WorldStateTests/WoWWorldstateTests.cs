@@ -50,5 +50,18 @@ namespace WoWHelperUnitTests
 
             Assert.AreEqual(expected, Player.WorldState.AttackerCount);
         }
+
+        [TestMethod]
+        [DataRow(false, false, "..\\..\\Source Images\\NoBattleshout.bmp")]
+        [DataRow(true, true, "..\\..\\Source Images\\BattleShout.bmp")]
+        public void VerifyMultiBoolEncoding(bool expectedBoolOne, bool expectedBoolTwo, string fileName)
+        {
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+
+            Player.UpdateFromBitmap(new Bitmap(filePath));
+
+            Assert.AreEqual(expectedBoolOne, Player.WorldState.IsAutoAttacking);
+            Assert.AreEqual(expectedBoolTwo, Player.WorldState.BattleShoutActive);
+        }
     }
 }

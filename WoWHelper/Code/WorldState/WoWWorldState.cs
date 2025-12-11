@@ -25,6 +25,9 @@ namespace WoWHelper
         public bool CanChargeTarget { get; private set; }
         public bool HeroicStrikeQueued { get; private set; }
 
+        public bool IsAutoAttacking { get; private set; }
+        public bool BattleShoutActive { get; private set; }
+
         public bool FacingWrongWay { get; private set; }
 
         public WoWWorldState()
@@ -77,6 +80,7 @@ namespace WoWHelper
             UpdateIsInCombat(bmp);
             UpdateCanChargeTarget(bmp);
             UpdateHeroicStrikeQueued(bmp);
+            UpdateMultiBoolOne(bmp);
 
             UpdateFacingWrongWay(bmp);
         }
@@ -98,6 +102,21 @@ namespace WoWHelper
         public static bool GetBoolFromColor(Color color)
         {
             return color.R == 0 && color.G == 255 && color.B == 0;
+        }
+
+        public static void DecodeByte(
+            byte value,
+            out bool b1, out bool b2, out bool b3, out bool b4,
+            out bool b5, out bool b6, out bool b7, out bool b8)
+        {
+            b1 = (value & 1) != 0;
+            b2 = (value & 2) != 0;
+            b3 = (value & 4) != 0;
+            b4 = (value & 8) != 0;
+            b5 = (value & 16) != 0;
+            b6 = (value & 32) != 0;
+            b7 = (value & 64) != 0;
+            b8 = (value & 128) != 0;
         }
 
         public void UpdatePlayerHpPercent(Bitmap bmp)
@@ -164,6 +183,15 @@ namespace WoWHelper
         {
             Color color = bmp.GetPixel(WoWWorldStateImageConstants.HEROIC_STRIKE_QUEUED_POSITION.X, WoWWorldStateImageConstants.HEROIC_STRIKE_QUEUED_POSITION.Y);
             HeroicStrikeQueued = GetBoolFromColor(color);
+        }
+
+        public void UpdateMultiBoolOne(Bitmap bmp)
+        {
+            Color color = bmp.GetPixel(WoWWorldStateImageConstants.MULTI_BOOL_ONE_POSITION.X, WoWWorldStateImageConstants.MULTI_BOOL_ONE_POSITION.Y);
+            DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
+
+            IsAutoAttacking = r1;
+            BattleShoutActive = r2;
         }
 
         public void UpdateFacingWrongWay(Bitmap bmp)

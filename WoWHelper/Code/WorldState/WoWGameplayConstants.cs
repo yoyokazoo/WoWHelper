@@ -9,6 +9,7 @@ namespace WoWHelper.Code.WorldState
     public class WoWGameplayConstants
     {
         public const int HEROIC_STRIKE_RAGE_COST = 15;
+        public const int BATTLE_SHOUT_RAGE_COST = 10;
 
         public const int HEALING_POTION_HP_THRESHOLD = 60;
     }
