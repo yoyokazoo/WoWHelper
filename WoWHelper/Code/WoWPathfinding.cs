@@ -94,7 +94,7 @@ namespace WoWHelper.Code
             float lerpedDegrees = Lerp(normalizedDistance, WAYPOINT_DEGREE_TOLERANCE_MIN_DEGREES, WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES);
             float inverseDegrees = WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES - lerpedDegrees;
 
-            Console.WriteLine($"GetWaypointDegreesTolerance for distance {distance} = {inverseDegrees}");
+            //Console.WriteLine($"GetWaypointDegreesTolerance for distance {distance} = {inverseDegrees}");
 
             return inverseDegrees;
         }

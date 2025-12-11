@@ -28,30 +28,8 @@ namespace WoWHelper
         public PathfindingState CurrentPathfindingState { get; private set; }
 
         public int CurrentWaypointIndex { get; private set; }
-        public List<Vector2> Waypoints = new List<Vector2> {
-            /*
-             * Boars level 1
-            new Vector2(44.21f, 63.86f),
-            new Vector2(44.41f, 59.83f),
-            new Vector2(45.78f, 60.20f),
-            new Vector2(45.27f, 62.75f)
-            */
-            /*
-             * Imps Level 5
-            new Vector2(43.66f, 56.64f),
-            new Vector2(46.79f, 57.88f),
-            new Vector2(44.52f, 59.48f)
-            */
-            // Boars level 7
-            new Vector2(52.01f, 54.60f),
-            new Vector2(52.61f, 57.03f),
-            new Vector2(53.12f, 62.92f),
-            new Vector2(51.78f, 66.50f),
-            new Vector2(54.44f, 66.99f),
-            new Vector2(54.48f, 62.45f),
-            new Vector2(54.00f, 58.09f),
-            new Vector2(53.34f, 53.85f)
-        };
+        public WoWWaypointDefinition WaypointDefinition { get; private set; }
+        public int WaypointTraversalDirection { get; private set; }
 
         public enum PlayerState
         {
@@ -82,6 +60,8 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
+            WaypointDefinition = WoWWaypoints.LEVEL_11_DUROTAR_COAST_WAYPOINTS;
+            WaypointTraversalDirection = 1;
         }
 
         public void UpdateFromBitmap(Bitmap bmp)
@@ -288,7 +268,7 @@ namespace WoWHelper
                         {
                             // we've never picked a waypoint yet, so find the closest one
                             Vector2 playerLocation = new Vector2(worldState.MapX, worldState.MapY);
-                            CurrentWaypointIndex = Waypoints
+                            CurrentWaypointIndex = WaypointDefinition.Waypoints
                                 .Select((p, i) => (dist: Vector2.Distance(playerLocation, p), index: i))
                                 .OrderBy(t => t.dist)
                                 .First()
@@ -297,17 +277,32 @@ namespace WoWHelper
                         else
                         {
                             // otherwise cycle through them
-                            CurrentWaypointIndex += 1;
-                            CurrentWaypointIndex %= Waypoints.Count;
+                            CurrentWaypointIndex += WaypointTraversalDirection;
+
+                            if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= WaypointDefinition.Waypoints.Count)
+                            {
+                                if (WaypointDefinition.TraversalMethod == WoWWaypointDefinition.WaypointTraversalMethod.CIRCULAR)
+                                {
+                                    CurrentWaypointIndex = 0;
+                                }
+                                else if (WaypointDefinition.TraversalMethod == WoWWaypointDefinition.WaypointTraversalMethod.LINEAR)
+                                {
+                                    // since we detect this when we've gone out of bounds, switch direction.
+                                    // first addition puts us back in bounds, but we know we're already there, so do a second addition
+                                    WaypointTraversalDirection *= -1;
+                                    CurrentWaypointIndex += WaypointTraversalDirection;
+                                    CurrentWaypointIndex += WaypointTraversalDirection;
+                                }
+                            }
                         }
                             
                         CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
                         break;
                     case PathfindingState.MOVING_TOWARDS_WAYPOINT:
                         //WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
-                        await WoWTasks.MoveTowardsWaypointTask(worldState, Waypoints[CurrentWaypointIndex]);
+                        await WoWTasks.MoveTowardsWaypointTask(worldState, WaypointDefinition.Waypoints[CurrentWaypointIndex]);
 
-                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(WoWTasks.MoveTowardsWaypointTask(worldState, Waypoints[CurrentWaypointIndex]),
+                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(WoWTasks.MoveTowardsWaypointTask(worldState, WaypointDefinition.Waypoints[CurrentWaypointIndex]),
                             PathfindingState.PICKING_NEXT_WAYPOINT,
                             PathfindingState.MOVING_TOWARDS_WAYPOINT);
                         break;

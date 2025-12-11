@@ -98,18 +98,18 @@ namespace WoWHelper.Code
             float desiredDegrees = WoWPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint);
             float degreesDifference = WoWPathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
 
-            Console.WriteLine($"Heading towards waypoint {waypoint}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
+            //Console.WriteLine($"Heading towards waypoint {waypoint}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
             if (waypointDistance <= WoWPathfinding.WAYPOINT_DISTANCE_TOLERANCE)
             {
-                Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
+                //Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
                 await EndWalkForwardTask();
                 return true;
             }
 
             if (Math.Abs(degreesDifference) > WoWPathfinding.GetWaypointDegreesTolerance(waypointDistance))
             {
-                Console.WriteLine($"degreesDifference too large, rotating to heading");
+                //Console.WriteLine($"degreesDifference too large, rotating to heading");
                 //await EndWalkForwardTask();
                 await RotateToDirectionTask(desiredDegrees, waypointDistance);
                 return false;
@@ -117,7 +117,7 @@ namespace WoWHelper.Code
             else
             {
                 // if we're already walking, ignore this
-                Console.WriteLine($"Start walking forward");
+                //Console.WriteLine($"Start walking forward");
                 await StartWalkForwardTask();
                 return false;
             }
@@ -137,7 +137,7 @@ namespace WoWHelper.Code
                     float degreesToMove = WoWPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
                     float absDegreesToMove = Math.Abs(degreesToMove);
 
-                    Console.WriteLine($"Desired Degrees: {desiredDegrees} Facing Degrees: {worldState.FacingDegrees} Degrees to Move: {degreesToMove}");
+                    //Console.WriteLine($"Desired Degrees: {desiredDegrees} Facing Degrees: {worldState.FacingDegrees} Degrees to Move: {degreesToMove}");
 
                     if (absDegreesToMove <= WoWPathfinding.GetWaypointDegreesTolerance(distance))
                         break;
