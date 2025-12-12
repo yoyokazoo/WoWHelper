@@ -60,7 +60,7 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
-            WaypointDefinition = WoWWaypoints.LEVEL_11_DUROTAR_COAST_WAYPOINTS;
+            WaypointDefinition = WoWWaypoints.LEVEL_13_BARRENS_ENTRACE_WAYPOINTS;
             WaypointTraversalDirection = 1;
         }
 
@@ -175,6 +175,7 @@ namespace WoWHelper
             WoWWorldState previousWorldState = null;
             WoWWorldState worldState = null;
             bool thrownDynamite = false;
+            bool potionUsed = false;
 
             // combat wiggle in case camera is pointed wrong direction
             Keyboard.KeyDown(Keys.S);
@@ -213,7 +214,7 @@ namespace WoWHelper
                 // 
                 if (worldState.TooFarAway)
                 {
-                    Console.WriteLine($"ASDFASDF Too Far away!!");
+                    //Console.WriteLine($"ASDFASDF Too Far away!!");
                     Keyboard.KeyPress(WoWInput.CLEAR_TARGET_MACRO);
                     Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
                 }
@@ -233,9 +234,11 @@ namespace WoWHelper
                     Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
                 }
 
-                if (worldState.PlayerHpPercent <= WoWGameplayConstants.HEALING_POTION_HP_THRESHOLD)
+                if (worldState.PlayerHpPercent <= WoWGameplayConstants.HEALING_POTION_HP_THRESHOLD && !potionUsed)
                 {
+                    SlackHelper.SendMessageToChannel("Potion used!");
                     Keyboard.KeyPress(WoWInput.HEALING_POTION_KEY);
+                    potionUsed = true;
                 }
 
                 if (!worldState.BattleShoutActive && worldState.ResourcePercent >= WoWGameplayConstants.BATTLE_SHOUT_RAGE_COST)
@@ -264,6 +267,11 @@ namespace WoWHelper
         {
             Console.WriteLine("Kicking off core pathfinding loop");
 
+            WoWWorldState previousWorldState = null;
+            WoWWorldState worldState = null;
+            bool stationaryAlertSent = false;
+            long lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
             await WoWTasks.FocusOnWindowTask();
 
             // Count loops of the waypoints, if we haven't found a target in N loops, error out
@@ -273,22 +281,36 @@ namespace WoWHelper
             {
                 if (!CurrentTimeInsideDuration(lastFindTargetTime, TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
-                    //if (targetChecks % 2 == 0)
-                    //{
-                    //    Keyboard.KeyPress(WoWInput.FIND_TARGET_MACRO);
-                    //}
-                    //else
-                    //{
+                    if (WaypointDefinition.TargetFindMethod == WoWWaypointDefinition.WaypointTargetFindMethod.TAB)
+                    {
                         Keyboard.KeyPress(WoWInput.TAB_TARGET);
-                    //}
-                    
+                    }
+                    else if (WaypointDefinition.TargetFindMethod == WoWWaypointDefinition.WaypointTargetFindMethod.MACRO)
+                    {
+                        Keyboard.KeyPress(WoWInput.FIND_TARGET_MACRO);
+                    }
+
+
                     lastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     targetChecks++;
                 }
 
                 // always wait a bit for the UI to update, then grab it?
                 await Task.Delay(250);
-                WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+                previousWorldState = worldState;
+                worldState = WoWWorldState.GetWoWWorldState();
+
+                // If we haven't moved in a long time, alert
+                if (previousWorldState?.MapX != worldState.MapX || previousWorldState?.MapY != worldState.MapY)
+                {
+                    lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                }
+
+                if (!CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_ALERT) && !stationaryAlertSent)
+                {
+                    SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
+                    stationaryAlertSent = true;
+                }
 
                 if (worldState.CanChargeTarget || worldState.IsInCombat)
                 {
@@ -336,9 +358,6 @@ namespace WoWHelper
                         CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
                         break;
                     case PathfindingState.MOVING_TOWARDS_WAYPOINT:
-                        //WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
-                        await WoWTasks.MoveTowardsWaypointTask(worldState, WaypointDefinition.Waypoints[CurrentWaypointIndex]);
-
                         CurrentPathfindingState = await ChangeStateBasedOnTaskResult(WoWTasks.MoveTowardsWaypointTask(worldState, WaypointDefinition.Waypoints[CurrentWaypointIndex]),
                             PathfindingState.PICKING_NEXT_WAYPOINT,
                             PathfindingState.MOVING_TOWARDS_WAYPOINT);
@@ -346,6 +365,7 @@ namespace WoWHelper
                 }
             }
 
+            SlackHelper.SendMessageToChannel($"Haven't found a target in ~4 minutes.  Something wrong?");
             Console.WriteLine("Exited Pathfinding loop.  Too many loops without a successful target find.");
             return false;
         }

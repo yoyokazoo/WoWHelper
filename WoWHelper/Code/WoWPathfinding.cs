@@ -10,7 +10,7 @@ namespace WoWHelper.Code
     public static class WoWPathfinding
     {
         public const float WAYPOINT_DEGREES_TOLERANCE = 20f;
-        public const float WAYPOINT_DISTANCE_TOLERANCE = 1.0f;
+        public const float WAYPOINT_DISTANCE_TOLERANCE = 0.5f; // 1.0f?
 
         public const int MIN_ROTATION_SPEED = 3;
         public const int MAX_ROTATION_SPEED = 10;
@@ -22,6 +22,8 @@ namespace WoWHelper.Code
 
         public const float WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES = 25.0f;
         public const float WAYPOINT_DEGREE_TOLERANCE_MIN_DEGREES = 10.0f;
+
+        public const int STATIONARY_MILLIS_BEFORE_ALERT = 30 * 1000;
 
 
         public static float GetDesiredDirectionInDegrees(Vector2 waypoint1, Vector2 waypoint2)

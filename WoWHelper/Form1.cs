@@ -1,4 +1,5 @@
 ﻿using InputManager;
+using SlackAPI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsGameAutomationTools.Images;
+using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
 
 namespace WoWHelper
@@ -41,6 +43,18 @@ namespace WoWHelper
             Console.WriteLine($"Done ({player.WorldState.HpPercent}) ({player.WorldState.ResourcePercent})");
             */
             //_ = CoreGameplayLoopTask();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            SlackHelper.SendMessageToChannel("Potion used!", OnPostMessageCompleted);
+            //SlackHelper.SendScreenshotToChannel();
+        }
+
+        private void OnPostMessageCompleted(PostMessageResponse response)
+        {
+            // TODO: handle the response here
+            Console.WriteLine(response);
         }
     }
 }
