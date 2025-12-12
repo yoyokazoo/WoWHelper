@@ -9,7 +9,7 @@ namespace WoWHelper.Code
 {
     public static class WoWInput
     {
-        public const Keys FIND_TARGET_MACRO = Keys.D1;
+        public const Keys CLEAR_TARGET_MACRO = Keys.D1;
         public const Keys CHARGE_KEY = Keys.D2;
         public const Keys HEROIC_STRIKE_KEY = Keys.D3;
         public const Keys EAT_FOOD_KEY = Keys.D4;

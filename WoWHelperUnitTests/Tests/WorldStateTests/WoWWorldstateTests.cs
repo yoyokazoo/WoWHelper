@@ -40,6 +40,18 @@ namespace WoWHelperUnitTests
         }
 
         [TestMethod]
+        [DataRow(false, "..\\..\\Source Images\\FacingWrongWay.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\toofaraway.bmp")]
+        public void VerifyTooFarAway(bool expected, string fileName)
+        {
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+
+            Player.UpdateFromBitmap(new Bitmap(filePath));
+
+            Assert.AreEqual(expected, Player.WorldState.TooFarAway);
+        }
+
+        [TestMethod]
         [DataRow(0, "..\\..\\Source Images\\numbersAsColors3.bmp")]
         [DataRow(1, "..\\..\\Source Images\\FacingWrongWay.bmp")]
         public void VerifyAttackerCount(int expected, string fileName)

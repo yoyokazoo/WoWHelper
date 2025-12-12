@@ -7,7 +7,7 @@ namespace WoWHelper
 {
     public static class WoWWorldStateImageConstants
     {
-        public const int WIDTH_OF_SCREEN_TO_SLICE = 1650;
+        public const int WIDTH_OF_SCREEN_TO_SLICE = 1700;
         public const int HEIGHT_OF_SCREEN_TO_SLICE = 800;
 
         // Center of color box in text column
@@ -20,12 +20,18 @@ namespace WoWHelper
         public const int BOOL_TOP_COORD = TEXT_TOP_COORD;
         public const int BOOL_SECTION_HEIGHT = TEXT_BOX_HEIGHT;
 
-        public static readonly Color FACING_WRONG_WAY_COLOR = Color.FromArgb(255, 25, 25);
+        public static readonly Color ERROR_TEXT_COLOR = Color.FromArgb(255, 25, 25);
 
         public static readonly ImageMatchColorPositions FACING_WRONG_WAY_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {
-            new ColorPosition(1529, 217, FACING_WRONG_WAY_COLOR),
-            new ColorPosition(1606, 219, FACING_WRONG_WAY_COLOR),
-            new ColorPosition(1647, 218, FACING_WRONG_WAY_COLOR),
+            new ColorPosition(1529, 217, ERROR_TEXT_COLOR),
+            new ColorPosition(1606, 219, ERROR_TEXT_COLOR),
+            new ColorPosition(1647, 218, ERROR_TEXT_COLOR),
+        });
+
+        public static readonly ImageMatchColorPositions TOO_FAR_AWAY_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {
+            new ColorPosition(1589, 217, ERROR_TEXT_COLOR),
+            new ColorPosition(1641, 222, ERROR_TEXT_COLOR),
+            new ColorPosition(1666, 220, ERROR_TEXT_COLOR),
         });
 
         //public static readonly ImageMatchMultiOffsetMultiColorPositions asdf = new ImageMatchMultiOffsetMultiColorPositions()

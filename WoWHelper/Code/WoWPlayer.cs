@@ -209,12 +209,27 @@ namespace WoWHelper
                     thrownDynamite = true;
                 }
 
+                // this usually means we're in combat, but have a non-combatant targeted in the distance.
+                // 
+                if (worldState.TooFarAway)
+                {
+                    Console.WriteLine($"ASDFASDF Too Far away!!");
+                    Keyboard.KeyPress(WoWInput.CLEAR_TARGET_MACRO);
+                    Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
+                }
+
                 bool attackerJustDied = previousWorldState?.AttackerCount > worldState.AttackerCount && worldState.AttackerCount > 0;
                 bool inCombatButNotAutoAttacking = worldState.IsInCombat && !worldState.IsAutoAttacking;
-                if (attackerJustDied || inCombatButNotAutoAttacking)
+
+                if (attackerJustDied)
                 {
                     // one of the mobs just died, scoot back to make sure the next mob is in front of you, and heroic strike to startattack
                     await WoWTasks.ScootBackwardsTask();
+                    Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
+                }
+
+                if (inCombatButNotAutoAttacking)
+                {
                     Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
                 }
 

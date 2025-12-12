@@ -29,6 +29,7 @@ namespace WoWHelper
         public bool BattleShoutActive { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
+        public bool TooFarAway { get; private set; }
 
         public WoWWorldState()
         {
@@ -41,13 +42,6 @@ namespace WoWHelper
             PlayerLocation = Vector2.Zero;
             FacingDegrees = -1;
             AttackerCount = -1;
-
-            IsInRange = false;
-            IsInCombat = false;
-            CanChargeTarget = false;
-            HeroicStrikeQueued = false;
-
-            FacingWrongWay = false;
 
             //TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
         }
@@ -83,6 +77,7 @@ namespace WoWHelper
             UpdateMultiBoolOne(bmp);
 
             UpdateFacingWrongWay(bmp);
+            UpdateTooFarAway(bmp);
         }
 
         // Returns the R component of the color
@@ -197,6 +192,11 @@ namespace WoWHelper
         public void UpdateFacingWrongWay(Bitmap bmp)
         {
             FacingWrongWay = WoWWorldStateImageConstants.FACING_WRONG_WAY_POSITIONS.MatchesSourceImage(bmp);
+        }
+
+        public void UpdateTooFarAway(Bitmap bmp)
+        {
+            TooFarAway = WoWWorldStateImageConstants.TOO_FAR_AWAY_POSITIONS.MatchesSourceImage(bmp);
         }
     }
 }
