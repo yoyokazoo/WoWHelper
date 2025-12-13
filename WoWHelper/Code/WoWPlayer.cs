@@ -213,13 +213,19 @@ namespace WoWHelper
                 }
 
                 // Finally, if we've made it this far, do standard combat actions
-
                 if (!worldState.BattleShoutActive && worldState.ResourcePercent >= WoWGameplayConstants.BATTLE_SHOUT_RAGE_COST)
                 {
                     Keyboard.KeyPress(WoWInput.BATTLE_SHOUT_KEY);
                 }
-
-                if (!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WoWGameplayConstants.HEROIC_STRIKE_RAGE_COST)
+                else if (worldState.OverpowerUsable && worldState.ResourcePercent >= WoWGameplayConstants.OVERPOWER_RAGE_COST)
+                {
+                    Keyboard.KeyPress(WoWInput.OVERPOWER_KEY);
+                }
+                else if (!worldState.TargetHasRend && worldState.ResourcePercent >= WoWGameplayConstants.REND_RAGE_COST)
+                {
+                    Keyboard.KeyPress(WoWInput.REND_KEY);
+                }
+                else if (!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WoWGameplayConstants.HEROIC_STRIKE_RAGE_COST)
                 {
                     Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
                 }

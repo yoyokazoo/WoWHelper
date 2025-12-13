@@ -27,6 +27,10 @@ namespace WoWHelper
 
         public bool IsAutoAttacking { get; private set; }
         public bool BattleShoutActive { get; private set; }
+        public bool LowOnHealthPotions { get; private set; }
+        public bool LowOnDynamite { get; private set; }
+        public bool OverpowerUsable { get; private set; }
+        public bool TargetHasRend { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -187,6 +191,10 @@ namespace WoWHelper
 
             IsAutoAttacking = r1;
             BattleShoutActive = r2;
+            LowOnHealthPotions = r3;
+            LowOnDynamite = r4;
+            TargetHasRend = r5;
+            OverpowerUsable = r8;
         }
 
         public void UpdateFacingWrongWay(Bitmap bmp)
