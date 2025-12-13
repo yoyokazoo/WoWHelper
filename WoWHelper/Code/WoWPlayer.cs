@@ -60,7 +60,7 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
-            WaypointDefinition = WoWWaypoints.LEVEL_13_BARRENS_ENTRACE_WAYPOINTS;
+            WaypointDefinition = WoWWaypoints.LEVEL_17_NORTHERN_BARRENS_WAYPOINTS;
             WaypointTraversalDirection = 1;
         }
 
@@ -270,6 +270,7 @@ namespace WoWHelper
             WoWWorldState previousWorldState = null;
             WoWWorldState worldState = null;
             bool stationaryAlertSent = false;
+            bool tooManyAttackersAlertSent = false;
             long lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             await WoWTasks.FocusOnWindowTask();
@@ -310,6 +311,12 @@ namespace WoWHelper
                 {
                     SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
                     stationaryAlertSent = true;
+                }
+
+                if (worldState.AttackerCount > 2 && !tooManyAttackersAlertSent)
+                {
+                    SlackHelper.SendMessageToChannel($"TOO MANY ATTACKERS HELP");
+                    tooManyAttackersAlertSent = true;
                 }
 
                 if (worldState.CanChargeTarget || worldState.IsInCombat)

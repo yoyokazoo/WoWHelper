@@ -9,6 +9,24 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WoWWaypoints
     {
+        public static readonly WoWWaypointDefinition LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WoWWaypointDefinition
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(47.30f, 13.91f),
+                new Vector2(46.59f, 14.27f),
+                new Vector2(45.76f, 14.68f),
+                new Vector2(44.00f, 14.78f),
+                new Vector2(45.13f, 15.02f),
+                new Vector2(45.15f, 17.36f),
+                new Vector2(44.20f, 18.71f),
+                new Vector2(43.27f, 20.00f),
+                new Vector2(42.24f, 20.87f)
+            },
+            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.TAB
+        };
+
         public static readonly WoWWaypointDefinition LEVEL_13_BARRENS_ENTRACE_WAYPOINTS = new WoWWaypointDefinition
         {
             Waypoints = new List<Vector2>
