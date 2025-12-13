@@ -4,4 +4,7 @@
 ## Version: 1.0.0
 ## Author: Peter Beckfield
 
+MathFunctions.lua
+WoWFunctions.lua
+UIFunctions.lua
 YoyokazooUI.lua
