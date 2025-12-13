@@ -60,7 +60,7 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
-            WaypointDefinition = WoWWaypoints.LEVEL_17_NORTHERN_BARRENS_WAYPOINTS;
+            WaypointDefinition = WoWWaypoints.LEVEL_21_ZORAMGAR_WAYPOINTS;
             WaypointTraversalDirection = 1;
         }
 
@@ -176,21 +176,10 @@ namespace WoWHelper
             WoWWorldState worldState = null;
             bool thrownDynamite = false;
             bool potionUsed = false;
+            bool tooManyAttackersActionsTaken = false;
 
-            // combat wiggle in case camera is pointed wrong direction
-            Keyboard.KeyDown(Keys.S);
-            await Task.Delay(400);
-            Keyboard.KeyUp(Keys.S);
-
-            Keyboard.KeyDown(Keys.W);
-            await Task.Delay(20);
-            Keyboard.KeyUp(Keys.W);
-
-            // always kick things off with heroic strike macro to /startattack
-            Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
-
+            await WoWTasks.StartOfCombatTask();
             
-            // true if mob killed, false if we need to do emergency stuff? or do emergency stuff in here?
             do
             {
                 await Task.Delay(250);
@@ -198,48 +187,32 @@ namespace WoWHelper
                 previousWorldState = worldState;
                 worldState = WoWWorldState.GetWoWWorldState();
 
-                if (worldState.AttackerCount > 1 && !thrownDynamite)
+                // First do our "Make sure we're not standing around doing nothing" checks
+                if (await WoWTasks.MakeSureWeAreAttackingEnemyTask(worldState, previousWorldState))
                 {
-                    // 3440, 1440
-                    Mouse.Move(1770, 770);
-                    await Task.Delay(50);
-                    Keyboard.KeyPress(WoWInput.DYNAMITE_KEY);
-                    await Task.Delay(50);
-                    Mouse.PressButton(Mouse.MouseKeys.Left);
-                    await Task.Delay(1000);
+                    continue;
+                }
+
+                // Next, check if we need to pop any big cooldowns
+                if (!tooManyAttackersActionsTaken && await WoWTasks.TooManyAttackersTask(worldState))
+                {
+                    tooManyAttackersActionsTaken = true;
+                    continue;
+                }
+
+                if (!thrownDynamite && await WoWTasks.ThrowDynamiteTask(worldState))
+                {
                     thrownDynamite = true;
+                    continue;
                 }
 
-                // this usually means we're in combat, but have a non-combatant targeted in the distance.
-                // 
-                if (worldState.TooFarAway)
+                if (!potionUsed && await WoWTasks.UseHealingPotionTask(worldState))
                 {
-                    //Console.WriteLine($"ASDFASDF Too Far away!!");
-                    Keyboard.KeyPress(WoWInput.CLEAR_TARGET_MACRO);
-                    Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
-                }
-
-                bool attackerJustDied = previousWorldState?.AttackerCount > worldState.AttackerCount && worldState.AttackerCount > 0;
-                bool inCombatButNotAutoAttacking = worldState.IsInCombat && !worldState.IsAutoAttacking;
-
-                if (attackerJustDied)
-                {
-                    // one of the mobs just died, scoot back to make sure the next mob is in front of you, and heroic strike to startattack
-                    await WoWTasks.ScootBackwardsTask();
-                    Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
-                }
-
-                if (inCombatButNotAutoAttacking)
-                {
-                    Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
-                }
-
-                if (worldState.PlayerHpPercent <= WoWGameplayConstants.HEALING_POTION_HP_THRESHOLD && !potionUsed)
-                {
-                    SlackHelper.SendMessageToChannel("Potion used!");
-                    Keyboard.KeyPress(WoWInput.HEALING_POTION_KEY);
                     potionUsed = true;
+                    continue;
                 }
+
+                // Finally, if we've made it this far, do standard combat actions
 
                 if (!worldState.BattleShoutActive && worldState.ResourcePercent >= WoWGameplayConstants.BATTLE_SHOUT_RAGE_COST)
                 {
@@ -250,14 +223,6 @@ namespace WoWHelper
                 {
                     Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
                 }
-
-                // turning off temporarily to see how the scooting strat works
-                if (worldState.FacingWrongWay)
-                {
-                    // let's try this first, rather than scooting back
-                    await WoWTasks.ScootBackwardsTask();
-                }
-
             } while (worldState.IsInCombat);
 
             return true;
@@ -270,7 +235,6 @@ namespace WoWHelper
             WoWWorldState previousWorldState = null;
             WoWWorldState worldState = null;
             bool stationaryAlertSent = false;
-            bool tooManyAttackersAlertSent = false;
             long lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             await WoWTasks.FocusOnWindowTask();
@@ -311,12 +275,6 @@ namespace WoWHelper
                 {
                     SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
                     stationaryAlertSent = true;
-                }
-
-                if (worldState.AttackerCount > 2 && !tooManyAttackersAlertSent)
-                {
-                    SlackHelper.SendMessageToChannel($"TOO MANY ATTACKERS HELP");
-                    tooManyAttackersAlertSent = true;
                 }
 
                 if (worldState.CanChargeTarget || worldState.IsInCombat)
@@ -365,7 +323,7 @@ namespace WoWHelper
                         CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
                         break;
                     case PathfindingState.MOVING_TOWARDS_WAYPOINT:
-                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(WoWTasks.MoveTowardsWaypointTask(worldState, WaypointDefinition.Waypoints[CurrentWaypointIndex]),
+                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(WoWTasks.MoveTowardsWaypointTask(worldState, WaypointDefinition, CurrentWaypointIndex),
                             PathfindingState.PICKING_NEXT_WAYPOINT,
                             PathfindingState.MOVING_TOWARDS_WAYPOINT);
                         break;

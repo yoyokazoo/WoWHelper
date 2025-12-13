@@ -17,6 +17,8 @@ namespace WoWHelper.Code
         public const Keys HEALING_POTION_KEY = Keys.D6;
         public const Keys BATTLE_SHOUT_KEY = Keys.D7;
         public const Keys CLEAR_TARGET_MACRO = Keys.D0;
+        public const Keys REND_KEY = Keys.OemMinus;
+        public const Keys RETALIATION_KEY = Keys.Oemplus;
 
         public const Keys TURN_LEFT = Keys.A;
         public const Keys TURN_RIGHT = Keys.D;

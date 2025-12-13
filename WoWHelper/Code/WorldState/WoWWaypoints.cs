@@ -9,6 +9,24 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WoWWaypoints
     {
+        public static readonly WoWWaypointDefinition LEVEL_21_ZORAMGAR_WAYPOINTS = new WoWWaypointDefinition
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(16.63f, 28.01f),
+                new Vector2(16.51f, 30.17f),
+                new Vector2(17.81f, 30.54f),
+                new Vector2(18.59f, 32.78f),
+                new Vector2(19.16f, 33.77f),
+                new Vector2(20.00f, 36.17f),
+                new Vector2(21.18f, 38.39f),
+                new Vector2(22.32f, 38.82f),
+            },
+            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.TAB,
+            DistanceTolerance = 0.2f
+        };
+
         public static readonly WoWWaypointDefinition LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WoWWaypointDefinition
         {
             Waypoints = new List<Vector2>
@@ -24,7 +42,8 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(42.24f, 20.87f)
             },
             TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.TAB
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.TAB,
+            DistanceTolerance = 0.5f
         };
 
         public static readonly WoWWaypointDefinition LEVEL_13_BARRENS_ENTRACE_WAYPOINTS = new WoWWaypointDefinition
@@ -39,7 +58,8 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(56.60f, 22.00f)
             },
             TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.MACRO
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.MACRO,
+            DistanceTolerance = 0.5f
         };
 
         public static readonly WoWWaypointDefinition LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WoWWaypointDefinition { 
@@ -58,7 +78,8 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(36.30f, 53.50f)
             },
             TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.TAB
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.TAB,
+            DistanceTolerance = 0.5f
         };
     }
 }

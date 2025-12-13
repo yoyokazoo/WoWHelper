@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsGameAutomationTools.Images;
+using WindowsGameAutomationTools.Slack;
+using WoWHelper.Code.WorldState;
 
 namespace WoWHelper.Code
 {
@@ -87,6 +89,99 @@ namespace WoWHelper.Code
             return worldState.IsInCombat;
         }
 
+        public static async Task<bool> StartOfCombatTask()
+        {
+            // combat wiggle in case camera is pointed wrong direction
+            Keyboard.KeyDown(Keys.S);
+            await Task.Delay(400);
+            Keyboard.KeyUp(Keys.S);
+
+            Keyboard.KeyDown(Keys.W);
+            await Task.Delay(20);
+            Keyboard.KeyUp(Keys.W);
+
+            // always kick things off with heroic strike macro to /startattack
+            Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
+
+            return true;
+        }
+
+        public static async Task<bool> MakeSureWeAreAttackingEnemyTask(WoWWorldState worldState, WoWWorldState previousWorldState)
+        {
+            bool attackerJustDied = previousWorldState?.AttackerCount > worldState.AttackerCount && worldState.AttackerCount > 0;
+            bool inCombatButNotAutoAttacking = worldState.IsInCombat && !worldState.IsAutoAttacking;
+            bool tooFarAway = worldState.TooFarAway;
+            bool facingWrongWay = worldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
+
+            if (attackerJustDied || facingWrongWay)
+            {
+                // one of the mobs just died, scoot back to make sure the next mob is in front of you
+                await WoWTasks.ScootBackwardsTask();
+            }
+
+            if (tooFarAway)
+            {
+                // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
+                Keyboard.KeyPress(WoWInput.CLEAR_TARGET_MACRO);
+            }
+
+            if (attackerJustDied || inCombatButNotAutoAttacking || tooFarAway)
+            {
+                // /startattack
+                Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
+            }
+
+            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay;
+        }
+
+        public static async Task<bool> TooManyAttackersTask(WoWWorldState worldState)
+        {
+            bool tooManyAttackers = worldState.AttackerCount > 2;
+
+            if (tooManyAttackers)
+            {
+                SlackHelper.SendMessageToChannel($"TOO MANY ATTACKERS HELP");
+                // cast retaliation
+                Keyboard.KeyPress(WoWInput.RETALIATION_KEY);
+                // until I get GCD tracking working, just wait a bit and click it again to make sure
+                await Task.Delay(1500);
+                Keyboard.KeyPress(WoWInput.RETALIATION_KEY);
+            }
+
+            return tooManyAttackers;
+        }
+
+        public static async Task<bool> ThrowDynamiteTask(WoWWorldState worldState)
+        {
+            bool shouldThrowDynamite = worldState.AttackerCount > 1;
+
+            if (shouldThrowDynamite)
+            {
+                Mouse.Move(1770, 770);
+                await Task.Delay(50);
+                Keyboard.KeyPress(WoWInput.DYNAMITE_KEY);
+                await Task.Delay(50);
+                Mouse.PressButton(Mouse.MouseKeys.Left);
+                await Task.Delay(1000);
+            }
+
+            return shouldThrowDynamite;
+        }
+
+        public static async Task<bool> UseHealingPotionTask(WoWWorldState worldState)
+        {
+            bool shouldUseHealingPotion = worldState.PlayerHpPercent <= WoWGameplayConstants.HEALING_POTION_HP_THRESHOLD;
+
+            if (shouldUseHealingPotion)
+            {
+                SlackHelper.SendMessageToChannel("Potion used!");
+                Keyboard.KeyPress(WoWInput.HEALING_POTION_KEY);
+                await Task.Delay(0);
+            }
+
+            return shouldUseHealingPotion;
+        }
+
         #endregion
 
         #region Movement Tasks
@@ -94,15 +189,15 @@ namespace WoWHelper.Code
         // Returns true if we've reached the waypoint
         // Returns false if we haven't yet reached the waypoint
         // Rotates towards the waypoint or walks towards the waypoint, depending
-        public static async Task<bool> MoveTowardsWaypointTask(WoWWorldState worldState, Vector2 waypoint)
+        public static async Task<bool> MoveTowardsWaypointTask(WoWWorldState worldState, WoWWaypointDefinition waypoint, int waypointIndex)
         {
-            float waypointDistance = Vector2.Distance(worldState.PlayerLocation, waypoint);
-            float desiredDegrees = WoWPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint);
+            float waypointDistance = Vector2.Distance(worldState.PlayerLocation, waypoint.Waypoints[waypointIndex]);
+            float desiredDegrees = WoWPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint.Waypoints[waypointIndex]);
             float degreesDifference = WoWPathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
 
             //Console.WriteLine($"Heading towards waypoint {waypoint}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
-            if (waypointDistance <= WoWPathfinding.WAYPOINT_DISTANCE_TOLERANCE)
+            if (waypointDistance <= waypoint.DistanceTolerance)
             {
                 //Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
                 await EndWalkForwardTask();

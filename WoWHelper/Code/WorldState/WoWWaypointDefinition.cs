@@ -24,5 +24,6 @@ namespace WoWHelper.Code.WorldState
         public List<Vector2> Waypoints { get; set; }
         public WaypointTraversalMethod TraversalMethod { get; set; }
         public WaypointTargetFindMethod TargetFindMethod { get; set; }
+        public float DistanceTolerance { get; set; } = 0.5f;
     }
 }
