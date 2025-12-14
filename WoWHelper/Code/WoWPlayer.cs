@@ -31,6 +31,9 @@ namespace WoWHelper
         public WoWWaypointDefinition WaypointDefinition { get; private set; }
         public int WaypointTraversalDirection { get; private set; }
 
+        public bool LogoutTriggered { get; set; }
+        public string LogoutReason { get; set; }
+
         public enum PlayerState
         {
             WAITING_TO_FOCUS,
@@ -44,6 +47,9 @@ namespace WoWHelper
             WALK_WAYPOINTS,
 
             ESC_KEY_SEEN,
+            CHECK_FOR_LOGOUT,
+            LOGGING_OUT,
+            LOGGED_OUT,
             EXITING_CORE_GAMEPLAY_LOOP,
         }
 
@@ -105,6 +111,8 @@ namespace WoWHelper
         async Task<bool> CoreGameplayLoopTask()
         {
             //lastFarmingLimitTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            LogoutTriggered = true;
+            LogoutReason = "Testing!";
 
             Console.WriteLine("Kicking off core gameplay loop");
             PlayerState currentPlayerState = PlayerState.WAITING_TO_FOCUS;
@@ -121,7 +129,24 @@ namespace WoWHelper
                         break;
                     case PlayerState.FOCUSED_ON_WINDOW:
                         Console.WriteLine("Focused on window");
-                        currentPlayerState = PlayerState.WAIT_UNTIL_BATTLE_READY;
+                        currentPlayerState = PlayerState.CHECK_FOR_LOGOUT;
+                        break;
+                    case PlayerState.CHECK_FOR_LOGOUT:
+                        Console.WriteLine("Checking if we should log out");
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(WoWTasks.SetLogoutVariablesTask(this),
+                            PlayerState.LOGGING_OUT,
+                            PlayerState.WAIT_UNTIL_BATTLE_READY);
+                        break;
+                    case PlayerState.LOGGING_OUT:
+                        Console.WriteLine("Logging out");
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(WoWTasks.LogoutTask(),
+                            PlayerState.LOGGED_OUT,
+                            PlayerState.IN_CORE_COMBAT_LOOP);
+                        break;
+                    case PlayerState.LOGGED_OUT:
+                        Console.WriteLine("Logged out");
+                        SlackHelper.SendMessageToChannel($"Logged out: {LogoutReason}");
+                        currentPlayerState = PlayerState.EXITING_CORE_GAMEPLAY_LOOP;
                         break;
                     case PlayerState.WAIT_UNTIL_BATTLE_READY:
                         Console.WriteLine("Waiting until battle ready");

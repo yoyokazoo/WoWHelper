@@ -21,6 +21,8 @@ namespace WoWHelper.Code
         public const Keys REND_KEY = Keys.OemMinus;
         public const Keys RETALIATION_KEY = Keys.Oemplus;
 
+        public const Keys LOGOUT_MACRO = Keys.D8;
+
         public const Keys TURN_LEFT = Keys.A;
         public const Keys TURN_RIGHT = Keys.D;
 

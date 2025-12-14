@@ -29,6 +29,29 @@ namespace WoWHelper.Code
             return true;
         }
 
+        public static async Task<bool> SetLogoutVariablesTask(WoWPlayer wowPlayer)
+        {
+            //wowPlayer.LogoutTriggered = true;
+            //wowPlayer.LogoutReason = "Testing";
+
+            return wowPlayer.LogoutTriggered;
+        }
+
+        public static async Task<bool> LogoutTask()
+        {
+            WoWWorldState worldState;
+
+            Keyboard.KeyPress(WoWInput.LOGOUT_MACRO);
+
+            do
+            {
+                worldState = WoWWorldState.GetWoWWorldState();
+                await Task.Delay(250);
+            } while (!worldState.IsInCombat && !worldState.OnLoginScreen);
+
+            return worldState.OnLoginScreen;
+        }
+
         #endregion
 
         #region Combat Tasks
