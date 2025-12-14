@@ -75,5 +75,17 @@ namespace WoWHelperUnitTests
             Assert.AreEqual(expectedBoolOne, Player.WorldState.IsAutoAttacking);
             Assert.AreEqual(expectedBoolTwo, Player.WorldState.BattleShoutActive);
         }
+
+        [TestMethod]
+        [DataRow(false, "..\\..\\Source Images\\NoBattleshout.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\login screen.bmp")]
+        public void VerifyOnLoginScreen(bool expected, string fileName)
+        {
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+
+            Player.UpdateFromBitmap(new Bitmap(filePath));
+
+            Assert.AreEqual(expected, Player.WorldState.OnLoginScreen);
+        }
     }
 }

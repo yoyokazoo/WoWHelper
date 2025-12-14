@@ -20,7 +20,7 @@ namespace WoWHelper
         public const int BOOL_TOP_COORD = TEXT_TOP_COORD;
         public const int BOOL_SECTION_HEIGHT = TEXT_BOX_HEIGHT;
 
-        public static readonly Color ERROR_TEXT_COLOR = Color.FromArgb(255, 25, 25);
+        private static readonly Color ERROR_TEXT_COLOR = Color.FromArgb(255, 25, 25);
 
         public static readonly ImageMatchColorPositions FACING_WRONG_WAY_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {
             new ColorPosition(1529, 217, ERROR_TEXT_COLOR),
@@ -32,6 +32,16 @@ namespace WoWHelper
             new ColorPosition(1589, 217, ERROR_TEXT_COLOR),
             new ColorPosition(1641, 222, ERROR_TEXT_COLOR),
             new ColorPosition(1666, 220, ERROR_TEXT_COLOR),
+        });
+
+        private static readonly Color LOGIN_SCREEN_COLOR_ONE = Color.FromArgb(241, 221, 175);
+        private static readonly Color LOGIN_SCREEN_COLOR_TWO = Color.FromArgb(52, 51, 60);
+        private static readonly Color LOGIN_SCREEN_COLOR_THREE = Color.FromArgb(229, 38, 39);
+
+        public static readonly ImageMatchColorPositions ON_LOGIN_SCREEN_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {
+            new ColorPosition(581, 109, LOGIN_SCREEN_COLOR_ONE),
+            new ColorPosition(705, 64, LOGIN_SCREEN_COLOR_TWO),
+            new ColorPosition(579, 248, LOGIN_SCREEN_COLOR_THREE),
         });
 
         //public static readonly ImageMatchMultiOffsetMultiColorPositions asdf = new ImageMatchMultiOffsetMultiColorPositions()
