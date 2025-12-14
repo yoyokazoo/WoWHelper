@@ -13,6 +13,7 @@ namespace WoWHelper.Code.WorldState
         {
             Waypoints = new List<Vector2>
             {
+                /*
                 new Vector2(16.63f, 28.01f),
                 new Vector2(16.51f, 30.17f),
                 new Vector2(17.81f, 30.54f),
@@ -21,8 +22,33 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(20.00f, 36.17f),
                 new Vector2(21.18f, 38.39f),
                 new Vector2(22.32f, 38.82f),
+                */
+                new Vector2(16.67f, 28.15f),
+                new Vector2(16.07f, 29.94f),
+                new Vector2(17.30f, 30.17f),
+                new Vector2(18.18f, 31.92f),
+                new Vector2(19.11f, 33.88f),
+                new Vector2(18.30f, 35.24f),
+                new Vector2(17.51f, 36.78f),
+                new Vector2(16.84f, 37.41f),
+                new Vector2(17.15f, 39.34f),
+                new Vector2(18.53f, 38.58f),
+                new Vector2(19.69f, 38.10f),
+                new Vector2(21.14f, 38.54f),
+                new Vector2(21.74f, 38.77f),
+                new Vector2(23.12f, 38.40f),
+                new Vector2(24.29f, 37.91f),
+                new Vector2(23.60f, 36.28f),
+                new Vector2(23.01f, 34.65f),
+                new Vector2(22.12f, 35.79f),
+                new Vector2(21.30f, 36.50f),
+                new Vector2(19.80f, 35.25f),
+                new Vector2(19.46f, 33.86f),
+                new Vector2(18.48f, 32.51f),
+                new Vector2(17.68f, 30.43f),
+                new Vector2(16.72f, 29.32f),
             },
-            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.LINEAR,
+            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.TAB,
             DistanceTolerance = 0.2f
         };

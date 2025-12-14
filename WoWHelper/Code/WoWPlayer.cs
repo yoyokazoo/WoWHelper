@@ -153,11 +153,11 @@ namespace WoWHelper
                         // loot
                         Mouse.Move(1720, 720);
                         Mouse.PressButton(Mouse.MouseKeys.Right);
-                        await Task.Delay(1000);
+                        await Task.Delay(1200);
 
                         // skin
                         Mouse.PressButton(Mouse.MouseKeys.Right);
-                        await Task.Delay(2500);
+                        await Task.Delay(3000);
 
                         currentPlayerState = PlayerState.WAIT_UNTIL_BATTLE_READY;
                         break;
