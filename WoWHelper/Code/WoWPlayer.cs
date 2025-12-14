@@ -111,8 +111,6 @@ namespace WoWHelper
         async Task<bool> CoreGameplayLoopTask()
         {
             //lastFarmingLimitTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            LogoutTriggered = true;
-            LogoutReason = "Testing!";
 
             Console.WriteLine("Kicking off core gameplay loop");
             PlayerState currentPlayerState = PlayerState.WAITING_TO_FOCUS;
