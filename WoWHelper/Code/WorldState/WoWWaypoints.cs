@@ -9,6 +9,28 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WoWWaypoints
     {
+        public static readonly WoWWaypointDefinition LEVEL_24_STONETALON_WAYPOINTS = new WoWWaypointDefinition
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(44.43f, 19.01f),
+                new Vector2(45.35f, 20.96f),
+                new Vector2(44.96f, 223.10f),
+                new Vector2(45.68f, 24.14f),
+                new Vector2(46.43f, 26.20f),
+                new Vector2(46.76f, 28.85f),
+                new Vector2(46.75f, 31.71f),
+                new Vector2(46.68f, 28.04f),
+                new Vector2(45.91f, 26.77f),
+                new Vector2(44.42f, 25.19f),
+                new Vector2(44.19f, 22.95f),
+                new Vector2(44.71f, 20.78f),
+            },
+            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.TAB,
+            DistanceTolerance = 0.2f
+        };
+
         public static readonly WoWWaypointDefinition LEVEL_21_ZORAMGAR_WAYPOINTS = new WoWWaypointDefinition
         {
             Waypoints = new List<Vector2>

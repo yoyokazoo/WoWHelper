@@ -60,7 +60,7 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
-            WaypointDefinition = WoWWaypoints.LEVEL_21_ZORAMGAR_WAYPOINTS;
+            WaypointDefinition = WoWWaypoints.LEVEL_24_STONETALON_WAYPOINTS;
             WaypointTraversalDirection = 1;
         }
 
