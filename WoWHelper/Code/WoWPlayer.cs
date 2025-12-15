@@ -19,6 +19,9 @@ namespace WoWHelper
         private static long TIME_BETWEEN_FIND_TARGET_MILLIS = (long)(2 * 1000); // 2 seconds
         private long lastFindTargetTime = 0;
 
+        public static long FARM_TIME_LIMIT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+
+        public long FarmStartTime { get; private set; }
         public long LastDynamiteTime { get; private set; }
         public long LastHealthPotionTime { get; private set; }
 
@@ -69,7 +72,7 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
-            WaypointDefinition = WoWWaypoints.LEVEL_27_NORTH_ASHENVALE_WAYPOINTS;
+            WaypointDefinition = WoWWaypoints.LEVEL_24_STONETALON_WAYPOINTS;
             WaypointTraversalDirection = 1;
         }
 
@@ -113,7 +116,7 @@ namespace WoWHelper
 
         async Task<bool> CoreGameplayLoopTask()
         {
-            //lastFarmingLimitTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            FarmStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             Console.WriteLine("Kicking off core gameplay loop");
             PlayerState currentPlayerState = PlayerState.WAITING_TO_FOCUS;
@@ -287,6 +290,17 @@ namespace WoWHelper
                     else if (WaypointDefinition.TargetFindMethod == WoWWaypointDefinition.WaypointTargetFindMethod.MACRO)
                     {
                         Keyboard.KeyPress(WoWInput.FIND_TARGET_MACRO);
+                    }
+                    else if (WaypointDefinition.TargetFindMethod == WoWWaypointDefinition.WaypointTargetFindMethod.ALTERNATE)
+                    {
+                        if (targetChecks % 2 == 0)
+                        {
+                            Keyboard.KeyPress(WoWInput.TAB_TARGET);
+                        }
+                        else
+                        {
+                            Keyboard.KeyPress(WoWInput.FIND_TARGET_MACRO);
+                        }  
                     }
 
 

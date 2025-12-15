@@ -42,6 +42,11 @@ namespace WoWHelper.Code
                 wowPlayer.LogoutTriggered = true;
                 wowPlayer.LogoutReason = "Low on Health Potions";
             }
+            else if (!WoWPlayer.CurrentTimeInsideDuration(wowPlayer.FarmStartTime, WoWPlayer.FARM_TIME_LIMIT_MILLIS))
+            {
+                wowPlayer.LogoutTriggered = true;
+                wowPlayer.LogoutReason = "Farm Time Limit Reached";
+            }
 
             await Task.Delay(0);
 
@@ -238,7 +243,7 @@ namespace WoWHelper.Code
             float desiredDegrees = WoWPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint.Waypoints[waypointIndex]);
             float degreesDifference = WoWPathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
 
-            //Console.WriteLine($"Heading towards waypoint {waypoint}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
+            Console.WriteLine($"Heading towards waypoint {waypoint.Waypoints[waypointIndex]}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
             if (waypointDistance <= waypoint.DistanceTolerance)
             {

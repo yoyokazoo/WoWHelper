@@ -48,13 +48,14 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(46.76f, 28.85f),
                 new Vector2(46.75f, 31.71f),
                 new Vector2(46.68f, 28.04f),
-                new Vector2(45.91f, 26.77f),
+                new Vector2(46.21f, 26.70f),
+                new Vector2(45.30f, 26.44f),
                 new Vector2(44.42f, 25.19f),
                 new Vector2(44.19f, 22.95f),
                 new Vector2(44.71f, 20.78f),
             },
             TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.TAB,
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.2f
         };
 

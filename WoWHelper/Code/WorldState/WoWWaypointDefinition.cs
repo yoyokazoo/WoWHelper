@@ -18,7 +18,8 @@ namespace WoWHelper.Code.WorldState
         public enum WaypointTargetFindMethod
         {
             TAB,
-            MACRO
+            MACRO,
+            ALTERNATE
         }
 
         public List<Vector2> Waypoints { get; set; }
