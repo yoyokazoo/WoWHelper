@@ -9,13 +9,40 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WoWWaypoints
     {
+        public static readonly WoWWaypointDefinition LEVEL_27_NORTH_ASHENVALE_WAYPOINTS = new WoWWaypointDefinition
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(60.43f, 39.81f),
+                new Vector2(60.05f, 38.56f),
+                new Vector2(58.47f, 37.08f),
+                new Vector2(58.70f, 35.47f),
+                new Vector2(57.98f, 34.11f),
+                new Vector2(57.50f, 31.07f),
+                new Vector2(56.00f, 31.00f),
+                new Vector2(55.79f, 32.64f),
+                new Vector2(54.88f, 32.73f),
+                new Vector2(55.34f, 34.93f),
+                new Vector2(56.54f, 36.72f),
+                new Vector2(57.42f, 37.99f),
+                new Vector2(57.30f, 40.60f),
+                new Vector2(56.36f, 41.26f),
+                new Vector2(57.53f, 41.97f),
+                new Vector2(58.87f, 41.32f),
+                new Vector2(59.55f, 39.57f),
+            },
+            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.TAB,
+            DistanceTolerance = 0.2f
+        };
+
         public static readonly WoWWaypointDefinition LEVEL_24_STONETALON_WAYPOINTS = new WoWWaypointDefinition
         {
             Waypoints = new List<Vector2>
             {
                 new Vector2(44.43f, 19.01f),
                 new Vector2(45.35f, 20.96f),
-                new Vector2(44.96f, 223.10f),
+                new Vector2(44.96f, 23.10f),
                 new Vector2(45.68f, 24.14f),
                 new Vector2(46.43f, 26.20f),
                 new Vector2(46.76f, 28.85f),

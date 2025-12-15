@@ -14,5 +14,8 @@ namespace WoWHelper.Code.WorldState
         public const int OVERPOWER_RAGE_COST = 5;
 
         public const int HEALING_POTION_HP_THRESHOLD = 50;
+
+        public const int DYNAMITE_COOLDOWN_MILLIS = 1 * 60 * 1000;
+        public const int POTION_COOLDOWN_MILLIS = 2 * 60 * 1000;
     }
 }

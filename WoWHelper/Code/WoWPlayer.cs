@@ -19,6 +19,9 @@ namespace WoWHelper
         private static long TIME_BETWEEN_FIND_TARGET_MILLIS = (long)(2 * 1000); // 2 seconds
         private long lastFindTargetTime = 0;
 
+        public long LastDynamiteTime { get; private set; }
+        public long LastHealthPotionTime { get; private set; }
+
         // TODO: Switch to a system where we use cancellation tokens to exit normal operation and go into "oh shit I got aggroed by something?"
         //private CancellationTokenSource CancellationTokenSource {  get; set; }
 
@@ -66,7 +69,7 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
-            WaypointDefinition = WoWWaypoints.LEVEL_24_STONETALON_WAYPOINTS;
+            WaypointDefinition = WoWWaypoints.LEVEL_27_NORTH_ASHENVALE_WAYPOINTS;
             WaypointTraversalDirection = 1;
         }
 
@@ -148,7 +151,7 @@ namespace WoWHelper
                         break;
                     case PlayerState.WAIT_UNTIL_BATTLE_READY:
                         Console.WriteLine("Waiting until battle ready");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(WoWTasks.RecoverAfterFightTask(),
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(WoWTasks.RecoverAfterFightTask(this),
                             PlayerState.CHECK_FOR_VALID_TARGET,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
@@ -182,7 +185,7 @@ namespace WoWHelper
                         Mouse.PressButton(Mouse.MouseKeys.Right);
                         await Task.Delay(3000);
 
-                        currentPlayerState = PlayerState.WAIT_UNTIL_BATTLE_READY;
+                        currentPlayerState = PlayerState.CHECK_FOR_LOGOUT;
                         break;
                 }
             }
@@ -225,12 +228,14 @@ namespace WoWHelper
 
                 if (!thrownDynamite && await WoWTasks.ThrowDynamiteTask(worldState))
                 {
+                    LastDynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     thrownDynamite = true;
                     continue;
                 }
 
                 if (!potionUsed && await WoWTasks.UseHealingPotionTask(worldState))
                 {
+                    LastHealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     potionUsed = true;
                     continue;
                 }

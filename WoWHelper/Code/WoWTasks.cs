@@ -31,8 +31,19 @@ namespace WoWHelper.Code
 
         public static async Task<bool> SetLogoutVariablesTask(WoWPlayer wowPlayer)
         {
-            //wowPlayer.LogoutTriggered = true;
-            //wowPlayer.LogoutReason = "Testing";
+            WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+            if (worldState.LowOnDynamite)
+            {
+                wowPlayer.LogoutTriggered = true;
+                wowPlayer.LogoutReason = "Low on Dynamite";
+            }
+            else if (worldState.LowOnHealthPotions)
+            {
+                wowPlayer.LogoutTriggered = true;
+                wowPlayer.LogoutReason = "Low on Health Potions";
+            }
+
+            await Task.Delay(0);
 
             return wowPlayer.LogoutTriggered;
         }
@@ -56,32 +67,41 @@ namespace WoWHelper.Code
 
         #region Combat Tasks
 
-        public static async Task<bool> RecoverAfterFightTask()
+        public static async Task<bool> RecoverAfterFightTask(WoWPlayer wowPlayer)
         {
             WoWWorldState worldState;
             bool startedEatingFood = false;
+            bool dynamiteOrPotionIsCooledDown = false;
 
-            do
+            while(true)
             {
+                await Task.Delay(200);
                 worldState = WoWWorldState.GetWoWWorldState();
+
+                if (worldState.IsInCombat)
+                {
+                    return false;
+                }
 
                 if (worldState.PlayerHpPercent < 85 && !startedEatingFood)
                 {
-                    //Console.WriteLine($"PlayerHpPercent = {worldState.PlayerHpPercent} ({startedEatingFood}), eating.");
-                    //if (worldState.PlayerHpPercent == 0) ScreenCapture.SaveTestDesktopScreenshot("hp percent zero.bmp");
                     Keyboard.KeyPress(WoWInput.EAT_FOOD_KEY);
                     startedEatingFood = true;
-
                 }
-                await Task.Delay(200);
-            } while (worldState.PlayerHpPercent < 100 && !worldState.IsInCombat); // and charge is cooling down
 
-            if (!worldState.IsInCombat)
-            {
-                await ScootForwardsTask();
+                //bool dynamiteIsCooledDown = !WoWPlayer.CurrentTimeInsideDuration(wowPlayer.LastDynamiteTime, WoWGameplayConstants.DYNAMITE_COOLDOWN_MILLIS);
+                bool potionIsCooledDown = !WoWPlayer.CurrentTimeInsideDuration(wowPlayer.LastHealthPotionTime, WoWGameplayConstants.POTION_COOLDOWN_MILLIS);
+
+                // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
+                // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
+                if (worldState.PlayerHpPercent >= 100 && potionIsCooledDown)
+                {
+                    break;
+                }
             }
 
-            return !worldState.IsInCombat;
+            await ScootForwardsTask();
+            return true;
         }
 
         public static async Task<bool> TryToChargeTask()
