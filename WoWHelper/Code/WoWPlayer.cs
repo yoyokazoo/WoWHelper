@@ -271,6 +271,7 @@ namespace WoWHelper
 
             WoWWorldState previousWorldState = null;
             WoWWorldState worldState = null;
+            bool stationaryWiggleAttempted = false;
             bool stationaryAlertSent = false;
             long lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -319,7 +320,25 @@ namespace WoWHelper
                     lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
 
-                if (!CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_ALERT) && !stationaryAlertSent)
+                if (!stationaryWiggleAttempted && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
+                {
+                    // stop walking forward
+                    await WoWTasks.EndWalkForwardTask();
+
+                    // back off obstruction
+                    Keyboard.KeyDown(Keys.S);
+                    await Task.Delay(1000);
+                    Keyboard.KeyUp(Keys.S);
+
+                    // strafe left
+                    Keyboard.KeyDown(Keys.Q);
+                    await Task.Delay(2000);
+                    Keyboard.KeyUp(Keys.Q);
+
+                    stationaryWiggleAttempted = true;
+                }
+
+                if (!stationaryAlertSent && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_ALERT))
                 {
                     SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
                     stationaryAlertSent = true;
