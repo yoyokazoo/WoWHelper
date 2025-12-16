@@ -44,6 +44,14 @@ namespace WoWHelper
             new ColorPosition(579, 248, LOGIN_SCREEN_COLOR_THREE),
         });
 
+        private static readonly Color BREATH_BAR_COLOR_ONE = Color.FromArgb(0, 77, 155);
+        private static readonly Color BREATH_BAR_COLOR_TWO = Color.FromArgb(0, 31, 62);
+
+        public static readonly ImageMatchColorPositions BREATH_BAR_SCREEN_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {
+            new ColorPosition(1568, 173, BREATH_BAR_COLOR_ONE),
+            new ColorPosition(1561, 173, BREATH_BAR_COLOR_TWO)
+        });
+
         //public static readonly ImageMatchMultiOffsetMultiColorPositions asdf = new ImageMatchMultiOffsetMultiColorPositions()
 
         public static readonly Point PLAYER_HP_PERCENT_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 0));

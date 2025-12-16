@@ -35,6 +35,7 @@ namespace WoWHelper
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
         public bool OnLoginScreen { get; private set; }
+        public bool Underwater { get; private set; }
 
         public WoWWorldState()
         {
@@ -84,6 +85,7 @@ namespace WoWHelper
             UpdateFacingWrongWay(bmp);
             UpdateTooFarAway(bmp);
             UpdateOnLoginScreen(bmp);
+            UpdateBreathBar(bmp);
         }
 
         // Returns the R component of the color
@@ -212,6 +214,11 @@ namespace WoWHelper
         public void UpdateOnLoginScreen(Bitmap bmp)
         {
             OnLoginScreen = WoWWorldStateImageConstants.ON_LOGIN_SCREEN_POSITIONS.MatchesSourceImage(bmp);
+        }
+
+        public void UpdateBreathBar(Bitmap bmp)
+        {
+            Underwater = WoWWorldStateImageConstants.BREATH_BAR_SCREEN_POSITIONS.MatchesSourceImage(bmp);
         }
     }
 }

@@ -272,6 +272,7 @@
     <Content Include="Source Images\BagCursor.bmp" />
     <Content Include="Source Images\Bars.bmp" />
     <Content Include="Source Images\BattleShout.bmp" />
+    <Content Include="Source Images\breathbar.bmp" />
     <Content Include="Source Images\Buffs.bmp" />
     <Content Include="Source Images\CanCharge.bmp" />
     <Content Include="Source Images\CustomUI.bmp" />

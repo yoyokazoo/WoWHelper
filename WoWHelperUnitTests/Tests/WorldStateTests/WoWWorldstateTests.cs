@@ -87,5 +87,17 @@ namespace WoWHelperUnitTests
 
             Assert.AreEqual(expected, Player.WorldState.OnLoginScreen);
         }
+
+        [TestMethod]
+        [DataRow(false, "..\\..\\Source Images\\NoBattleshout.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\breathbar.bmp")]
+        public void VerifyUnderwater(bool expected, string fileName)
+        {
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+
+            Player.UpdateFromBitmap(new Bitmap(filePath));
+
+            Assert.AreEqual(expected, Player.WorldState.Underwater);
+        }
     }
 }

@@ -19,7 +19,7 @@ namespace WoWHelper
         private static long TIME_BETWEEN_FIND_TARGET_MILLIS = (long)(2 * 1000); // 2 seconds
         private long lastFindTargetTime = 0;
 
-        public static long FARM_TIME_LIMIT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+        public static long FARM_TIME_LIMIT_MILLIS = 8 * 60 * 60 * 1000; // 4 hours
 
         public long FarmStartTime { get; private set; }
         public long LastDynamiteTime { get; private set; }
@@ -72,7 +72,7 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
-            WaypointDefinition = WoWWaypoints.LEVEL_24_STONETALON_WAYPOINTS;
+            WaypointDefinition = WoWWaypoints.LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS;
             WaypointTraversalDirection = 1;
         }
 
@@ -216,6 +216,12 @@ namespace WoWHelper
                 previousWorldState = worldState;
                 worldState = WoWWorldState.GetWoWWorldState();
 
+                // don't drown
+                if (worldState.Underwater)
+                {
+                    await WoWTasks.GetOutOfWater();
+                }
+
                 // First do our "Make sure we're not standing around doing nothing" checks
                 if (await WoWTasks.MakeSureWeAreAttackingEnemyTask(worldState, previousWorldState))
                 {
@@ -314,6 +320,12 @@ namespace WoWHelper
                 previousWorldState = worldState;
                 worldState = WoWWorldState.GetWoWWorldState();
 
+                // don't drown
+                if (worldState.Underwater)
+                {
+                    await WoWTasks.GetOutOfWater();
+                }
+
                 // If we haven't moved in a long time, alert
                 if (previousWorldState?.MapX != worldState.MapX || previousWorldState?.MapY != worldState.MapY)
                 {
@@ -364,6 +376,41 @@ namespace WoWHelper
                                 .OrderBy(t => t.dist)
                                 .First()
                                 .index;
+
+                            // Circular always goes in the same direction, so if you interrupt and restart, you'll still be going the same direction.
+                            // For linear let's do our best guess to pick the best direction
+                            if (WaypointDefinition.TraversalMethod == WoWWaypointDefinition.WaypointTraversalMethod.LINEAR)
+                            {
+                                if (CurrentWaypointIndex == 0)
+                                {
+                                    WaypointTraversalDirection = 1;
+                                }
+                                else if (CurrentWaypointIndex == WaypointDefinition.Waypoints.Count - 1)
+                                {
+                                    WaypointTraversalDirection = -1;
+                                }
+                                else
+                                {
+                                    var forwardDegrees = WoWPathfinding.GetDesiredDirectionInDegrees(WaypointDefinition.Waypoints[CurrentWaypointIndex], WaypointDefinition.Waypoints[CurrentWaypointIndex + 1]);
+                                    var backwardsDegrees = WoWPathfinding.GetDesiredDirectionInDegrees(WaypointDefinition.Waypoints[CurrentWaypointIndex], WaypointDefinition.Waypoints[CurrentWaypointIndex - 1]);
+                                    var facingDegrees = worldState.FacingDegrees;
+                                    var forwardDiff = WoWPathfinding.GetDegreesToMove(facingDegrees, forwardDegrees);
+                                    var backwardsDiff = WoWPathfinding.GetDegreesToMove(facingDegrees, backwardsDegrees);
+
+                                    if (backwardsDiff < forwardDiff)
+                                    {
+                                        WaypointTraversalDirection = -1;
+                                    }
+                                    
+                                    Console.WriteLine("Forward/Backwards/Facing/AbsFor/AbsBack");
+                                    Console.WriteLine(forwardDegrees);
+                                    Console.WriteLine(backwardsDegrees);
+                                    Console.WriteLine(facingDegrees);
+                                    Console.WriteLine(forwardDiff);
+                                    Console.WriteLine(backwardsDiff);
+                                    
+                                }
+                            }
                         }
                         else
                         {

@@ -36,6 +36,28 @@ namespace WoWHelper.Code.WorldState
             DistanceTolerance = 0.2f
         };
 
+        public static readonly WoWWaypointDefinition LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS = new WoWWaypointDefinition
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(70.12f, 11.00f),
+                new Vector2(68.84f, 13.74f),
+                new Vector2(67.82f, 17.99f),
+                new Vector2(67.78f, 21.78f),
+                new Vector2(67.97f, 25.64f),
+                new Vector2(67.35f, 30.65f),
+                new Vector2(67.29f, 35.17f),
+                new Vector2(65.68f, 38.19f),
+                new Vector2(64.12f, 40.35f),
+                // under bridge, get stuck too often to be worth it
+                //new Vector2(62.49f, 42.11f),
+                //new Vector2(61.55f, 42.71f),
+            },
+            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.MACRO,
+            DistanceTolerance = 0.2f
+        };
+
         public static readonly WoWWaypointDefinition LEVEL_24_STONETALON_WAYPOINTS = new WoWWaypointDefinition
         {
             Waypoints = new List<Vector2>

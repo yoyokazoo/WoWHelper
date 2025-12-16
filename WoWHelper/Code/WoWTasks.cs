@@ -83,6 +83,12 @@ namespace WoWHelper.Code
                 await Task.Delay(200);
                 worldState = WoWWorldState.GetWoWWorldState();
 
+                // don't drown
+                if (worldState.Underwater)
+                {
+                    await WoWTasks.GetOutOfWater();
+                }
+
                 if (worldState.IsInCombat)
                 {
                     return false;
@@ -353,6 +359,15 @@ namespace WoWHelper.Code
             Keyboard.KeyDown(WoWInput.TURN_LEFT);
             await Task.Delay(500);
             Keyboard.KeyUp(WoWInput.TURN_LEFT);
+
+            return true;
+        }
+
+        public static async Task<bool> GetOutOfWater()
+        {
+            Keyboard.KeyDown(Keys.Space);
+            await Task.Delay(1000);
+            Keyboard.KeyUp(Keys.Space);
 
             return true;
         }
