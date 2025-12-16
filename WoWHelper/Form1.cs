@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -55,6 +56,51 @@ namespace WoWHelper
         {
             // TODO: handle the response here
             Console.WriteLine(response);
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            CopyLuaAddonToWoW(textBox1.Text);
+        }
+
+        public static void CopyLuaAddonToWoW(string destinationDir)
+        {
+            // Base directory = bin\Debug\
+            string baseDir = AppContext.BaseDirectory;
+
+            // Relative source folder under bin\Debug
+            string sourceDir = Path.Combine(baseDir, "Lua Addon");
+
+            if (!Directory.Exists(sourceDir))
+            {
+                throw new DirectoryNotFoundException(
+                    $"Source addon directory does not exist: {sourceDir}");
+            }
+
+            CopyDirectoryRecursive(sourceDir, destinationDir);
+        }
+
+        private static void CopyDirectoryRecursive(string sourceDir, string destinationDir)
+        {
+            Directory.CreateDirectory(destinationDir);
+
+            foreach (var filePath in Directory.GetFiles(sourceDir))
+            {
+                string destFilePath = Path.Combine(
+                    destinationDir,
+                    Path.GetFileName(filePath));
+
+                System.IO.File.Copy(filePath, destFilePath, overwrite: true);
+            }
+
+            foreach (var subDir in Directory.GetDirectories(sourceDir))
+            {
+                string destSubDir = Path.Combine(
+                    destinationDir,
+                    Path.GetFileName(subDir));
+
+                CopyDirectoryRecursive(subDir, destSubDir);
+            }
         }
     }
 }

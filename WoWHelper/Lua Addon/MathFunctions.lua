@@ -25,9 +25,6 @@ function EncodeFloatToColor(value)
 end
 
 function round2(n)
-    --if n == nil then
-    --    return "0"
-    --end
     return math.floor(n * 100 + 0.5) / 100
 end
 
