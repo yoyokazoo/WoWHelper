@@ -39,7 +39,6 @@ frame:SetScript("OnEvent", function(self, event, ...)
             UIErrorsFrame:AddMessage("Enemy nameplates are off! Turn them on!", 1, 0, 0, nil, 15) 
         end
 
-        -- Move the loot frame so it doesn't cover this one
         local lowOnHealingPotions = AreWeLowOnHealthPotions()
         print("lowOnHealingPotions? ", lowOnHealingPotions)
         

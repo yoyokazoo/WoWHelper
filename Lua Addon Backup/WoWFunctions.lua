@@ -17,7 +17,7 @@ function CanChargeTarget()
 
     -- Basic checks
     if not UnitExists(unit) then
-        return false
+        return falsed
     end
 
     if not UnitCanAttack("player", unit) then
@@ -33,7 +33,12 @@ function CanChargeTarget()
     end
 
     -- don't kill greys
-    if UnitLevel("player") - UnitLevel("target") >= 6 then
+    if UnitLevel("player") - UnitLevel("target") >= 7 then
+        return false
+    end
+
+    -- don't charge oranges
+    if UnitLevel("player") - UnitLevel("target") <= -3 then
         return false
     end
 
@@ -290,17 +295,19 @@ end
 -- superior healing potion, level 35, 3928
 -- major healing potion, level 45, 13446
 function AreWeLowOnHealthPotions()
-    local healthPotCount = GetItemCount(929, false)
-    return healthPotCount < 15
+    local healthPotCount = GetItemCount(1710, false)
+    return healthPotCount < 2
 end
 
 -- heavy dynamite, 4378
+-- explosive sheep, 4384
+-- big bronze bomb, 4380
 -- solid dynamite, 10507
 -- dense dynamite, 18641
 -- hi-explosive bomb, 10562 
 function AreWeLowOnDynamite()
-    local dynamiteCount = GetItemCount(4378, false)
-    return dynamiteCount < 40
+    local dynamiteCount = GetItemCount(4380, false)
+    return dynamiteCount < 2
 end
 
 -- rank 1, 772
@@ -315,7 +322,7 @@ function TargetHasRend()
     local _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("target", i)
     if not spellId then break end
 
-    if spellId == 6546 then
+    if spellId == 6548 then
       return true
     end
   end

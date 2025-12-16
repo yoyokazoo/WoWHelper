@@ -168,3 +168,10 @@ function PrintXpPerHour(prefix, startTime, totalGained)
         xpPerHour
     ))
 end
+
+function PositionLootFrameCenter()
+  if not LootFrame then return end
+  LootFrame:ClearAllPoints()
+  LootFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+  print("LOOT FRAME CENTERED")
+end
