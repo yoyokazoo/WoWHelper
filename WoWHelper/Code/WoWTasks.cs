@@ -32,6 +32,8 @@ namespace WoWHelper.Code
         public static async Task<bool> SetLogoutVariablesTask(WoWPlayer wowPlayer)
         {
             WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+            // TODO: Hook this up to the zone, since for example the river turtles will never get 2 mobs
+            
             if (worldState.LowOnDynamite)
             {
                 wowPlayer.LogoutTriggered = true;
@@ -80,7 +82,23 @@ namespace WoWHelper.Code
 
             while(true)
             {
-                await Task.Delay(200);
+                if (!WoWPlayer.CurrentTimeInsideDuration(wowPlayer.lastDangerousFindTargetTime, WoWPlayer.TIME_BETWEEN_FIND_DANGEROUS_TARGET_MILLIS))
+                {
+                    Keyboard.KeyDown(Keys.LShiftKey);
+                    await Task.Delay(5);
+                    Keyboard.KeyDown(WoWInput.SHIFT_DANGEROUS_TARGET_MACRO);
+                    await Task.Delay(5);
+                    Keyboard.KeyUp(WoWInput.SHIFT_DANGEROUS_TARGET_MACRO);
+                    await Task.Delay(5);
+                    Keyboard.KeyUp(Keys.LShiftKey);
+
+                    // give a little extra time
+                    await Task.Delay(250);
+
+                    wowPlayer.lastDangerousFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                }
+
+                await Task.Delay(250);
                 worldState = WoWWorldState.GetWoWWorldState();
 
                 // don't drown
@@ -92,6 +110,15 @@ namespace WoWHelper.Code
                 if (worldState.IsInCombat)
                 {
                     return false;
+                }
+
+                // these common actions should be checked each loop, need to move to more centralized logic
+                if (worldState.TargetHpPercent > 0)
+                {
+                    SlackHelper.SendMessageToChannel("DANGEROUS MOB TARGETED");
+                    wowPlayer.LogoutReason = "DANGEROUS MOB TARGETED";
+                    wowPlayer.LogoutTriggered = true;
+                    return true;
                 }
 
                 if (worldState.PlayerHpPercent < 85 && !startedEatingFood)
@@ -135,7 +162,7 @@ namespace WoWHelper.Code
                 worldState = WoWWorldState.GetWoWWorldState();
 
                 loopNum++;
-            } while (!worldState.IsInCombat && worldState.CanChargeTarget);
+            } while (!worldState.IsInCombat && worldState.CanChargeTarget && loopNum < 12);
 
             // give some time for the charge to land
             await Task.Delay(500);
@@ -228,7 +255,7 @@ namespace WoWHelper.Code
 
             if (shouldUseHealingPotion)
             {
-                SlackHelper.SendMessageToChannel("Potion used!");
+                //SlackHelper.SendMessageToChannel("Potion used!");
                 Keyboard.KeyPress(WoWInput.HEALING_POTION_KEY);
                 await Task.Delay(0);
             }
