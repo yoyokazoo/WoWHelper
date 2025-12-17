@@ -9,6 +9,67 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WoWWaypoints
     {
+        public static readonly WoWWaypointDefinition LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE = new WoWWaypointDefinition
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(78.16f, 52.21f),
+                new Vector2(79.70f, 52.30f),
+                new Vector2(81.79f, 52.12f),
+                new Vector2(82.08f, 53.51f),
+                new Vector2(81.60f, 55.03f),
+                new Vector2(82.47f, 56.14f),
+                new Vector2(83.00f, 54.67f),
+                new Vector2(82.92f, 54.00f),
+                new Vector2(84.13f, 56.00f),
+                //new Vector2(86.87f, 58.05f),
+                //new Vector2(87.96f, 61.20f),
+            },
+            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.MACRO,
+            DistanceTolerance = 0.2f
+        };
+
+        /*
+        public static readonly WoWWaypointDefinition LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE = new WoWWaypointDefinition
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(78.16f, 52.21f),
+                new Vector2(79.70f, 52.30f),
+                new Vector2(81.53f, 53.34f),
+                new Vector2(82.13f, 56.16f),
+                new Vector2(82.92f, 54.00f),
+                new Vector2(84.13f, 56.00f),
+                new Vector2(85.53f, 57.50f),
+                new Vector2(86.46f, 59.50f),
+            },
+            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.MACRO,
+            DistanceTolerance = 0.2f
+        };
+        */
+
+        public static readonly WoWWaypointDefinition LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WoWWaypointDefinition
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(81.79f, 52.12f),
+                new Vector2(82.08f, 53.51f),
+                new Vector2(81.60f, 55.03f),
+                new Vector2(82.47f, 56.14f),
+                new Vector2(83.00f, 54.67f),
+                new Vector2(84.03f, 54.25f),
+                new Vector2(85.73f, 56.59f),
+                new Vector2(86.87f, 58.05f),
+                new Vector2(87.96f, 61.20f),
+            },
+            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.MACRO,
+            DistanceTolerance = 0.2f
+        };
+
+        // Don't recommend this one without WBs
         public static readonly WoWWaypointDefinition LEVEL_27_NORTH_ASHENVALE_WAYPOINTS = new WoWWaypointDefinition
         {
             Waypoints = new List<Vector2>

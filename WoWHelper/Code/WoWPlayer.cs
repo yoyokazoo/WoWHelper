@@ -16,8 +16,11 @@ namespace WoWHelper
 {
     public class WoWPlayer
     {
-        private static long TIME_BETWEEN_FIND_TARGET_MILLIS = (long)(2 * 1000); // 2 seconds
+        public static long TIME_BETWEEN_FIND_TARGET_MILLIS = (long)(1 * 1000); // 1 seconds
+        public static long TIME_BETWEEN_FIND_DANGEROUS_TARGET_MILLIS = (long)(5 * 1000); // 5 seconds
         private long lastFindTargetTime = 0;
+        // TODO: player needs to be refactored
+        public long lastDangerousFindTargetTime { get; set; }
 
         public static long FARM_TIME_LIMIT_MILLIS = 8 * 60 * 60 * 1000; // 4 hours
 
@@ -72,7 +75,7 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
-            WaypointDefinition = WoWWaypoints.LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS;
+            WaypointDefinition = WoWWaypoints.LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE;
             WaypointTraversalDirection = 1;
         }
 
@@ -287,10 +290,14 @@ namespace WoWHelper
             // Count loops of the waypoints, if we haven't found a target in N loops, error out
             int maxTargetChecks = 1000;
             int targetChecks = 0;
+            bool lookingForDangerousTarget = false;
             while (targetChecks < maxTargetChecks)
             {
                 if (!CurrentTimeInsideDuration(lastFindTargetTime, TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
+                    lookingForDangerousTarget = false;
+                    lastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
                     if (WaypointDefinition.TargetFindMethod == WoWWaypointDefinition.WaypointTargetFindMethod.TAB)
                     {
                         Keyboard.KeyPress(WoWInput.TAB_TARGET);
@@ -311,9 +318,24 @@ namespace WoWHelper
                         }  
                     }
 
-
-                    lastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     targetChecks++;
+                }
+                else if(!CurrentTimeInsideDuration(lastDangerousFindTargetTime, TIME_BETWEEN_FIND_DANGEROUS_TARGET_MILLIS))
+                {
+                    lookingForDangerousTarget = true;
+                    lastDangerousFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+                    // TODO HELPER METHOD
+                    Keyboard.KeyDown(Keys.LShiftKey);
+                    await Task.Delay(5);
+                    Keyboard.KeyDown(WoWInput.SHIFT_DANGEROUS_TARGET_MACRO);
+                    await Task.Delay(5);
+                    Keyboard.KeyUp(WoWInput.SHIFT_DANGEROUS_TARGET_MACRO);
+                    await Task.Delay(5);
+                    Keyboard.KeyUp(Keys.LShiftKey);
+
+                    // give a little extra time
+                    await Task.Delay(250);
                 }
 
                 // always wait a bit for the UI to update, then grab it?
@@ -325,6 +347,29 @@ namespace WoWHelper
                 if (worldState.Underwater)
                 {
                     await WoWTasks.GetOutOfWater();
+                }
+
+                if (worldState.IsInCombat)
+                {
+                    await WoWTasks.EndWalkForwardTask();
+                    // return true if we can charge, false if we're already in combat
+                    return false;
+                }
+
+                if (lookingForDangerousTarget && worldState.TargetHpPercent > 0)
+                {
+                    await WoWTasks.EndWalkForwardTask();
+
+                    SlackHelper.SendMessageToChannel($"DANGEROUS MOB TARGETED during CorePathfindingLoopTask, {lookingForDangerousTarget}");
+                    LogoutReason = "DANGEROUS MOB TARGETED";
+                    LogoutTriggered = true;
+                    return true;
+                }
+
+                if (worldState.CanChargeTarget)
+                {
+                    await WoWTasks.EndWalkForwardTask();
+                    return true;
                 }
 
                 // If we haven't moved in a long time, alert
