@@ -265,9 +265,39 @@ namespace WoWHelper
                 {
                     Keyboard.KeyPress(WoWInput.REND_KEY);
                 }
-                else if (!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WoWGameplayConstants.HEROIC_STRIKE_RAGE_COST)
+                else if(worldState.AttackerCount > 1)
                 {
-                    Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
+                    if (worldState.SweepingStrikesCooledDown && worldState.ResourcePercent < WoWGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    {
+                        // Popping SS ASAP is priority
+                        continue;
+                    }
+
+                    if (worldState.SweepingStrikesCooledDown && worldState.ResourcePercent >= WoWGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    {
+                        await WoWInput.PressKeyWithShift(WoWInput.SHIFT_SWEEPING_STRIKES_MACRO);
+                    }
+                    /*
+                    else if (worldState.WhirlwindCooledDown && worldState.ResourcePercent >= WoWGameplayConstants.WHIRLWIND_RAGE_COST)
+                    {
+                        await WoWInput.PressKeyWithShift(WoWInput.SHIFT_WHIRLWIND_MACRO);
+                        await Task.Delay(200);
+                        Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
+                    }
+                    */
+                    else if (/*!worldState.WhirlwindCooledDown && */!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WoWGameplayConstants.CLEAVE_RAGE_COST)
+                    {
+                        // if WW is cooled down, prefer waiting for rage for that over cleaving
+                        await WoWInput.PressKeyWithShift(WoWInput.SHIFT_CLEAVE_MACRO);
+                    }
+                }
+                else if (worldState.AttackerCount == 1)
+                {
+                    // leave a little rage in case we get an add
+                    if (!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WoWGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    {
+                        Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
+                    }
                 }
             } while (worldState.IsInCombat);
 
@@ -280,6 +310,7 @@ namespace WoWHelper
 
             WoWWorldState previousWorldState = null;
             WoWWorldState worldState = null;
+            bool stationaryJumpAttemptedOnce = false;
             bool stationaryWiggleAttemptedOnce = false;
             bool stationaryWiggleAttemptedTwice = false;
             bool stationaryAlertSent = false;
@@ -393,6 +424,16 @@ namespace WoWHelper
                     Keyboard.KeyUp(Keys.Q);
 
                     stationaryWiggleAttemptedOnce = true;
+                }
+
+                if (!stationaryJumpAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
+                {
+                    // back off obstruction
+                    Keyboard.KeyPress(Keys.Space);
+                    await Task.Delay(1000);
+                    Keyboard.KeyPress(Keys.Space);
+
+                    stationaryJumpAttemptedOnce = true;
                 }
 
                 if (!stationaryWiggleAttemptedTwice && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE))

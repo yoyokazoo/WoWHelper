@@ -197,8 +197,9 @@ namespace WoWHelper.Code
             bool inCombatButNotAutoAttacking = worldState.IsInCombat && !worldState.IsAutoAttacking;
             bool tooFarAway = worldState.TooFarAway;
             bool facingWrongWay = worldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
+            bool targetNeedsToBeInFront = worldState.TargetNeedsToBeInFront;
 
-            if (attackerJustDied || facingWrongWay)
+            if (attackerJustDied || facingWrongWay || targetNeedsToBeInFront)
             {
                 // one of the mobs just died, scoot back to make sure the next mob is in front of you
                 await WoWTasks.ScootBackwardsTask();
@@ -216,7 +217,7 @@ namespace WoWHelper.Code
                 Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
             }
 
-            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay;
+            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront;
         }
 
         public static async Task<bool> TooManyAttackersTask(WoWWorldState worldState)
@@ -259,7 +260,7 @@ namespace WoWHelper.Code
 
             if (shouldUseHealingPotion)
             {
-                //SlackHelper.SendMessageToChannel("Potion used!");
+                SlackHelper.SendMessageToChannel("Potion used!");
                 Keyboard.KeyPress(WoWInput.HEALING_POTION_KEY);
                 await Task.Delay(0);
             }

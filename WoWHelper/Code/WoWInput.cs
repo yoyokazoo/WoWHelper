@@ -24,6 +24,9 @@ namespace WoWHelper.Code
         public const Keys RETALIATION_KEY = Keys.Oemplus;
 
         public const Keys SHIFT_DANGEROUS_TARGET_MACRO = Keys.D1;
+        public const Keys SHIFT_SWEEPING_STRIKES_MACRO = Keys.D2;
+        public const Keys SHIFT_WHIRLWIND_MACRO = Keys.D3;
+        public const Keys SHIFT_CLEAVE_MACRO = Keys.D4;
         public const Keys SHIFT_LOGOUT_MACRO = Keys.D5;
 
         public const Keys TURN_LEFT = Keys.A;
