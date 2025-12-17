@@ -295,7 +295,7 @@ end
 -- superior healing potion, level 35, 3928
 -- major healing potion, level 45, 13446
 function AreWeLowOnHealthPotions()
-    local healthPotCount = GetItemCount(1710, false)
+    local healthPotCount = GetItemCount(3928, false)
     return healthPotCount < 2
 end
 

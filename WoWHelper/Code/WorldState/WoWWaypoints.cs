@@ -30,26 +30,6 @@ namespace WoWHelper.Code.WorldState
             DistanceTolerance = 0.2f
         };
 
-        /*
-        public static readonly WoWWaypointDefinition LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE = new WoWWaypointDefinition
-        {
-            Waypoints = new List<Vector2>
-            {
-                new Vector2(78.16f, 52.21f),
-                new Vector2(79.70f, 52.30f),
-                new Vector2(81.53f, 53.34f),
-                new Vector2(82.13f, 56.16f),
-                new Vector2(82.92f, 54.00f),
-                new Vector2(84.13f, 56.00f),
-                new Vector2(85.53f, 57.50f),
-                new Vector2(86.46f, 59.50f),
-            },
-            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.MACRO,
-            DistanceTolerance = 0.2f
-        };
-        */
-
         public static readonly WoWWaypointDefinition LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WoWWaypointDefinition
         {
             Waypoints = new List<Vector2>
