@@ -23,6 +23,7 @@ namespace WoWHelper.Code
         public const float WAYPOINT_DEGREE_TOLERANCE_MIN_DEGREES = 10.0f;
 
         public const int STATIONARY_MILLIS_BEFORE_WIGGLE = 5 * 1000;
+        public const int STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE = 15 * 1000;
         public const int STATIONARY_MILLIS_BEFORE_ALERT = 30 * 1000;
 
 
