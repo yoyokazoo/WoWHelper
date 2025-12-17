@@ -12,19 +12,19 @@ function IsInCombat()
     return UnitAffectingCombat("player")
 end
 
-function CanChargeTarget()
+function ShouldWeAttackTarget()
     local unit = "target"
 
     -- Basic checks
     if not UnitExists(unit) then
-        return falsed
+        return false
     end
 
     if not UnitCanAttack("player", unit) then
         return false
     end
 
-    if UnitIsPVP("target") then
+    if UnitIsPVP(unit) then
         return false
     end
 
@@ -33,12 +33,12 @@ function CanChargeTarget()
     end
 
     -- don't kill greys
-    if UnitLevel("player") - UnitLevel("target") >= 7 then
+    if UnitLevel("player") - UnitLevel(unit) >= 7 then
         return false
     end
 
     -- don't charge oranges
-    if UnitLevel("player") - UnitLevel("target") <= -3 then
+    if UnitLevel("player") - UnitLevel(unit) <= -3 then
         return false
     end
 
@@ -47,29 +47,26 @@ function CanChargeTarget()
         return false
     end
 
-    -- Resolve Charge spell name from its ID (100 is the standard Charge ID)
-    local chargeName = GetSpellInfo(100)
-    if not chargeName then
+    return true
+end
+
+function SpellIsCooledDown(spellId)
+    local spellName = GetSpellInfo(spellId)
+    if not spellName then
         -- Should never happen unless spell is unknown (e.g., very low level)
         return false
     end
 
-    -- 1) Range check
-    local inRange = IsSpellInRange(chargeName, unit)
-    if inRange ~= 1 then
-        return false
-    end
+    local start, duration, enabled = GetSpellCooldown(spellName)
 
-    -- 2) Cooldown check
-    local start, duration, enabled = GetSpellCooldown(chargeName)
-
+    -- removing this check for now -> we should be using macros to hop into correct stance
     -- If it's not enabled, you can't use it (e.g., disabled by stance/form)
-    if enabled == 0 then
-        return false
-    end
+    --if enabled == 0 then
+    --    return false
+    --end
 
     -- If start == 0 and duration == 0, spell is ready
-    if start == 0 or duration == 0 then
+    if start == 0 and duration == 0 then
         return true
     end
 
@@ -79,6 +76,65 @@ function CanChargeTarget()
     end
 
     return false
+end
+
+function SpellIsInRangeAndCooledDown(spellId)
+    local unit = "target"
+
+    -- Resolve spell name from its ID
+    local spellName = GetSpellInfo(spellId)
+    if not spellName then
+        -- Should never happen unless spell is unknown (e.g., very low level)
+        return false
+    end
+
+    -- 1) Range check
+    local inRange = IsSpellInRange(spellName, unit)
+    if inRange ~= 1 then
+        return false
+    end
+
+    -- 2) Cooldown check
+    local start, duration, enabled = GetSpellCooldown(spellName)
+
+    -- removing this check for now -> we should be using macros to hop into correct stance
+    -- If it's not enabled, you can't use it (e.g., disabled by stance/form)
+    --if enabled == 0 then
+    --    return false
+    --end
+
+    -- If start == 0 and duration == 0, spell is ready
+    if start == 0 and duration == 0 then
+        return true
+    end
+
+    local remaining = start + duration - GetTime()
+    if remaining <= 0 then
+        return true
+    end
+
+    return false
+end
+
+-- 100 is level 1 charge, but still works since range doesnt change and shares cooldown
+function CanChargeTarget()
+    if not ShouldWeAttackTarget() then
+        return false
+    end
+
+    return SpellIsInRangeAndCooledDown(100)
+end
+
+-- 75,    -- Auto Shot (Hunter)
+-- 2480,  -- Shoot Bow
+-- 7918,  -- Shoot Gun
+-- 7919,  -- Shoot Crossbow
+function CanShootTarget()
+    if not ShouldWeAttackTarget() then
+        return false
+    end
+
+    return SpellIsInRangeAndCooledDown(7918)
 end
 
 function IsAnyNextSwingSpellQueued()
@@ -310,6 +366,13 @@ function AreWeLowOnDynamite()
     return dynamiteCount < 2
 end
 
+-- light shot, 2516
+-- rough arrow, 2512
+function AreWeLowOnAmmo()
+    local ammoCount = GetItemCount(2516, false)
+    return ammoCount < 2
+end
+
 -- rank 1, 772
 -- rank 2, 6546
 -- rank 3, 6547
@@ -329,22 +392,47 @@ function TargetHasRend()
   return false
 end
 
+-- Look at Rend, since it has no cooldown beyond GCD
+function IsGlobalCooldownCooledDown()
+    return SpellIsCooledDown(772)
+end
+
+-- WW rank 1, 1680
+function CanCastWhirlwind()
+    return SpellIsCooledDown(1680)
+end
+
+-- Sweeping Strikes, 12292
+function CanCastSweepingStrikes()
+    return SpellIsCooledDown(12292)
+end
+
 function GetMultiBoolOne()
-    -- IsAttacking
     local bool1 = IsAttacking()
     local bool2 = HasBattleShout()
     local bool3 = AreWeLowOnHealthPotions()
     local bool4 = AreWeLowOnDynamite()
     local bool5 = TargetHasRend()
-    local bool6 = true
-    local bool7 = true
+    local bool6 = CanShootTarget()
+    local bool7 = AreWeLowOnAmmo()
     local bool8 = IsOverpowerUsable()
 
     local rByte = EncodeBooleansToByte(bool1, bool2, bool3, bool4, bool5, bool6, bool7, bool8)
 
+    local boolG1 = IsGlobalCooldownCooledDown()
+    local boolG2 = CanCastWhirlwind()
+    local boolG3 = CanCastSweepingStrikes()
+    local boolG4 = false
+    local boolG5 = false
+    local boolG6 = false
+    local boolG7 = false
+    local boolG8 = IsGlobalCooldownCooledDown()
+
+    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
+
     --print(rByte)
 
-    return rByte/255.0, 0, 0
+    return rByte/255.0, gByte/255.0, 0
 end
 
 function IsAttackingColor()

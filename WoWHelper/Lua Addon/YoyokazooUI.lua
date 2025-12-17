@@ -38,9 +38,6 @@ frame:SetScript("OnEvent", function(self, event, ...)
         if not nameplateShowEnemies then
             UIErrorsFrame:AddMessage("Enemy nameplates are off! Turn them on!", 1, 0, 0, nil, 15) 
         end
-
-        local lowOnHealingPotions = AreWeLowOnHealthPotions()
-        print("lowOnHealingPotions? ", lowOnHealingPotions)
         
         print("XP session started. Level:", xpTracker.startLevel, "XP:", xpTracker.startXP)
         InitializeIndicators()

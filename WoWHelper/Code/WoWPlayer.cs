@@ -325,14 +325,7 @@ namespace WoWHelper
                     lookingForDangerousTarget = true;
                     lastDangerousFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                    // TODO HELPER METHOD
-                    Keyboard.KeyDown(Keys.LShiftKey);
-                    await Task.Delay(5);
-                    Keyboard.KeyDown(WoWInput.SHIFT_DANGEROUS_TARGET_MACRO);
-                    await Task.Delay(5);
-                    Keyboard.KeyUp(WoWInput.SHIFT_DANGEROUS_TARGET_MACRO);
-                    await Task.Delay(5);
-                    Keyboard.KeyUp(Keys.LShiftKey);
+                    await WoWInput.PressKeyWithShift(WoWInput.SHIFT_DANGEROUS_TARGET_MACRO);
 
                     // give a little extra time
                     await Task.Delay(250);
@@ -366,6 +359,7 @@ namespace WoWHelper
                     return true;
                 }
 
+                // TODO: ASDF
                 if (worldState.CanChargeTarget)
                 {
                     await WoWTasks.EndWalkForwardTask();

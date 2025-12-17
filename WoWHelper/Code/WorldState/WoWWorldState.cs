@@ -29,11 +29,17 @@ namespace WoWHelper
         public bool BattleShoutActive { get; private set; }
         public bool LowOnHealthPotions { get; private set; }
         public bool LowOnDynamite { get; private set; }
+        public bool LowOnAmmo { get; private set; }
         public bool OverpowerUsable { get; private set; }
         public bool TargetHasRend { get; private set; }
+        public bool GCDCooledDown { get; private set; }
+        public bool SweepingStrikesCooledDown { get; private set; }
+        public bool WhirlwindCooledDown { get; private set; }
+        public bool CanShootTarget { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
+        public bool TargetNeedsToBeInFront { get; private set; }
         public bool OnLoginScreen { get; private set; }
         public bool Underwater { get; private set; }
 
@@ -84,6 +90,7 @@ namespace WoWHelper
 
             UpdateFacingWrongWay(bmp);
             UpdateTooFarAway(bmp);
+            UpdateTargetNeedsToBeInFront(bmp);
             UpdateOnLoginScreen(bmp);
             UpdateBreathBar(bmp);
         }
@@ -192,13 +199,20 @@ namespace WoWHelper
         {
             Color color = bmp.GetPixel(WoWWorldStateImageConstants.MULTI_BOOL_ONE_POSITION.X, WoWWorldStateImageConstants.MULTI_BOOL_ONE_POSITION.Y);
             DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
+            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
 
             IsAutoAttacking = r1;
             BattleShoutActive = r2;
             LowOnHealthPotions = r3;
             LowOnDynamite = r4;
             TargetHasRend = r5;
+            CanShootTarget = r6;
+            LowOnAmmo = r7;
             OverpowerUsable = r8;
+
+            GCDCooledDown = g1;
+            WhirlwindCooledDown = g2;
+            SweepingStrikesCooledDown = g3;
         }
 
         public void UpdateFacingWrongWay(Bitmap bmp)
@@ -209,6 +223,11 @@ namespace WoWHelper
         public void UpdateTooFarAway(Bitmap bmp)
         {
             TooFarAway = WoWWorldStateImageConstants.TOO_FAR_AWAY_POSITIONS.MatchesSourceImage(bmp);
+        }
+
+        public void UpdateTargetNeedsToBeInFront(Bitmap bmp)
+        {
+            TargetNeedsToBeInFront = WoWWorldStateImageConstants.TARGET_NEEDS_TO_BE_IN_FRONT_POSITIONS.MatchesSourceImage(bmp);
         }
 
         public void UpdateOnLoginScreen(Bitmap bmp)

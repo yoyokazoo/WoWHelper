@@ -1,4 +1,5 @@
-﻿using System;
+﻿using InputManager;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,13 +17,14 @@ namespace WoWHelper.Code
         public const Keys DYNAMITE_KEY = Keys.D5;
         public const Keys HEALING_POTION_KEY = Keys.D6;
         public const Keys BATTLE_SHOUT_KEY = Keys.D7;
-        public const Keys LOGOUT_MACRO = Keys.D8;
+        public const Keys SHOOT_MACRO = Keys.D8;
         public const Keys OVERPOWER_KEY = Keys.D9;
         public const Keys CLEAR_TARGET_MACRO = Keys.D0;
         public const Keys REND_KEY = Keys.OemMinus;
         public const Keys RETALIATION_KEY = Keys.Oemplus;
 
         public const Keys SHIFT_DANGEROUS_TARGET_MACRO = Keys.D1;
+        public const Keys SHIFT_LOGOUT_MACRO = Keys.D5;
 
         public const Keys TURN_LEFT = Keys.A;
         public const Keys TURN_RIGHT = Keys.D;
@@ -31,5 +33,16 @@ namespace WoWHelper.Code
         public const Keys MOVE_BACK = Keys.S;
 
         public const Keys TAB_TARGET = Keys.Tab;
+
+        public static async Task PressKeyWithShift(Keys key)
+        {
+            Keyboard.KeyDown(Keys.LShiftKey);
+            await Task.Delay(5);
+            Keyboard.KeyDown(key);
+            await Task.Delay(5);
+            Keyboard.KeyUp(key);
+            await Task.Delay(5);
+            Keyboard.KeyUp(Keys.LShiftKey);
+        }
     }
 }

@@ -34,6 +34,12 @@ namespace WoWHelper
             new ColorPosition(1666, 220, ERROR_TEXT_COLOR),
         });
 
+        public static readonly ImageMatchColorPositions TARGET_NEEDS_TO_BE_IN_FRONT_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {
+            new ColorPosition(1506, 216, ERROR_TEXT_COLOR),
+            new ColorPosition(1524, 218, ERROR_TEXT_COLOR),
+            new ColorPosition(1531, 219, ERROR_TEXT_COLOR),
+        });
+
         private static readonly Color LOGIN_SCREEN_COLOR_ONE = Color.FromArgb(241, 221, 175);
         private static readonly Color LOGIN_SCREEN_COLOR_TWO = Color.FromArgb(52, 51, 60);
         private static readonly Color LOGIN_SCREEN_COLOR_THREE = Color.FromArgb(229, 38, 39);
