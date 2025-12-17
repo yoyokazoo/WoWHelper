@@ -254,7 +254,7 @@ namespace WoWHelper.Code
             if (waypointDistance <= waypoint.DistanceTolerance)
             {
                 //Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
-                //await EndWalkForwardTask();
+                await EndWalkForwardTask();
                 return true;
             }
 

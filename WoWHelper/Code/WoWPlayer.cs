@@ -160,7 +160,7 @@ namespace WoWHelper
                         break;
                     case PlayerState.CHECK_FOR_VALID_TARGET:
                         Console.WriteLine("Checking for valid target");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(CorePathfindingLoopTask(),
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(CorePathfindingLoopTask(this),
                             PlayerState.TRY_TO_CHARGE_TARGET,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
@@ -168,7 +168,7 @@ namespace WoWHelper
                         Console.WriteLine("Trying to charge target");
                         currentPlayerState = await ChangeStateBasedOnTaskResult(WoWTasks.TryToChargeTask(),
                             PlayerState.IN_CORE_COMBAT_LOOP,
-                            PlayerState.CHECK_FOR_VALID_TARGET);
+                            PlayerState.CHECK_FOR_LOGOUT);
                         break;
                     case PlayerState.IN_CORE_COMBAT_LOOP:
                         Console.WriteLine("In core combat loop");
@@ -271,13 +271,14 @@ namespace WoWHelper
             return true;
         }
 
-        async Task<bool> CorePathfindingLoopTask()
+        async Task<bool> CorePathfindingLoopTask(WoWPlayer wowPlayer)
         {
             Console.WriteLine("Kicking off core pathfinding loop");
 
             WoWWorldState previousWorldState = null;
             WoWWorldState worldState = null;
-            bool stationaryWiggleAttempted = false;
+            bool stationaryWiggleAttemptedOnce = false;
+            bool stationaryWiggleAttemptedTwice = false;
             bool stationaryAlertSent = false;
             long lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -332,7 +333,7 @@ namespace WoWHelper
                     lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
 
-                if (!stationaryWiggleAttempted && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
+                if (!stationaryWiggleAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
                 {
                     // stop walking forward
                     await WoWTasks.EndWalkForwardTask();
@@ -347,13 +348,34 @@ namespace WoWHelper
                     await Task.Delay(2000);
                     Keyboard.KeyUp(Keys.Q);
 
-                    stationaryWiggleAttempted = true;
+                    stationaryWiggleAttemptedOnce = true;
+                }
+
+                if (!stationaryWiggleAttemptedTwice && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE))
+                {
+                    // stop walking forward
+                    await WoWTasks.EndWalkForwardTask();
+
+                    // back off obstruction
+                    Keyboard.KeyDown(Keys.S);
+                    await Task.Delay(1000);
+                    Keyboard.KeyUp(Keys.S);
+
+                    // strafe left
+                    Keyboard.KeyDown(Keys.E);
+                    await Task.Delay(2000);
+                    Keyboard.KeyUp(Keys.E);
+
+                    stationaryWiggleAttemptedTwice = true;
                 }
 
                 if (!stationaryAlertSent && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_ALERT))
                 {
-                    SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
-                    stationaryAlertSent = true;
+                    //SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
+                    //stationaryAlertSent = true;
+                    wowPlayer.LogoutTriggered = true;
+                    wowPlayer.LogoutReason = "Stuck for a long time, couldn't wiggle out";
+                    return true;
                 }
 
                 if (worldState.CanChargeTarget || worldState.IsInCombat)
@@ -446,7 +468,10 @@ namespace WoWHelper
 
             SlackHelper.SendMessageToChannel($"Haven't found a target in ~4 minutes.  Something wrong?");
             Console.WriteLine("Exited Pathfinding loop.  Too many loops without a successful target find.");
-            return false;
+            wowPlayer.LogoutTriggered = true;
+            wowPlayer.LogoutReason = "4 minutes without finding a target";
+
+            return true;
         }
     }
 }
