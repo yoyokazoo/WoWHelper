@@ -75,7 +75,7 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
-            WaypointDefinition = WoWWaypoints.LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE;
+            WaypointDefinition = WoWWaypoints.LEVEL_37_KODO_GRAVEYARD;
             WaypointTraversalDirection = 1;
         }
 

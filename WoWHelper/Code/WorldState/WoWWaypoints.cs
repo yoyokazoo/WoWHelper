@@ -9,6 +9,27 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WoWWaypoints
     {
+        public static readonly WoWWaypointDefinition LEVEL_37_KODO_GRAVEYARD = new WoWWaypointDefinition
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(54.05f, 61.73f),
+                new Vector2(53.45f, 59.77f),
+                new Vector2(53.93f, 58.53f),
+                new Vector2(53.65f, 57.29f),
+                new Vector2(52.62f, 57.50f),
+                new Vector2(51.40f, 58.10f),
+                new Vector2(51.08f, 57.06f),
+                new Vector2(50.60f, 56.78f),
+                new Vector2(50.17f, 57.92f),
+                new Vector2(49.45f, 58.84f),
+                new Vector2(49.31f, 59.66f),
+            },
+            TraversalMethod = WoWWaypointDefinition.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WoWWaypointDefinition.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.2f
+        };
+
         public static readonly WoWWaypointDefinition LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE = new WoWWaypointDefinition
         {
             Waypoints = new List<Vector2>
