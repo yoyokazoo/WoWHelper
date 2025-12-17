@@ -99,5 +99,17 @@ namespace WoWHelperUnitTests
 
             Assert.AreEqual(expected, Player.WorldState.Underwater);
         }
+
+        [TestMethod]
+        [DataRow(false, "..\\..\\Source Images\\NoBattleshout.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\targetneedstobeinfront.bmp")]
+        public void VerifyTargetNeedsToBeInFront(bool expected, string fileName)
+        {
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+
+            Player.UpdateFromBitmap(new Bitmap(filePath));
+
+            Assert.AreEqual(expected, Player.WorldState.TargetNeedsToBeInFront);
+        }
     }
 }

@@ -360,7 +360,7 @@ namespace WoWHelper
                 }
 
                 // TODO: ASDF
-                if (worldState.CanChargeTarget)
+                if (worldState.CanShootTarget)
                 {
                     await WoWTasks.EndWalkForwardTask();
                     return true;
@@ -417,7 +417,8 @@ namespace WoWHelper
                     return true;
                 }
 
-                if (worldState.CanChargeTarget || worldState.IsInCombat)
+                // ASDF
+                if (worldState.CanShootTarget || worldState.IsInCombat)
                 {
                     await WoWTasks.EndWalkForwardTask();
                     // return true if we can charge, false if we're already in combat

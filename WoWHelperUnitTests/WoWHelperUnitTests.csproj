@@ -284,6 +284,7 @@
     <Content Include="Source Images\NumbersAsColors.bmp" />
     <Content Include="Source Images\NumbersAsColors2.bmp" />
     <Content Include="Source Images\numbersAsColors3.bmp" />
+    <Content Include="Source Images\targetneedstobeinfront.bmp" />
     <Content Include="Source Images\toofaraway.bmp" />
   </ItemGroup>
   <ItemGroup>

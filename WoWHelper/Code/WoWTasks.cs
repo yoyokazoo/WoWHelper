@@ -138,25 +138,29 @@ namespace WoWHelper.Code
 
         public static async Task<bool> TryToChargeTask()
         {
-            WoWWorldState worldState;
+            Console.WriteLine($"Clicked first shoot");
+            Keyboard.KeyPress(WoWInput.SHOOT_MACRO);
+            await Task.Delay(250);
+            WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
 
             // break this apart a bit?  Smaller discrete charge task and then all the "rotation, wait for charge to land" cruft around it
             int loopNum = 0;
             do
             {
-                if (loopNum > 0)
+                if (!worldState.WaitingToShoot)
                 {
+                    Console.WriteLine($"Not shooting, probably not facing");
                     await TurnABitToTheLeftTask();
+                    Keyboard.KeyPress(WoWInput.SHOOT_MACRO);
                 }
-
-                Keyboard.KeyPress(WoWInput.CHARGE_KEY);
 
                 await Task.Delay(250);
 
                 worldState = WoWWorldState.GetWoWWorldState();
 
                 loopNum++;
-            } while (!worldState.IsInCombat && worldState.CanChargeTarget && loopNum < 12);
+            } while (!worldState.IsInCombat && worldState.CanShootTarget && loopNum < 12);
+            // ASDF
 
             // give some time for the charge to land
             await Task.Delay(500);

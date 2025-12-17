@@ -137,6 +137,10 @@ function CanShootTarget()
     return SpellIsInRangeAndCooledDown(7918)
 end
 
+function WaitingToShoot()
+    return IsCurrentSpell(7918)
+end
+
 function IsAnyNextSwingSpellQueued()
     -- Action queue abilities always satisfy IsCurrentSpell()
     -- So check if ANY known next-swing spell is current.
@@ -422,7 +426,7 @@ function GetMultiBoolOne()
     local boolG1 = IsGlobalCooldownCooledDown()
     local boolG2 = CanCastWhirlwind()
     local boolG3 = CanCastSweepingStrikes()
-    local boolG4 = false
+    local boolG4 = WaitingToShoot()
     local boolG5 = false
     local boolG6 = false
     local boolG7 = false
