@@ -320,6 +320,8 @@ namespace WoWHelper
 
                     targetChecks++;
                 }
+                // TODO: FDSA
+                /*
                 else if(!CurrentTimeInsideDuration(lastDangerousFindTargetTime, TIME_BETWEEN_FIND_DANGEROUS_TARGET_MILLIS))
                 {
                     lookingForDangerousTarget = true;
@@ -330,6 +332,7 @@ namespace WoWHelper
                     // give a little extra time
                     await Task.Delay(250);
                 }
+                */
 
                 // always wait a bit for the UI to update, then grab it?
                 await Task.Delay(250);
@@ -349,6 +352,7 @@ namespace WoWHelper
                     return false;
                 }
 
+                /*
                 if (lookingForDangerousTarget && worldState.TargetHpPercent > 0)
                 {
                     await WoWTasks.EndWalkForwardTask();
@@ -358,6 +362,7 @@ namespace WoWHelper
                     LogoutTriggered = true;
                     return true;
                 }
+                */
 
                 // TODO: ASDF
                 if (worldState.CanShootTarget)

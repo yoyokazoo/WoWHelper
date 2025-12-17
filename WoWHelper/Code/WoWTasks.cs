@@ -82,6 +82,8 @@ namespace WoWHelper.Code
 
             while(true)
             {
+                // TODO: FDSA
+                /*
                 if (!WoWPlayer.CurrentTimeInsideDuration(wowPlayer.lastDangerousFindTargetTime, WoWPlayer.TIME_BETWEEN_FIND_DANGEROUS_TARGET_MILLIS))
                 {
                     await WoWInput.PressKeyWithShift(WoWInput.SHIFT_DANGEROUS_TARGET_MACRO);
@@ -91,6 +93,7 @@ namespace WoWHelper.Code
 
                     wowPlayer.lastDangerousFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
+                */
 
                 await Task.Delay(250);
                 worldState = WoWWorldState.GetWoWWorldState();
@@ -106,6 +109,8 @@ namespace WoWHelper.Code
                     return false;
                 }
 
+                // TODO: FDSA
+                /*
                 // these common actions should be checked each loop, need to move to more centralized logic
                 if (worldState.TargetHpPercent > 0)
                 {
@@ -114,6 +119,7 @@ namespace WoWHelper.Code
                     wowPlayer.LogoutTriggered = true;
                     return true;
                 }
+                */
 
                 if (worldState.PlayerHpPercent < 85 && !startedEatingFood)
                 {
