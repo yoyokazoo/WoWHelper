@@ -17,7 +17,7 @@ namespace WoWHelperUnitTests
             var waypoint1 = new Vector2(x1, y1);
             var waypoint2 = new Vector2(x2, y2);
 
-            var direction = WoWPathfinding.GetDesiredDirectionInDegrees(waypoint1, waypoint2);
+            var direction = WowPathfinding.GetDesiredDirectionInDegrees(waypoint1, waypoint2);
             AssertExtensions.DoublesAreAlmostEqual(expectedDirection, direction);
         }
 
@@ -28,7 +28,7 @@ namespace WoWHelperUnitTests
         [DataRow(340f, 40f, 60f)]
         public void VerifyGetDirectionToDragMouse(float currentDegrees, float desiredDegrees, float expectedDegrees)
         {
-            var degreesToMove = WoWPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
+            var degreesToMove = WowPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
             AssertExtensions.DoublesAreAlmostEqual(expectedDegrees, degreesToMove);
         }
     }

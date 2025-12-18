@@ -130,7 +130,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Code\WorldState\WoWGameplayConstants.cs" />
+    <Compile Include="Code\WorldState\WowGameplayConstants.cs" />
     <Compile Include="Code\WorldState\WoWWaypointDefinition.cs" />
     <Compile Include="Code\WorldState\WoWWaypoints.cs" />
     <Compile Include="Code\WoWPathfinding.cs" />

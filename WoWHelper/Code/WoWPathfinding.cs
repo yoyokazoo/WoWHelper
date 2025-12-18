@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WoWHelper.Code
 {
-    public static class WoWPathfinding
+    public static class WowPathfinding
     {
         public const float WAYPOINT_DEGREES_TOLERANCE = 20f;
 

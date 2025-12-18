@@ -27,7 +27,7 @@ namespace WoWHelper
 
         private void button1_Click(object sender, EventArgs e)
         {
-            WoWPlayer player = new WoWPlayer();
+            WowPlayer player = new WowPlayer();
             player.KickOffCoreLoop();
 
 

@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
-using System.Numerics;
 using WindowsGameAutomationTools.ImageDetection;
 
 namespace WoWHelper
 {
-    public static class WoWWorldStateImageConstants
+    public static class WowImageConstants
     {
         public const int WIDTH_OF_SCREEN_TO_SLICE = 1700;
         public const int HEIGHT_OF_SCREEN_TO_SLICE = 800;

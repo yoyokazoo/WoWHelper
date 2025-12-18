@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Numerics;
-using WindowsGameAutomationTools.ImageDetection;
 using WindowsGameAutomationTools.Images;
-using WoWHelper.Shared;
 
 namespace WoWHelper
 {
-    public class WoWWorldState
+    public class WowWorldState
     {
         public bool Initialized { get; private set; }
         public int PlayerHpPercent { get; private set; }
@@ -44,7 +40,7 @@ namespace WoWHelper
         public bool OnLoginScreen { get; private set; }
         public bool Underwater { get; private set; }
 
-        public WoWWorldState()
+        public WowWorldState()
         {
             Initialized = false;
             PlayerHpPercent = -1;
@@ -59,11 +55,11 @@ namespace WoWHelper
             //TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
         }
 
-        public static WoWWorldState GetWoWWorldState()
+        public static WowWorldState GetWoWWorldState()
         {
-            WoWWorldState currentState = new WoWWorldState();
+            WowWorldState currentState = new WowWorldState();
 
-            Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, WoWWorldStateImageConstants.WIDTH_OF_SCREEN_TO_SLICE, WoWWorldStateImageConstants.HEIGHT_OF_SCREEN_TO_SLICE));
+            Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, WowImageConstants.WIDTH_OF_SCREEN_TO_SLICE, WowImageConstants.HEIGHT_OF_SCREEN_TO_SLICE));
             currentState.UpdateFromBitmap(wowBitmap);
             wowBitmap.Dispose();
 
@@ -132,73 +128,73 @@ namespace WoWHelper
 
         public void UpdatePlayerHpPercent(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.PLAYER_HP_PERCENT_POSITION.X, WoWWorldStateImageConstants.PLAYER_HP_PERCENT_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.PLAYER_HP_PERCENT_POSITION.X, WowImageConstants.PLAYER_HP_PERCENT_POSITION.Y);
             PlayerHpPercent = GetIntFromColor(color);
         }
 
         public void UpdateResourcePercent(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.RESOURCE_PERCENT_POSITION.X, WoWWorldStateImageConstants.RESOURCE_PERCENT_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.RESOURCE_PERCENT_POSITION.X, WowImageConstants.RESOURCE_PERCENT_POSITION.Y);
             ResourcePercent = GetIntFromColor(color);
         }
 
         public void UpdateTargetHpPercent(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.TARGET_PERCENT_POSITION.X, WoWWorldStateImageConstants.TARGET_PERCENT_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.TARGET_PERCENT_POSITION.X, WowImageConstants.TARGET_PERCENT_POSITION.Y);
             TargetHpPercent = GetIntFromColor(color);
         }
 
         public void UpdateMapX(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.MAP_X_POSITION.X, WoWWorldStateImageConstants.MAP_X_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.MAP_X_POSITION.X, WowImageConstants.MAP_X_POSITION.Y);
             MapX = GetFloatFromColor(color);
         }
 
         public void UpdateMapY(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.MAP_Y_POSITION.X, WoWWorldStateImageConstants.MAP_Y_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.MAP_Y_POSITION.X, WowImageConstants.MAP_Y_POSITION.Y);
             MapY = GetFloatFromColor(color);
         }
 
         public void UpdateFacingDegrees(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.FACING_DEGREES_POSITION.X, WoWWorldStateImageConstants.FACING_DEGREES_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.FACING_DEGREES_POSITION.X, WowImageConstants.FACING_DEGREES_POSITION.Y);
             FacingDegrees = GetFloatFromColor(color);
         }
 
         public void UpdateAttackerCount(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.ATTACKER_COUNT_POSITION.X, WoWWorldStateImageConstants.ATTACKER_COUNT_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.ATTACKER_COUNT_POSITION.X, WowImageConstants.ATTACKER_COUNT_POSITION.Y);
             AttackerCount = GetIntFromColor(color);
         }
 
         public void UpdateIsInRange(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.IS_IN_RANGE_POSITION.X, WoWWorldStateImageConstants.IS_IN_RANGE_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.IS_IN_RANGE_POSITION.X, WowImageConstants.IS_IN_RANGE_POSITION.Y);
             IsInRange = GetBoolFromColor(color);
         }
 
         public void UpdateIsInCombat(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.IS_IN_COMBAT_POSITION.X, WoWWorldStateImageConstants.IS_IN_COMBAT_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.IS_IN_COMBAT_POSITION.X, WowImageConstants.IS_IN_COMBAT_POSITION.Y);
             IsInCombat = GetBoolFromColor(color);
         }
 
         public void UpdateCanChargeTarget(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.CAN_CHARGE_TARGET_POSITION.X, WoWWorldStateImageConstants.CAN_CHARGE_TARGET_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.CAN_CHARGE_TARGET_POSITION.X, WowImageConstants.CAN_CHARGE_TARGET_POSITION.Y);
             CanChargeTarget = GetBoolFromColor(color);
         }
 
         public void UpdateHeroicStrikeQueued(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.HEROIC_STRIKE_QUEUED_POSITION.X, WoWWorldStateImageConstants.HEROIC_STRIKE_QUEUED_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.HEROIC_STRIKE_QUEUED_POSITION.X, WowImageConstants.HEROIC_STRIKE_QUEUED_POSITION.Y);
             HeroicStrikeQueued = GetBoolFromColor(color);
         }
 
         public void UpdateMultiBoolOne(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WoWWorldStateImageConstants.MULTI_BOOL_ONE_POSITION.X, WoWWorldStateImageConstants.MULTI_BOOL_ONE_POSITION.Y);
+            Color color = bmp.GetPixel(WowImageConstants.MULTI_BOOL_ONE_POSITION.X, WowImageConstants.MULTI_BOOL_ONE_POSITION.Y);
             DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
             DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
 
@@ -219,27 +215,27 @@ namespace WoWHelper
 
         public void UpdateFacingWrongWay(Bitmap bmp)
         {
-            FacingWrongWay = WoWWorldStateImageConstants.FACING_WRONG_WAY_POSITIONS.MatchesSourceImage(bmp);
+            FacingWrongWay = WowImageConstants.FACING_WRONG_WAY_POSITIONS.MatchesSourceImage(bmp);
         }
 
         public void UpdateTooFarAway(Bitmap bmp)
         {
-            TooFarAway = WoWWorldStateImageConstants.TOO_FAR_AWAY_POSITIONS.MatchesSourceImage(bmp);
+            TooFarAway = WowImageConstants.TOO_FAR_AWAY_POSITIONS.MatchesSourceImage(bmp);
         }
 
         public void UpdateTargetNeedsToBeInFront(Bitmap bmp)
         {
-            TargetNeedsToBeInFront = WoWWorldStateImageConstants.TARGET_NEEDS_TO_BE_IN_FRONT_POSITIONS.MatchesSourceImage(bmp);
+            TargetNeedsToBeInFront = WowImageConstants.TARGET_NEEDS_TO_BE_IN_FRONT_POSITIONS.MatchesSourceImage(bmp);
         }
 
         public void UpdateOnLoginScreen(Bitmap bmp)
         {
-            OnLoginScreen = WoWWorldStateImageConstants.ON_LOGIN_SCREEN_POSITIONS.MatchesSourceImage(bmp);
+            OnLoginScreen = WowImageConstants.ON_LOGIN_SCREEN_POSITIONS.MatchesSourceImage(bmp);
         }
 
         public void UpdateBreathBar(Bitmap bmp)
         {
-            Underwater = WoWWorldStateImageConstants.BREATH_BAR_SCREEN_POSITIONS.MatchesSourceImage(bmp);
+            Underwater = WowImageConstants.BREATH_BAR_SCREEN_POSITIONS.MatchesSourceImage(bmp);
         }
     }
 }

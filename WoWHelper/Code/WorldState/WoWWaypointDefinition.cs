@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WoWHelper.Code.WorldState
 {
-    public class WoWWaypointDefinition
+    public class WowWaypointDefinition
     {
         public enum WaypointTraversalMethod
         {

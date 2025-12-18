@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace WoWHelper.Code.WorldState
+﻿namespace WoWHelper.Code.WorldState
 {
-    public class WoWGameplayConstants
+    public class WowGameplayConstants
     {
         public const int HEROIC_STRIKE_RAGE_COST = 15;
         public const int BATTLE_SHOUT_RAGE_COST = 10;

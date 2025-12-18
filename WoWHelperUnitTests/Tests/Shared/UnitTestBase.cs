@@ -12,8 +12,8 @@ namespace WoWHelperUnitTests
 {
     public class UnitTestBase
     {
-        public WoWPlayer Player { get; set; }
-        public WoWWorldState WorldState { get; set; }
+        public WowPlayer Player { get; set; }
+        public WowWorldState WorldState { get; set; }
 
         [AssemblyInitialize]
         public void InitializeTesseractEngine()
@@ -24,7 +24,7 @@ namespace WoWHelperUnitTests
         [TestInitialize]
         public void Initialize()
         {
-            Player = new WoWPlayer();
+            Player = new WowPlayer();
         }
     }
 }

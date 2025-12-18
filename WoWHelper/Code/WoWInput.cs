@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 namespace WoWHelper.Code
 {
-    public static class WoWInput
+    public static class WowInput
     {
         public const Keys FIND_TARGET_MACRO = Keys.D1;
         public const Keys CHARGE_KEY = Keys.D2;

@@ -1,20 +1,14 @@
 ﻿using InputManager;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
 using System.Numerics;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code.WorldState;
 
 namespace WoWHelper.Code
 {
-    public class WoWTasks
+    public class WowTasks
     {
         #region Windows Management Tasks
 
@@ -29,9 +23,9 @@ namespace WoWHelper.Code
             return true;
         }
 
-        public static async Task<bool> SetLogoutVariablesTask(WoWPlayer wowPlayer)
+        public static async Task<bool> SetLogoutVariablesTask(WowPlayer wowPlayer)
         {
-            WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+            WowWorldState worldState = WowWorldState.GetWoWWorldState();
             // TODO: Hook this up to the zone, since for example the river turtles will never get 2 mobs
             
             if (worldState.LowOnDynamite)
@@ -49,7 +43,7 @@ namespace WoWHelper.Code
                 wowPlayer.LogoutTriggered = true;
                 wowPlayer.LogoutReason = "Low on Ammo";
             }
-            else if (!WoWPlayer.CurrentTimeInsideDuration(wowPlayer.FarmStartTime, WoWPlayer.FARM_TIME_LIMIT_MILLIS))
+            else if (!WowPlayer.CurrentTimeInsideDuration(wowPlayer.FarmStartTime, WowPlayer.FARM_TIME_LIMIT_MILLIS))
             {
                 wowPlayer.LogoutTriggered = true;
                 wowPlayer.LogoutReason = "Farm Time Limit Reached";
@@ -62,13 +56,13 @@ namespace WoWHelper.Code
 
         public static async Task<bool> LogoutTask()
         {
-            WoWWorldState worldState;
+            WowWorldState worldState;
 
-            await WoWInput.PressKeyWithShift(WoWInput.SHIFT_LOGOUT_MACRO);
+            await WowInput.PressKeyWithShift(WowInput.SHIFT_LOGOUT_MACRO);
 
             do
             {
-                worldState = WoWWorldState.GetWoWWorldState();
+                worldState = WowWorldState.GetWoWWorldState();
                 await Task.Delay(250);
             } while (!worldState.IsInCombat && !worldState.OnLoginScreen);
 
@@ -79,9 +73,9 @@ namespace WoWHelper.Code
 
         #region Combat Tasks
 
-        public static async Task<bool> RecoverAfterFightTask(WoWPlayer wowPlayer)
+        public static async Task<bool> RecoverAfterFightTask(WowPlayer wowPlayer)
         {
-            WoWWorldState worldState;
+            WowWorldState worldState;
             bool startedEatingFood = false;
             bool dynamiteOrPotionIsCooledDown = false;
 
@@ -101,12 +95,12 @@ namespace WoWHelper.Code
                 */
 
                 await Task.Delay(250);
-                worldState = WoWWorldState.GetWoWWorldState();
+                worldState = WowWorldState.GetWoWWorldState();
 
                 // don't drown
                 if (worldState.Underwater)
                 {
-                    await WoWTasks.GetOutOfWater();
+                    await WowTasks.GetOutOfWater();
                 }
 
                 if (worldState.IsInCombat)
@@ -128,12 +122,12 @@ namespace WoWHelper.Code
 
                 if (worldState.PlayerHpPercent < 85 && !startedEatingFood)
                 {
-                    Keyboard.KeyPress(WoWInput.EAT_FOOD_KEY);
+                    Keyboard.KeyPress(WowInput.EAT_FOOD_KEY);
                     startedEatingFood = true;
                 }
 
                 //bool dynamiteIsCooledDown = !WoWPlayer.CurrentTimeInsideDuration(wowPlayer.LastDynamiteTime, WoWGameplayConstants.DYNAMITE_COOLDOWN_MILLIS);
-                bool potionIsCooledDown = !WoWPlayer.CurrentTimeInsideDuration(wowPlayer.LastHealthPotionTime, WoWGameplayConstants.POTION_COOLDOWN_MILLIS);
+                bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(wowPlayer.LastHealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
 
                 // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
                 // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
@@ -150,9 +144,9 @@ namespace WoWHelper.Code
         public static async Task<bool> TryToChargeTask()
         {
             Console.WriteLine($"Clicked first shoot");
-            Keyboard.KeyPress(WoWInput.SHOOT_MACRO);
+            Keyboard.KeyPress(WowInput.SHOOT_MACRO);
             await Task.Delay(250);
-            WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+            WowWorldState worldState = WowWorldState.GetWoWWorldState();
 
             // break this apart a bit?  Smaller discrete charge task and then all the "rotation, wait for charge to land" cruft around it
             int loopNum = 0;
@@ -162,12 +156,12 @@ namespace WoWHelper.Code
                 {
                     Console.WriteLine($"Not shooting, probably not facing");
                     await TurnABitToTheLeftTask();
-                    Keyboard.KeyPress(WoWInput.SHOOT_MACRO);
+                    Keyboard.KeyPress(WowInput.SHOOT_MACRO);
                 }
 
                 await Task.Delay(250);
 
-                worldState = WoWWorldState.GetWoWWorldState();
+                worldState = WowWorldState.GetWoWWorldState();
 
                 loopNum++;
             } while (!worldState.IsInCombat && worldState.CanShootTarget && loopNum < 12);
@@ -181,15 +175,15 @@ namespace WoWHelper.Code
 
         public static async Task<bool> StartOfCombatTask()
         {
-            await WoWTasks.StartOfCombatWiggle();
+            await WowTasks.StartOfCombatWiggle();
 
             // always kick things off with heroic strike macro to /startattack
-            Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
+            Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
 
             return true;
         }
 
-        public static async Task<bool> MakeSureWeAreAttackingEnemyTask(WoWWorldState worldState, WoWWorldState previousWorldState)
+        public static async Task<bool> MakeSureWeAreAttackingEnemyTask(WowWorldState worldState, WowWorldState previousWorldState)
         {
             bool attackerJustDied = previousWorldState?.AttackerCount > worldState.AttackerCount && worldState.AttackerCount > 0;
             bool inCombatButNotAutoAttacking = worldState.IsInCombat && !worldState.IsAutoAttacking;
@@ -200,25 +194,25 @@ namespace WoWHelper.Code
             if (attackerJustDied || facingWrongWay || targetNeedsToBeInFront)
             {
                 // one of the mobs just died, scoot back to make sure the next mob is in front of you
-                await WoWTasks.ScootBackwardsTask();
+                await WowTasks.ScootBackwardsTask();
             }
 
             if (tooFarAway)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
-                Keyboard.KeyPress(WoWInput.CLEAR_TARGET_MACRO);
+                Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
             }
 
             if (attackerJustDied || inCombatButNotAutoAttacking || tooFarAway)
             {
                 // /startattack
-                Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
+                Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
             }
 
             return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront;
         }
 
-        public static async Task<bool> TooManyAttackersTask(WoWWorldState worldState)
+        public static async Task<bool> TooManyAttackersTask(WowWorldState worldState)
         {
             bool tooManyAttackers = worldState.AttackerCount > 2;
 
@@ -226,16 +220,16 @@ namespace WoWHelper.Code
             {
                 SlackHelper.SendMessageToChannel($"TOO MANY ATTACKERS HELP");
                 // cast retaliation
-                Keyboard.KeyPress(WoWInput.RETALIATION_KEY);
+                Keyboard.KeyPress(WowInput.RETALIATION_KEY);
                 // until I get GCD tracking working, just wait a bit and click it again to make sure
                 await Task.Delay(1500);
-                Keyboard.KeyPress(WoWInput.RETALIATION_KEY);
+                Keyboard.KeyPress(WowInput.RETALIATION_KEY);
             }
 
             return tooManyAttackers;
         }
 
-        public static async Task<bool> ThrowDynamiteTask(WoWWorldState worldState)
+        public static async Task<bool> ThrowDynamiteTask(WowWorldState worldState)
         {
             bool shouldThrowDynamite = worldState.AttackerCount > 1;
 
@@ -243,7 +237,7 @@ namespace WoWHelper.Code
             {
                 Mouse.Move(1770, 770);
                 await Task.Delay(50);
-                Keyboard.KeyPress(WoWInput.DYNAMITE_KEY);
+                Keyboard.KeyPress(WowInput.DYNAMITE_KEY);
                 await Task.Delay(50);
                 Mouse.PressButton(Mouse.MouseKeys.Left);
                 await Task.Delay(1000);
@@ -252,14 +246,14 @@ namespace WoWHelper.Code
             return shouldThrowDynamite;
         }
 
-        public static async Task<bool> UseHealingPotionTask(WoWWorldState worldState)
+        public static async Task<bool> UseHealingPotionTask(WowWorldState worldState)
         {
-            bool shouldUseHealingPotion = worldState.PlayerHpPercent <= WoWGameplayConstants.HEALING_POTION_HP_THRESHOLD;
+            bool shouldUseHealingPotion = worldState.PlayerHpPercent <= WowGameplayConstants.HEALING_POTION_HP_THRESHOLD;
 
             if (shouldUseHealingPotion)
             {
                 SlackHelper.SendMessageToChannel("Potion used!");
-                Keyboard.KeyPress(WoWInput.HEALING_POTION_KEY);
+                Keyboard.KeyPress(WowInput.HEALING_POTION_KEY);
                 await Task.Delay(0);
             }
 
@@ -273,11 +267,11 @@ namespace WoWHelper.Code
         // Returns true if we've reached the waypoint
         // Returns false if we haven't yet reached the waypoint
         // Rotates towards the waypoint or walks towards the waypoint, depending
-        public static async Task<bool> MoveTowardsWaypointTask(WoWWorldState worldState, WoWWaypointDefinition waypoint, int waypointIndex)
+        public static async Task<bool> MoveTowardsWaypointTask(WowWorldState worldState, WowWaypointDefinition waypoint, int waypointIndex)
         {
             float waypointDistance = Vector2.Distance(worldState.PlayerLocation, waypoint.Waypoints[waypointIndex]);
-            float desiredDegrees = WoWPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint.Waypoints[waypointIndex]);
-            float degreesDifference = WoWPathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
+            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint.Waypoints[waypointIndex]);
+            float degreesDifference = WowPathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
 
             Console.WriteLine($"Heading towards waypoint {waypoint.Waypoints[waypointIndex]}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
@@ -288,7 +282,7 @@ namespace WoWHelper.Code
                 return true;
             }
 
-            if (Math.Abs(degreesDifference) > WoWPathfinding.GetWaypointDegreesTolerance(waypointDistance))
+            if (Math.Abs(degreesDifference) > WowPathfinding.GetWaypointDegreesTolerance(waypointDistance))
             {
                 //Console.WriteLine($"degreesDifference too large, rotating to heading");
                 //await EndWalkForwardTask();
@@ -312,15 +306,15 @@ namespace WoWHelper.Code
             {
                 while (true)
                 {
-                    WoWWorldState worldState = WoWWorldState.GetWoWWorldState();
+                    WowWorldState worldState = WowWorldState.GetWoWWorldState();
 
                     float currentDegrees = worldState.FacingDegrees;
-                    float degreesToMove = WoWPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
+                    float degreesToMove = WowPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
                     float absDegreesToMove = Math.Abs(degreesToMove);
 
                     //Console.WriteLine($"Desired Degrees: {desiredDegrees} Facing Degrees: {worldState.FacingDegrees} Degrees to Move: {degreesToMove}");
 
-                    if (absDegreesToMove <= WoWPathfinding.GetWaypointDegreesTolerance(distance))
+                    if (absDegreesToMove <= WowPathfinding.GetWaypointDegreesTolerance(distance))
                         break;
 
                     if (mouseDown == false)
@@ -331,10 +325,10 @@ namespace WoWHelper.Code
                     }
 
                     // Map angle difference -> [0,1] where 0 = on target, 1 = far away (>= maxSpeedAngle)
-                    float t = absDegreesToMove / WoWPathfinding.MAX_SPEED_ANGLE;
+                    float t = absDegreesToMove / WowPathfinding.MAX_SPEED_ANGLE;
 
                     // Interpolate between minSpeed and maxSpeed
-                    int speed = (int)Math.Round(WoWPathfinding.MIN_ROTATION_SPEED + (WoWPathfinding.MAX_ROTATION_SPEED - WoWPathfinding.MIN_ROTATION_SPEED) * t);
+                    int speed = (int)Math.Round(WowPathfinding.MIN_ROTATION_SPEED + (WowPathfinding.MAX_ROTATION_SPEED - WowPathfinding.MIN_ROTATION_SPEED) * t);
 
                     int direction = degreesToMove <= 0 ? 1 : -1;
                     int verticalDirection = 0;
@@ -357,53 +351,53 @@ namespace WoWHelper.Code
         public static async Task<bool> StartWalkForwardTask()
         {
             await Task.Delay(0);
-            Keyboard.KeyDown(WoWInput.MOVE_FORWARD);
+            Keyboard.KeyDown(WowInput.MOVE_FORWARD);
             return true;
         }
 
         public static async Task<bool> EndWalkForwardTask()
         {
             await Task.Delay(0);
-            Keyboard.KeyUp(WoWInput.MOVE_FORWARD);
+            Keyboard.KeyUp(WowInput.MOVE_FORWARD);
             return true;
         }
 
         public static async Task<bool> ScootForwardsTask()
         {
-            Keyboard.KeyDown(WoWInput.MOVE_FORWARD);
+            Keyboard.KeyDown(WowInput.MOVE_FORWARD);
             await Task.Delay(100);
-            Keyboard.KeyUp(WoWInput.MOVE_FORWARD);
+            Keyboard.KeyUp(WowInput.MOVE_FORWARD);
             return true;
         }
 
         public static async Task<bool> ScootBackwardsTask()
         {
-            Keyboard.KeyDown(WoWInput.MOVE_BACK);
+            Keyboard.KeyDown(WowInput.MOVE_BACK);
             await Task.Delay(1000);
-            Keyboard.KeyUp(WoWInput.MOVE_BACK);
+            Keyboard.KeyUp(WowInput.MOVE_BACK);
             return true;
         }
 
         public static async Task<bool> StartOfCombatWiggle()
         {
             // move back a bit to fix camera direction
-            Keyboard.KeyDown(WoWInput.MOVE_BACK);
+            Keyboard.KeyDown(WowInput.MOVE_BACK);
             await Task.Delay(400);
-            Keyboard.KeyUp(WoWInput.MOVE_BACK);
+            Keyboard.KeyUp(WowInput.MOVE_BACK);
 
             // scoot forward a tiny bit to get back in range
-            Keyboard.KeyDown(WoWInput.MOVE_FORWARD);
+            Keyboard.KeyDown(WowInput.MOVE_FORWARD);
             await Task.Delay(20);
-            Keyboard.KeyUp(WoWInput.MOVE_FORWARD);
+            Keyboard.KeyUp(WowInput.MOVE_FORWARD);
 
             return true;
         }
 
         public static async Task<bool> TurnABitToTheLeftTask()
         {
-            Keyboard.KeyDown(WoWInput.TURN_LEFT);
+            Keyboard.KeyDown(WowInput.TURN_LEFT);
             await Task.Delay(500);
-            Keyboard.KeyUp(WoWInput.TURN_LEFT);
+            Keyboard.KeyUp(WowInput.TURN_LEFT);
 
             return true;
         }
@@ -411,9 +405,9 @@ namespace WoWHelper.Code
         public static async Task<bool> GetOutOfWater()
         {
             // Holding jump ascends
-            Keyboard.KeyDown(WoWInput.JUMP);
+            Keyboard.KeyDown(WowInput.JUMP);
             await Task.Delay(1000);
-            Keyboard.KeyUp(WoWInput.JUMP);
+            Keyboard.KeyUp(WowInput.JUMP);
 
             return true;
         }
@@ -421,15 +415,15 @@ namespace WoWHelper.Code
         public static async Task<bool> AvoidObstacle(bool left)
         {
             // stop walking forward
-            await WoWTasks.EndWalkForwardTask();
+            await WowTasks.EndWalkForwardTask();
 
             // back off obstruction
-            Keyboard.KeyDown(WoWInput.MOVE_BACK);
+            Keyboard.KeyDown(WowInput.MOVE_BACK);
             await Task.Delay(1000);
-            Keyboard.KeyUp(WoWInput.MOVE_BACK);
+            Keyboard.KeyUp(WowInput.MOVE_BACK);
 
             // strafe
-            var strafeKey = left ? WoWInput.STRAFE_LEFT : WoWInput.STRAFE_RIGHT;
+            var strafeKey = left ? WowInput.STRAFE_LEFT : WowInput.STRAFE_RIGHT;
             Keyboard.KeyDown(strafeKey);
             await Task.Delay(2000);
             Keyboard.KeyUp(strafeKey);
@@ -439,9 +433,9 @@ namespace WoWHelper.Code
 
         public static async Task<bool> AvoidObstacleByJumping()
         {
-            Keyboard.KeyPress(WoWInput.JUMP);
+            Keyboard.KeyPress(WowInput.JUMP);
             await Task.Delay(1000);
-            Keyboard.KeyPress(WoWInput.JUMP);
+            Keyboard.KeyPress(WowInput.JUMP);
 
             return true;
         }
