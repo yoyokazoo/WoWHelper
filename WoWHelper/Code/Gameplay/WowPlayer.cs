@@ -18,6 +18,8 @@ namespace WoWHelper
         // TODO: player needs to be refactored
         public long lastDangerousFindTargetTime { get; set; }
 
+        // TODO: write custom getters/setters for these so we can keep checking the time until they're off cooldown,
+        // then use the cached value until they get dirtied again
         public long FarmStartTime { get; private set; }
         public long LastDynamiteTime { get; private set; }
         public long LastHealthPotionTime { get; private set; }
@@ -128,13 +130,13 @@ namespace WoWHelper
                         break;
                     case PlayerState.WAIT_UNTIL_BATTLE_READY:
                         Console.WriteLine("Waiting until battle ready");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(RecoverAfterFightTask(this),
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(RecoverAfterFightTask(),
                             PlayerState.CHECK_FOR_VALID_TARGET,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
                     case PlayerState.CHECK_FOR_VALID_TARGET:
                         Console.WriteLine("Checking for valid target");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(CorePathfindingLoopTask(this),
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(CorePathfindingLoopTask(),
                             PlayerState.TRY_TO_CHARGE_TARGET,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
@@ -281,7 +283,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> CorePathfindingLoopTask(WowPlayer wowPlayer)
+        public async Task<bool> CorePathfindingLoopTask()
         {
             Console.WriteLine("Kicking off core pathfinding loop");
 
@@ -411,8 +413,8 @@ namespace WoWHelper
                 {
                     //SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
                     //stationaryAlertSent = true;
-                    wowPlayer.LogoutTriggered = true;
-                    wowPlayer.LogoutReason = "Stuck for a long time, couldn't wiggle out";
+                    LogoutTriggered = true;
+                    LogoutReason = "Stuck for a long time, couldn't wiggle out";
                     return true;
                 }
 
@@ -498,7 +500,7 @@ namespace WoWHelper
                         CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
                         break;
                     case PathfindingState.MOVING_TOWARDS_WAYPOINT:
-                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(MoveTowardsWaypointTask(worldState, WaypointDefinition, CurrentWaypointIndex),
+                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(MoveTowardsWaypointTask(worldState),
                             PathfindingState.PICKING_NEXT_WAYPOINT,
                             PathfindingState.MOVING_TOWARDS_WAYPOINT);
                         break;
@@ -507,8 +509,8 @@ namespace WoWHelper
 
             SlackHelper.SendMessageToChannel($"Haven't found a target in ~4 minutes.  Something wrong?");
             Console.WriteLine("Exited Pathfinding loop.  Too many loops without a successful target find.");
-            wowPlayer.LogoutTriggered = true;
-            wowPlayer.LogoutReason = "4 minutes without finding a target";
+            LogoutTriggered = true;
+            LogoutReason = "4 minutes without finding a target";
 
             return true;
         }

@@ -74,7 +74,7 @@ namespace WoWHelper
 
         #region Combat Tasks
 
-        public async Task<bool> RecoverAfterFightTask(WowPlayer wowPlayer)
+        public async Task<bool> RecoverAfterFightTask()
         {
             WowWorldState worldState;
             bool startedEatingFood = false;
@@ -128,7 +128,7 @@ namespace WoWHelper
                 }
 
                 //bool dynamiteIsCooledDown = !WoWPlayer.CurrentTimeInsideDuration(wowPlayer.LastDynamiteTime, WoWGameplayConstants.DYNAMITE_COOLDOWN_MILLIS);
-                bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(wowPlayer.LastHealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+                bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(LastHealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
 
                 // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
                 // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
@@ -268,15 +268,15 @@ namespace WoWHelper
         // Returns true if we've reached the waypoint
         // Returns false if we haven't yet reached the waypoint
         // Rotates towards the waypoint or walks towards the waypoint, depending
-        public async Task<bool> MoveTowardsWaypointTask(WowWorldState worldState, WowWaypointDefinition waypoint, int waypointIndex)
+        public async Task<bool> MoveTowardsWaypointTask(WowWorldState worldState)
         {
-            float waypointDistance = Vector2.Distance(worldState.PlayerLocation, waypoint.Waypoints[waypointIndex]);
-            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint.Waypoints[waypointIndex]);
+            float waypointDistance = Vector2.Distance(worldState.PlayerLocation, WaypointDefinition.Waypoints[CurrentWaypointIndex]);
+            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, WaypointDefinition.Waypoints[CurrentWaypointIndex]);
             float degreesDifference = WowPathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
 
-            Console.WriteLine($"Heading towards waypoint {waypoint.Waypoints[waypointIndex]}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
+            Console.WriteLine($"Heading towards waypoint {WaypointDefinition.Waypoints[CurrentWaypointIndex]}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
-            if (waypointDistance <= waypoint.DistanceTolerance)
+            if (waypointDistance <= WaypointDefinition.DistanceTolerance)
             {
                 //Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
                 await EndWalkForwardTask();
