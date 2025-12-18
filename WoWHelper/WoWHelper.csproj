@@ -130,17 +130,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Code\WorldState\WowGameplayConstants.cs" />
-    <Compile Include="Code\WorldState\WowWaypointDefinition.cs" />
-    <Compile Include="Code\WorldState\WowWaypointConstants.cs" />
-    <Compile Include="Code\WowPathfinding.cs" />
+    <Compile Include="Code\Constants\WowGameplayConstants.cs" />
+    <Compile Include="Code\Gameplay\WowWaypointDefinition.cs" />
+    <Compile Include="Code\Constants\WowWaypointConstants.cs" />
+    <Compile Include="Code\Gameplay\WowPathfinding.cs" />
     <Compile Include="Code\Shared\KeyPoller.cs" />
-    <Compile Include="Code\WorldState\WowImageConstants.cs" />
-    <Compile Include="Code\WowInput.cs" />
-    <Compile Include="Code\WowPlayer.cs" />
-    <Compile Include="Code\WorldState\WowWorldState.cs" />
+    <Compile Include="Code\Constants\WowImageConstants.cs" />
+    <Compile Include="Code\Constants\WowInput.cs" />
+    <Compile Include="Code\Gameplay\WowPlayer.cs" />
+    <Compile Include="Code\Gameplay\WowWorldState.cs" />
     <Compile Include="Code\Shared\TessaractSingleton.cs" />
-    <Compile Include="Code\WowTasks.cs" />
+    <Compile Include="Code\Gameplay\WowTasks.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
