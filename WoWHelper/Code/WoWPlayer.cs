@@ -185,7 +185,11 @@ namespace WoWHelper
                         // loot
                         Mouse.Move(1720, 720);
                         Mouse.PressButton(Mouse.MouseKeys.Right);
-                        await Task.Delay(1200);
+                        await Task.Delay(1500);
+
+                        // click again in case they die slow
+                        Mouse.PressButton(Mouse.MouseKeys.Right);
+                        await Task.Delay(1500);
 
                         // skin
                         Mouse.PressButton(Mouse.MouseKeys.Right);
@@ -277,15 +281,17 @@ namespace WoWHelper
                     {
                         await WoWInput.PressKeyWithShift(WoWInput.SHIFT_SWEEPING_STRIKES_MACRO);
                     }
-                    /*
                     else if (worldState.WhirlwindCooledDown && worldState.ResourcePercent >= WoWGameplayConstants.WHIRLWIND_RAGE_COST)
                     {
                         await WoWInput.PressKeyWithShift(WoWInput.SHIFT_WHIRLWIND_MACRO);
-                        await Task.Delay(200);
-                        Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
+                        await Task.Delay(150);
+                        await WoWInput.PressKeyWithShift(WoWInput.SHIFT_CLEAVE_MACRO);
+                        await Task.Delay(150);
+                        await WoWInput.PressKeyWithShift(WoWInput.SHIFT_CLEAVE_MACRO);
+                        await Task.Delay(150);
+                        await WoWInput.PressKeyWithShift(WoWInput.SHIFT_CLEAVE_MACRO);
                     }
-                    */
-                    else if (/*!worldState.WhirlwindCooledDown && */!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WoWGameplayConstants.CLEAVE_RAGE_COST)
+                    else if (!worldState.WhirlwindCooledDown && !worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WoWGameplayConstants.CLEAVE_RAGE_COST)
                     {
                         // if WW is cooled down, prefer waiting for rage for that over cleaving
                         await WoWInput.PressKeyWithShift(WoWInput.SHIFT_CLEAVE_MACRO);

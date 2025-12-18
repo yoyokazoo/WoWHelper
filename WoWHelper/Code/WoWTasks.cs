@@ -44,6 +44,11 @@ namespace WoWHelper.Code
                 wowPlayer.LogoutTriggered = true;
                 wowPlayer.LogoutReason = "Low on Health Potions";
             }
+            else if (worldState.LowOnAmmo) // ASDF
+            {
+                wowPlayer.LogoutTriggered = true;
+                wowPlayer.LogoutReason = "Low on Ammo";
+            }
             else if (!WoWPlayer.CurrentTimeInsideDuration(wowPlayer.FarmStartTime, WoWPlayer.FARM_TIME_LIMIT_MILLIS))
             {
                 wowPlayer.LogoutTriggered = true;
