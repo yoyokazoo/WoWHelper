@@ -409,6 +409,34 @@ namespace WoWHelper.Code
             return true;
         }
 
+        public static async Task<bool> AvoidObstacle(bool left)
+        {
+            // stop walking forward
+            await WoWTasks.EndWalkForwardTask();
+
+            // back off obstruction
+            Keyboard.KeyDown(WoWInput.MOVE_BACK);
+            await Task.Delay(1000);
+            Keyboard.KeyUp(WoWInput.MOVE_BACK);
+
+            // strafe
+            var strafeKey = left ? WoWInput.STRAFE_LEFT : WoWInput.STRAFE_RIGHT;
+            Keyboard.KeyDown(strafeKey);
+            await Task.Delay(2000);
+            Keyboard.KeyUp(strafeKey);
+
+            return true;
+        }
+
+        public static async Task<bool> AvoidObstacleByJumping()
+        {
+            Keyboard.KeyPress(Keys.Space);
+            await Task.Delay(1000);
+            Keyboard.KeyPress(Keys.Space);
+
+            return true;
+        }
+
         #endregion
     }
 }

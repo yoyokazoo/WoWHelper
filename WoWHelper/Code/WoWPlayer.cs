@@ -414,49 +414,25 @@ namespace WoWHelper
                     lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
 
-                if (!stationaryWiggleAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
-                {
-                    // stop walking forward
-                    await WoWTasks.EndWalkForwardTask();
-
-                    // back off obstruction
-                    Keyboard.KeyDown(Keys.S);
-                    await Task.Delay(1000);
-                    Keyboard.KeyUp(Keys.S);
-
-                    // strafe left
-                    Keyboard.KeyDown(Keys.Q);
-                    await Task.Delay(2000);
-                    Keyboard.KeyUp(Keys.Q);
-
-                    stationaryWiggleAttemptedOnce = true;
-                }
+                
 
                 if (!stationaryJumpAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
                 {
-                    // back off obstruction
-                    Keyboard.KeyPress(Keys.Space);
-                    await Task.Delay(1000);
-                    Keyboard.KeyPress(Keys.Space);
-
+                    await WoWTasks.AvoidObstacleByJumping();
                     stationaryJumpAttemptedOnce = true;
+                }
+
+                if (!stationaryWiggleAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
+                {
+                    // first wiggle try left
+                    await WoWTasks.AvoidObstacle(left: true);
+                    stationaryWiggleAttemptedOnce = true;
                 }
 
                 if (!stationaryWiggleAttemptedTwice && !CurrentTimeInsideDuration(lastLocationChangeTime, WoWPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE))
                 {
-                    // stop walking forward
-                    await WoWTasks.EndWalkForwardTask();
-
-                    // back off obstruction
-                    Keyboard.KeyDown(Keys.S);
-                    await Task.Delay(1000);
-                    Keyboard.KeyUp(Keys.S);
-
-                    // strafe left
-                    Keyboard.KeyDown(Keys.E);
-                    await Task.Delay(2000);
-                    Keyboard.KeyUp(Keys.E);
-
+                    // second wiggle try right
+                    await WoWTasks.AvoidObstacle(left: true);
                     stationaryWiggleAttemptedTwice = true;
                 }
 

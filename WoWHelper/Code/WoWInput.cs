@@ -1,8 +1,4 @@
 ﻿using InputManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -28,9 +24,17 @@ namespace WoWHelper.Code
         public const Keys SHIFT_WHIRLWIND_MACRO = Keys.D3;
         public const Keys SHIFT_CLEAVE_MACRO = Keys.D4;
         public const Keys SHIFT_LOGOUT_MACRO = Keys.D5;
+        public const Keys SHIFT_UNASSIGNED1 = Keys.D6;
+        public const Keys SHIFT_UNASSIGNED2 = Keys.D7;
+        public const Keys SHIFT_UNASSIGNED3 = Keys.D8;
+        public const Keys SHIFT_UNASSIGNED4 = Keys.D9;
+        public const Keys SHIFT_UNASSIGNED5 = Keys.D0;
 
         public const Keys TURN_LEFT = Keys.A;
         public const Keys TURN_RIGHT = Keys.D;
+
+        public const Keys STRAFE_LEFT = Keys.Q;
+        public const Keys STRAFE_RIGHT = Keys.E;
 
         public const Keys MOVE_FORWARD = Keys.W;
         public const Keys MOVE_BACK = Keys.S;
