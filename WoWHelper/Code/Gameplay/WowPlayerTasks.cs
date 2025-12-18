@@ -4,15 +4,16 @@ using System.Numerics;
 using System.Threading.Tasks;
 using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
+using WoWHelper.Code;
 using WoWHelper.Code.WorldState;
 
-namespace WoWHelper.Code
+namespace WoWHelper
 {
-    public class WowTasks
+    public partial class WowPlayer
     {
         #region Windows Management Tasks
 
-        public static async Task<bool> FocusOnWindowTask()
+        public async Task<bool> FocusOnWindowTask()
         {
             IntPtr h = ScreenCapture.GetWindowHandleByName("WowClassic");
             if (h == IntPtr.Zero) { return false; }
@@ -23,38 +24,38 @@ namespace WoWHelper.Code
             return true;
         }
 
-        public static async Task<bool> SetLogoutVariablesTask(WowPlayer wowPlayer)
+        public async Task<bool> SetLogoutVariablesTask()
         {
             WowWorldState worldState = WowWorldState.GetWoWWorldState();
             // TODO: Hook this up to the zone, since for example the river turtles will never get 2 mobs
             
             if (worldState.LowOnDynamite)
             {
-                wowPlayer.LogoutTriggered = true;
-                wowPlayer.LogoutReason = "Low on Dynamite";
+                LogoutTriggered = true;
+                LogoutReason = "Low on Dynamite";
             }
             else if (worldState.LowOnHealthPotions)
             {
-                wowPlayer.LogoutTriggered = true;
-                wowPlayer.LogoutReason = "Low on Health Potions";
+                LogoutTriggered = true;
+                LogoutReason = "Low on Health Potions";
             }
             else if (worldState.LowOnAmmo) // ASDF
             {
-                wowPlayer.LogoutTriggered = true;
-                wowPlayer.LogoutReason = "Low on Ammo";
+                LogoutTriggered = true;
+                LogoutReason = "Low on Ammo";
             }
-            else if (!WowPlayer.CurrentTimeInsideDuration(wowPlayer.FarmStartTime, WowPlayer.FARM_TIME_LIMIT_MILLIS))
+            else if (!WowPlayer.CurrentTimeInsideDuration(FarmStartTime, WowPlayerConstants.FARM_TIME_LIMIT_MILLIS))
             {
-                wowPlayer.LogoutTriggered = true;
-                wowPlayer.LogoutReason = "Farm Time Limit Reached";
+                LogoutTriggered = true;
+                LogoutReason = "Farm Time Limit Reached";
             }
 
             await Task.Delay(0);
 
-            return wowPlayer.LogoutTriggered;
+            return LogoutTriggered;
         }
 
-        public static async Task<bool> LogoutTask()
+        public async Task<bool> LogoutTask()
         {
             WowWorldState worldState;
 
@@ -73,11 +74,11 @@ namespace WoWHelper.Code
 
         #region Combat Tasks
 
-        public static async Task<bool> RecoverAfterFightTask(WowPlayer wowPlayer)
+        public async Task<bool> RecoverAfterFightTask(WowPlayer wowPlayer)
         {
             WowWorldState worldState;
             bool startedEatingFood = false;
-            bool dynamiteOrPotionIsCooledDown = false;
+            //bool dynamiteOrPotionIsCooledDown = false;
 
             while(true)
             {
@@ -100,7 +101,7 @@ namespace WoWHelper.Code
                 // don't drown
                 if (worldState.Underwater)
                 {
-                    await WowTasks.GetOutOfWater();
+                    await GetOutOfWater();
                 }
 
                 if (worldState.IsInCombat)
@@ -141,7 +142,7 @@ namespace WoWHelper.Code
             return true;
         }
 
-        public static async Task<bool> TryToChargeTask()
+        public async Task<bool> TryToChargeTask()
         {
             Console.WriteLine($"Clicked first shoot");
             Keyboard.KeyPress(WowInput.SHOOT_MACRO);
@@ -173,9 +174,9 @@ namespace WoWHelper.Code
             return worldState.IsInCombat;
         }
 
-        public static async Task<bool> StartOfCombatTask()
+        public async Task<bool> StartOfCombatTask()
         {
-            await WowTasks.StartOfCombatWiggle();
+            await StartOfCombatWiggle();
 
             // always kick things off with heroic strike macro to /startattack
             Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
@@ -183,7 +184,7 @@ namespace WoWHelper.Code
             return true;
         }
 
-        public static async Task<bool> MakeSureWeAreAttackingEnemyTask(WowWorldState worldState, WowWorldState previousWorldState)
+        public async Task<bool> MakeSureWeAreAttackingEnemyTask(WowWorldState worldState, WowWorldState previousWorldState)
         {
             bool attackerJustDied = previousWorldState?.AttackerCount > worldState.AttackerCount && worldState.AttackerCount > 0;
             bool inCombatButNotAutoAttacking = worldState.IsInCombat && !worldState.IsAutoAttacking;
@@ -194,7 +195,7 @@ namespace WoWHelper.Code
             if (attackerJustDied || facingWrongWay || targetNeedsToBeInFront)
             {
                 // one of the mobs just died, scoot back to make sure the next mob is in front of you
-                await WowTasks.ScootBackwardsTask();
+                await ScootBackwardsTask();
             }
 
             if (tooFarAway)
@@ -212,7 +213,7 @@ namespace WoWHelper.Code
             return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront;
         }
 
-        public static async Task<bool> TooManyAttackersTask(WowWorldState worldState)
+        public async Task<bool> TooManyAttackersTask(WowWorldState worldState)
         {
             bool tooManyAttackers = worldState.AttackerCount > 2;
 
@@ -229,7 +230,7 @@ namespace WoWHelper.Code
             return tooManyAttackers;
         }
 
-        public static async Task<bool> ThrowDynamiteTask(WowWorldState worldState)
+        public async Task<bool> ThrowDynamiteTask(WowWorldState worldState)
         {
             bool shouldThrowDynamite = worldState.AttackerCount > 1;
 
@@ -246,7 +247,7 @@ namespace WoWHelper.Code
             return shouldThrowDynamite;
         }
 
-        public static async Task<bool> UseHealingPotionTask(WowWorldState worldState)
+        public async Task<bool> UseHealingPotionTask(WowWorldState worldState)
         {
             bool shouldUseHealingPotion = worldState.PlayerHpPercent <= WowGameplayConstants.HEALING_POTION_HP_THRESHOLD;
 
@@ -267,7 +268,7 @@ namespace WoWHelper.Code
         // Returns true if we've reached the waypoint
         // Returns false if we haven't yet reached the waypoint
         // Rotates towards the waypoint or walks towards the waypoint, depending
-        public static async Task<bool> MoveTowardsWaypointTask(WowWorldState worldState, WowWaypointDefinition waypoint, int waypointIndex)
+        public async Task<bool> MoveTowardsWaypointTask(WowWorldState worldState, WowWaypointDefinition waypoint, int waypointIndex)
         {
             float waypointDistance = Vector2.Distance(worldState.PlayerLocation, waypoint.Waypoints[waypointIndex]);
             float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, waypoint.Waypoints[waypointIndex]);
@@ -298,7 +299,7 @@ namespace WoWHelper.Code
             }
         }
 
-        public static async Task<bool> RotateToDirectionTask(float desiredDegrees, float distance)
+        public async Task<bool> RotateToDirectionTask(float desiredDegrees, float distance)
         {
             bool mouseDown = false;
 
@@ -348,21 +349,21 @@ namespace WoWHelper.Code
             return true;
         }
 
-        public static async Task<bool> StartWalkForwardTask()
+        public async Task<bool> StartWalkForwardTask()
         {
             await Task.Delay(0);
             Keyboard.KeyDown(WowInput.MOVE_FORWARD);
             return true;
         }
 
-        public static async Task<bool> EndWalkForwardTask()
+        public async Task<bool> EndWalkForwardTask()
         {
             await Task.Delay(0);
             Keyboard.KeyUp(WowInput.MOVE_FORWARD);
             return true;
         }
 
-        public static async Task<bool> ScootForwardsTask()
+        public async Task<bool> ScootForwardsTask()
         {
             Keyboard.KeyDown(WowInput.MOVE_FORWARD);
             await Task.Delay(100);
@@ -370,7 +371,7 @@ namespace WoWHelper.Code
             return true;
         }
 
-        public static async Task<bool> ScootBackwardsTask()
+        public async Task<bool> ScootBackwardsTask()
         {
             Keyboard.KeyDown(WowInput.MOVE_BACK);
             await Task.Delay(1000);
@@ -378,7 +379,7 @@ namespace WoWHelper.Code
             return true;
         }
 
-        public static async Task<bool> StartOfCombatWiggle()
+        public async Task<bool> StartOfCombatWiggle()
         {
             // move back a bit to fix camera direction
             Keyboard.KeyDown(WowInput.MOVE_BACK);
@@ -393,7 +394,7 @@ namespace WoWHelper.Code
             return true;
         }
 
-        public static async Task<bool> TurnABitToTheLeftTask()
+        public async Task<bool> TurnABitToTheLeftTask()
         {
             Keyboard.KeyDown(WowInput.TURN_LEFT);
             await Task.Delay(500);
@@ -402,7 +403,7 @@ namespace WoWHelper.Code
             return true;
         }
 
-        public static async Task<bool> GetOutOfWater()
+        public async Task<bool> GetOutOfWater()
         {
             // Holding jump ascends
             Keyboard.KeyDown(WowInput.JUMP);
@@ -412,10 +413,10 @@ namespace WoWHelper.Code
             return true;
         }
 
-        public static async Task<bool> AvoidObstacle(bool left)
+        public async Task<bool> AvoidObstacle(bool left)
         {
             // stop walking forward
-            await WowTasks.EndWalkForwardTask();
+            await EndWalkForwardTask();
 
             // back off obstruction
             Keyboard.KeyDown(WowInput.MOVE_BACK);
@@ -431,7 +432,7 @@ namespace WoWHelper.Code
             return true;
         }
 
-        public static async Task<bool> AvoidObstacleByJumping()
+        public async Task<bool> AvoidObstacleByJumping()
         {
             Keyboard.KeyPress(WowInput.JUMP);
             await Task.Delay(1000);
