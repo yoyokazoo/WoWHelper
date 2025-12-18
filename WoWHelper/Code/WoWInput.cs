@@ -40,6 +40,7 @@ namespace WoWHelper.Code
         public const Keys MOVE_BACK = Keys.S;
 
         public const Keys TAB_TARGET = Keys.Tab;
+        public const Keys JUMP = Keys.Space;
 
         public static async Task PressKeyWithShift(Keys key)
         {

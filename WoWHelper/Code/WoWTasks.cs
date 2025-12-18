@@ -181,14 +181,7 @@ namespace WoWHelper.Code
 
         public static async Task<bool> StartOfCombatTask()
         {
-            // combat wiggle in case camera is pointed wrong direction
-            Keyboard.KeyDown(Keys.S);
-            await Task.Delay(400);
-            Keyboard.KeyUp(Keys.S);
-
-            Keyboard.KeyDown(Keys.W);
-            await Task.Delay(20);
-            Keyboard.KeyUp(Keys.W);
+            await WoWTasks.StartOfCombatWiggle();
 
             // always kick things off with heroic strike macro to /startattack
             Keyboard.KeyPress(WoWInput.HEROIC_STRIKE_KEY);
@@ -391,6 +384,21 @@ namespace WoWHelper.Code
             return true;
         }
 
+        public static async Task<bool> StartOfCombatWiggle()
+        {
+            // move back a bit to fix camera direction
+            Keyboard.KeyDown(WoWInput.MOVE_BACK);
+            await Task.Delay(400);
+            Keyboard.KeyUp(WoWInput.MOVE_BACK);
+
+            // scoot forward a tiny bit to get back in range
+            Keyboard.KeyDown(WoWInput.MOVE_FORWARD);
+            await Task.Delay(20);
+            Keyboard.KeyUp(WoWInput.MOVE_FORWARD);
+
+            return true;
+        }
+
         public static async Task<bool> TurnABitToTheLeftTask()
         {
             Keyboard.KeyDown(WoWInput.TURN_LEFT);
@@ -402,9 +410,10 @@ namespace WoWHelper.Code
 
         public static async Task<bool> GetOutOfWater()
         {
-            Keyboard.KeyDown(Keys.Space);
+            // Holding jump ascends
+            Keyboard.KeyDown(WoWInput.JUMP);
             await Task.Delay(1000);
-            Keyboard.KeyUp(Keys.Space);
+            Keyboard.KeyUp(WoWInput.JUMP);
 
             return true;
         }
@@ -430,9 +439,9 @@ namespace WoWHelper.Code
 
         public static async Task<bool> AvoidObstacleByJumping()
         {
-            Keyboard.KeyPress(Keys.Space);
+            Keyboard.KeyPress(WoWInput.JUMP);
             await Task.Delay(1000);
-            Keyboard.KeyPress(Keys.Space);
+            Keyboard.KeyPress(WoWInput.JUMP);
 
             return true;
         }
