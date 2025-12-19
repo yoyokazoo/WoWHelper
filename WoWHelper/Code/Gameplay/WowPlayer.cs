@@ -99,6 +99,8 @@ namespace WoWHelper
 
             while (currentPlayerState != PlayerState.EXITING_CORE_GAMEPLAY_LOOP)
             {
+                //UpdateFromBitmap(bm);
+
                 switch (currentPlayerState)
                 {
                     case PlayerState.WAITING_TO_FOCUS:
@@ -272,8 +274,7 @@ namespace WoWHelper
                 }
                 else if (worldState.AttackerCount == 1)
                 {
-                    // leave a little rage in case we get an add
-                    if (!worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    if (worldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_RAGE_COST)
                     {
                         Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
                     }

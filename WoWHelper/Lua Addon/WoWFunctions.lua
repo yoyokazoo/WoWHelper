@@ -65,6 +65,10 @@ function SpellIsCooledDown(spellId)
     --    return false
     --end
 
+    if start == nil then
+        return false
+    end
+
     -- If start == 0 and duration == 0, spell is ready
     if start == 0 and duration == 0 then
         return true
@@ -366,7 +370,7 @@ end
 -- dense dynamite, 18641
 -- hi-explosive bomb, 10562 
 function AreWeLowOnDynamite()
-    local dynamiteCount = GetItemCount(4380, false)
+    local dynamiteCount = GetItemCount(10507, false)
     return dynamiteCount < 2
 end
 
@@ -389,7 +393,7 @@ function TargetHasRend()
     local _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("target", i)
     if not spellId then break end
 
-    if spellId == 6548 then
+    if spellId == 11572 then
       return true
     end
   end
@@ -411,6 +415,13 @@ function CanCastSweepingStrikes()
     return SpellIsCooledDown(12292)
 end
 
+-- Mortal Strike, 12294
+-- Bloodthirst, 23881
+-- only one can be active at a time, so do both in one
+function CanCastMortalStrikeOrBloodthirst()
+    return SpellIsCooledDown(12294) or SpellIsCooledDown(23881)
+end
+
 function GetMultiBoolOne()
     local bool1 = IsAttacking()
     local bool2 = HasBattleShout()
@@ -427,10 +438,10 @@ function GetMultiBoolOne()
     local boolG2 = CanCastWhirlwind()
     local boolG3 = CanCastSweepingStrikes()
     local boolG4 = WaitingToShoot()
-    local boolG5 = false
+    local boolG5 = CanCastMortalStrikeOrBloodthirst()
     local boolG6 = false
     local boolG7 = false
-    local boolG8 = IsGlobalCooldownCooledDown()
+    local boolG8 = CanCastMortalStrikeOrBloodthirst()
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 

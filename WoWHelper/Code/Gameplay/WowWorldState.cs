@@ -33,6 +33,7 @@ namespace WoWHelper
         public bool WhirlwindCooledDown { get; private set; }
         public bool CanShootTarget { get; private set; }
         public bool WaitingToShoot { get; private set; }
+        public bool MortalStrikeOrBloodThirstCooledDown { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -211,6 +212,7 @@ namespace WoWHelper
             WhirlwindCooledDown = g2;
             SweepingStrikesCooledDown = g3;
             WaitingToShoot = g4;
+            MortalStrikeOrBloodThirstCooledDown = g5;
         }
 
         public void UpdateFacingWrongWay(Bitmap bmp)

@@ -11,6 +11,8 @@
         public const int WHIRLWIND_RAGE_COST = 25;
         public const int CLEAVE_RAGE_COST = 20;
 
+        public const int MORTAL_STRIKE_RAGE_COST = 30;
+
         public const int HEALING_POTION_HP_THRESHOLD = 50;
 
         public const int DYNAMITE_COOLDOWN_MILLIS = 1 * 60 * 1000;
