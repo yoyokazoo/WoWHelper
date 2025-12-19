@@ -39,7 +39,7 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = "Low on Health Potions";
             }
-            else if (worldState.LowOnAmmo) // ASDF
+            else if (EngageMethod == EngagementMethod.Shoot && worldState.LowOnAmmo)
             {
                 LogoutTriggered = true;
                 LogoutReason = "Low on Ammo";
@@ -142,7 +142,46 @@ namespace WoWHelper
             return true;
         }
 
+        public async Task<bool> TryToEngageTask()
+        {
+            if (EngageMethod == EngagementMethod.Charge)
+            {
+                return await TryToChargeTask();
+            }
+            else if (EngageMethod != EngagementMethod.Charge)
+            {
+                return await TryToShootTask();
+            }
+
+            return false;
+        }
+
         public async Task<bool> TryToChargeTask()
+        {
+            Keyboard.KeyPress(WowInput.CHARGE_KEY);
+            await Task.Delay(250);
+            WowWorldState worldState = WowWorldState.GetWoWWorldState();
+
+            // break this apart a bit?  Smaller discrete charge task and then all the "rotation, wait for charge to land" cruft around it
+            int loopNum = 0;
+            while (!worldState.IsInCombat && worldState.CanChargeTarget && loopNum < 12)
+            {
+                await TurnABitToTheLeftTask();
+                Keyboard.KeyPress(WowInput.CHARGE_KEY);
+
+                await Task.Delay(250);
+                worldState = WowWorldState.GetWoWWorldState();
+
+                loopNum++;
+            }
+
+            // give some time for the charge to land
+            await Task.Delay(500);
+
+            return worldState.IsInCombat;
+        }
+
+        public async Task<bool> TryToShootTask()
         {
             Console.WriteLine($"Clicked first shoot");
             Keyboard.KeyPress(WowInput.SHOOT_MACRO);
@@ -166,9 +205,8 @@ namespace WoWHelper
 
                 loopNum++;
             } while (!worldState.IsInCombat && worldState.CanShootTarget && loopNum < 12);
-            // ASDF
 
-            // give some time for the charge to land
+            // give some time for the shot to land
             await Task.Delay(500);
 
             return worldState.IsInCombat;
@@ -253,7 +291,7 @@ namespace WoWHelper
 
             if (shouldUseHealingPotion)
             {
-                //SlackHelper.SendMessageToChannel("Potion used!");
+                SlackHelper.SendMessageToChannel("Potion used!");
                 Keyboard.KeyPress(WowInput.HEALING_POTION_KEY);
                 await Task.Delay(0);
             }

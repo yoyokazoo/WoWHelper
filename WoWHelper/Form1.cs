@@ -48,7 +48,7 @@ namespace WoWHelper
 
         private void button2_Click(object sender, EventArgs e)
         {
-            SlackHelper.SendMessageToChannel("Potion used!", OnPostMessageCompleted);
+            SlackHelper.SendMessageToChannel("Test slack message!", OnPostMessageCompleted);
             //SlackHelper.SendScreenshotToChannel();
         }
 

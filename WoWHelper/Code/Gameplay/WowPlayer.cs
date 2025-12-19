@@ -39,6 +39,13 @@ namespace WoWHelper
         public bool LogoutTriggered { get; set; }
         public string LogoutReason { get; set; }
 
+        public enum EngagementMethod
+        {
+            Charge,
+            Shoot
+        }
+
+        public EngagementMethod EngageMethod { get; private set; }
         
 
         public WowPlayer()
@@ -47,8 +54,9 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
-            WaypointDefinition = WowWaypointConstants.LEVEL_37_KODO_GRAVEYARD;
+            WaypointDefinition = WowWaypointConstants.LEVEL_42_TANARIS_TURTLES;
             WaypointTraversalDirection = 1;
+            EngageMethod = EngagementMethod.Charge;
         }
 
         public void UpdateFromBitmap(Bitmap bmp)
@@ -70,6 +78,20 @@ namespace WoWHelper
         public static bool CurrentTimeInsideDuration(long startTime, long duration)
         {
             return (DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime) < duration;
+        }
+
+        public bool CanEngageTarget(WowWorldState worldState)
+        {
+            if (EngageMethod == EngagementMethod.Charge)
+            {
+                return worldState.CanChargeTarget;
+            }
+            else if (EngageMethod == EngagementMethod.Shoot)
+            {
+                return worldState.CanShootTarget;
+            }
+
+            return false;
         }
 
         public void KickOffCoreLoop()
@@ -144,7 +166,7 @@ namespace WoWHelper
                         break;
                     case PlayerState.TRY_TO_CHARGE_TARGET:
                         Console.WriteLine("Trying to charge target");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(TryToChargeTask(),
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(TryToEngageTask(),
                             PlayerState.IN_CORE_COMBAT_LOOP,
                             PlayerState.CHECK_FOR_LOGOUT);
                         break;
@@ -260,11 +282,13 @@ namespace WoWHelper
                     {
                         await WowInput.PressKeyWithShift(WowInput.SHIFT_WHIRLWIND_MACRO);
                         await Task.Delay(150);
-                        await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
+                        Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
                         await Task.Delay(150);
-                        await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
+                        Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
                         await Task.Delay(150);
-                        await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
+                        Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
+                        await Task.Delay(150);
+                        Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
                     }
                     else if (!worldState.WhirlwindCooledDown && !worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WowGameplayConstants.CLEAVE_RAGE_COST)
                     {
@@ -375,8 +399,7 @@ namespace WoWHelper
                 }
                 */
 
-                // TODO: ASDF
-                if (worldState.CanShootTarget)
+                if (CanEngageTarget(worldState))
                 {
                     await EndWalkForwardTask();
                     return true;
@@ -419,11 +442,10 @@ namespace WoWHelper
                     return true;
                 }
 
-                // ASDF
-                if (worldState.CanShootTarget || worldState.IsInCombat)
+                if (CanEngageTarget(worldState) || worldState.IsInCombat)
                 {
                     await EndWalkForwardTask();
-                    // return true if we can charge, false if we're already in combat
+                    // return true if we can charge/shoot, false if we're already in combat
                     return !worldState.IsInCombat;
                 }
 

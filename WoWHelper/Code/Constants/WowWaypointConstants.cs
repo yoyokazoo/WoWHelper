@@ -5,6 +5,24 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowWaypointConstants
     {
+        public static readonly WowWaypointDefinition LEVEL_42_TANARIS_TURTLES = new WowWaypointDefinition
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(68.87f, 39.97f),
+                new Vector2(68.44f, 39.65f),
+                new Vector2(67.62f, 39.21f),
+                new Vector2(67.26f, 38.69f),
+                new Vector2(67.35f, 37.68f),
+                new Vector2(67.88f, 36.57f),
+                new Vector2(67.86f, 35.27f),
+                new Vector2(68.54f, 34.02f),
+            },
+            TraversalMethod = WowWaypointDefinition.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowWaypointDefinition.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.2f
+        };
+
         public static readonly WowWaypointDefinition LEVEL_37_KODO_GRAVEYARD = new WowWaypointDefinition
         {
             Waypoints = new List<Vector2>
