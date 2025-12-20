@@ -310,25 +310,25 @@ namespace WoWHelper
                 // if we're already walking, ignore this
                 Console.WriteLine($"Start walking forward");
                 await StartWalkForwardTask();
-                /*
+
                 var lateralDistance = WowPathfinding.GetLateralDistance(WorldState.FacingDegrees, WorldState.PlayerLocation, waypoint);
                 if (Math.Abs(lateralDistance) > WowPathfinding.STRAFE_LATERAL_DISTANCE_TOLERANCE)
                 {
                     if (lateralDistance > 0)
                     {
                         Keyboard.KeyDown(WowInput.STRAFE_RIGHT);
-                        await Task.Delay(100);
-                        Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
                     }
                     else
                     {
                         Keyboard.KeyDown(WowInput.STRAFE_LEFT);
-                        await Task.Delay(100);
-                        Keyboard.KeyUp(WowInput.STRAFE_LEFT);
                     }
                 }
-                */
-                
+                else
+                {
+                    Keyboard.KeyUp(WowInput.STRAFE_LEFT);
+                    Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
+                }
+
                 return false;
             }
         }

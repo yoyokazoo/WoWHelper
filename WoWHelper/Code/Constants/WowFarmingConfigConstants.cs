@@ -7,7 +7,7 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration LEVEL_42_TANARIS_TURTLES = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowWaypointConstants.TANARIS_TEST_PATHFINDING,
+            WaypointDefinition = WowWaypointConstants.LEVEL_42_TANARIS_TURTLES,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
             AlertOnPotionUsed = false,
             AlertOnFullBags = true

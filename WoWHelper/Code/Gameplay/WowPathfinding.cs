@@ -15,15 +15,15 @@ namespace WoWHelper.Code
         public const float WAYPOINT_DEGREE_TOLERANCE_MAX_DISTANCE = 10.0f;
         public const float WAYPOINT_DEGREE_TOLERANCE_MIN_DISTANCE = 3.0f;
 
-        public const float WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES = 25.0f;
-        public const float WAYPOINT_DEGREE_TOLERANCE_MIN_DEGREES = 10.0f;
+        public const float WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES = 15.0f;
+        public const float WAYPOINT_DEGREE_TOLERANCE_MIN_DEGREES = 05.0f;
 
         public const int STATIONARY_MILLIS_BEFORE_JUMP = 4 * 1000;
         public const int STATIONARY_MILLIS_BEFORE_WIGGLE = 8 * 1000;
         public const int STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE = 18 * 1000;
         public const int STATIONARY_MILLIS_BEFORE_ALERT = 30 * 1000;
 
-        public const float STRAFE_LATERAL_DISTANCE_TOLERANCE = 0.02f;
+        public const float STRAFE_LATERAL_DISTANCE_TOLERANCE = 0.04f;
 
 
         public static float GetDesiredDirectionInDegrees(Vector2 waypoint1, Vector2 waypoint2)
