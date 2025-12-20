@@ -10,6 +10,6 @@
         public const int EAT_FOOD_HP_THRESHOLD = 90;
         public const int OH_SHIT_RETAL_HP_THRESHOLD = 35;
 
-        public const int ENGAGE_ROTATION_ATTEMPTS = 12;
+        public const int ENGAGE_ROTATION_ATTEMPTS = 30;
     }
 }

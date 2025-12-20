@@ -25,6 +25,8 @@ namespace WoWHelper
         public long HealthPotionTime { get; private set; }
         public long NextUpdateTime { get; private set; }
 
+        public int EngageAttempts { get; private set; }
+
         public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }
         public PlayerState CurrentPlayerState { get; private set; }
@@ -136,90 +138,99 @@ namespace WoWHelper
             FarmStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             Console.WriteLine("Kicking off core gameplay loop");
-            PlayerState currentPlayerState = PlayerState.WAITING_TO_FOCUS_ON_WINDOW;
 
-            while (currentPlayerState != PlayerState.EXITING_CORE_GAMEPLAY_LOOP)
+            while (CurrentPlayerState != PlayerState.EXITING_CORE_GAMEPLAY_LOOP)
             {
                 await UpdateWorldStateAsync();
 
                 // TODO: short circuit into combat/getting out of water/etc.
+                if (WorldState.IsInCombat)
+                {
+                    CurrentPlayerState = PlayerState.IN_CORE_COMBAT_LOOP;
+                }
 
-                switch (currentPlayerState)
+                switch (CurrentPlayerState)
                 {
                     case PlayerState.WAITING_TO_FOCUS_ON_WINDOW:
                         Console.WriteLine("Focusing on window");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
                             PlayerState.CHECK_FOR_LOGOUT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.CHECK_FOR_LOGOUT:
                         Console.WriteLine("Checking if we should log out");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(SetLogoutVariablesTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(SetLogoutVariablesTask(),
                             PlayerState.START_LOGGING_OUT,
                             PlayerState.START_BATTLE_READY_RECOVERY);
                         break;
                     case PlayerState.START_LOGGING_OUT:
                         Console.WriteLine("Started logging out");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(StartLogoutTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartLogoutTask(),
                             PlayerState.WAITING_TO_LOG_OUT,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
                     case PlayerState.WAITING_TO_LOG_OUT:
                         Console.WriteLine("Waiting to log out");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(CheckIfLoggedOutTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(CheckIfLoggedOutTask(),
                             PlayerState.LOGGED_OUT,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
                     case PlayerState.LOGGED_OUT:
                         Console.WriteLine("Logged out");
                         SlackHelper.SendMessageToChannel($"Logged out: {LogoutReason}");
-                        currentPlayerState = PlayerState.EXITING_CORE_GAMEPLAY_LOOP;
+                        CurrentPlayerState = PlayerState.EXITING_CORE_GAMEPLAY_LOOP;
                         break;
                     case PlayerState.START_BATTLE_READY_RECOVERY:
                         Console.WriteLine("Waiting until battle ready");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(StartBattleReadyRecoverTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartBattleReadyRecoverTask(),
                             PlayerState.WAIT_UNTIL_BATTLE_READY,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.WAIT_UNTIL_BATTLE_READY:
                         Console.WriteLine("Waiting until battle ready");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(WaitUntilBattleReadyTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(WaitUntilBattleReadyTask(),
                             PlayerState.CHECK_FOR_VALID_TARGET,
                             PlayerState.WAIT_UNTIL_BATTLE_READY);
                         break;
                     case PlayerState.CHECK_FOR_VALID_TARGET:
                         Console.WriteLine("Checking for valid target");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(CorePathfindingLoopTask(), // TODO
-                            PlayerState.TRY_TO_CHARGE_TARGET,
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(CorePathfindingLoopTask(), // TODO
+                            PlayerState.INITIATE_ENGAGE_TARGET,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
-                    case PlayerState.TRY_TO_CHARGE_TARGET:
-                        Console.WriteLine("Trying to charge target");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(TryToEngageTask(), // TODO
-                            PlayerState.IN_CORE_COMBAT_LOOP,
+                    case PlayerState.INITIATE_ENGAGE_TARGET:
+                        Console.WriteLine("Trying to engage target");
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(KickOffEngageTask(),
+                            PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
+                            PlayerState.CHECK_FOR_LOGOUT);
+                        break;
+                    case PlayerState.CONTINUE_TO_TRY_TO_ENGAGE:
+                        Console.WriteLine("Continuing to engage target");
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(FaceCorrectDirectionToEngageTask(),
+                            PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
                             PlayerState.CHECK_FOR_LOGOUT);
                         break;
                     case PlayerState.IN_CORE_COMBAT_LOOP:
                         Console.WriteLine("In core combat loop");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(CoreCombatLoopTask(), // TODO
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(CoreCombatLoopTask(), // TODO
                             PlayerState.TARGET_DEFEATED,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.TARGET_DEFEATED:
                         Console.WriteLine("Target defeated, trying to loot");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
                             PlayerState.LOOT_ATTEMPT_TWO,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.LOOT_ATTEMPT_TWO:
                         Console.WriteLine("Trying to loot a second time, in case the dying anim is slow");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
                             PlayerState.SKIN_ATTEMPT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.SKIN_ATTEMPT:
                         Console.WriteLine("Trying to skin");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
                             PlayerState.CHECK_FOR_LOGOUT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;

@@ -30,22 +30,27 @@ namespace WoWHelper
             if (WorldState.LowOnDynamite)
             {
                 LogoutTriggered = true;
-                LogoutReason = "Low on Dynamite";
+                LogoutReason = $"Low on Dynamite";
             }
             else if (WorldState.LowOnHealthPotions)
             {
                 LogoutTriggered = true;
-                LogoutReason = "Low on Health Potions";
+                LogoutReason = $"Low on Health Potions";
             }
             else if (WorldState.LowOnAmmo && FarmingConfig.EngageMethod == WowFarmingConfiguration.EngagementMethod.Shoot)
             {
                 LogoutTriggered = true;
-                LogoutReason = "Low on Ammo";
+                LogoutReason = $"Low on Ammo";
             }
             else if (!CurrentTimeInsideDuration(FarmStartTime, WowPlayerConstants.FARM_TIME_LIMIT_MILLIS))
             {
                 LogoutTriggered = true;
-                LogoutReason = "Farm Time Limit Reached";
+                LogoutReason = $"Farm Time Limit Reached";
+            }
+            else if (EngageAttempts >= WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS)
+            {
+                LogoutTriggered = true;
+                LogoutReason = $"Failed to engage target after {WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS} loops.  Something wrong?";
             }
 
             await Task.Delay(0);
@@ -132,74 +137,44 @@ namespace WoWHelper
             return battleReady;
         }
 
-        public async Task<bool> TryToEngageTask()
+        public async Task<bool> KickOffEngageTask()
         {
-            if (FarmingConfig.EngageMethod == Code.Gameplay.WowFarmingConfiguration.EngagementMethod.Charge)
+            await Task.Delay(0);
+            EngageAttempts = 1;
+
+            if (FarmingConfig.EngageMethod == WowFarmingConfiguration.EngagementMethod.Charge)
             {
-                return await TryToChargeTask();
+                Keyboard.KeyPress(WowInput.CHARGE_KEY);
+                return true;
             }
-            else if (FarmingConfig.EngageMethod != Code.Gameplay.WowFarmingConfiguration.EngagementMethod.Charge)
+            else if (FarmingConfig.EngageMethod == WowFarmingConfiguration.EngagementMethod.Shoot)
             {
-                return await TryToShootTask();
+                Keyboard.KeyPress(WowInput.SHOOT_MACRO);
+                return true;
             }
 
             return false;
         }
 
-        public async Task<bool> TryToChargeTask()
+        public async Task<bool> FaceCorrectDirectionToEngageTask()
         {
-            Keyboard.KeyPress(WowInput.CHARGE_KEY);
-            await Task.Delay(250);
-            UpdateWorldState();
+            EngageAttempts++;
 
-            // break this apart a bit?  Smaller discrete charge task and then all the "rotation, wait for charge to land" cruft around it
-            int loopNum = 0;
-            while (!WorldState.IsInCombat && WorldState.CanChargeTarget && loopNum < WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS)
+            if (FarmingConfig.EngageMethod == WowFarmingConfiguration.EngagementMethod.Charge)
             {
                 await TurnABitToTheLeftTask();
                 Keyboard.KeyPress(WowInput.CHARGE_KEY);
-
-                await Task.Delay(250);
-                UpdateWorldState();
-
-                loopNum++;
             }
-
-            // give some time for the charge to land
-            await Task.Delay(500);
-
-            return WorldState.IsInCombat;
-        }
-
-        public async Task<bool> TryToShootTask()
-        {
-            Console.WriteLine($"Clicked first shoot");
-            Keyboard.KeyPress(WowInput.SHOOT_MACRO);
-            await Task.Delay(250);
-            UpdateWorldState();
-
-            // break this apart a bit?  Smaller discrete charge task and then all the "rotation, wait for charge to land" cruft around it
-            int loopNum = 0;
-            do
+            else if (FarmingConfig.EngageMethod == WowFarmingConfiguration.EngagementMethod.Shoot)
             {
                 if (!WorldState.WaitingToShoot)
                 {
-                    Console.WriteLine($"Not shooting, probably not facing");
                     await TurnABitToTheLeftTask();
                     Keyboard.KeyPress(WowInput.SHOOT_MACRO);
                 }
+            }
 
-                await Task.Delay(250);
-
-                UpdateWorldState();
-
-                loopNum++;
-            } while (!WorldState.IsInCombat && WorldState.CanShootTarget && loopNum < WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS);
-
-            // give some time for the shot to land
-            await Task.Delay(500);
-
-            return WorldState.IsInCombat;
+            return CanEngageTarget();
         }
 
         public async Task<bool> StartOfCombatTask()
