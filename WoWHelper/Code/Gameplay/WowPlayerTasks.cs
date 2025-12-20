@@ -6,6 +6,7 @@ using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
 using WoWHelper.Code.WorldState;
+using WoWHelper.Code.Gameplay;
 
 namespace WoWHelper
 {
@@ -26,25 +27,24 @@ namespace WoWHelper
 
         public async Task<bool> SetLogoutVariablesTask()
         {
-            WowWorldState worldState = WowWorldState.GetWoWWorldState();
-            // TODO: Hook this up to the zone, since for example the river turtles will never get 2 mobs
+            UpdateWorldState();
             
-            if (worldState.LowOnDynamite)
+            if (WorldState.LowOnDynamite)
             {
                 LogoutTriggered = true;
                 LogoutReason = "Low on Dynamite";
             }
-            else if (worldState.LowOnHealthPotions)
+            else if (WorldState.LowOnHealthPotions)
             {
                 LogoutTriggered = true;
                 LogoutReason = "Low on Health Potions";
             }
-            else if (EngageMethod == EngagementMethod.Shoot && worldState.LowOnAmmo)
+            else if (WorldState.LowOnAmmo && FarmingConfig.EngageMethod == WowFarmingConfiguration.EngagementMethod.Shoot)
             {
                 LogoutTriggered = true;
                 LogoutReason = "Low on Ammo";
             }
-            else if (!WowPlayer.CurrentTimeInsideDuration(FarmStartTime, WowPlayerConstants.FARM_TIME_LIMIT_MILLIS))
+            else if (!CurrentTimeInsideDuration(FarmStartTime, WowPlayerConstants.FARM_TIME_LIMIT_MILLIS))
             {
                 LogoutTriggered = true;
                 LogoutReason = "Farm Time Limit Reached";
@@ -57,17 +57,15 @@ namespace WoWHelper
 
         public async Task<bool> LogoutTask()
         {
-            WowWorldState worldState;
-
             await WowInput.PressKeyWithShift(WowInput.SHIFT_LOGOUT_MACRO);
 
             do
             {
-                worldState = WowWorldState.GetWoWWorldState();
                 await Task.Delay(250);
-            } while (!worldState.IsInCombat && !worldState.OnLoginScreen);
+                UpdateWorldState();
+            } while (!WorldState.IsInCombat && !WorldState.OnLoginScreen);
 
-            return worldState.OnLoginScreen;
+            return WorldState.OnLoginScreen;
         }
 
         #endregion
@@ -76,63 +74,35 @@ namespace WoWHelper
 
         public async Task<bool> RecoverAfterFightTask()
         {
-            WowWorldState worldState;
             bool startedEatingFood = false;
-            //bool dynamiteOrPotionIsCooledDown = false;
 
             while(true)
             {
-                // TODO: FDSA
-                /*
-                if (!WoWPlayer.CurrentTimeInsideDuration(wowPlayer.lastDangerousFindTargetTime, WoWPlayer.TIME_BETWEEN_FIND_DANGEROUS_TARGET_MILLIS))
-                {
-                    await WoWInput.PressKeyWithShift(WoWInput.SHIFT_DANGEROUS_TARGET_MACRO);
-
-                    // give a little extra time
-                    await Task.Delay(250);
-
-                    wowPlayer.lastDangerousFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                }
-                */
-
                 await Task.Delay(250);
-                worldState = WowWorldState.GetWoWWorldState();
+                UpdateWorldState();
 
                 // don't drown
-                if (worldState.Underwater)
+                if (WorldState.Underwater)
                 {
                     await GetOutOfWater();
                 }
 
-                if (worldState.IsInCombat)
+                if (WorldState.IsInCombat)
                 {
                     return false;
                 }
 
-                // TODO: FDSA
-                /*
-                // these common actions should be checked each loop, need to move to more centralized logic
-                if (worldState.TargetHpPercent > 0)
-                {
-                    SlackHelper.SendMessageToChannel("DANGEROUS MOB TARGETED");
-                    wowPlayer.LogoutReason = "DANGEROUS MOB TARGETED";
-                    wowPlayer.LogoutTriggered = true;
-                    return true;
-                }
-                */
-
-                if (worldState.PlayerHpPercent < 85 && !startedEatingFood)
+                if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD && !startedEatingFood)
                 {
                     Keyboard.KeyPress(WowInput.EAT_FOOD_KEY);
                     startedEatingFood = true;
                 }
 
-                //bool dynamiteIsCooledDown = !WoWPlayer.CurrentTimeInsideDuration(wowPlayer.LastDynamiteTime, WoWGameplayConstants.DYNAMITE_COOLDOWN_MILLIS);
-                bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(LastHealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+                bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
 
                 // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
                 // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
-                if (worldState.PlayerHpPercent >= 98 && potionIsCooledDown)
+                if (WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD && potionIsCooledDown)
                 {
                     break;
                 }
@@ -144,11 +114,11 @@ namespace WoWHelper
 
         public async Task<bool> TryToEngageTask()
         {
-            if (EngageMethod == EngagementMethod.Charge)
+            if (FarmingConfig.EngageMethod == Code.Gameplay.WowFarmingConfiguration.EngagementMethod.Charge)
             {
                 return await TryToChargeTask();
             }
-            else if (EngageMethod != EngagementMethod.Charge)
+            else if (FarmingConfig.EngageMethod != Code.Gameplay.WowFarmingConfiguration.EngagementMethod.Charge)
             {
                 return await TryToShootTask();
             }
@@ -160,17 +130,17 @@ namespace WoWHelper
         {
             Keyboard.KeyPress(WowInput.CHARGE_KEY);
             await Task.Delay(250);
-            WowWorldState worldState = WowWorldState.GetWoWWorldState();
+            UpdateWorldState();
 
             // break this apart a bit?  Smaller discrete charge task and then all the "rotation, wait for charge to land" cruft around it
             int loopNum = 0;
-            while (!worldState.IsInCombat && worldState.CanChargeTarget && loopNum < 12)
+            while (!WorldState.IsInCombat && WorldState.CanChargeTarget && loopNum < WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS)
             {
                 await TurnABitToTheLeftTask();
                 Keyboard.KeyPress(WowInput.CHARGE_KEY);
 
                 await Task.Delay(250);
-                worldState = WowWorldState.GetWoWWorldState();
+                UpdateWorldState();
 
                 loopNum++;
             }
@@ -178,7 +148,7 @@ namespace WoWHelper
             // give some time for the charge to land
             await Task.Delay(500);
 
-            return worldState.IsInCombat;
+            return WorldState.IsInCombat;
         }
 
         public async Task<bool> TryToShootTask()
@@ -186,13 +156,13 @@ namespace WoWHelper
             Console.WriteLine($"Clicked first shoot");
             Keyboard.KeyPress(WowInput.SHOOT_MACRO);
             await Task.Delay(250);
-            WowWorldState worldState = WowWorldState.GetWoWWorldState();
+            UpdateWorldState();
 
             // break this apart a bit?  Smaller discrete charge task and then all the "rotation, wait for charge to land" cruft around it
             int loopNum = 0;
             do
             {
-                if (!worldState.WaitingToShoot)
+                if (!WorldState.WaitingToShoot)
                 {
                     Console.WriteLine($"Not shooting, probably not facing");
                     await TurnABitToTheLeftTask();
@@ -201,15 +171,15 @@ namespace WoWHelper
 
                 await Task.Delay(250);
 
-                worldState = WowWorldState.GetWoWWorldState();
+                UpdateWorldState();
 
                 loopNum++;
-            } while (!worldState.IsInCombat && worldState.CanShootTarget && loopNum < 12);
+            } while (!WorldState.IsInCombat && WorldState.CanShootTarget && loopNum < WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS);
 
             // give some time for the shot to land
             await Task.Delay(500);
 
-            return worldState.IsInCombat;
+            return WorldState.IsInCombat;
         }
 
         public async Task<bool> StartOfCombatTask()
@@ -308,13 +278,13 @@ namespace WoWHelper
         // Rotates towards the waypoint or walks towards the waypoint, depending
         public async Task<bool> MoveTowardsWaypointTask(WowWorldState worldState)
         {
-            float waypointDistance = Vector2.Distance(worldState.PlayerLocation, WaypointDefinition.Waypoints[CurrentWaypointIndex]);
-            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, WaypointDefinition.Waypoints[CurrentWaypointIndex]);
+            float waypointDistance = Vector2.Distance(worldState.PlayerLocation, FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]);
+            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]);
             float degreesDifference = WowPathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
 
-            Console.WriteLine($"Heading towards waypoint {WaypointDefinition.Waypoints[CurrentWaypointIndex]}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
+            Console.WriteLine($"Heading towards waypoint {FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
-            if (waypointDistance <= WaypointDefinition.DistanceTolerance)
+            if (waypointDistance <= FarmingConfig.WaypointDefinition.DistanceTolerance)
             {
                 //Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
                 await EndWalkForwardTask();
@@ -345,9 +315,9 @@ namespace WoWHelper
             {
                 while (true)
                 {
-                    WowWorldState worldState = WowWorldState.GetWoWWorldState();
+                    UpdateWorldState();
 
-                    float currentDegrees = worldState.FacingDegrees;
+                    float currentDegrees = WorldState.FacingDegrees;
                     float degreesToMove = WowPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
                     float absDegreesToMove = Math.Abs(degreesToMove);
 
