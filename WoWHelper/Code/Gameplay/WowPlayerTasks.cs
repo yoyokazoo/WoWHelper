@@ -192,13 +192,13 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> MakeSureWeAreAttackingEnemyTask(WowWorldState worldState, WowWorldState previousWorldState)
+        public async Task<bool> MakeSureWeAreAttackingEnemyTask()
         {
-            bool attackerJustDied = previousWorldState?.AttackerCount > worldState.AttackerCount && worldState.AttackerCount > 0;
-            bool inCombatButNotAutoAttacking = worldState.IsInCombat && !worldState.IsAutoAttacking;
-            bool tooFarAway = worldState.TooFarAway;
-            bool facingWrongWay = worldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
-            bool targetNeedsToBeInFront = worldState.TargetNeedsToBeInFront;
+            bool attackerJustDied = PreviousWorldState?.AttackerCount > WorldState.AttackerCount && WorldState.AttackerCount > 0;
+            bool inCombatButNotAutoAttacking = WorldState.IsInCombat && !WorldState.IsAutoAttacking;
+            bool tooFarAway = WorldState.TooFarAway;
+            bool facingWrongWay = WorldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
+            bool targetNeedsToBeInFront = WorldState.TargetNeedsToBeInFront;
 
             if (attackerJustDied || facingWrongWay || targetNeedsToBeInFront)
             {
@@ -221,9 +221,9 @@ namespace WoWHelper
             return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront;
         }
 
-        public async Task<bool> TooManyAttackersTask(WowWorldState worldState)
+        public async Task<bool> TooManyAttackersTask()
         {
-            bool tooManyAttackers = worldState.AttackerCount > 2;
+            bool tooManyAttackers = WorldState.AttackerCount > 2;
 
             if (tooManyAttackers)
             {
@@ -238,9 +238,9 @@ namespace WoWHelper
             return tooManyAttackers;
         }
 
-        public async Task<bool> ThrowDynamiteTask(WowWorldState worldState)
+        public async Task<bool> ThrowDynamiteTask()
         {
-            bool shouldThrowDynamite = worldState.AttackerCount > 1;
+            bool shouldThrowDynamite = WorldState.AttackerCount > 1;
 
             if (shouldThrowDynamite)
             {
@@ -255,9 +255,9 @@ namespace WoWHelper
             return shouldThrowDynamite;
         }
 
-        public async Task<bool> UseHealingPotionTask(WowWorldState worldState)
+        public async Task<bool> UseHealingPotionTask()
         {
-            bool shouldUseHealingPotion = worldState.PlayerHpPercent <= WowGameplayConstants.HEALING_POTION_HP_THRESHOLD;
+            bool shouldUseHealingPotion = WorldState.PlayerHpPercent <= WowGameplayConstants.HEALING_POTION_HP_THRESHOLD;
 
             if (shouldUseHealingPotion)
             {
@@ -276,13 +276,13 @@ namespace WoWHelper
         // Returns true if we've reached the waypoint
         // Returns false if we haven't yet reached the waypoint
         // Rotates towards the waypoint or walks towards the waypoint, depending
-        public async Task<bool> MoveTowardsWaypointTask(WowWorldState worldState)
+        public async Task<bool> MoveTowardsWaypointTask()
         {
-            float waypointDistance = Vector2.Distance(worldState.PlayerLocation, FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]);
-            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]);
-            float degreesDifference = WowPathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
+            float waypointDistance = Vector2.Distance(WorldState.PlayerLocation, FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]);
+            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]);
+            float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
 
-            Console.WriteLine($"Heading towards waypoint {FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
+            Console.WriteLine($"Heading towards waypoint {FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]}. At {WorldState.MapX},{WorldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {WorldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
             if (waypointDistance <= FarmingConfig.WaypointDefinition.DistanceTolerance)
             {

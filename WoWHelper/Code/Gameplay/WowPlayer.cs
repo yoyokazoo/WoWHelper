@@ -93,15 +93,15 @@ namespace WoWHelper
             return (DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime) < duration;
         }
 
-        public bool CanEngageTarget(WowWorldState worldState)
+        public bool CanEngageTarget()
         {
             if (FarmingConfig.EngageMethod == EngagementMethod.Charge)
             {
-                return worldState.CanChargeTarget;
+                return WorldState.CanChargeTarget;
             }
             else if (FarmingConfig.EngageMethod == EngagementMethod.Shoot)
             {
-                return worldState.CanShootTarget;
+                return WorldState.CanShootTarget;
             }
 
             return false;
@@ -236,13 +236,13 @@ namespace WoWHelper
                 }
 
                 // First do our "Make sure we're not standing around doing nothing" checks
-                if (await MakeSureWeAreAttackingEnemyTask(WorldState, PreviousWorldState))
+                if (await MakeSureWeAreAttackingEnemyTask())
                 {
                     continue;
                 }
 
                 // Next, check if we need to pop any big cooldowns
-                if (!tooManyAttackersActionsTaken && await TooManyAttackersTask(WorldState))
+                if (!tooManyAttackersActionsTaken && await TooManyAttackersTask())
                 {
                     tooManyAttackersActionsTaken = true;
                     continue;
@@ -265,14 +265,14 @@ namespace WoWHelper
                     continue;
                 }
 
-                if (!thrownDynamite && await ThrowDynamiteTask(WorldState))
+                if (!thrownDynamite && await ThrowDynamiteTask())
                 {
                     DynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     thrownDynamite = true;
                     continue;
                 }
 
-                if (!potionUsed && await UseHealingPotionTask(WorldState))
+                if (!potionUsed && await UseHealingPotionTask())
                 {
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     potionUsed = true;
@@ -396,7 +396,7 @@ namespace WoWHelper
                     return false;
                 }
 
-                if (CanEngageTarget(WorldState))
+                if (CanEngageTarget())
                 {
                     await EndWalkForwardTask();
                     return true;
@@ -439,7 +439,7 @@ namespace WoWHelper
                     return true;
                 }
 
-                if (CanEngageTarget(WorldState) || WorldState.IsInCombat)
+                if (CanEngageTarget() || WorldState.IsInCombat)
                 {
                     await EndWalkForwardTask();
                     // return true if we can charge/shoot, false if we're already in combat
@@ -520,7 +520,7 @@ namespace WoWHelper
                         CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
                         break;
                     case PathfindingState.MOVING_TOWARDS_WAYPOINT:
-                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(MoveTowardsWaypointTask(WorldState),
+                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(MoveTowardsWaypointTask(),
                             PathfindingState.PICKING_NEXT_WAYPOINT,
                             PathfindingState.MOVING_TOWARDS_WAYPOINT);
                         break;

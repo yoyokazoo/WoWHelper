@@ -13,7 +13,6 @@ namespace WoWHelperUnitTests
     public class UnitTestBase
     {
         public WowPlayer Player { get; set; }
-        public WowWorldState WorldState { get; set; }
 
         [AssemblyInitialize]
         public void InitializeTesseractEngine()
