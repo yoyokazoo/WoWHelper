@@ -9,7 +9,8 @@ namespace WoWHelper.Code.Constants
         {
             WaypointDefinition = WowWaypointConstants.LEVEL_42_TANARIS_TURTLES,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
-            AlertOnPotionUsed = false
+            AlertOnPotionUsed = false,
+            AlertOnFullBags = false
         };
     }
 }

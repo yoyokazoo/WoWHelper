@@ -54,7 +54,7 @@ namespace WoWHelper
             }
 
             // also send once-per-session alerts here
-            if (!FullBagsAlertSent && WorldState.BagsAreFull)
+            if (FarmingConfig.AlertOnFullBags && !FullBagsAlertSent && WorldState.BagsAreFull)
             {
                 SlackHelper.SendMessageToChannel($"Bags are full!");
                 FullBagsAlertSent = true;
@@ -263,7 +263,10 @@ namespace WoWHelper
 
             if (shouldUseHealingPotion)
             {
-                SlackHelper.SendMessageToChannel("Potion used!");
+                if (FarmingConfig.AlertOnPotionUsed)
+                {
+                    SlackHelper.SendMessageToChannel("Potion used!");
+                }
                 Keyboard.KeyPress(WowInput.HEALING_POTION_KEY);
                 await Task.Delay(0);
             }
