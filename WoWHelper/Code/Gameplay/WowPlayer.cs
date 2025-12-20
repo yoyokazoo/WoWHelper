@@ -156,7 +156,7 @@ namespace WoWHelper
                         Console.WriteLine("Checking if we should log out");
                         currentPlayerState = await ChangeStateBasedOnTaskResult(SetLogoutVariablesTask(),
                             PlayerState.START_LOGGING_OUT,
-                            PlayerState.WAIT_UNTIL_BATTLE_READY);
+                            PlayerState.START_BATTLE_READY_RECOVERY);
                         break;
                     case PlayerState.START_LOGGING_OUT:
                         Console.WriteLine("Started logging out");
@@ -175,11 +175,17 @@ namespace WoWHelper
                         SlackHelper.SendMessageToChannel($"Logged out: {LogoutReason}");
                         currentPlayerState = PlayerState.EXITING_CORE_GAMEPLAY_LOOP;
                         break;
+                    case PlayerState.START_BATTLE_READY_RECOVERY:
+                        Console.WriteLine("Waiting until battle ready");
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(StartBattleReadyRecoverTask(),
+                            PlayerState.WAIT_UNTIL_BATTLE_READY,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        break;
                     case PlayerState.WAIT_UNTIL_BATTLE_READY:
                         Console.WriteLine("Waiting until battle ready");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(RecoverAfterFightTask(), // TODO
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(WaitUntilBattleReadyTask(),
                             PlayerState.CHECK_FOR_VALID_TARGET,
-                            PlayerState.IN_CORE_COMBAT_LOOP);
+                            PlayerState.WAIT_UNTIL_BATTLE_READY);
                         break;
                     case PlayerState.CHECK_FOR_VALID_TARGET:
                         Console.WriteLine("Checking for valid target");

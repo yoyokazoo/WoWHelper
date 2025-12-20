@@ -104,44 +104,32 @@ namespace WoWHelper
 
         #region Combat Tasks
 
-        public async Task<bool> RecoverAfterFightTask()
+        public async Task<bool> StartBattleReadyRecoverTask()
         {
-            bool startedEatingFood = false;
-
-            while(true)
+            await Task.Delay(0);
+            if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
-                await Task.Delay(250);
-                UpdateWorldState();
-
-                // don't drown
-                if (WorldState.Underwater)
-                {
-                    await GetOutOfWater();
-                }
-
-                if (WorldState.IsInCombat)
-                {
-                    return false;
-                }
-
-                if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD && !startedEatingFood)
-                {
-                    Keyboard.KeyPress(WowInput.EAT_FOOD_KEY);
-                    startedEatingFood = true;
-                }
-
-                bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
-
-                // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
-                // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
-                if (WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD && potionIsCooledDown)
-                {
-                    break;
-                }
+                Keyboard.KeyPress(WowInput.EAT_FOOD_KEY);
             }
 
-            await ScootForwardsTask();
             return true;
+        }
+
+        public async Task<bool> WaitUntilBattleReadyTask()
+        {
+            // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
+            // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
+
+            bool hpRecovered = WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD;
+            bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+            bool battleReady = hpRecovered && potionIsCooledDown;
+
+            if (battleReady)
+            {
+                await ScootForwardsTask();
+            }
+            
+            return battleReady;
         }
 
         public async Task<bool> TryToEngageTask()
