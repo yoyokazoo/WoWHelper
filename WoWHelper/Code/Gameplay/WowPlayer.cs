@@ -382,6 +382,7 @@ namespace WoWHelper
             //bool lookingForDangerousTarget = false;
             while (targetChecks < maxTargetChecks)
             {
+                /*
                 if (!CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
@@ -408,6 +409,7 @@ namespace WoWHelper
 
                     targetChecks++;
                 }
+                */
 
                 // always wait a bit for the UI to update, then grab it?
                 await Task.Delay(250);

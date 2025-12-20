@@ -7,6 +7,7 @@ using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
 using WoWHelper.Code.WorldState;
 using WoWHelper.Code.Gameplay;
+using System.Windows.Forms;
 
 namespace WoWHelper
 {
@@ -283,22 +284,23 @@ namespace WoWHelper
         // Rotates towards the waypoint or walks towards the waypoint, depending
         public async Task<bool> MoveTowardsWaypointTask()
         {
-            float waypointDistance = Vector2.Distance(WorldState.PlayerLocation, FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]);
-            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]);
+            var waypoint = FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex];
+            float waypointDistance = Vector2.Distance(WorldState.PlayerLocation, waypoint);
+            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, waypoint);
             float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
 
-            Console.WriteLine($"Heading towards waypoint {FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]}. At {WorldState.MapX},{WorldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {WorldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
+            Console.WriteLine($"Heading towards waypoint {waypoint}. At {WorldState.MapX},{WorldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {WorldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
             if (waypointDistance <= FarmingConfig.WaypointDefinition.DistanceTolerance)
             {
-                //Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
+                Console.WriteLine($"Arrived at {waypoint} ({WorldState.MapX},{WorldState.MapY})");
                 await EndWalkForwardTask();
                 return true;
             }
 
             if (Math.Abs(degreesDifference) > WowPathfinding.GetWaypointDegreesTolerance(waypointDistance))
             {
-                //Console.WriteLine($"degreesDifference too large, rotating to heading");
+                Console.WriteLine($"degreesDifference too large, rotating to heading");
                 //await EndWalkForwardTask();
                 await RotateToDirectionTask(desiredDegrees, waypointDistance);
                 return false;
@@ -306,16 +308,34 @@ namespace WoWHelper
             else
             {
                 // if we're already walking, ignore this
-                //Console.WriteLine($"Start walking forward");
+                Console.WriteLine($"Start walking forward");
                 await StartWalkForwardTask();
+                /*
+                var lateralDistance = WowPathfinding.GetLateralDistance(WorldState.FacingDegrees, WorldState.PlayerLocation, waypoint);
+                if (Math.Abs(lateralDistance) > WowPathfinding.STRAFE_LATERAL_DISTANCE_TOLERANCE)
+                {
+                    if (lateralDistance > 0)
+                    {
+                        Keyboard.KeyDown(WowInput.STRAFE_RIGHT);
+                        await Task.Delay(100);
+                        Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
+                    }
+                    else
+                    {
+                        Keyboard.KeyDown(WowInput.STRAFE_LEFT);
+                        await Task.Delay(100);
+                        Keyboard.KeyUp(WowInput.STRAFE_LEFT);
+                    }
+                }
+                */
+                
                 return false;
             }
         }
 
         public async Task<bool> RotateToDirectionTask(float desiredDegrees, float distance)
         {
-            bool mouseDown = false;
-
+            await Task.Delay(0);
             try
             {
                 while (true)
@@ -331,32 +351,24 @@ namespace WoWHelper
                     if (absDegreesToMove <= WowPathfinding.GetWaypointDegreesTolerance(distance))
                         break;
 
-                    if (mouseDown == false)
+                    Keys directionKey = degreesToMove <= 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
+
+                    if (directionKey == WowInput.TURN_RIGHT)
                     {
-                        Mouse.ButtonDown(Mouse.MouseKeys.Right);
-                        await Task.Delay(50);
-                        mouseDown = true;
+                        Keyboard.KeyUp(WowInput.TURN_LEFT);
+                    }
+                    else
+                    {
+                        Keyboard.KeyUp(WowInput.TURN_RIGHT);
                     }
 
-                    // Map angle difference -> [0,1] where 0 = on target, 1 = far away (>= maxSpeedAngle)
-                    float t = absDegreesToMove / WowPathfinding.MAX_SPEED_ANGLE;
-
-                    // Interpolate between minSpeed and maxSpeed
-                    int speed = (int)Math.Round(WowPathfinding.MIN_ROTATION_SPEED + (WowPathfinding.MAX_ROTATION_SPEED - WowPathfinding.MIN_ROTATION_SPEED) * t);
-
-                    int direction = degreesToMove <= 0 ? 1 : -1;
-                    int verticalDirection = 0;
-
-                    Mouse.MoveRelative(speed * direction, verticalDirection);
+                    Keyboard.KeyDown(directionKey);
                 }
             }
             finally
             {
-                if (mouseDown == true)
-                {
-                    Mouse.ButtonUp(Mouse.MouseKeys.Right);
-                    await Task.Delay(50);
-                }
+                Keyboard.KeyUp(WowInput.TURN_LEFT);
+                Keyboard.KeyUp(WowInput.TURN_RIGHT);
             }
 
             return true;
@@ -373,6 +385,8 @@ namespace WoWHelper
         {
             await Task.Delay(0);
             Keyboard.KeyUp(WowInput.MOVE_FORWARD);
+            Keyboard.KeyUp(WowInput.STRAFE_LEFT);
+            Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
             return true;
         }
 

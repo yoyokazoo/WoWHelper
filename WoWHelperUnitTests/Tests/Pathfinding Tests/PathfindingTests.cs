@@ -31,5 +31,17 @@ namespace WoWHelperUnitTests
             var degreesToMove = WowPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
             AssertExtensions.DoublesAreAlmostEqual(expectedDegrees, degreesToMove);
         }
+
+        [DataTestMethod]
+        [DataRow(97f, 0.12f)]
+        [DataRow(83f, -0.12f)]
+        public void VerifyLateralDistance(float facingDegrees, float expectedDistance)
+        {
+            Vector2 startingPoint = new Vector2(68.50f, 34.00f);
+            Vector2 endingPoint = new Vector2(67.50f, 34.00f);
+            
+            var lateralDistance = WowPathfinding.GetLateralDistance(facingDegrees, startingPoint, endingPoint);
+            AssertExtensions.DoublesAreAlmostEqual(expectedDistance, lateralDistance);
+        }
     }
 }

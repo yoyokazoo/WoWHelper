@@ -5,6 +5,21 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowWaypointConstants
     {
+        public static readonly WowWaypointDefinition TANARIS_TEST_PATHFINDING = new WowWaypointDefinition
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(68.42f, 34.13f),
+                new Vector2(67.07f, 34.12f),
+                new Vector2(67.16f, 34.75f),
+                new Vector2(67.02f, 35.20f),
+                new Vector2(67.81f, 35.26f),
+            },
+            TraversalMethod = WowWaypointDefinition.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowWaypointDefinition.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.06f
+        };
+
         public static readonly WowWaypointDefinition LEVEL_42_TANARIS_TURTLES = new WowWaypointDefinition
         {
             Waypoints = new List<Vector2>

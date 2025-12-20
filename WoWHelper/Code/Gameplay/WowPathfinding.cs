@@ -23,6 +23,8 @@ namespace WoWHelper.Code
         public const int STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE = 18 * 1000;
         public const int STATIONARY_MILLIS_BEFORE_ALERT = 30 * 1000;
 
+        public const float STRAFE_LATERAL_DISTANCE_TOLERANCE = 0.02f;
+
 
         public static float GetDesiredDirectionInDegrees(Vector2 waypoint1, Vector2 waypoint2)
         {
@@ -97,6 +99,37 @@ namespace WoWHelper.Code
             //Console.WriteLine($"GetWaypointDegreesTolerance for distance {distance} = {inverseDegrees}");
 
             return inverseDegrees;
+        }
+
+        public static float Cross2D(Vector2 a, Vector2 b) => a.X * b.Y - a.Y * b.X;
+        public static float Dot2D(Vector2 a, Vector2 b) => a.X * b.X + a.Y * b.Y;
+
+        public static Vector2 ForwardFromFacingDegrees(float facingDegrees)
+        {
+            // Convert degrees to radians
+            float radians = facingDegrees * (float)Math.PI / 180f;
+
+            // WoW:
+            // 0° = North
+            // 90° = West
+            // 180° = South
+            // 270° = East
+            //
+            // X grows East, Y grows South
+            //
+            // This mapping satisfies all constraints:
+            float x = -(float)Math.Sin(radians);
+            float y = -(float)Math.Cos(radians);
+
+            return Vector2.Normalize(new Vector2(x, y));
+        }
+
+        public static float GetLateralDistance(float facingDegrees, Vector2 playerPos, Vector2 waypoint)
+        {
+            Vector2 forward = ForwardFromFacingDegrees(facingDegrees); // must be unit
+            Vector2 toWaypoint = waypoint - playerPos;
+
+            return Cross2D(forward, toWaypoint);
         }
     }
 }
