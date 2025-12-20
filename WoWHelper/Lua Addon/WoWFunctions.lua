@@ -359,7 +359,7 @@ end
 -- superior healing potion, level 35, 3928
 -- major healing potion, level 45, 13446
 function AreWeLowOnHealthPotions()
-    local healthPotCount = GetItemCount(3928, false)
+    local healthPotCount = GetItemCount(13446, false)
     return healthPotCount < 2
 end
 
@@ -370,7 +370,7 @@ end
 -- dense dynamite, 18641
 -- hi-explosive bomb, 10562 
 function AreWeLowOnDynamite()
-    local dynamiteCount = GetItemCount(10507, false)
+    local dynamiteCount = GetItemCount(10562, false)
     return dynamiteCount < 2
 end
 
