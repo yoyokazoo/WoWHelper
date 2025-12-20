@@ -16,16 +16,12 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        
-        private long lastFindTargetTime = 0;
-        // TODO: player needs to be refactored
-        public long lastDangerousFindTargetTime { get; set; }
-
         // TODO: write custom getters/setters for these so we can keep checking the time until they're off cooldown,
-        // then use the cached value until they get dirtied again
+        // then use the cached value until they get dirtied again?
         public long FarmStartTime { get; private set; }
-        public long LastDynamiteTime { get; private set; }
-        public long LastHealthPotionTime { get; private set; }
+        public long LastFindTargetTime { get; private set; }
+        public long DynamiteTime { get; private set; }
+        public long HealthPotionTime { get; private set; }
         public long NextUpdateTime { get; private set; }
 
         public WowWorldState PreviousWorldState { get; private set; }
@@ -57,8 +53,16 @@ namespace WoWHelper
 
         public async Task UpdateWorldState()
         {
+            var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            var timeToWait = NextUpdateTime - now;
+            int timeToWaitClamped = (int)Math.Max(0, timeToWait);
 
-            int waitTime = Math.Max(0, 250);
+            await Task.Delay(timeToWaitClamped);
+
+            PreviousWorldState = WorldState;
+            WorldState = WowWorldState.GetWoWWorldState();
+
+            NextUpdateTime = now + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
 
         // For Testing only, otherwise use UpdateWorldState
@@ -100,19 +104,18 @@ namespace WoWHelper
         public void KickOffCoreLoop()
         {
             KeyPoller.EscPressed += async () => {
-                Console.WriteLine("ESC detected!");
-                // set cancellation flag or perform cleanup
-                Keyboard.KeyPress(WowInput.MOVE_BACK);
+                Console.WriteLine("ESC detected! Performing cleanup then quitting");
 
-                await Task.Delay(0);
+                Keyboard.KeyUp(WowInput.MOVE_FORWARD);
+                Keyboard.KeyPress(WowInput.MOVE_BACK);
+                await Task.Delay(5);
+
                 Environment.Exit(0);
             };
-
             KeyPoller.Start();
 
 
             _ = CoreGameplayLoopTask();
-            //_ = CorePathfindingLoopTask();
         }
 
         public async Task<bool> CoreGameplayLoopTask()
@@ -244,14 +247,14 @@ namespace WoWHelper
 
                 if (!thrownDynamite && await ThrowDynamiteTask(worldState))
                 {
-                    LastDynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    DynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     thrownDynamite = true;
                     continue;
                 }
 
                 if (!potionUsed && await UseHealingPotionTask(worldState))
                 {
-                    LastHealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     potionUsed = true;
                     continue;
                 }
@@ -331,10 +334,10 @@ namespace WoWHelper
             //bool lookingForDangerousTarget = false;
             while (targetChecks < maxTargetChecks)
             {
-                if (!CurrentTimeInsideDuration(lastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
+                if (!CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
                     //lookingForDangerousTarget = false;
-                    lastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
                     if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowWaypointDefinition.WaypointTargetFindMethod.TAB)
                     {

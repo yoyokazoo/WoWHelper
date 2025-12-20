@@ -128,7 +128,7 @@ namespace WoWHelper
                 }
 
                 //bool dynamiteIsCooledDown = !WoWPlayer.CurrentTimeInsideDuration(wowPlayer.LastDynamiteTime, WoWGameplayConstants.DYNAMITE_COOLDOWN_MILLIS);
-                bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(LastHealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+                bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
 
                 // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
                 // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
