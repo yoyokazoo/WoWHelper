@@ -239,6 +239,23 @@ namespace WoWHelper
                     continue;
                 }
 
+                // Just in case, if for some reason things are going really poorly, try to pop retal regardless
+                if (!tooManyAttackersActionsTaken && worldState.PlayerHpPercent <= 35)
+                {
+                    SlackHelper.SendMessageToChannel($"35% Retal popped, not sure what went wrong!");
+                    // cast retaliation
+                    Keyboard.KeyPress(WowInput.RETALIATION_KEY);
+                    // until I get GCD tracking working, just wait a bit and click it again to make sure
+                    await Task.Delay(1500);
+                    Keyboard.KeyPress(WowInput.RETALIATION_KEY);
+                    tooManyAttackersActionsTaken = true;
+
+                    LogoutReason = "Got down to 35% somehow";
+                    LogoutTriggered = true;
+
+                    continue;
+                }
+
                 if (!thrownDynamite && await ThrowDynamiteTask(worldState))
                 {
                     LastDynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
