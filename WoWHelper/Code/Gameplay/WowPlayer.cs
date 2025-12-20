@@ -25,6 +25,8 @@ namespace WoWHelper
         public long HealthPotionTime { get; private set; }
         public long NextUpdateTime { get; private set; }
 
+        public bool FullBagsAlertSent { get; private set; }
+
         public int EngageAttempts { get; private set; }
 
         public WowWorldState PreviousWorldState { get; private set; }

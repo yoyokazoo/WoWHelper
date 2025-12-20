@@ -422,6 +422,38 @@ function CanCastMortalStrikeOrBloodthirst()
     return SpellIsCooledDown(12294) or SpellIsCooledDown(23881)
 end
 
+function GetFreeSlotsInBag(bag)
+    local total = C_Container.GetContainerNumSlots(bag)
+    local free = 0
+
+    for slot = 1, total do
+        local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+        if not itemInfo then
+            free = free + 1
+        end
+    end
+
+    return free
+end
+
+function GetTotalFreeBagSlots()
+    local free = 0
+
+    -- backpack
+    free = free + GetFreeSlotsInBag(0)
+
+    -- equipped bags
+    for bag = 1, 4 do
+        free = free + GetFreeSlotsInBag(bag)
+    end
+
+    return free
+end
+
+function AreBagsFull()
+    return GetTotalFreeBagSlots() == 0
+end
+
 function GetMultiBoolOne()
     local bool1 = IsAttacking()
     local bool2 = HasBattleShout()
@@ -439,7 +471,7 @@ function GetMultiBoolOne()
     local boolG3 = CanCastSweepingStrikes()
     local boolG4 = WaitingToShoot()
     local boolG5 = CanCastMortalStrikeOrBloodthirst()
-    local boolG6 = false
+    local boolG6 = AreBagsFull()
     local boolG7 = false
     local boolG8 = CanCastMortalStrikeOrBloodthirst()
 

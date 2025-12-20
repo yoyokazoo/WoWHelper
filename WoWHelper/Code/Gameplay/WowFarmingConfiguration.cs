@@ -18,11 +18,13 @@ namespace WoWHelper.Code.Gameplay
         public WowWaypointDefinition WaypointDefinition { get; set; }
         public EngagementMethod EngageMethod { get; set; }
         public bool AlertOnPotionUsed { get; set; }
+        public bool AlertOnFullBags { get; set; }
 
         public WowFarmingConfiguration()
         {
             EngageMethod = EngagementMethod.Shoot;
             AlertOnPotionUsed = true;
+            AlertOnFullBags = true;
         }
     }
 }

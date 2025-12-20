@@ -53,6 +53,13 @@ namespace WoWHelper
                 LogoutReason = $"Failed to engage target after {WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS} loops.  Something wrong?";
             }
 
+            // also send once-per-session alerts here
+            if (!FullBagsAlertSent && WorldState.BagsAreFull)
+            {
+                SlackHelper.SendMessageToChannel($"Bags are full!");
+                FullBagsAlertSent = true;
+            }
+
             await Task.Delay(0);
 
             return LogoutTriggered;
