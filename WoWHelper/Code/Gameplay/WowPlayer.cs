@@ -51,7 +51,7 @@ namespace WoWHelper
             FarmingConfig = WowFarmingConfigConstants.LEVEL_42_TANARIS_TURTLES;
         }
 
-        public async Task UpdateWorldState()
+        public async Task UpdateWorldStateAsync()
         {
             var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             var timeToWait = NextUpdateTime - now;
@@ -63,6 +63,12 @@ namespace WoWHelper
             WorldState = WowWorldState.GetWoWWorldState();
 
             NextUpdateTime = now + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
+        }
+
+        public void UpdateWorldState()
+        {
+            PreviousWorldState = WorldState;
+            WorldState = WowWorldState.GetWoWWorldState();
         }
 
         // For Testing only, otherwise use UpdateWorldState
@@ -211,8 +217,6 @@ namespace WoWHelper
         public async Task<bool> CoreCombatLoopTask()
         {
             Console.WriteLine("Kicking off core combat loop");
-            WowWorldState previousWorldState = null;
-            WowWorldState worldState = null;
             bool thrownDynamite = false;
             bool potionUsed = false;
             bool tooManyAttackersActionsTaken = false;
@@ -223,36 +227,35 @@ namespace WoWHelper
             {
                 await Task.Delay(250);
 
-                previousWorldState = worldState;
-                worldState = WowWorldState.GetWoWWorldState();
+                UpdateWorldState();
 
                 // don't drown
-                if (worldState.Underwater)
+                if (WorldState.Underwater)
                 {
                     await GetOutOfWater();
                 }
 
                 // First do our "Make sure we're not standing around doing nothing" checks
-                if (await MakeSureWeAreAttackingEnemyTask(worldState, previousWorldState))
+                if (await MakeSureWeAreAttackingEnemyTask(WorldState, PreviousWorldState))
                 {
                     continue;
                 }
 
                 // Next, check if we need to pop any big cooldowns
-                if (!tooManyAttackersActionsTaken && await TooManyAttackersTask(worldState))
+                if (!tooManyAttackersActionsTaken && await TooManyAttackersTask(WorldState))
                 {
                     tooManyAttackersActionsTaken = true;
                     continue;
                 }
 
-                if (!thrownDynamite && await ThrowDynamiteTask(worldState))
+                if (!thrownDynamite && await ThrowDynamiteTask(WorldState))
                 {
                     DynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     thrownDynamite = true;
                     continue;
                 }
 
-                if (!potionUsed && await UseHealingPotionTask(worldState))
+                if (!potionUsed && await UseHealingPotionTask(WorldState))
                 {
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     potionUsed = true;
@@ -260,31 +263,31 @@ namespace WoWHelper
                 }
 
                 // Finally, if we've made it this far, do standard combat actions
-                if (!worldState.BattleShoutActive && worldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
+                if (!WorldState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
                 {
                     Keyboard.KeyPress(WowInput.BATTLE_SHOUT_KEY);
                 }
-                else if (worldState.OverpowerUsable && worldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
+                else if (WorldState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
                 {
                     Keyboard.KeyPress(WowInput.OVERPOWER_KEY);
                 }
-                else if (!worldState.TargetHasRend && worldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
+                else if (!WorldState.TargetHasRend && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
                 {
                     Keyboard.KeyPress(WowInput.REND_KEY);
                 }
-                else if(worldState.AttackerCount > 1)
+                else if(WorldState.AttackerCount > 1)
                 {
-                    if (worldState.SweepingStrikesCooledDown && worldState.ResourcePercent < WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    if (WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent < WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
                     {
                         // Popping SS ASAP is priority
                         continue;
                     }
 
-                    if (worldState.SweepingStrikesCooledDown && worldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    if (WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
                     {
                         await WowInput.PressKeyWithShift(WowInput.SHIFT_SWEEPING_STRIKES_MACRO);
                     }
-                    else if (worldState.WhirlwindCooledDown && worldState.ResourcePercent >= WowGameplayConstants.WHIRLWIND_RAGE_COST)
+                    else if (WorldState.WhirlwindCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.WHIRLWIND_RAGE_COST)
                     {
                         await WowInput.PressKeyWithShift(WowInput.SHIFT_WHIRLWIND_MACRO);
                         await Task.Delay(150);
@@ -296,20 +299,20 @@ namespace WoWHelper
                         await Task.Delay(150);
                         Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
                     }
-                    else if (!worldState.WhirlwindCooledDown && !worldState.HeroicStrikeQueued && worldState.ResourcePercent >= WowGameplayConstants.CLEAVE_RAGE_COST)
+                    else if (!WorldState.WhirlwindCooledDown && !WorldState.HeroicStrikeQueued && WorldState.ResourcePercent >= WowGameplayConstants.CLEAVE_RAGE_COST)
                     {
                         // if WW is cooled down, prefer waiting for rage for that over cleaving
                         await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
                     }
                 }
-                else if (worldState.AttackerCount == 1)
+                else if (WorldState.AttackerCount == 1)
                 {
-                    if (worldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_RAGE_COST)
+                    if (WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_RAGE_COST)
                     {
                         Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
                     }
                 }
-            } while (worldState.IsInCombat);
+            } while (WorldState.IsInCombat);
 
             return true;
         }
@@ -318,8 +321,6 @@ namespace WoWHelper
         {
             Console.WriteLine("Kicking off core pathfinding loop");
 
-            WowWorldState previousWorldState = null;
-            WowWorldState worldState = null;
             bool stationaryJumpAttemptedOnce = false;
             bool stationaryWiggleAttemptedOnce = false;
             bool stationaryWiggleAttemptedTwice = false;
@@ -336,7 +337,6 @@ namespace WoWHelper
             {
                 if (!CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
-                    //lookingForDangerousTarget = false;
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
                     if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowWaypointDefinition.WaypointTargetFindMethod.TAB)
@@ -361,58 +361,32 @@ namespace WoWHelper
 
                     targetChecks++;
                 }
-                // TODO: FDSA
-                /*
-                else if(!CurrentTimeInsideDuration(lastDangerousFindTargetTime, TIME_BETWEEN_FIND_DANGEROUS_TARGET_MILLIS))
-                {
-                    lookingForDangerousTarget = true;
-                    lastDangerousFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-
-                    await WoWInput.PressKeyWithShift(WoWInput.SHIFT_DANGEROUS_TARGET_MACRO);
-
-                    // give a little extra time
-                    await Task.Delay(250);
-                }
-                */
 
                 // always wait a bit for the UI to update, then grab it?
                 await Task.Delay(250);
-                previousWorldState = worldState;
-                worldState = WowWorldState.GetWoWWorldState();
+                UpdateWorldState();
 
                 // don't drown
-                if (worldState.Underwater)
+                if (WorldState.Underwater)
                 {
                     await GetOutOfWater();
                 }
 
-                if (worldState.IsInCombat)
+                if (WorldState.IsInCombat)
                 {
                     await EndWalkForwardTask();
                     // return true if we can charge, false if we're already in combat
                     return false;
                 }
 
-                /*
-                if (lookingForDangerousTarget && worldState.TargetHpPercent > 0)
-                {
-                    await WoWTasks.EndWalkForwardTask();
-
-                    SlackHelper.SendMessageToChannel($"DANGEROUS MOB TARGETED during CorePathfindingLoopTask, {lookingForDangerousTarget}");
-                    LogoutReason = "DANGEROUS MOB TARGETED";
-                    LogoutTriggered = true;
-                    return true;
-                }
-                */
-
-                if (CanEngageTarget(worldState))
+                if (CanEngageTarget(WorldState))
                 {
                     await EndWalkForwardTask();
                     return true;
                 }
 
                 // If we haven't moved in a long time, alert
-                if (previousWorldState?.MapX != worldState.MapX || previousWorldState?.MapY != worldState.MapY)
+                if (PreviousWorldState?.MapX != WorldState.MapX || PreviousWorldState?.MapY != WorldState.MapY)
                 {
                     lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
@@ -448,11 +422,11 @@ namespace WoWHelper
                     return true;
                 }
 
-                if (CanEngageTarget(worldState) || worldState.IsInCombat)
+                if (CanEngageTarget(WorldState) || WorldState.IsInCombat)
                 {
                     await EndWalkForwardTask();
                     // return true if we can charge/shoot, false if we're already in combat
-                    return !worldState.IsInCombat;
+                    return !WorldState.IsInCombat;
                 }
 
                 switch (CurrentPathfindingState)
@@ -462,7 +436,7 @@ namespace WoWHelper
                         if (CurrentWaypointIndex == -1)
                         {
                             // we've never picked a waypoint yet, so find the closest one
-                            Vector2 playerLocation = new Vector2(worldState.MapX, worldState.MapY);
+                            Vector2 playerLocation = new Vector2(WorldState.MapX, WorldState.MapY);
                             CurrentWaypointIndex = FarmingConfig.WaypointDefinition.Waypoints
                                 .Select((p, i) => (dist: Vector2.Distance(playerLocation, p), index: i))
                                 .OrderBy(t => t.dist)
@@ -485,7 +459,7 @@ namespace WoWHelper
                                 {
                                     var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex], FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex + 1]);
                                     var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex], FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex - 1]);
-                                    var facingDegrees = worldState.FacingDegrees;
+                                    var facingDegrees = WorldState.FacingDegrees;
                                     var forwardDiff = WowPathfinding.GetDegreesToMove(facingDegrees, forwardDegrees);
                                     var backwardsDiff = WowPathfinding.GetDegreesToMove(facingDegrees, backwardsDegrees);
 
@@ -529,7 +503,7 @@ namespace WoWHelper
                         CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
                         break;
                     case PathfindingState.MOVING_TOWARDS_WAYPOINT:
-                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(MoveTowardsWaypointTask(worldState),
+                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(MoveTowardsWaypointTask(WorldState),
                             PathfindingState.PICKING_NEXT_WAYPOINT,
                             PathfindingState.MOVING_TOWARDS_WAYPOINT);
                         break;
