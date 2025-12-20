@@ -4,6 +4,9 @@
 ## Version: 1.0.0
 ## Author: Peter Beckfield
 
+## LoadSavedVariablesFirst 1
+## SavedVariablesPerCharacter: YoyokazooUIDB
+
 MathFunctions.lua
 WoWFunctions.lua
 UIFunctions.lua
