@@ -6,7 +6,10 @@ using System.Numerics;
 using System.Threading.Tasks;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
+using WoWHelper.Code.Constants;
+using WoWHelper.Code.Gameplay;
 using WoWHelper.Code.WorldState;
+using static WoWHelper.Code.Gameplay.WowFarmingConfiguration;
 using static WoWHelper.Code.WowPlayerStates;
 
 namespace WoWHelper
@@ -23,42 +26,42 @@ namespace WoWHelper
         public long FarmStartTime { get; private set; }
         public long LastDynamiteTime { get; private set; }
         public long LastHealthPotionTime { get; private set; }
+        public long NextUpdateTime { get; private set; }
 
-        // TODO: Switch to a system where we use cancellation tokens to exit normal operation and go into "oh shit I got aggroed by something?"
-        //private CancellationTokenSource CancellationTokenSource {  get; set; }
-
-
+        public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }
         public PlayerState CurrentPlayerState { get; private set; }
         public PathfindingState CurrentPathfindingState { get; private set; }
 
         public int CurrentWaypointIndex { get; private set; }
-        public WowWaypointDefinition WaypointDefinition { get; private set; }
         public int WaypointTraversalDirection { get; private set; }
 
-        public bool LogoutTriggered { get; set; }
-        public string LogoutReason { get; set; }
+        public bool LogoutTriggered { get; private set; }
+        public string LogoutReason { get; private set; }
+        public Bitmap LogoutBitmap { get; private set; }
 
-        public enum EngagementMethod
-        {
-            Charge,
-            Shoot
-        }
-
-        public EngagementMethod EngageMethod { get; private set; }
-        
+        public WowFarmingConfiguration FarmingConfig { get; private set; }
 
         public WowPlayer()
         {
+            PreviousWorldState = new WowWorldState();
             WorldState = new WowWorldState();
+
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
-            WaypointDefinition = WowWaypointConstants.LEVEL_42_TANARIS_TURTLES;
             WaypointTraversalDirection = 1;
-            EngageMethod = EngagementMethod.Charge;
+
+            FarmingConfig = WowFarmingConfigConstants.LEVEL_42_TANARIS_TURTLES;
         }
 
+        public async Task UpdateWorldState()
+        {
+
+            int waitTime = Math.Max(0, 250);
+        }
+
+        // For Testing only, otherwise use UpdateWorldState
         public void UpdateFromBitmap(Bitmap bmp)
         {
             WorldState.UpdateFromBitmap(bmp);
@@ -82,11 +85,11 @@ namespace WoWHelper
 
         public bool CanEngageTarget(WowWorldState worldState)
         {
-            if (EngageMethod == EngagementMethod.Charge)
+            if (FarmingConfig.EngageMethod == EngagementMethod.Charge)
             {
                 return worldState.CanChargeTarget;
             }
-            else if (EngageMethod == EngagementMethod.Shoot)
+            else if (FarmingConfig.EngageMethod == EngagementMethod.Shoot)
             {
                 return worldState.CanShootTarget;
             }
@@ -333,15 +336,15 @@ namespace WoWHelper
                     //lookingForDangerousTarget = false;
                     lastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                    if (WaypointDefinition.TargetFindMethod == WowWaypointDefinition.WaypointTargetFindMethod.TAB)
+                    if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowWaypointDefinition.WaypointTargetFindMethod.TAB)
                     {
                         Keyboard.KeyPress(WowInput.TAB_TARGET);
                     }
-                    else if (WaypointDefinition.TargetFindMethod == WowWaypointDefinition.WaypointTargetFindMethod.MACRO)
+                    else if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowWaypointDefinition.WaypointTargetFindMethod.MACRO)
                     {
                         Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
                     }
-                    else if (WaypointDefinition.TargetFindMethod == WowWaypointDefinition.WaypointTargetFindMethod.ALTERNATE)
+                    else if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowWaypointDefinition.WaypointTargetFindMethod.ALTERNATE)
                     {
                         if (targetChecks % 2 == 0)
                         {
@@ -457,7 +460,7 @@ namespace WoWHelper
                         {
                             // we've never picked a waypoint yet, so find the closest one
                             Vector2 playerLocation = new Vector2(worldState.MapX, worldState.MapY);
-                            CurrentWaypointIndex = WaypointDefinition.Waypoints
+                            CurrentWaypointIndex = FarmingConfig.WaypointDefinition.Waypoints
                                 .Select((p, i) => (dist: Vector2.Distance(playerLocation, p), index: i))
                                 .OrderBy(t => t.dist)
                                 .First()
@@ -465,20 +468,20 @@ namespace WoWHelper
 
                             // Circular always goes in the same direction, so if you interrupt and restart, you'll still be going the same direction.
                             // For linear let's do our best guess to pick the best direction
-                            if (WaypointDefinition.TraversalMethod == WowWaypointDefinition.WaypointTraversalMethod.LINEAR)
+                            if (FarmingConfig.WaypointDefinition.TraversalMethod == WowWaypointDefinition.WaypointTraversalMethod.LINEAR)
                             {
                                 if (CurrentWaypointIndex == 0)
                                 {
                                     WaypointTraversalDirection = 1;
                                 }
-                                else if (CurrentWaypointIndex == WaypointDefinition.Waypoints.Count - 1)
+                                else if (CurrentWaypointIndex == FarmingConfig.WaypointDefinition.Waypoints.Count - 1)
                                 {
                                     WaypointTraversalDirection = -1;
                                 }
                                 else
                                 {
-                                    var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WaypointDefinition.Waypoints[CurrentWaypointIndex], WaypointDefinition.Waypoints[CurrentWaypointIndex + 1]);
-                                    var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WaypointDefinition.Waypoints[CurrentWaypointIndex], WaypointDefinition.Waypoints[CurrentWaypointIndex - 1]);
+                                    var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex], FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex + 1]);
+                                    var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex], FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex - 1]);
                                     var facingDegrees = worldState.FacingDegrees;
                                     var forwardDiff = WowPathfinding.GetDegreesToMove(facingDegrees, forwardDegrees);
                                     var backwardsDiff = WowPathfinding.GetDegreesToMove(facingDegrees, backwardsDegrees);
@@ -503,13 +506,13 @@ namespace WoWHelper
                             // otherwise cycle through them
                             CurrentWaypointIndex += WaypointTraversalDirection;
 
-                            if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= WaypointDefinition.Waypoints.Count)
+                            if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= FarmingConfig.WaypointDefinition.Waypoints.Count)
                             {
-                                if (WaypointDefinition.TraversalMethod == WowWaypointDefinition.WaypointTraversalMethod.CIRCULAR)
+                                if (FarmingConfig.WaypointDefinition.TraversalMethod == WowWaypointDefinition.WaypointTraversalMethod.CIRCULAR)
                                 {
                                     CurrentWaypointIndex = 0;
                                 }
-                                else if (WaypointDefinition.TraversalMethod == WowWaypointDefinition.WaypointTraversalMethod.LINEAR)
+                                else if (FarmingConfig.WaypointDefinition.TraversalMethod == WowWaypointDefinition.WaypointTraversalMethod.LINEAR)
                                 {
                                     // since we detect this when we've gone out of bounds, switch direction.
                                     // first addition puts us back in bounds, but we know we're already there, so do a second addition

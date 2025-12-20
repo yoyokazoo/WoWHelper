@@ -130,9 +130,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Code\Constants\WowFarmingConfigConstants.cs" />
     <Compile Include="Code\Constants\WowGameplayConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerStates.cs" />
+    <Compile Include="Code\Gameplay\WowFarmingConfiguration.cs" />
     <Compile Include="Code\Gameplay\WowWaypointDefinition.cs" />
     <Compile Include="Code\Constants\WowWaypointConstants.cs" />
     <Compile Include="Code\Gameplay\WowPathfinding.cs" />
