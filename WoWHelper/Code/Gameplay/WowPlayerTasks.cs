@@ -39,7 +39,7 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = "Low on Health Potions";
             }
-            else if (EngageMethod == EngagementMethod.Shoot && worldState.LowOnAmmo)
+            else if (FarmingConfig.EngageMethod == Code.Gameplay.WowFarmingConfiguration.EngagementMethod.Shoot && worldState.LowOnAmmo)
             {
                 LogoutTriggered = true;
                 LogoutReason = "Low on Ammo";
@@ -144,11 +144,11 @@ namespace WoWHelper
 
         public async Task<bool> TryToEngageTask()
         {
-            if (EngageMethod == EngagementMethod.Charge)
+            if (FarmingConfig.EngageMethod == Code.Gameplay.WowFarmingConfiguration.EngagementMethod.Charge)
             {
                 return await TryToChargeTask();
             }
-            else if (EngageMethod != EngagementMethod.Charge)
+            else if (FarmingConfig.EngageMethod != Code.Gameplay.WowFarmingConfiguration.EngagementMethod.Charge)
             {
                 return await TryToShootTask();
             }
@@ -308,13 +308,13 @@ namespace WoWHelper
         // Rotates towards the waypoint or walks towards the waypoint, depending
         public async Task<bool> MoveTowardsWaypointTask(WowWorldState worldState)
         {
-            float waypointDistance = Vector2.Distance(worldState.PlayerLocation, WaypointDefinition.Waypoints[CurrentWaypointIndex]);
-            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, WaypointDefinition.Waypoints[CurrentWaypointIndex]);
+            float waypointDistance = Vector2.Distance(worldState.PlayerLocation, FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]);
+            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(worldState.PlayerLocation, FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]);
             float degreesDifference = WowPathfinding.GetDegreesToMove(worldState.FacingDegrees, desiredDegrees);
 
-            Console.WriteLine($"Heading towards waypoint {WaypointDefinition.Waypoints[CurrentWaypointIndex]}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
+            Console.WriteLine($"Heading towards waypoint {FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex]}. At {worldState.MapX},{worldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {worldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
-            if (waypointDistance <= WaypointDefinition.DistanceTolerance)
+            if (waypointDistance <= FarmingConfig.WaypointDefinition.DistanceTolerance)
             {
                 //Console.WriteLine($"Arrived at {waypoint} ({worldState.MapX},{worldState.MapY})");
                 await EndWalkForwardTask();

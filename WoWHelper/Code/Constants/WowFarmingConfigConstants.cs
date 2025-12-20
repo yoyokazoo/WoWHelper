@@ -11,4 +11,5 @@ namespace WoWHelper.Code.Constants
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
             AlertOnPotionUsed = false
         };
+    }
 }
