@@ -12,7 +12,7 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        #region Windows Management Tasks
+        #region Management Tasks
 
         public async Task<bool> FocusOnWindowTask()
         {
@@ -27,8 +27,6 @@ namespace WoWHelper
 
         public async Task<bool> SetLogoutVariablesTask()
         {
-            UpdateWorldState();
-            
             if (WorldState.LowOnDynamite)
             {
                 LogoutTriggered = true;
@@ -55,18 +53,52 @@ namespace WoWHelper
             return LogoutTriggered;
         }
 
-        public async Task<bool> LogoutTask()
+        public async Task<bool> StartLogoutTask()
         {
             await WowInput.PressKeyWithShift(WowInput.SHIFT_LOGOUT_MACRO);
+            return true;
+        }
 
-            do
-            {
-                await Task.Delay(250);
-                UpdateWorldState();
-            } while (!WorldState.IsInCombat && !WorldState.OnLoginScreen);
-
+        public async Task<bool> CheckIfLoggedOutTask()
+        {
+            await Task.Delay(0);
             return WorldState.OnLoginScreen;
         }
+
+        public async Task<bool> LootTask()
+        {
+            Mouse.Move(1720, 720);
+            Mouse.PressButton(Mouse.MouseKeys.Right);
+            await Task.Delay(1500);
+            return true;
+        }
+
+        public async Task<bool> SkinTask()
+        {
+            Mouse.Move(1720, 720);
+            Mouse.PressButton(Mouse.MouseKeys.Right);
+            await Task.Delay(3000);
+            return true;
+        }
+
+        /*
+        public long LongWaitTimeStart { get; private set; }
+        public long LongWaitTimeDuration { get; private set; }
+        // Set a non-blocking long wait time
+        public async Task<bool> SetLongWaitTask(long duration)
+        {
+            await Task.Delay(0);
+            LongWaitTimeStart = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            LongWaitTimeDuration = duration;
+            return true;
+        }
+
+        public async Task<bool> CheckLongWaitTask()
+        {
+            await Task.Delay(0);
+            return CurrentTimeInsideDuration(LongWaitTimeStart, LongWaitTimeDuration);
+        }
+        */
 
         #endregion
 

@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
 using WoWHelper.Code.Constants;
@@ -43,7 +44,7 @@ namespace WoWHelper
             PreviousWorldState = new WowWorldState();
             WorldState = new WowWorldState();
 
-            CurrentPlayerState = PlayerState.WAITING_TO_FOCUS;
+            CurrentPlayerState = PlayerState.WAITING_TO_FOCUS_ON_WINDOW;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
             WaypointTraversalDirection = 1;
@@ -112,9 +113,15 @@ namespace WoWHelper
             KeyPoller.EscPressed += async () => {
                 Console.WriteLine("ESC detected! Performing cleanup then quitting");
 
+                // Make sure we don't have any lingering keys pressed down
                 Keyboard.KeyUp(WowInput.MOVE_FORWARD);
-                Keyboard.KeyPress(WowInput.MOVE_BACK);
-                await Task.Delay(5);
+                Keyboard.KeyUp(WowInput.MOVE_BACK);
+                Keyboard.KeyUp(WowInput.TURN_LEFT);
+                Keyboard.KeyUp(WowInput.JUMP);
+                Keyboard.KeyUp(WowInput.STRAFE_LEFT);
+                Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
+                Keyboard.KeyUp(WowInput.LatestShiftKey);
+                Keyboard.KeyUp(Keys.LShiftKey);
 
                 Environment.Exit(0);
             };
@@ -129,33 +136,37 @@ namespace WoWHelper
             FarmStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             Console.WriteLine("Kicking off core gameplay loop");
-            PlayerState currentPlayerState = PlayerState.WAITING_TO_FOCUS;
+            PlayerState currentPlayerState = PlayerState.WAITING_TO_FOCUS_ON_WINDOW;
 
             while (currentPlayerState != PlayerState.EXITING_CORE_GAMEPLAY_LOOP)
             {
-                //UpdateFromBitmap(bm);
+                await UpdateWorldStateAsync();
+
+                // TODO: short circuit into combat/getting out of water/etc.
 
                 switch (currentPlayerState)
                 {
-                    case PlayerState.WAITING_TO_FOCUS:
+                    case PlayerState.WAITING_TO_FOCUS_ON_WINDOW:
                         Console.WriteLine("Focusing on window");
                         currentPlayerState = await ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
-                            PlayerState.FOCUSED_ON_WINDOW,
+                            PlayerState.CHECK_FOR_LOGOUT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
-                        break;
-                    case PlayerState.FOCUSED_ON_WINDOW:
-                        Console.WriteLine("Focused on window");
-                        currentPlayerState = PlayerState.CHECK_FOR_LOGOUT;
                         break;
                     case PlayerState.CHECK_FOR_LOGOUT:
                         Console.WriteLine("Checking if we should log out");
                         currentPlayerState = await ChangeStateBasedOnTaskResult(SetLogoutVariablesTask(),
-                            PlayerState.LOGGING_OUT,
+                            PlayerState.START_LOGGING_OUT,
                             PlayerState.WAIT_UNTIL_BATTLE_READY);
                         break;
-                    case PlayerState.LOGGING_OUT:
-                        Console.WriteLine("Logging out");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(LogoutTask(),
+                    case PlayerState.START_LOGGING_OUT:
+                        Console.WriteLine("Started logging out");
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(StartLogoutTask(),
+                            PlayerState.WAITING_TO_LOG_OUT,
+                            PlayerState.IN_CORE_COMBAT_LOOP);
+                        break;
+                    case PlayerState.WAITING_TO_LOG_OUT:
+                        Console.WriteLine("Waiting to log out");
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(CheckIfLoggedOutTask(),
                             PlayerState.LOGGED_OUT,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
@@ -166,45 +177,45 @@ namespace WoWHelper
                         break;
                     case PlayerState.WAIT_UNTIL_BATTLE_READY:
                         Console.WriteLine("Waiting until battle ready");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(RecoverAfterFightTask(),
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(RecoverAfterFightTask(), // TODO
                             PlayerState.CHECK_FOR_VALID_TARGET,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
                     case PlayerState.CHECK_FOR_VALID_TARGET:
                         Console.WriteLine("Checking for valid target");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(CorePathfindingLoopTask(),
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(CorePathfindingLoopTask(), // TODO
                             PlayerState.TRY_TO_CHARGE_TARGET,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
                     case PlayerState.TRY_TO_CHARGE_TARGET:
                         Console.WriteLine("Trying to charge target");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(TryToEngageTask(),
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(TryToEngageTask(), // TODO
                             PlayerState.IN_CORE_COMBAT_LOOP,
                             PlayerState.CHECK_FOR_LOGOUT);
                         break;
                     case PlayerState.IN_CORE_COMBAT_LOOP:
                         Console.WriteLine("In core combat loop");
-                        currentPlayerState = await ChangeStateBasedOnTaskResult(CoreCombatLoopTask(),
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(CoreCombatLoopTask(), // TODO
                             PlayerState.TARGET_DEFEATED,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.TARGET_DEFEATED:
                         Console.WriteLine("Target defeated, trying to loot");
-
-                        // loot
-                        Mouse.Move(1720, 720);
-                        Mouse.PressButton(Mouse.MouseKeys.Right);
-                        await Task.Delay(1500);
-
-                        // click again in case they die slow
-                        Mouse.PressButton(Mouse.MouseKeys.Right);
-                        await Task.Delay(1500);
-
-                        // skin
-                        Mouse.PressButton(Mouse.MouseKeys.Right);
-                        await Task.Delay(3000);
-
-                        currentPlayerState = PlayerState.CHECK_FOR_LOGOUT;
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
+                            PlayerState.LOOT_ATTEMPT_TWO,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        break;
+                    case PlayerState.LOOT_ATTEMPT_TWO:
+                        Console.WriteLine("Trying to loot a second time, in case the dying anim is slow");
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
+                            PlayerState.SKIN_ATTEMPT,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        break;
+                    case PlayerState.SKIN_ATTEMPT:
+                        Console.WriteLine("Trying to skin");
+                        currentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
+                            PlayerState.CHECK_FOR_LOGOUT,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                 }
             }

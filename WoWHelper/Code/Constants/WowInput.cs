@@ -42,8 +42,12 @@ namespace WoWHelper.Code
         public const Keys TAB_TARGET = Keys.Tab;
         public const Keys JUMP = Keys.Space;
 
+        // For when we exit the program with ESC, make sure we don't have any lingering keys pressed down
+        public static Keys LatestShiftKey;
         public static async Task PressKeyWithShift(Keys key)
         {
+            LatestShiftKey = key;
+
             Keyboard.KeyDown(Keys.LShiftKey);
             await Task.Delay(5);
             Keyboard.KeyDown(key);
