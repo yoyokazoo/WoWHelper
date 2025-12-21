@@ -28,7 +28,7 @@ namespace WoWHelper
 
         public async Task<bool> SetLogoutVariablesTask()
         {
-            if (WorldState.LowOnDynamite)
+            if (FarmingConfig.LogoutOnLowDynamite && WorldState.LowOnDynamite)
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Dynamite";
@@ -236,6 +236,9 @@ namespace WoWHelper
                 // until I get GCD tracking working, just wait a bit and click it again to make sure
                 await Task.Delay(1500);
                 Keyboard.KeyPress(WowInput.RETALIATION_KEY);
+
+                LogoutReason = "Got into a Retaliation situation, logging off for safety";
+                LogoutTriggered = true;
             }
 
             return tooManyAttackers;

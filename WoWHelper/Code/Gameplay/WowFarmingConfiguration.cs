@@ -15,16 +15,26 @@ namespace WoWHelper.Code.Gameplay
             Shoot
         }
 
+        public enum WarriorSpec
+        {
+            Arms,
+            Fury
+        }
+
         public WowWaypointDefinition WaypointDefinition { get; set; }
         public EngagementMethod EngageMethod { get; set; }
+        public WarriorSpec Spec { get; set; }
         public bool AlertOnPotionUsed { get; set; }
         public bool AlertOnFullBags { get; set; }
+        public bool LogoutOnLowDynamite { get; set; }
 
         public WowFarmingConfiguration()
         {
             EngageMethod = EngagementMethod.Shoot;
             AlertOnPotionUsed = true;
             AlertOnFullBags = true;
+            LogoutOnLowDynamite = true;
+            Spec = WarriorSpec.Fury;
         }
     }
 }

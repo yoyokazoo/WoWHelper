@@ -324,17 +324,18 @@ namespace WoWHelper
                 }
                 else if(WorldState.AttackerCount > 1)
                 {
-                    if (WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent < WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    if (FarmingConfig.Spec == WarriorSpec.Arms && WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent < WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
                     {
                         // Popping SS ASAP is priority
                         continue;
                     }
 
-                    if (WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    if (FarmingConfig.Spec == WarriorSpec.Arms && WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
                     {
                         await WowInput.PressKeyWithShift(WowInput.SHIFT_SWEEPING_STRIKES_MACRO);
                     }
-                    else if (WorldState.WhirlwindCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.WHIRLWIND_RAGE_COST)
+                    // TODO: This is temp until I have 5/5 tac mastery in Fury, otherwise we don't have enough rage after switching stances
+                    else if (FarmingConfig.Spec == WarriorSpec.Arms && WorldState.WhirlwindCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.WHIRLWIND_RAGE_COST)
                     {
                         await WowInput.PressKeyWithShift(WowInput.SHIFT_WHIRLWIND_MACRO);
                         await Task.Delay(150);
@@ -346,18 +347,20 @@ namespace WoWHelper
                         await Task.Delay(150);
                         Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
                     }
-                    else if (!WorldState.WhirlwindCooledDown && !WorldState.HeroicStrikeQueued && WorldState.ResourcePercent >= WowGameplayConstants.CLEAVE_RAGE_COST)
+                    // TODO: 5/5 tac mastery
+                    else if ((FarmingConfig.Spec == WarriorSpec.Fury || !WorldState.WhirlwindCooledDown) && !WorldState.HeroicStrikeQueued && WorldState.ResourcePercent >= WowGameplayConstants.CLEAVE_RAGE_COST)
                     {
                         // if WW is cooled down, prefer waiting for rage for that over cleaving
                         await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
                     }
                 }
-                else if (WorldState.AttackerCount == 1)
+                else if (WorldState.AttackerCount <= 1) // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
                 {
                     if (WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_RAGE_COST)
                     {
                         Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
                     }
+                    // TODO: Actually split out Heroic Strike and cast if we have really surplus rage
                 }
             } while (WorldState.IsInCombat);
 
