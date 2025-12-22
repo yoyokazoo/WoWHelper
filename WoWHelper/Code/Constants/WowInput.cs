@@ -51,11 +51,11 @@ namespace WoWHelper.Code
             LatestShiftKey = key;
 
             Keyboard.KeyDown(modifier);
-            await Task.Delay(5);
+            await Task.Delay(15);
             Keyboard.KeyDown(key);
-            await Task.Delay(5);
+            await Task.Delay(15);
             Keyboard.KeyUp(key);
-            await Task.Delay(5);
+            await Task.Delay(15);
             Keyboard.KeyUp(modifier);
         }
 
