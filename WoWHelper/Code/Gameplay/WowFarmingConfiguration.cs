@@ -21,7 +21,7 @@ namespace WoWHelper.Code.Gameplay
             Fury
         }
 
-        public WowWaypointDefinition WaypointDefinition { get; set; }
+        public WowWaypointConfiguration WaypointDefinition { get; set; }
         public EngagementMethod EngageMethod { get; set; }
         public WarriorSpec Spec { get; set; }
         public bool AlertOnPotionUsed { get; set; }

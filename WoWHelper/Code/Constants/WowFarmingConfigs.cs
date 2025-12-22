@@ -3,11 +3,11 @@ using WoWHelper.Code.WorldState;
 
 namespace WoWHelper.Code.Constants
 {
-    public class WowFarmingConfigConstants
+    public class WowFarmingConfigs
     {
         public static readonly WowFarmingConfiguration LEVEL_42_TANARIS_TURTLES = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowWaypointConstants.LEVEL_42_TANARIS_TURTLES,
+            WaypointDefinition = WowWaypointConfigs.LEVEL_42_TANARIS_TURTLES,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
             AlertOnPotionUsed = true,
             AlertOnFullBags = true,

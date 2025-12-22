@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace WoWHelper.Code.WorldState
 {
-    public class WowWaypointDefinition
+    public class WowWaypointConfiguration
     {
         public enum WaypointTraversalMethod
         {

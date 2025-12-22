@@ -53,7 +53,7 @@ namespace WoWHelper
             CurrentWaypointIndex = -1;
             WaypointTraversalDirection = 1;
 
-            FarmingConfig = WowFarmingConfigConstants.LEVEL_42_TANARIS_TURTLES;
+            FarmingConfig = WowFarmingConfigs.LEVEL_42_TANARIS_TURTLES;
         }
 
         public async Task UpdateWorldStateAsync()
@@ -393,15 +393,15 @@ namespace WoWHelper
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                    if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowWaypointDefinition.WaypointTargetFindMethod.TAB)
+                    if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowWaypointConfiguration.WaypointTargetFindMethod.TAB)
                     {
                         Keyboard.KeyPress(WowInput.TAB_TARGET);
                     }
-                    else if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowWaypointDefinition.WaypointTargetFindMethod.MACRO)
+                    else if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowWaypointConfiguration.WaypointTargetFindMethod.MACRO)
                     {
                         Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
                     }
-                    else if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowWaypointDefinition.WaypointTargetFindMethod.ALTERNATE)
+                    else if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE)
                     {
                         if (targetChecks % 2 == 0)
                         {
@@ -499,7 +499,7 @@ namespace WoWHelper
 
                             // Circular always goes in the same direction, so if you interrupt and restart, you'll still be going the same direction.
                             // For linear let's do our best guess to pick the best direction
-                            if (FarmingConfig.WaypointDefinition.TraversalMethod == WowWaypointDefinition.WaypointTraversalMethod.LINEAR)
+                            if (FarmingConfig.WaypointDefinition.TraversalMethod == WowWaypointConfiguration.WaypointTraversalMethod.LINEAR)
                             {
                                 if (CurrentWaypointIndex == 0)
                                 {
@@ -539,11 +539,11 @@ namespace WoWHelper
 
                             if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= FarmingConfig.WaypointDefinition.Waypoints.Count)
                             {
-                                if (FarmingConfig.WaypointDefinition.TraversalMethod == WowWaypointDefinition.WaypointTraversalMethod.CIRCULAR)
+                                if (FarmingConfig.WaypointDefinition.TraversalMethod == WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR)
                                 {
                                     CurrentWaypointIndex = 0;
                                 }
-                                else if (FarmingConfig.WaypointDefinition.TraversalMethod == WowWaypointDefinition.WaypointTraversalMethod.LINEAR)
+                                else if (FarmingConfig.WaypointDefinition.TraversalMethod == WowWaypointConfiguration.WaypointTraversalMethod.LINEAR)
                                 {
                                     // since we detect this when we've gone out of bounds, switch direction.
                                     // first addition puts us back in bounds, but we know we're already there, so do a second addition
