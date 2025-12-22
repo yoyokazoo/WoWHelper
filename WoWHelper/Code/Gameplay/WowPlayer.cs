@@ -59,9 +59,9 @@ namespace WoWHelper
         public async Task UpdateWorldStateAsync()
         {
             var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
             var timeToWait = NextUpdateTime - now;
             int timeToWaitClamped = (int)Math.Max(0, timeToWait);
-
             await Task.Delay(timeToWaitClamped);
 
             PreviousWorldState = WorldState;
@@ -72,8 +72,12 @@ namespace WoWHelper
 
         public void UpdateWorldState()
         {
+            var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
             PreviousWorldState = WorldState;
             WorldState = WowWorldState.GetWoWWorldState();
+
+            NextUpdateTime = now + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
 
         // For Testing only, otherwise use UpdateWorldState
@@ -280,6 +284,15 @@ namespace WoWHelper
                     await GetOutOfWater();
                 }
 
+                // Just in case, if for some reason things are going really poorly, try to pop retal regardless
+                if (WorldState.PlayerHpPercent <= WowPlayerConstants.PETRI_ALTF4_HP_THRESHOLD)
+                {
+                    SlackHelper.SendMessageToChannel($"Petri Alt+F4ed at ~{WorldState.PlayerHpPercent}%!  Consider using Unstuck instead of logging back in");
+                    await PetriAltF4Task();
+                    Environment.Exit(0);
+                    continue;
+                }
+
                 // First do our "Make sure we're not standing around doing nothing" checks
                 if (await MakeSureWeAreAttackingEnemyTask())
                 {
@@ -297,11 +310,14 @@ namespace WoWHelper
                 if (!tooManyAttackersActionsTaken && WorldState.PlayerHpPercent <= WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD)
                 {
                     SlackHelper.SendMessageToChannel($"{WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD}% Retal popped, not sure what went wrong!");
-                    // cast retaliation
+                    
+                    // cast retaliation once GCD is cooled down
+                    while (!WorldState.GCDCooledDown)
+                    {
+                        await UpdateWorldStateAsync();
+                    }
                     Keyboard.KeyPress(WowInput.RETALIATION_KEY);
-                    // until I get GCD tracking working, just wait a bit and click it again to make sure
-                    await Task.Delay(1500);
-                    Keyboard.KeyPress(WowInput.RETALIATION_KEY);
+
                     tooManyAttackersActionsTaken = true;
 
                     LogoutReason = $"Got down to {WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD}% somehow";

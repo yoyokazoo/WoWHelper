@@ -96,7 +96,13 @@ namespace WoWHelper
 
         public async Task<bool> PetriAltF4Task()
         {
+            while (!WorldState.GCDCooledDown)
+            {
+                await UpdateWorldStateAsync();
+            }
+
             await WowInput.PressKeyWithShift(WowInput.SHIFT_PETRIFICATION_FLASK);
+            await Task.Delay(750);
             await WowInput.PressKeyWithAlt(WowInput.ALT_FORCE_QUIT_KEY);
             return true;
         }
@@ -235,10 +241,12 @@ namespace WoWHelper
             if (tooManyAttackers)
             {
                 SlackHelper.SendMessageToChannel($"TOO MANY ATTACKERS HELP");
-                // cast retaliation
-                Keyboard.KeyPress(WowInput.RETALIATION_KEY);
-                // until I get GCD tracking working, just wait a bit and click it again to make sure
-                await Task.Delay(1500);
+
+                // cast retaliation once GCD is cooled down
+                while (!WorldState.GCDCooledDown)
+                {
+                    await UpdateWorldStateAsync();
+                }
                 Keyboard.KeyPress(WowInput.RETALIATION_KEY);
 
                 LogoutReason = "Got into a Retaliation situation, logging off for safety";
