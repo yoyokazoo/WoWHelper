@@ -119,10 +119,9 @@ namespace WoWHelper
 
         public async Task<bool> StartBattleReadyRecoverTask()
         {
-            await Task.Delay(0);
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
-                Keyboard.KeyPress(WowInput.EAT_FOOD_KEY);
+                await WowInput.PressKeyWithShift(WowInput.SHIFT_EAT_FOOD_KEY);
             }
 
             return true;
@@ -190,7 +189,7 @@ namespace WoWHelper
             await StartOfCombatWiggle();
 
             // always kick things off with heroic strike macro to /startattack
-            Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
+            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
 
             return true;
         }
@@ -218,7 +217,7 @@ namespace WoWHelper
             if (attackerJustDied || inCombatButNotAutoAttacking || tooFarAway)
             {
                 // /startattack
-                Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
+                Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
             }
 
             return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront;

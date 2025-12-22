@@ -339,13 +339,13 @@ namespace WoWHelper
                     {
                         await WowInput.PressKeyWithShift(WowInput.SHIFT_WHIRLWIND_MACRO);
                         await Task.Delay(150);
-                        Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
+                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
                         await Task.Delay(150);
-                        Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
+                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
                         await Task.Delay(150);
-                        Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
+                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
                         await Task.Delay(150);
-                        Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
+                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
                     }
                     // TODO: 5/5 tac mastery
                     else if ((FarmingConfig.Spec == WarriorSpec.Fury || !WorldState.WhirlwindCooledDown) && !WorldState.HeroicStrikeQueued && WorldState.ResourcePercent >= WowGameplayConstants.CLEAVE_RAGE_COST)
@@ -356,8 +356,12 @@ namespace WoWHelper
                 }
                 else if (WorldState.AttackerCount <= 1) // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
                 {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_RAGE_COST)
+                    if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_RAGE_COST)
                     {
+                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+                    }else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
+                    {
+                        // Heroic only if we have enough spare rage to bloodthirst right after
                         Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
                     }
                     // TODO: Actually split out Heroic Strike and cast if we have really surplus rage
