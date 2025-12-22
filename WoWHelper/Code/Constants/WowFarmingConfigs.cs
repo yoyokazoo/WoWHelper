@@ -9,9 +9,9 @@ namespace WoWHelper.Code.Constants
         {
             WaypointDefinition = WowWaypointConfigs.LEVEL_48_FERALAS_HIPPOGRYPHS,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
-            AlertOnPotionUsed = true,
-            AlertOnFullBags = true,
-            LogoutOnLowDynamite = true,
+            AlertOnPotionUsed = false,
+            AlertOnFullBags = false,
+            LogoutOnLowDynamite = false,
         };
 
         public static readonly WowFarmingConfiguration LEVEL_42_TANARIS_TURTLES = new WowFarmingConfiguration

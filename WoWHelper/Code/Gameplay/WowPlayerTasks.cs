@@ -94,6 +94,13 @@ namespace WoWHelper
             return true;
         }
 
+        public async Task<bool> PetriAltF4Task()
+        {
+            await WowInput.PressKeyWithShift(WowInput.SHIFT_PETRIFICATION_FLASK);
+            await WowInput.PressKeyWithAlt(WowInput.ALT_FORCE_QUIT_KEY);
+            return true;
+        }
+
         /*
         public long LongWaitTimeStart { get; private set; }
         public long LongWaitTimeDuration { get; private set; }
@@ -184,10 +191,8 @@ namespace WoWHelper
             return CanEngageTarget();
         }
 
-        public async Task<bool> StartOfCombatTask()
+        public async Task<bool> StartAttackTask()
         {
-            await StartOfCombatWiggle();
-
             // always kick things off with heroic strike macro to /startattack
             Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
 

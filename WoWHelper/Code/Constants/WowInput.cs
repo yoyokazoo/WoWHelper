@@ -26,9 +26,11 @@ namespace WoWHelper.Code
         public const Keys SHIFT_LOGOUT_MACRO = Keys.D5;
         public const Keys SHIFT_UNASSIGNED1 = Keys.D6;
         public const Keys SHIFT_UNASSIGNED2 = Keys.D7;
-        public const Keys SHIFT_UNASSIGNED3 = Keys.D8;
-        public const Keys SHIFT_UNASSIGNED4 = Keys.D9;
+        public const Keys SHIFT_TARGET_DUMMY = Keys.D8;
+        public const Keys SHIFT_PETRIFICATION_FLASK = Keys.D9;
         public const Keys SHIFT_EAT_FOOD_KEY = Keys.D0;
+
+        public const Keys ALT_FORCE_QUIT_KEY = Keys.F4;
 
         public const Keys TURN_LEFT = Keys.A;
         public const Keys TURN_RIGHT = Keys.D;
@@ -44,17 +46,30 @@ namespace WoWHelper.Code
 
         // For when we exit the program with ESC, make sure we don't have any lingering keys pressed down
         public static Keys LatestShiftKey;
-        public static async Task PressKeyWithShift(Keys key)
+        public static async Task PressKeyWithModifier(Keys key, Keys modifier)
         {
             LatestShiftKey = key;
 
-            Keyboard.KeyDown(Keys.LShiftKey);
+            Keyboard.KeyDown(modifier);
             await Task.Delay(5);
             Keyboard.KeyDown(key);
             await Task.Delay(5);
             Keyboard.KeyUp(key);
             await Task.Delay(5);
-            Keyboard.KeyUp(Keys.LShiftKey);
+            Keyboard.KeyUp(modifier);
+        }
+
+        public static async Task PressKeyWithShift(Keys key)
+        {
+            LatestShiftKey = key;
+
+            await PressKeyWithModifier(key, Keys.LShiftKey);
+        }
+
+        public static async Task PressKeyWithAlt(Keys key)
+        {
+            // Why is it not Keys.Alt, which exists? no one knows!
+            await PressKeyWithModifier(key, Keys.Menu);
         }
     }
 }

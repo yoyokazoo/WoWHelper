@@ -135,6 +135,20 @@ namespace WoWHelper
             _ = CoreGameplayLoopTask();
         }
 
+        public void AdHocTest()
+        {
+            _ = AdHocTestTask();
+        }
+
+        public async Task<bool> AdHocTestTask()
+        {
+            await FocusOnWindowTask();
+            await PetriAltF4Task();
+            SlackHelper.SendMessageToChannel($"Petri Alt+F4ed!  Consider using Unstuck instead of logging back in");
+            Environment.Exit(0);
+            return true;
+        }
+
         public async Task<bool> CoreGameplayLoopTask()
         {
             FarmStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
@@ -250,8 +264,9 @@ namespace WoWHelper
             bool thrownDynamite = false;
             bool potionUsed = false;
             bool tooManyAttackersActionsTaken = false;
+            bool startOfCombatWiggled = false;
 
-            await StartOfCombatTask();
+            await StartAttackTask();
             
             do
             {
@@ -307,6 +322,12 @@ namespace WoWHelper
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     potionUsed = true;
                     continue;
+                }
+
+                if (!startOfCombatWiggled && PreviousWorldState?.TargetHpPercent == 100 && WorldState.TargetHpPercent < 100)
+                {
+                    await StartOfCombatWiggle();
+                    startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
                 // Finally, if we've made it this far, do standard combat actions
