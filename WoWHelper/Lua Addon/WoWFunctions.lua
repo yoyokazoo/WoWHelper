@@ -370,7 +370,7 @@ end
 -- dense dynamite, 18641
 -- hi-explosive bomb, 10562 
 function AreWeLowOnDynamite()
-    local dynamiteCount = GetItemCount(10562, false)
+    local dynamiteCount = GetItemCount(18641, false)
     return dynamiteCount < 2
 end
 

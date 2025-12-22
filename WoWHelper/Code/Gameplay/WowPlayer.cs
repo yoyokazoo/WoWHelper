@@ -318,48 +318,63 @@ namespace WoWHelper
                 {
                     Keyboard.KeyPress(WowInput.OVERPOWER_KEY);
                 }
-                else if (!WorldState.TargetHasRend && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
+                else if (!WorldState.TargetHasRend && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
                 {
                     Keyboard.KeyPress(WowInput.REND_KEY);
                 }
                 else if(WorldState.AttackerCount > 1)
                 {
-                    if (FarmingConfig.Spec == WarriorSpec.Arms && WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent < WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    if (FarmingConfig.Spec == WarriorSpec.Arms)
                     {
-                        // Popping SS ASAP is priority
-                        continue;
-                    }
+                        if (WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent < WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                        {
+                            // Popping SS ASAP is priority
+                            continue;
+                        }
 
-                    if (FarmingConfig.Spec == WarriorSpec.Arms && WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
-                    {
-                        await WowInput.PressKeyWithShift(WowInput.SHIFT_SWEEPING_STRIKES_MACRO);
+                        if (WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                        {
+                            await WowInput.PressKeyWithShift(WowInput.SHIFT_SWEEPING_STRIKES_MACRO);
+                        }
+                        // TODO: This is temp until I have 5/5 tac mastery in Fury, otherwise we don't have enough rage after switching stances
+                        else if (WorldState.WhirlwindCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.WHIRLWIND_RAGE_COST)
+                        {
+                            await WowInput.PressKeyWithShift(WowInput.SHIFT_WHIRLWIND_MACRO);
+                            await Task.Delay(150);
+                            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+                            await Task.Delay(150);
+                            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+                            await Task.Delay(150);
+                            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+                            await Task.Delay(150);
+                            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+                        }
+                        // TODO: 5/5 tac mastery
+                        else if (!WorldState.WhirlwindCooledDown && !WorldState.HeroicStrikeQueued && WorldState.ResourcePercent >= WowGameplayConstants.CLEAVE_RAGE_COST)
+                        {
+                            // if WW is cooled down, prefer waiting for rage for that over cleaving
+                            await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
+                        }
                     }
-                    // TODO: This is temp until I have 5/5 tac mastery in Fury, otherwise we don't have enough rage after switching stances
-                    else if (FarmingConfig.Spec == WarriorSpec.Arms && WorldState.WhirlwindCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.WHIRLWIND_RAGE_COST)
+                    else if (FarmingConfig.Spec == WarriorSpec.Fury)
                     {
-                        await WowInput.PressKeyWithShift(WowInput.SHIFT_WHIRLWIND_MACRO);
-                        await Task.Delay(150);
-                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
-                        await Task.Delay(150);
-                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
-                        await Task.Delay(150);
-                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
-                        await Task.Delay(150);
-                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
-                    }
-                    // TODO: 5/5 tac mastery
-                    else if ((FarmingConfig.Spec == WarriorSpec.Fury || !WorldState.WhirlwindCooledDown) && !WorldState.HeroicStrikeQueued && WorldState.ResourcePercent >= WowGameplayConstants.CLEAVE_RAGE_COST)
-                    {
-                        // if WW is cooled down, prefer waiting for rage for that over cleaving
-                        await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
+                        if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
+                        {
+                            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+                        }
+                        else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST))
+                        {
+                            // Cleave only if we have enough spare rage to bloodthirst right after
+                            await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
+                        }
                     }
                 }
                 else if (WorldState.AttackerCount <= 1) // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
                 {
-                    if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_RAGE_COST)
+                    if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
                     {
                         Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
-                    }else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
+                    }else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
                     {
                         // Heroic only if we have enough spare rage to bloodthirst right after
                         Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
