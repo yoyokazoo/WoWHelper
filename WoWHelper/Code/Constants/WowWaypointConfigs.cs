@@ -5,6 +5,32 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowWaypointConfigs
     {
+        public static readonly WowWaypointConfiguration LEVEL_48_FERALAS_HIPPOGRYPHS = new WowWaypointConfiguration
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(55.06f, 64.41f),
+                new Vector2(54.26f, 65.30f),
+                new Vector2(53.84f, 66.35f),
+                new Vector2(53.80f, 68.20f),
+                new Vector2(53.54f, 69.29f),
+                new Vector2(53.74f, 70.95f),
+                new Vector2(54.38f, 72.55f),
+                new Vector2(55.22f, 74.12f),
+                new Vector2(55.71f, 74.88f),
+                new Vector2(56.07f, 72.88f),
+                new Vector2(55.73f, 71.73f),
+                new Vector2(54.72f, 70.25f),
+                new Vector2(54.84f, 68.00f),
+                new Vector2(55.38f, 67.00f),
+                new Vector2(55.49f, 66.57f),
+                new Vector2(55.00f, 65.00f),
+            },
+            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.06f
+        };
+
         public static readonly WowWaypointConfiguration TANARIS_TEST_PATHFINDING = new WowWaypointConfiguration
         {
             Waypoints = new List<Vector2>

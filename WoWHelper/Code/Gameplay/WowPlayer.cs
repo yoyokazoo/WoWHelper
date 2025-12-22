@@ -53,7 +53,7 @@ namespace WoWHelper
             CurrentWaypointIndex = -1;
             WaypointTraversalDirection = 1;
 
-            FarmingConfig = WowFarmingConfigs.LEVEL_42_TANARIS_TURTLES;
+            FarmingConfig = WowFarmingConfigs.CURRENT_CONFIG;
         }
 
         public async Task UpdateWorldStateAsync()
