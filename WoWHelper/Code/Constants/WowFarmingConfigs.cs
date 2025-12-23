@@ -7,16 +7,7 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowWaypointConfigs.LEVEL_48_FERALAS_HIPPOGRYPHS,
-            EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
-            AlertOnPotionUsed = false,
-            AlertOnFullBags = false,
-            LogoutOnLowDynamite = false,
-        };
-
-        public static readonly WowFarmingConfiguration LEVEL_42_TANARIS_TURTLES = new WowFarmingConfiguration
-        {
-            WaypointDefinition = WowWaypointConfigs.LEVEL_42_TANARIS_TURTLES,
+            WaypointDefinition = WowWaypointConfigs.LEVEL_51_FELWOOD_SOUTH,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
             AlertOnPotionUsed = true,
             AlertOnFullBags = true,

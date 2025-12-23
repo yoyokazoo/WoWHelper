@@ -5,6 +5,42 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowWaypointConfigs
     {
+        public static readonly WowWaypointConfiguration LEVEL_51_FELWOOD_SOUTH = new WowWaypointConfiguration
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(51.06f, 82.12f),
+                new Vector2(52.63f, 82.56f),
+                new Vector2(53.50f, 83.02f),
+                new Vector2(53.42f, 84.33f),
+                new Vector2(55.01f, 85.73f),
+                new Vector2(55.91f, 87.25f),
+                new Vector2(56.02f, 89.37f),
+                new Vector2(56.36f, 90.48f),
+                new Vector2(55.99f, 92.01f),
+                new Vector2(54.44f, 91.97f),
+                new Vector2(53.87f, 90.58f),
+                new Vector2(54.63f, 89.08f),
+                new Vector2(53.33f, 87.21f),
+                new Vector2(52.76f, 87.69f),
+                new Vector2(51.87f, 86.53f),
+                new Vector2(50.59f, 87.53f),
+                new Vector2(51.31f, 84.80f),
+
+                new Vector2(49.78f, 84.04f),
+                new Vector2(49.16f, 85.59f),
+                new Vector2(48.39f, 83.93f),
+                new Vector2(47.24f, 83.18f),
+                new Vector2(47.87f, 81.42f),
+                new Vector2(48.51f, 81.87f),
+                new Vector2(49.23f, 82.05f),
+                new Vector2(50.47f, 91.94f),
+            },
+            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.06f
+        };
+
         public static readonly WowWaypointConfiguration LEVEL_48_FERALAS_HIPPOGRYPHS = new WowWaypointConfiguration
         {
             Waypoints = new List<Vector2>

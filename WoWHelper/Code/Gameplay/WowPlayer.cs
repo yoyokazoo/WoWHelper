@@ -146,10 +146,15 @@ namespace WoWHelper
 
         public async Task<bool> AdHocTestTask()
         {
+            /*
             await FocusOnWindowTask();
             await PetriAltF4Task();
             SlackHelper.SendMessageToChannel($"Petri Alt+F4ed!  Consider using Unstuck instead of logging back in");
             Environment.Exit(0);
+            
+            */
+
+            await Task.Delay(0);
             return true;
         }
 
@@ -274,9 +279,7 @@ namespace WoWHelper
             
             do
             {
-                await Task.Delay(250);
-
-                UpdateWorldState();
+                await UpdateWorldStateAsync();
 
                 // don't drown
                 if (WorldState.Underwater)
@@ -284,7 +287,7 @@ namespace WoWHelper
                     await GetOutOfWater();
                 }
 
-                // Just in case, if for some reason things are going really poorly, try to pop retal regardless
+                // If we're about to die, petri alt+f4
                 if (WorldState.PlayerHpPercent <= WowPlayerConstants.PETRI_ALTF4_HP_THRESHOLD)
                 {
                     SlackHelper.SendMessageToChannel($"Petri Alt+F4ed at ~{WorldState.PlayerHpPercent}%!  Consider using Unstuck instead of logging back in");

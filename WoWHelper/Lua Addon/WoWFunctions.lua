@@ -33,7 +33,7 @@ function ShouldWeAttackTarget()
     end
 
     -- don't kill greys
-    if UnitLevel("player") - UnitLevel(unit) >= 7 then
+    if UnitLevel("player") - UnitLevel(unit) >= 8 then
         return false
     end
 
