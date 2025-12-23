@@ -15,7 +15,11 @@
 
         public const int HEALING_POTION_HP_THRESHOLD = 50;
 
+        // The healing trinket isn't very good, so spam it to keep the run going faster
+        public const int HEALING_TRINKET_HP_THRESHOLD = 91;
+
         public const int DYNAMITE_COOLDOWN_MILLIS = 1 * 60 * 1000;
         public const int POTION_COOLDOWN_MILLIS = 2 * 60 * 1000;
+        public const int HEALING_TRINKET_COOLDOWN_MILLIS = 5 * 60 * 1000;
     }
 }

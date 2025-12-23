@@ -107,6 +107,21 @@ namespace WoWHelper
             return true;
         }
 
+        public async Task<bool> ThrowTargetDummyTask()
+        {
+            Mouse.ButtonDown(Mouse.MouseKeys.Left);
+            await Task.Delay(30);
+            Mouse.MoveRelative(0, 200);
+            await Task.Delay(30);
+            Mouse.ButtonUp(Mouse.MouseKeys.Left);
+
+            await Task.Delay(250);
+
+            await WowInput.PressKeyWithShift(WowInput.SHIFT_TARGET_DUMMY);
+            await Task.Delay(250);
+            return true;
+        }
+
         /*
         public long LongWaitTimeStart { get; private set; }
         public long LongWaitTimeDuration { get; private set; }
@@ -288,6 +303,20 @@ namespace WoWHelper
             }
 
             return shouldUseHealingPotion;
+        }
+
+        public async Task<bool> UseHealingTrinketTask()
+        {
+            bool shouldUseHealingTrinket = WorldState.PlayerHpPercent <= WowGameplayConstants.HEALING_TRINKET_HP_THRESHOLD &&
+                !CurrentTimeInsideDuration(HealingTrinketTime, WowGameplayConstants.HEALING_TRINKET_COOLDOWN_MILLIS);
+
+            if (shouldUseHealingTrinket)
+            {
+                HealingTrinketTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                await WowInput.PressKeyWithShift(WowInput.SHIFT_HEALING_TRINKET);
+            }
+
+            return shouldUseHealingTrinket;
         }
 
         #endregion

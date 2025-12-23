@@ -9,8 +9,8 @@ namespace WoWHelper.Code.Constants
         {
             WaypointDefinition = WowWaypointConfigs.LEVEL_51_FELWOOD_SOUTH,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
-            AlertOnPotionUsed = true,
-            AlertOnFullBags = true,
+            AlertOnPotionUsed = false,
+            AlertOnFullBags = false,
             LogoutOnLowDynamite = false,
         };
     }

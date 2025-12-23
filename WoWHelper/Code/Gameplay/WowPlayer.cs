@@ -23,6 +23,7 @@ namespace WoWHelper
         public long LastFindTargetTime { get; private set; }
         public long DynamiteTime { get; private set; }
         public long HealthPotionTime { get; private set; }
+        public long HealingTrinketTime { get; private set; }
         public long NextUpdateTime { get; private set; }
 
         public bool FullBagsAlertSent { get; private set; }
@@ -153,6 +154,8 @@ namespace WoWHelper
             Environment.Exit(0);
             
             */
+            await FocusOnWindowTask();
+            await ThrowTargetDummyTask();
 
             await Task.Delay(0);
             return true;
@@ -169,7 +172,8 @@ namespace WoWHelper
                 await UpdateWorldStateAsync();
 
                 // TODO: short circuit into combat/getting out of water/etc.
-                if (WorldState.IsInCombat)
+                // TODO: if on login screen all other values will be messed up
+                if (!WorldState.OnLoginScreen && WorldState.IsInCombat)
                 {
                     CurrentPlayerState = PlayerState.IN_CORE_COMBAT_LOOP;
                 }
@@ -272,6 +276,7 @@ namespace WoWHelper
             Console.WriteLine("Kicking off core combat loop");
             bool thrownDynamite = false;
             bool potionUsed = false;
+            bool healingTrinketUsed = false;
             bool tooManyAttackersActionsTaken = false;
             bool startOfCombatWiggled = false;
 
@@ -340,6 +345,12 @@ namespace WoWHelper
                 {
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     potionUsed = true;
+                    continue;
+                }
+
+                if (!healingTrinketUsed && await UseHealingTrinketTask())
+                {
+                    healingTrinketUsed = true;
                     continue;
                 }
 
@@ -518,7 +529,7 @@ namespace WoWHelper
                 if (!stationaryWiggleAttemptedTwice && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE))
                 {
                     // second wiggle try right
-                    await AvoidObstacle(left: true);
+                    await AvoidObstacle(left: false);
                     stationaryWiggleAttemptedTwice = true;
                 }
 

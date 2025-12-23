@@ -24,8 +24,8 @@ namespace WoWHelper.Code
         public const Keys SHIFT_WHIRLWIND_MACRO = Keys.D3;
         public const Keys SHIFT_CLEAVE_MACRO = Keys.D4;
         public const Keys SHIFT_LOGOUT_MACRO = Keys.D5;
-        public const Keys SHIFT_UNASSIGNED1 = Keys.D6;
-        public const Keys SHIFT_UNASSIGNED2 = Keys.D7;
+        public const Keys SHIFT_SHIELD_WALL = Keys.D6;
+        public const Keys SHIFT_HEALING_TRINKET = Keys.D7;
         public const Keys SHIFT_TARGET_DUMMY = Keys.D8;
         public const Keys SHIFT_PETRIFICATION_FLASK = Keys.D9;
         public const Keys SHIFT_EAT_FOOD_KEY = Keys.D0;
