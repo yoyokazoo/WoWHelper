@@ -27,6 +27,7 @@ namespace WoWHelper.Code.Gameplay
         public bool AlertOnPotionUsed { get; set; }
         public bool AlertOnFullBags { get; set; }
         public bool LogoutOnLowDynamite { get; set; }
+        public bool UseRend { get; set; } // some mobs are immune to bleed
 
         public WowFarmingConfiguration()
         {
@@ -34,6 +35,7 @@ namespace WoWHelper.Code.Gameplay
             AlertOnPotionUsed = true;
             AlertOnFullBags = true;
             LogoutOnLowDynamite = true;
+            UseRend = true;
             Spec = WarriorSpec.Fury;
         }
     }

@@ -369,7 +369,7 @@ namespace WoWHelper
                 {
                     Keyboard.KeyPress(WowInput.OVERPOWER_KEY);
                 }
-                else if (!WorldState.TargetHasRend && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
+                else if (FarmingConfig.UseRend && !WorldState.TargetHasRend && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
                 {
                     Keyboard.KeyPress(WowInput.REND_KEY);
                 }

@@ -393,7 +393,7 @@ function TargetHasRend()
     local _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("target", i)
     if not spellId then break end
 
-    if spellId == 11572 then
+    if spellId == 11573 then
       return true
     end
   end
