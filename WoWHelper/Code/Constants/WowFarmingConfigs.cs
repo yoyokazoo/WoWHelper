@@ -7,10 +7,10 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowWaypointConfigs.LEVEL_51_FELWOOD_SOUTH,
+            WaypointDefinition = WowWaypointConfigs.LEVEL_53_NORTH_FELWOOD,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
-            AlertOnPotionUsed = false,
-            AlertOnFullBags = false,
+            AlertOnPotionUsed = true,
+            AlertOnFullBags = true,
             LogoutOnLowDynamite = false,
         };
     }

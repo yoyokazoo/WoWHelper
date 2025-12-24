@@ -5,6 +5,59 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowWaypointConfigs
     {
+        public static readonly WowWaypointConfiguration LEVEL_53_NORTH_FELWOOD = new WowWaypointConfiguration
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(50.88f, 15.57f),
+                new Vector2(51.81f, 15.38f),
+                new Vector2(52.31f, 16.10f),
+                new Vector2(54.02f, 15.57f),
+                new Vector2(54.78f, 15.88f),
+                new Vector2(55.23f, 16.49f),
+                new Vector2(54.43f, 17.08f),
+                new Vector2(55.02f, 17.69f),
+                new Vector2(54.85f, 19.46f),
+                new Vector2(55.85f, 20.75f),
+                new Vector2(55.48f, 22.18f),
+                new Vector2(55.43f, 23.45f),
+                new Vector2(54.72f, 24.82f),
+                new Vector2(54.30f, 26.32f),
+                new Vector2(53.57f, 28.18f),
+            },
+            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.06f
+        };
+
+        /*
+        // Level 55 pats through this area
+        public static readonly WowWaypointConfiguration LEVEL_53_FELWOOD_IRONTREE_STOMPERS = new WowWaypointConfiguration
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(51.68f, 26.10f),
+                new Vector2(51.15f, 25.17f),
+                new Vector2(51.70f, 24.43f),
+                new Vector2(52.49f, 24.58f),
+                new Vector2(53.23f, 23.66f),
+                new Vector2(53.23f, 22.23f),
+                new Vector2(52.72f, 21.38f),
+                new Vector2(51.73f, 21.43f),
+                new Vector2(50.62f, 20.74f),
+                new Vector2(50.17f, 19.39f),
+                new Vector2(50.29f, 18.11f),
+                new Vector2(49.50f, 17.45f),
+                new Vector2(49.13f, 19.06f),
+                new Vector2(48.72f, 19.83f),
+                new Vector2(48.81f, 21.12f),
+            },
+            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.06f
+        };
+        */
+
         public static readonly WowWaypointConfiguration LEVEL_51_FELWOOD_SOUTH = new WowWaypointConfiguration
         {
             Waypoints = new List<Vector2>
