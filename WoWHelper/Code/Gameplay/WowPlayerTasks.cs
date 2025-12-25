@@ -262,7 +262,7 @@ namespace WoWHelper
                 {
                     await UpdateWorldStateAsync();
                 }
-                Keyboard.KeyPress(WowInput.RETALIATION_KEY);
+                await WowInput.PressKeyWithShift(WowInput.SHIFT_RETALIATION_KEY);
 
                 LogoutReason = "Got into a Retaliation situation, logging off for safety";
                 LogoutTriggered = true;

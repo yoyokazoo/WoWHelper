@@ -337,7 +337,7 @@ namespace WoWHelper
                     {
                         await UpdateWorldStateAsync();
                     }
-                    Keyboard.KeyPress(WowInput.RETALIATION_KEY);
+                    await WowInput.PressKeyWithShift(WowInput.SHIFT_RETALIATION_KEY);
 
                     tooManyAttackersActionsTaken = true;
 
@@ -381,6 +381,10 @@ namespace WoWHelper
                 else if (WorldState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
                 {
                     Keyboard.KeyPress(WowInput.OVERPOWER_KEY);
+                }
+                else if (WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST)
+                {
+                    Keyboard.KeyPress(WowInput.EXECUTE_KEY);
                 }
                 else if (FarmingConfig.UseRend && !WorldState.TargetHasRend && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
                 {
