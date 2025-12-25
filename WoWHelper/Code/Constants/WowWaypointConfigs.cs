@@ -5,7 +5,27 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowWaypointConfigs
     {
-        public static readonly WowWaypointConfiguration LEVEL_56_DALTONS_TEARS_WPL = new WowWaypointConfiguration
+        public static readonly WowWaypointConfiguration LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL = new WowWaypointConfiguration
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(48.41f, 51.75f),
+                new Vector2(48.72f, 50.66f),
+                new Vector2(48.49f, 49.79f),
+                new Vector2(47.96f, 49.01f),
+                new Vector2(47.38f, 48.65f),
+                new Vector2(46.41f, 48.94f),
+                new Vector2(45.86f, 49.10f),
+                new Vector2(45.38f, 49.72f),
+                new Vector2(45.04f, 50.33f),
+                new Vector2(44.67f, 51.01f),
+            },
+            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.05f
+        };
+
+        public static readonly WowWaypointConfiguration LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL = new WowWaypointConfiguration
         {
             Waypoints = new List<Vector2>
             {

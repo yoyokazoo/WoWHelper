@@ -252,7 +252,7 @@ namespace WoWHelper
 
         public async Task<bool> TooManyAttackersTask()
         {
-            bool tooManyAttackers = WorldState.AttackerCount > 2;
+            bool tooManyAttackers = WorldState.AttackerCount >= FarmingConfig.TooManyAttackersThreshold;
 
             if (tooManyAttackers)
             {
@@ -332,6 +332,21 @@ namespace WoWHelper
             }
 
             return shouldUseHealingTrinket;
+        }
+
+        public async Task<bool> StartOfCombatBerserkerRage()
+        {
+            await WowInput.PressKeyWithShift(WowInput.SHIFT_BERSERKER_RAGE_MACRO);
+            await Task.Delay(150);
+            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+            await Task.Delay(150);
+            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+            await Task.Delay(150);
+            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+            await Task.Delay(150);
+            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+
+            return true;
         }
 
         #endregion

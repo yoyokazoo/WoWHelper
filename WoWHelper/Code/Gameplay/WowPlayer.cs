@@ -25,6 +25,7 @@ namespace WoWHelper
         public long DynamiteTime { get; private set; }
         public long HealthPotionTime { get; private set; }
         public long HealingTrinketTime { get; private set; } // and Diamond Flask
+        public long BerserkerRageTime { get; private set; }
         public long NextUpdateTime { get; private set; }
 
         public bool FullBagsAlertSent { get; private set; }
@@ -375,6 +376,12 @@ namespace WoWHelper
                     startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
+                if (FarmingConfig.PreemptFear && !CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS))
+                {
+                    await StartOfCombatBerserkerRage();
+                    BerserkerRageTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                }
+
                 // Finally, if we've made it this far, do standard combat actions
                 if (!WorldState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
                 {
@@ -402,12 +409,14 @@ namespace WoWHelper
                             continue;
                         }
 
+                        /*
                         if (WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
                         {
                             await WowInput.PressKeyWithShift(WowInput.SHIFT_SWEEPING_STRIKES_MACRO);
                         }
-                        // TODO: This is temp until I have 5/5 tac mastery in Fury, otherwise we don't have enough rage after switching stances
-                        else if (WorldState.WhirlwindCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.WHIRLWIND_RAGE_COST)
+                        */
+
+                        if (WorldState.WhirlwindCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.WHIRLWIND_RAGE_COST)
                         {
                             await WowInput.PressKeyWithShift(WowInput.SHIFT_WHIRLWIND_MACRO);
                             await Task.Delay(150);
@@ -419,7 +428,6 @@ namespace WoWHelper
                             await Task.Delay(150);
                             Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
                         }
-                        // TODO: 5/5 tac mastery
                         else if (!WorldState.WhirlwindCooledDown && !WorldState.HeroicStrikeQueued && WorldState.ResourcePercent >= WowGameplayConstants.CLEAVE_RAGE_COST)
                         {
                             // if WW is cooled down, prefer waiting for rage for that over cleaving

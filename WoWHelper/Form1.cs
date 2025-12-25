@@ -23,6 +23,9 @@ namespace WoWHelper
         public Form1()
         {
             InitializeComponent();
+
+            StartPosition = FormStartPosition.Manual;
+            Location = new Point(600, 600);
         }
 
         private void button1_Click(object sender, EventArgs e)

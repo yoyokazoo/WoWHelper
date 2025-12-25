@@ -20,7 +20,7 @@ namespace WoWHelper.Code
         public const Keys EXECUTE_KEY = Keys.Oemplus;
 
         public const Keys SHIFT_RETALIATION_KEY = Keys.D1;
-        public const Keys SHIFT_SWEEPING_STRIKES_MACRO = Keys.D2;
+        public const Keys SHIFT_BERSERKER_RAGE_MACRO = Keys.D2;
         public const Keys SHIFT_WHIRLWIND_MACRO = Keys.D3;
         public const Keys SHIFT_CLEAVE_MACRO = Keys.D4;
         public const Keys SHIFT_LOGOUT_MACRO = Keys.D5;

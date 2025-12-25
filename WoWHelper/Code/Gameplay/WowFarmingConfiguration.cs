@@ -30,6 +30,7 @@ namespace WoWHelper.Code.Gameplay
         public bool LogoutOnLowDynamite { get; set; }
         public bool UseRend { get; set; } // some mobs are immune to bleed
         public int TooManyAttackersThreshold { get; set; }
+        public bool PreemptFear { get; set; } // if fighting mobs that Fear, start each fight with Berserker Rage
 
         public WowFarmingConfiguration()
         {
@@ -40,6 +41,7 @@ namespace WoWHelper.Code.Gameplay
             LogoutOnLowDynamite = true;
             UseRend = true;
             TooManyAttackersThreshold = 3;
+            PreemptFear = true;
             Spec = WarriorSpec.Fury;
         }
     }
