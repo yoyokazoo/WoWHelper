@@ -23,7 +23,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(45.96f, 56.01f),
             },
             TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.MACRO,
+            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f
         };
 

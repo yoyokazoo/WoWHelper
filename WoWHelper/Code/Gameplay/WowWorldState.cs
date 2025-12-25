@@ -72,16 +72,14 @@ namespace WoWHelper
         {
             Initialized = true;
 
-            UpdatePlayerHpPercent(bmp);
-            UpdateResourcePercent(bmp);
-            UpdateTargetHpPercent(bmp);
             UpdateMapX(bmp);
             UpdateMapY(bmp);
             PlayerLocation = new Vector2(MapX, MapY);
             UpdateFacingDegrees(bmp);
-            UpdateAttackerCount(bmp);
 
             UpdateMultiBoolOne(bmp);
+            UpdateMultiIntOne(bmp);
+            UpdateMultiIntTwo(bmp);
 
             UpdateFacingWrongWay(bmp);
             UpdateTooFarAway(bmp);
@@ -124,24 +122,6 @@ namespace WoWHelper
             b8 = (value & 128) != 0;
         }
 
-        public void UpdatePlayerHpPercent(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(WowImageConstants.PLAYER_HP_PERCENT_POSITION.X, WowImageConstants.PLAYER_HP_PERCENT_POSITION.Y);
-            PlayerHpPercent = GetIntFromColor(color);
-        }
-
-        public void UpdateResourcePercent(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(WowImageConstants.RESOURCE_PERCENT_POSITION.X, WowImageConstants.RESOURCE_PERCENT_POSITION.Y);
-            ResourcePercent = GetIntFromColor(color);
-        }
-
-        public void UpdateTargetHpPercent(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(WowImageConstants.TARGET_PERCENT_POSITION.X, WowImageConstants.TARGET_PERCENT_POSITION.Y);
-            TargetHpPercent = GetIntFromColor(color);
-        }
-
         public void UpdateMapX(Bitmap bmp)
         {
             Color color = bmp.GetPixel(WowImageConstants.MAP_X_POSITION.X, WowImageConstants.MAP_X_POSITION.Y);
@@ -158,12 +138,6 @@ namespace WoWHelper
         {
             Color color = bmp.GetPixel(WowImageConstants.FACING_DEGREES_POSITION.X, WowImageConstants.FACING_DEGREES_POSITION.Y);
             FacingDegrees = GetFloatFromColor(color);
-        }
-
-        public void UpdateAttackerCount(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(WowImageConstants.ATTACKER_COUNT_POSITION.X, WowImageConstants.ATTACKER_COUNT_POSITION.Y);
-            AttackerCount = GetIntFromColor(color);
         }
 
         public void UpdateMultiBoolOne(Bitmap bmp)
@@ -192,6 +166,22 @@ namespace WoWHelper
             IsInCombat = g8;
 
             HeroicStrikeQueued = b1;
+        }
+
+        public void UpdateMultiIntOne(Bitmap bmp)
+        {
+            Color color = bmp.GetPixel(WowImageConstants.MULTI_INT_ONE_POSITION.X, WowImageConstants.MULTI_INT_ONE_POSITION.Y);
+            
+            PlayerHpPercent = color.R;
+            ResourcePercent = color.G;
+            TargetHpPercent = color.B;
+        }
+
+        public void UpdateMultiIntTwo(Bitmap bmp)
+        {
+            Color color = bmp.GetPixel(WowImageConstants.MULTI_INT_TWO_POSITION.X, WowImageConstants.MULTI_INT_TWO_POSITION.Y);
+
+            AttackerCount = color.R;
         }
 
         public void UpdateFacingWrongWay(Bitmap bmp)

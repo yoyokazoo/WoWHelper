@@ -13,6 +13,7 @@ namespace WoWHelper.Code.Constants
             AlertOnFullBags = true,
             LogoutOnLowDynamite = false,
             UseRend = true,
+            TooManyAttackersThreshold = 4
         };
     }
 }

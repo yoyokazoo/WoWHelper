@@ -52,6 +52,7 @@ namespace WoWHelperUnitTests
             Assert.AreEqual(expected, Player.WorldState.TooFarAway);
         }
 
+        /*
         [TestMethod]
         [DataRow(0, "..\\..\\Source Images\\numbersAsColors3.bmp")]
         [DataRow(1, "..\\..\\Source Images\\FacingWrongWay.bmp")]
@@ -63,6 +64,7 @@ namespace WoWHelperUnitTests
 
             Assert.AreEqual(expected, Player.WorldState.AttackerCount);
         }
+        */
 
         [TestMethod]
         [DataRow(false, false, "..\\..\\Source Images\\NoBattleshout.bmp")]

@@ -57,14 +57,13 @@ namespace WoWHelper
             new ColorPosition(1561, 173, BREATH_BAR_COLOR_TWO)
         });
 
-        public static readonly Point PLAYER_HP_PERCENT_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 0));
-        public static readonly Point RESOURCE_PERCENT_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 1));
-        public static readonly Point TARGET_PERCENT_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 2));
         public static readonly Point MAP_X_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 3));
         public static readonly Point MAP_Y_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 4));
         public static readonly Point FACING_DEGREES_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 5));
-        public static readonly Point ATTACKER_COUNT_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 6));
 
         public static readonly Point MULTI_BOOL_ONE_POSITION = new Point(BOOL_LEFT_COORD, BOOL_TOP_COORD + (BOOL_SECTION_HEIGHT * 4));
+
+        public static readonly Point MULTI_INT_ONE_POSITION = new Point(BOOL_LEFT_COORD, BOOL_TOP_COORD + (BOOL_SECTION_HEIGHT * 5));
+        public static readonly Point MULTI_INT_TWO_POSITION = new Point(BOOL_LEFT_COORD, BOOL_TOP_COORD + (BOOL_SECTION_HEIGHT * 6));
     }
 }
