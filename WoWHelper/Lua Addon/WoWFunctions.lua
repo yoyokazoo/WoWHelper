@@ -142,7 +142,7 @@ function CanShootTarget()
 end
 
 function WaitingToShoot()
-    return IsCurrentSpell(7918)
+    return IsCurrentSpell(7918) or IsCurrentSpell(2480)
 end
 
 function IsAnyNextSwingSpellQueued()
@@ -377,7 +377,7 @@ end
 -- light shot, 2516
 -- rough arrow, 2512
 function AreWeLowOnAmmo()
-    local ammoCount = GetItemCount(2516, false)
+    local ammoCount = GetItemCount(2512, false)
     return ammoCount < 2
 end
 
