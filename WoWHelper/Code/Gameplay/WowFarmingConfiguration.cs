@@ -26,6 +26,7 @@ namespace WoWHelper.Code.Gameplay
         public WarriorSpec Spec { get; set; }
         public bool AlertOnPotionUsed { get; set; }
         public bool AlertOnFullBags { get; set; }
+        public bool AlertOnUnreadWhisper { get; set; }
         public bool LogoutOnLowDynamite { get; set; }
         public bool UseRend { get; set; } // some mobs are immune to bleed
         public int TooManyAttackersThreshold { get; set; }
@@ -35,6 +36,7 @@ namespace WoWHelper.Code.Gameplay
             EngageMethod = EngagementMethod.Shoot;
             AlertOnPotionUsed = true;
             AlertOnFullBags = true;
+            AlertOnUnreadWhisper = true;
             LogoutOnLowDynamite = true;
             UseRend = true;
             TooManyAttackersThreshold = 3;

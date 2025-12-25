@@ -180,7 +180,7 @@ namespace WoWHelper
                 }
 
                 // ping if unseen message
-                if (!(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
+                if (FarmingConfig.AlertOnUnreadWhisper && !(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
                 {
                     SlackHelper.SendMessageToChannel($"Unseen Whisper!");
                 }
@@ -300,7 +300,7 @@ namespace WoWHelper
                 }
 
                 // ping if unseen message
-                if (!(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
+                if (FarmingConfig.AlertOnUnreadWhisper && !(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
                 {
                     SlackHelper.SendMessageToChannel($"Unseen Whisper!");
                 }
@@ -482,7 +482,7 @@ namespace WoWHelper
                 }
 
                 // ping if unseen message
-                if (!(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
+                if (FarmingConfig.AlertOnUnreadWhisper && !(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
                 {
                     SlackHelper.SendMessageToChannel($"Unseen Whisper!");
                 }

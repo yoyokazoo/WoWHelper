@@ -9,8 +9,9 @@ namespace WoWHelper.Code.Constants
         {
             WaypointDefinition = WowWaypointConfigs.LEVEL_53_NORTH_FELWOOD,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
-            AlertOnPotionUsed = true,
-            AlertOnFullBags = true,
+            AlertOnPotionUsed = false,
+            AlertOnFullBags = false,
+            AlertOnUnreadWhisper = false,
             LogoutOnLowDynamite = false,
             UseRend = true,
             TooManyAttackersThreshold = 3
