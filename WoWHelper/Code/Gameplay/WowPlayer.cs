@@ -209,7 +209,7 @@ namespace WoWHelper
                         Console.WriteLine("Waiting to log out");
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(CheckIfLoggedOutTask(),
                             PlayerState.LOGGED_OUT,
-                            PlayerState.IN_CORE_COMBAT_LOOP);
+                            PlayerState.WAITING_TO_LOG_OUT);
                         break;
                     case PlayerState.LOGGED_OUT:
                         Console.WriteLine("Logged out");
@@ -275,6 +275,8 @@ namespace WoWHelper
 
             Console.WriteLine("Exited Core Gameplay");
             //await EQTask.CampTask();
+            Environment.Exit(0);
+
             return true;
         }
 

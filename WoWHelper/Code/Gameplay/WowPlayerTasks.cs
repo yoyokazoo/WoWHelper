@@ -68,6 +68,7 @@ namespace WoWHelper
 
         public async Task<bool> StartLogoutTask()
         {
+            Console.WriteLine($"Starting logout: {LogoutReason}");
             await WowInput.PressKeyWithShift(WowInput.SHIFT_LOGOUT_MACRO);
             return true;
         }
