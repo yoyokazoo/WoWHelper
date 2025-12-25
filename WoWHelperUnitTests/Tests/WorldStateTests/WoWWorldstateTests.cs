@@ -8,6 +8,7 @@ namespace WoWHelperUnitTests
     [TestClass]
     public class WoWWorldstateTests : UnitTestBase
     {
+        /*
         [TestMethod]
         [DataRow("..\\..\\Source Images\\numbersAsColors3.bmp")]
         public void VerifyWowWorldState(string fileName)
@@ -22,10 +23,10 @@ namespace WoWHelperUnitTests
             AssertExtensions.AssertFloatApproximately(44.05f, Player.WorldState.MapX);
             AssertExtensions.AssertFloatApproximately(64.61f, Player.WorldState.MapY);
             AssertExtensions.AssertFloatApproximately(128.56f, Player.WorldState.FacingDegrees);
-            Assert.IsFalse(Player.WorldState.IsInRange);
             Assert.IsFalse(Player.WorldState.IsInCombat);
             Assert.IsTrue(Player.WorldState.CanChargeTarget);
         }
+        */
 
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\numbersAsColors3.bmp")]

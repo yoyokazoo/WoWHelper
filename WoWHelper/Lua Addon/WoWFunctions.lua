@@ -455,16 +455,16 @@ function AreBagsFull()
 end
 
 function GetMultiBoolOne()
-    local bool1 = IsAttacking()
-    local bool2 = HasBattleShout()
-    local bool3 = AreWeLowOnHealthPotions()
-    local bool4 = AreWeLowOnDynamite()
-    local bool5 = TargetHasRend()
-    local bool6 = CanShootTarget()
-    local bool7 = AreWeLowOnAmmo()
-    local bool8 = IsOverpowerUsable()
+    local boolR1 = IsAttacking()
+    local boolR2 = HasBattleShout()
+    local boolR3 = AreWeLowOnHealthPotions()
+    local boolR4 = AreWeLowOnDynamite()
+    local boolR5 = TargetHasRend()
+    local boolR6 = CanShootTarget()
+    local boolR7 = AreWeLowOnAmmo()
+    local boolR8 = IsOverpowerUsable()
 
-    local rByte = EncodeBooleansToByte(bool1, bool2, bool3, bool4, bool5, bool6, bool7, bool8)
+    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
 
     local boolG1 = IsGlobalCooldownCooledDown()
     local boolG2 = CanCastWhirlwind()
@@ -472,14 +472,23 @@ function GetMultiBoolOne()
     local boolG4 = WaitingToShoot()
     local boolG5 = CanCastMortalStrikeOrBloodthirst()
     local boolG6 = AreBagsFull()
-    local boolG7 = false
-    local boolG8 = CanCastMortalStrikeOrBloodthirst()
+    local boolG7 = CanChargeTarget()
+    local boolG8 = IsInCombat()
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
-    --print(rByte)
+    local boolB1 = IsAnyNextSwingSpellQueued()
+    local boolB2 = false
+    local boolB3 = false
+    local boolB4 = false
+    local boolB5 = false
+    local boolB6 = false
+    local boolB7 = false
+    local boolB8 = IsAnyNextSwingSpellQueued()
 
-    return rByte/255.0, gByte/255.0, 0
+    local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
+
+    return rByte/255.0, gByte/255.0, bByte/255.0
 end
 
 function IsAttackingColor()

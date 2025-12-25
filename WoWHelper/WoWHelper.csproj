@@ -143,6 +143,7 @@
     <Compile Include="Code\Constants\WowInput.cs" />
     <Compile Include="Code\Gameplay\WowPlayer.cs" />
     <Compile Include="Code\Gameplay\WowWorldState.cs" />
+    <Compile Include="Code\Shared\PathSubdivision.cs" />
     <Compile Include="Code\Shared\TessaractSingleton.cs" />
     <Compile Include="Code\Gameplay\WowPlayerTasks.cs" />
     <Compile Include="Form1.cs">

@@ -5,6 +5,30 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowWaypointConfigs
     {
+        public static readonly WowWaypointConfiguration LEVEL_56_DALTONS_TEARS_WPL = new WowWaypointConfiguration
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(45.96f, 56.01f),
+                new Vector2(45.5f, 55.25f),
+                new Vector2(45.04f, 54.49f),
+                new Vector2(44.58f, 53.73f),
+                new Vector2(45.3525f, 53.625f),
+                new Vector2(46.125f, 53.52f),
+                new Vector2(46.8975f, 53.415f),
+                new Vector2(47.67f, 53.31f),
+                new Vector2(47.2425f, 53.985f),
+                new Vector2(46.815f, 54.66f),
+                new Vector2(46.3875f, 55.335f),
+                new Vector2(45.96f, 56.01f),
+            },
+            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.MACRO,
+            DistanceTolerance = 0.1f
+        };
+
+        /*
+        // Water elementals spawn here during invasion, not really safe
         public static readonly WowWaypointConfiguration LEVEL_55_WINTERSPRING_LAKE = new WowWaypointConfiguration
         {
             Waypoints = new List<Vector2>
@@ -30,6 +54,7 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.06f
         };
+        */
 
         public static readonly WowWaypointConfiguration LEVEL_53_NORTH_FELWOOD = new WowWaypointConfiguration
         {

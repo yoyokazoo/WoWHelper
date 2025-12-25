@@ -7,12 +7,12 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowWaypointConfigs.LEVEL_55_WINTERSPRING_LAKE,
+            WaypointDefinition = WowWaypointConfigs.LEVEL_56_DALTONS_TEARS_WPL,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
             AlertOnPotionUsed = true,
             AlertOnFullBags = true,
             LogoutOnLowDynamite = false,
-            UseRend = false,
+            UseRend = true,
         };
     }
 }

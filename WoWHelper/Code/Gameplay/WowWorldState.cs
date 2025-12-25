@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics.SymbolStore;
+using System.Drawing;
 using System.Numerics;
 using WindowsGameAutomationTools.Images;
 
@@ -16,7 +17,6 @@ namespace WoWHelper
         public float FacingDegrees { get; private set; }
         public int AttackerCount { get; private set; }
 
-        public bool IsInRange { get; private set; }
         public bool IsInCombat { get; private set; }
         public bool CanChargeTarget { get; private set; }
         public bool HeroicStrikeQueued { get; private set; }
@@ -81,10 +81,6 @@ namespace WoWHelper
             UpdateFacingDegrees(bmp);
             UpdateAttackerCount(bmp);
 
-            UpdateIsInRange(bmp);
-            UpdateIsInCombat(bmp);
-            UpdateCanChargeTarget(bmp);
-            UpdateHeroicStrikeQueued(bmp);
             UpdateMultiBoolOne(bmp);
 
             UpdateFacingWrongWay(bmp);
@@ -170,35 +166,12 @@ namespace WoWHelper
             AttackerCount = GetIntFromColor(color);
         }
 
-        public void UpdateIsInRange(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(WowImageConstants.IS_IN_RANGE_POSITION.X, WowImageConstants.IS_IN_RANGE_POSITION.Y);
-            IsInRange = GetBoolFromColor(color);
-        }
-
-        public void UpdateIsInCombat(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(WowImageConstants.IS_IN_COMBAT_POSITION.X, WowImageConstants.IS_IN_COMBAT_POSITION.Y);
-            IsInCombat = GetBoolFromColor(color);
-        }
-
-        public void UpdateCanChargeTarget(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(WowImageConstants.CAN_CHARGE_TARGET_POSITION.X, WowImageConstants.CAN_CHARGE_TARGET_POSITION.Y);
-            CanChargeTarget = GetBoolFromColor(color);
-        }
-
-        public void UpdateHeroicStrikeQueued(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(WowImageConstants.HEROIC_STRIKE_QUEUED_POSITION.X, WowImageConstants.HEROIC_STRIKE_QUEUED_POSITION.Y);
-            HeroicStrikeQueued = GetBoolFromColor(color);
-        }
-
         public void UpdateMultiBoolOne(Bitmap bmp)
         {
             Color color = bmp.GetPixel(WowImageConstants.MULTI_BOOL_ONE_POSITION.X, WowImageConstants.MULTI_BOOL_ONE_POSITION.Y);
             DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
             DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
+            DecodeByte(color.B, out var b1, out var b2, out var b3, out var b4, out var b5, out var b6, out var b7, out var b8);
 
             IsAutoAttacking = r1;
             BattleShoutActive = r2;
@@ -215,6 +188,10 @@ namespace WoWHelper
             WaitingToShoot = g4;
             MortalStrikeOrBloodThirstCooledDown = g5;
             BagsAreFull = g6;
+            CanChargeTarget = g7;
+            IsInCombat = g8;
+
+            HeroicStrikeQueued = b1;
         }
 
         public void UpdateFacingWrongWay(Bitmap bmp)

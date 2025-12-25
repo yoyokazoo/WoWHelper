@@ -104,5 +104,44 @@ namespace WoWHelper
                 CopyDirectoryRecursive(subDir, destSubDir);
             }
         }
+
+        /*
+         * Waypoints = new List<Vector2>
+            {
+                new Vector2(53.60f, 39.54f),
+                new Vector2(53.58f, 40.99f),
+                new Vector2(52.96f, 41.78f),
+                new Vector2(52.07f, 42.04f),
+                new Vector2(51.51f, 41.22f),
+                new Vector2(50.84f, 41.76f),
+                new Vector2(51.25f, 42.36f),
+                new Vector2(50.71f, 43.01f),
+                new Vector2(52.22f, 43.96f),
+                new Vector2(52.97f, 43.92f),
+                new Vector2(53.44f, 43.40f),
+                new Vector2(53.54f, 42.67f),
+                new Vector2(54.59f, 43.87f),
+                new Vector2(55.23f, 42.98f),
+                new Vector2(54.28f, 42.10f),
+                new Vector2(53.96f, 40.54f),
+            },
+        */
+        private void button4_Click(object sender, EventArgs e)
+        {
+            List<Vector2> points = new List<Vector2>();
+            points.Add(new Vector2(45.96f, 56.01f));
+            points.Add(new Vector2(44.58f, 53.73f));
+            points.Add(new Vector2(47.67f, 53.31f));
+            points.Add(new Vector2(45.96f, 56.01f));
+            float maxDistance = 1.0f;
+            var dividedPoints = PathSubdivision.Subdivide(points, maxDistance);
+            Console.WriteLine($"Waypoints = new List<Vector2>");
+            Console.WriteLine($"{{");
+            foreach (var point in dividedPoints)
+            {
+                Console.WriteLine($"new Vector2({point.X}f, {point.Y}f),");
+            }
+            Console.WriteLine($"}},");
+        }
     }
 }
