@@ -21,5 +21,6 @@
         public const int DYNAMITE_COOLDOWN_MILLIS = 1 * 60 * 1000;
         public const int POTION_COOLDOWN_MILLIS = 2 * 60 * 1000;
         public const int HEALING_TRINKET_COOLDOWN_MILLIS = 5 * 60 * 1000;
+        public const int DIAMOND_FLASK_COOLDOWN_MILLIS = 6 * 60 * 1000;
     }
 }

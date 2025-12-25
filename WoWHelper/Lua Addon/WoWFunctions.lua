@@ -454,6 +454,21 @@ function AreBagsFull()
     return GetTotalFreeBagSlots() == 0
 end
 
+function IsPlayerPetrified()
+    for i = 1, 40 do
+        local name = UnitAura("player", i)
+        if not name then
+            return false
+        end
+
+        if name == "Petrification" then
+            return true
+        end
+    end
+
+    return false
+end
+
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = HasBattleShout()
@@ -478,13 +493,13 @@ function GetMultiBoolOne()
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
     local boolB1 = IsAnyNextSwingSpellQueued()
-    local boolB2 = false
-    local boolB3 = false
+    local boolB2 = IsPlayerPetrified()
+    local boolB3 = HasUnseenWhisper()
     local boolB4 = false
     local boolB5 = false
     local boolB6 = false
     local boolB7 = false
-    local boolB8 = IsAnyNextSwingSpellQueued()
+    local boolB8 = HasUnseenWhisper()
 
     local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
 

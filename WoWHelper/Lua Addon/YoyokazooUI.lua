@@ -5,6 +5,9 @@ xpTracker.totalGained = 0
 xpTracker.startLevel = 0
 xpTracker.startTime   = 0
 
+local UNSEEN_WINDOW_SECONDS = 60
+local lastWhisperTime = nil
+
 -- Create a frame to be our black box
 local frame = CreateFrame("Frame", "YoyokazooUIFrame", UIParent, "BackdropTemplate")
 -- Size and position
@@ -21,11 +24,16 @@ frame:SetBackdrop({
 })
 frame:SetBackdropColor(0, 0, 0, 1)  -- RGBA, 0.8 alpha for slight transparency
 
+frame:RegisterEvent("CHAT_MSG_WHISPER")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("PLAYER_XP_UPDATE")
 frame:RegisterEvent("PLAYER_LEVEL_UP")
 
 frame:SetScript("OnEvent", function(self, event, ...)
+    if event == "CHAT_MSG_WHISPER" then
+        lastWhisperTime = GetTime()
+    end
+
     if event == "PLAYER_ENTERING_WORLD" then
         xpTracker.startLevel = UnitLevel("player")
         xpTracker.startXP    = UnitXP("player")
@@ -71,3 +79,11 @@ frame:SetScript("OnEvent", function(self, event, ...)
         print("Total session XP so far:", xpTracker.totalGained)
     end
 end)
+
+function HasUnseenWhisper()
+    if not lastWhisperTime then
+        return false
+    end
+
+    return (GetTime() - lastWhisperTime) <= UNSEEN_WINDOW_SECONDS
+end

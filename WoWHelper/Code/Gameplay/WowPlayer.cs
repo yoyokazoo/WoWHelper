@@ -24,7 +24,7 @@ namespace WoWHelper
         public long LastJumpTime { get; private set; }
         public long DynamiteTime { get; private set; }
         public long HealthPotionTime { get; private set; }
-        public long HealingTrinketTime { get; private set; }
+        public long HealingTrinketTime { get; private set; } // and Diamond Flask
         public long NextUpdateTime { get; private set; }
 
         public bool FullBagsAlertSent { get; private set; }
@@ -349,7 +349,7 @@ namespace WoWHelper
                     continue;
                 }
 
-                if (!healingTrinketUsed && await UseHealingTrinketTask())
+                if (!healingTrinketUsed && await UseDiamondFlaskTask())
                 {
                     healingTrinketUsed = true;
                     continue;

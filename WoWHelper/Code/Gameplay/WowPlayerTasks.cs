@@ -305,6 +305,20 @@ namespace WoWHelper
             return shouldUseHealingPotion;
         }
 
+        public async Task<bool> UseDiamondFlaskTask()
+        {
+            bool shouldUseDiamondFlask = WorldState.AttackerCount > 1 &&
+                !CurrentTimeInsideDuration(HealingTrinketTime, WowGameplayConstants.DIAMOND_FLASK_COOLDOWN_MILLIS);
+
+            if (shouldUseDiamondFlask)
+            {
+                HealingTrinketTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                await WowInput.PressKeyWithShift(WowInput.SHIFT_HEALING_TRINKET);
+            }
+
+            return shouldUseDiamondFlask;
+        }
+
         public async Task<bool> UseHealingTrinketTask()
         {
             bool shouldUseHealingTrinket = WorldState.PlayerHpPercent <= WowGameplayConstants.HEALING_TRINKET_HP_THRESHOLD &&
