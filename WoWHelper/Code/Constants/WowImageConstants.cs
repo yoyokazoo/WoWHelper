@@ -57,8 +57,6 @@ namespace WoWHelper
             new ColorPosition(1561, 173, BREATH_BAR_COLOR_TWO)
         });
 
-        //public static readonly ImageMatchMultiOffsetMultiColorPositions asdf = new ImageMatchMultiOffsetMultiColorPositions()
-
         public static readonly Point PLAYER_HP_PERCENT_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 0));
         public static readonly Point RESOURCE_PERCENT_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 1));
         public static readonly Point TARGET_PERCENT_POSITION = new Point(TEXT_LEFT_COORD, TEXT_TOP_COORD + (TEXT_BOX_HEIGHT * 2));

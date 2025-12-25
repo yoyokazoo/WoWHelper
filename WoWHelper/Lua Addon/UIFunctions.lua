@@ -120,13 +120,17 @@ function InitializeIndicators()
     local canChargeTarget = CreateIndicator(YoyokazooUIFrame, "CanChargeTarget", CanChargeTargetColor, 2)
     local heroicQueued = CreateIndicator(YoyokazooUIFrame, "Heroic Queued", IsAnyNextSwingSpellQueuedColor, 3)
     local multiBoolOne = CreateIndicator(YoyokazooUIFrame, "Multi Bool One", GetMultiBoolOne, 4)
+    local multiIntOne = CreateIndicator(YoyokazooUIFrame, "Multi Int One", GetMultiIntOne, 5)
+    local multiIntTwo = CreateIndicator(YoyokazooUIFrame, "Multi Int Two", GetMultiIntTwo, 6)
 
     local indicators = {
         inRangeBox.update,
         inCombatBox.update,
         canChargeTarget.update,
         heroicQueued.update,
-        multiBoolOne.update
+        multiBoolOne.update,
+        multiIntOne.update,
+        multiIntTwo.update
     }
 
     -- Melee Range Indicator

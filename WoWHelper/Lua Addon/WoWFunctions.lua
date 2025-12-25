@@ -491,6 +491,22 @@ function GetMultiBoolOne()
     return rByte/255.0, gByte/255.0, bByte/255.0
 end
 
+function GetMultiIntOne()
+    local r = GetPlayerHealthPercent()
+    local g = GetPlayerResourcePercent()
+    local b = GetTargetHealthPercent()
+
+    return r/255.0, g/255.0, b/255.0
+end
+
+function GetMultiIntTwo()
+    local r = CountAttackers()
+    local g = 0
+    local b = 0
+
+    return r/255.0, g/255.0, b/255.0
+end
+
 function IsAttackingColor()
     return GetColorFromSingleBool(IsAttacking())
 end
