@@ -21,6 +21,7 @@ namespace WoWHelper
         // then use the cached value until they get dirtied again?
         public long FarmStartTime { get; private set; }
         public long LastFindTargetTime { get; private set; }
+        public long LastJumpTime { get; private set; }
         public long DynamiteTime { get; private set; }
         public long HealthPotionTime { get; private set; }
         public long HealingTrinketTime { get; private set; }
@@ -446,6 +447,7 @@ namespace WoWHelper
             bool stationaryWiggleAttemptedTwice = false;
             bool stationaryAlertSent = false;
             long lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             await FocusOnWindowTask();
 
@@ -480,6 +482,12 @@ namespace WoWHelper
                     }
 
                     targetChecks++;
+                }
+
+                if (!CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
+                {
+                    LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    Keyboard.KeyPress(WowInput.JUMP);
                 }
 
                 // always wait a bit for the UI to update, then grab it?
