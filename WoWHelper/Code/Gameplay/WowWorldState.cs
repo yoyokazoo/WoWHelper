@@ -35,6 +35,8 @@ namespace WoWHelper
         public bool WaitingToShoot { get; private set; }
         public bool MortalStrikeOrBloodThirstCooledDown { get; private set; }
         public bool BagsAreFull { get; private set; }
+        public bool IsPlayerPetrified { get; private set; }
+        public bool HasUnseenWhisper { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -166,6 +168,8 @@ namespace WoWHelper
             IsInCombat = g8;
 
             HeroicStrikeQueued = b1;
+            IsPlayerPetrified = b2;
+            HasUnseenWhisper = b3;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

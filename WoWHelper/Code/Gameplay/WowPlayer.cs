@@ -179,6 +179,12 @@ namespace WoWHelper
                     CurrentPlayerState = PlayerState.IN_CORE_COMBAT_LOOP;
                 }
 
+                // ping if unseen message
+                if (!(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
+                {
+                    SlackHelper.SendMessageToChannel($"Unseen Whisper!");
+                }
+
                 switch (CurrentPlayerState)
                 {
                     case PlayerState.WAITING_TO_FOCUS_ON_WINDOW:
@@ -291,6 +297,12 @@ namespace WoWHelper
                 if (WorldState.Underwater)
                 {
                     await GetOutOfWater();
+                }
+
+                // ping if unseen message
+                if (!(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
+                {
+                    SlackHelper.SendMessageToChannel($"Unseen Whisper!");
                 }
 
                 // If we're about to die, petri alt+f4
@@ -457,6 +469,20 @@ namespace WoWHelper
             //bool lookingForDangerousTarget = false;
             while (targetChecks < maxTargetChecks)
             {
+                await UpdateWorldStateAsync();
+
+                // don't drown
+                if (WorldState.Underwater)
+                {
+                    await GetOutOfWater();
+                }
+
+                // ping if unseen message
+                if (!(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
+                {
+                    SlackHelper.SendMessageToChannel($"Unseen Whisper!");
+                }
+
                 if (!CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
@@ -488,16 +514,6 @@ namespace WoWHelper
                 {
                     LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     Keyboard.KeyPress(WowInput.JUMP);
-                }
-
-                // always wait a bit for the UI to update, then grab it?
-                await Task.Delay(250);
-                UpdateWorldState();
-
-                // don't drown
-                if (WorldState.Underwater)
-                {
-                    await GetOutOfWater();
                 }
 
                 if (WorldState.IsInCombat)
