@@ -5,6 +5,27 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowWaypointConfigs
     {
+        public static readonly WowWaypointConfiguration LEVEL_58_SILITHUS_RUMBLERS = new WowWaypointConfiguration
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(27.20f, 11.69f),
+                new Vector2(25.52f, 10.55f),
+                new Vector2(25.65f, 13.44f),
+                new Vector2(24.75f, 14.44f),
+                new Vector2(22.60f, 11.84f),
+                new Vector2(21.31f, 11.96f),
+                new Vector2(22.60f, 11.84f),
+                new Vector2(22.50f, 14.59f),
+                new Vector2(21.30f, 15.79f),
+                new Vector2(22.04f, 17.74f),
+                new Vector2(22.92f, 17.88f),
+            },
+            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.1f
+        };
+
         public static readonly WowWaypointConfiguration LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL = new WowWaypointConfiguration
         {
             Waypoints = new List<Vector2>
