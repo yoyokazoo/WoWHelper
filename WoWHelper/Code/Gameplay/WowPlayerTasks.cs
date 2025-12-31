@@ -53,6 +53,11 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = $"Failed to engage target after {WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS} loops.  Something wrong?";
             }
+            else if (FarmingConfig.LogoutOnFullBags && WorldState.BagsAreFull)
+            {
+                LogoutTriggered = true;
+                LogoutReason = $"Bags are full!";
+            }
 
             // also send once-per-session alerts here
             if (FarmingConfig.AlertOnFullBags && !FullBagsAlertSent && WorldState.BagsAreFull)
@@ -229,7 +234,8 @@ namespace WoWHelper
             bool facingWrongWay = WorldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
             bool targetNeedsToBeInFront = WorldState.TargetNeedsToBeInFront;
 
-            if (attackerJustDied || facingWrongWay || targetNeedsToBeInFront)
+            // now since we have more accurate "are they in front" checking, try not backing up if attacker just died
+            if (/*attackerJustDied || */facingWrongWay || targetNeedsToBeInFront)
             {
                 // one of the mobs just died, scoot back to make sure the next mob is in front of you
                 await ScootBackwardsTask();

@@ -5,14 +5,16 @@ namespace WoWHelper.Code.Constants
 {
     public class WowFarmingConfigs
     {
+        // TODO: split into zone specific properties and "am i home/asleep" type properties
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
             WaypointDefinition = WowWaypointConfigs.LEVEL_58_SILITHUS_RUMBLERS,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
             AlertOnPotionUsed = false,
-            AlertOnFullBags = true,
-            AlertOnUnreadWhisper = true,
+            AlertOnFullBags = false,
+            AlertOnUnreadWhisper = false,
             LogoutOnLowDynamite = false,
+            LogoutOnFullBags = true,
             UseRend = false,
             TooManyAttackersThreshold = 3
         };
@@ -23,10 +25,11 @@ namespace WoWHelper.Code.Constants
         {
             WaypointDefinition = WowWaypointConfigs.LEVEL_58_SILITHUS_RUMBLERS,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
-            AlertOnPotionUsed = true,
-            AlertOnFullBags = true,
+            AlertOnPotionUsed = false,
+            AlertOnFullBags = false,
             AlertOnUnreadWhisper = true,
             LogoutOnLowDynamite = false,
+            LogoutOnFullBags = true,
             UseRend = false,
             TooManyAttackersThreshold = 3
         };
@@ -37,9 +40,10 @@ namespace WoWHelper.Code.Constants
             WaypointDefinition = WowWaypointConfigs.LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Shoot,
             AlertOnPotionUsed = true,
-            AlertOnFullBags = true,
-            AlertOnUnreadWhisper = true,
+            AlertOnFullBags = false,
+            AlertOnUnreadWhisper = false,
             LogoutOnLowDynamite = false,
+            LogoutOnFullBags = true,
             UseRend = true,
             TooManyAttackersThreshold = 4
         };

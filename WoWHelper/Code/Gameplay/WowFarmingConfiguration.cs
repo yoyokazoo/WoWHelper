@@ -28,6 +28,7 @@ namespace WoWHelper.Code.Gameplay
         public bool AlertOnFullBags { get; set; }
         public bool AlertOnUnreadWhisper { get; set; }
         public bool LogoutOnLowDynamite { get; set; }
+        public bool LogoutOnFullBags { get; set; }
         public bool UseRend { get; set; } // some mobs are immune to bleed
         public int TooManyAttackersThreshold { get; set; }
         public bool PreemptFear { get; set; } // if fighting mobs that Fear, start each fight with Berserker Rage
@@ -39,6 +40,7 @@ namespace WoWHelper.Code.Gameplay
             AlertOnFullBags = true;
             AlertOnUnreadWhisper = true;
             LogoutOnLowDynamite = true;
+            LogoutOnFullBags = false;
             UseRend = true;
             TooManyAttackersThreshold = 3;
             PreemptFear = true;
