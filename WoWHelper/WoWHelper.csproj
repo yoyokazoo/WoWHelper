@@ -135,8 +135,8 @@
     <Compile Include="Code\Constants\WowPlayerConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerStates.cs" />
     <Compile Include="Code\Config\Definitions\WowFarmingConfiguration.cs" />
-    <Compile Include="Code\Config\Definitions\WowWaypointConfiguration.cs" />
-    <Compile Include="Code\Config\WowWaypointConfigs.cs" />
+    <Compile Include="Code\Config\Definitions\WowLocationConfiguration.cs" />
+    <Compile Include="Code\Config\WowLocationConfigs.cs" />
     <Compile Include="Code\Gameplay\WowPathfinding.cs" />
     <Compile Include="Code\Shared\KeyPoller.cs" />
     <Compile Include="Code\Constants\WowImageConstants.cs" />

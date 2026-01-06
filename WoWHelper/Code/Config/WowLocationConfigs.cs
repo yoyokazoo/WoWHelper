@@ -3,9 +3,9 @@ using System.Numerics;
 
 namespace WoWHelper.Code.WorldState
 {
-    public static class WowWaypointConfigs
+    public static class WowLocationConfigs
     {
-        public static readonly WowWaypointConfiguration LEVEL_58_SILITHUS_RUMBLERS = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_58_SILITHUS_RUMBLERS = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -21,12 +21,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(22.04f, 17.74f),
                 new Vector2(22.92f, 17.88f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -41,12 +41,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(45.04f, 50.33f),
                 new Vector2(44.67f, 51.01f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.05f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -63,8 +63,8 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(46.3875f, 55.335f),
                 new Vector2(45.96f, 56.01f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f
         };
 
@@ -97,7 +97,7 @@ namespace WoWHelper.Code.WorldState
         };
         */
 
-        public static readonly WowWaypointConfiguration LEVEL_53_NORTH_FELWOOD = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_53_NORTH_FELWOOD = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -117,8 +117,8 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(54.30f, 26.32f),
                 new Vector2(53.57f, 28.18f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.06f
         };
 
@@ -150,7 +150,7 @@ namespace WoWHelper.Code.WorldState
         };
         */
 
-        public static readonly WowWaypointConfiguration LEVEL_51_FELWOOD_SOUTH = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_51_FELWOOD_SOUTH = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -183,12 +183,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(49.23f, 82.05f),
                 new Vector2(50.47f, 81.94f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.06f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_48_FERALAS_HIPPOGRYPHS = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_48_FERALAS_HIPPOGRYPHS = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -209,12 +209,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(55.49f, 66.57f),
                 new Vector2(55.00f, 65.00f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.06f
         };
 
-        public static readonly WowWaypointConfiguration TANARIS_TEST_PATHFINDING = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration TANARIS_TEST_PATHFINDING = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -224,12 +224,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(67.02f, 35.20f),
                 new Vector2(67.81f, 35.26f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.06f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_42_TANARIS_TURTLES = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_42_TANARIS_TURTLES = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -242,12 +242,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(67.86f, 35.27f),
                 new Vector2(68.54f, 34.02f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.2f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_37_KODO_GRAVEYARD = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_37_KODO_GRAVEYARD = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -266,12 +266,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(47.00f, 60.92f),
                 new Vector2(47.64f, 58.37f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.2f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -287,12 +287,12 @@ namespace WoWHelper.Code.WorldState
                 //new Vector2(86.87f, 58.05f),
                 //new Vector2(87.96f, 61.20f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.MACRO,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.2f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -306,13 +306,13 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(86.87f, 58.05f),
                 new Vector2(87.96f, 61.20f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.MACRO,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.2f
         };
 
         // Don't recommend this one without WBs
-        public static readonly WowWaypointConfiguration LEVEL_27_NORTH_ASHENVALE_WAYPOINTS = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_27_NORTH_ASHENVALE_WAYPOINTS = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -334,12 +334,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(58.87f, 41.32f),
                 new Vector2(59.55f, 39.57f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.TAB,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.TAB,
             DistanceTolerance = 0.2f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -356,12 +356,12 @@ namespace WoWHelper.Code.WorldState
                 //new Vector2(62.49f, 42.11f),
                 //new Vector2(61.55f, 42.71f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.MACRO,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.3f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_24_STONETALON_WAYPOINTS = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_24_STONETALON_WAYPOINTS = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -379,12 +379,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.19f, 22.95f),
                 new Vector2(44.71f, 20.78f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.2f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_21_ZORAMGAR_WAYPOINTS = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_21_ZORAMGAR_WAYPOINTS = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -423,12 +423,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(17.68f, 30.43f),
                 new Vector2(16.72f, 29.32f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.TAB,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.TAB,
             DistanceTolerance = 0.2f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -442,12 +442,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(43.27f, 20.00f),
                 new Vector2(42.24f, 20.87f)
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.TAB,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.TAB,
             DistanceTolerance = 0.5f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_13_BARRENS_ENTRACE_WAYPOINTS = new WowWaypointConfiguration
+        public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRACE_WAYPOINTS = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -458,12 +458,12 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(56.29f, 22.47f),
                 new Vector2(56.60f, 22.00f)
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.MACRO,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.5f
         };
 
-        public static readonly WowWaypointConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowWaypointConfiguration { 
+        public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration { 
             Waypoints = new List<Vector2>
             { 
                 //new Vector2(38.13f, 16.10f),
@@ -478,8 +478,8 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(36.65f, 51.08f),
                 new Vector2(36.30f, 53.50f)
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.TAB,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.TAB,
             DistanceTolerance = 0.5f
         };
     }

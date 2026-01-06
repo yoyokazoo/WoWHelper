@@ -8,7 +8,7 @@ namespace WoWHelper.Code.Constants
         // TODO: split into zone specific properties and "am i home/asleep" type properties
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowWaypointConfigs.LEVEL_58_SILITHUS_RUMBLERS,
+            WaypointDefinition = WowLocationConfigs.LEVEL_58_SILITHUS_RUMBLERS,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
             AlertOnPotionUsed = false,
             AlertOnFullBags = false,
@@ -23,7 +23,7 @@ namespace WoWHelper.Code.Constants
         // /target desert rumbler
         public static readonly WowFarmingConfiguration LEVEL_58_SILITHUS_RUMBLERS = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowWaypointConfigs.LEVEL_58_SILITHUS_RUMBLERS,
+            WaypointDefinition = WowLocationConfigs.LEVEL_58_SILITHUS_RUMBLERS,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
             AlertOnPotionUsed = false,
             AlertOnFullBags = false,
@@ -37,7 +37,7 @@ namespace WoWHelper.Code.Constants
         // AOE Farmed, worms
         public static readonly WowFarmingConfiguration LEVEL_56_DALSONS_TEAR_FRONTSIDE = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowWaypointConfigs.LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
+            WaypointDefinition = WowLocationConfigs.LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Shoot,
             AlertOnPotionUsed = true,
             AlertOnFullBags = false,
@@ -52,7 +52,7 @@ namespace WoWHelper.Code.Constants
         // Issues with targeting mobs in buildings (not in line of sight)
         public static readonly WowFarmingConfiguration LEVEL_56_DALSONS_TEAR_BACKSIDE = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowWaypointConfigs.LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL,
+            WaypointDefinition = WowLocationConfigs.LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Shoot,
             AlertOnPotionUsed = true,
             AlertOnFullBags = true,

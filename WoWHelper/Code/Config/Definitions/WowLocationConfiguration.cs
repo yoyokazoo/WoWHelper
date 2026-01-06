@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace WoWHelper.Code.WorldState
 {
-    public class WowWaypointConfiguration
+    public class WowLocationConfiguration
     {
         public enum WaypointTraversalMethod
         {
@@ -13,9 +13,9 @@ namespace WoWHelper.Code.WorldState
 
         public enum WaypointTargetFindMethod
         {
-            TAB,
-            MACRO,
-            ALTERNATE
+            TAB, // only use tab, only gets a narrow cone in front
+            MACRO, // only use macro, often gets stuck re-picking a bad target
+            ALTERNATE // alternate between the two
         }
 
         public List<Vector2> Waypoints { get; set; }
