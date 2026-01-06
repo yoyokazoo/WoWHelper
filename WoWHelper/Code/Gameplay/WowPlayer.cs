@@ -341,7 +341,7 @@ namespace WoWHelper
                     {
                         await UpdateWorldStateAsync();
                     }
-                    await WowInput.PressKeyWithShift(WowInput.SHIFT_RETALIATION_KEY);
+                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION_KEY);
 
                     tooManyAttackersActionsTaken = true;
 
@@ -386,41 +386,41 @@ namespace WoWHelper
                 // Finally, if we've made it this far, do standard combat actions
                 if (!WorldState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
                 {
-                    Keyboard.KeyPress(WowInput.BATTLE_SHOUT_KEY);
+                    Keyboard.KeyPress(WowInput.WARRIOR_BATTLE_SHOUT_KEY);
                 }
                 else if (WorldState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
                 {
-                    Keyboard.KeyPress(WowInput.OVERPOWER_KEY);
+                    Keyboard.KeyPress(WowInput.WARRIOR_OVERPOWER_KEY);
                 }
                 else if (WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST)
                 {
-                    Keyboard.KeyPress(WowInput.EXECUTE_KEY);
+                    Keyboard.KeyPress(WowInput.WARRIOR_EXECUTE_KEY);
                 }
                 else if (FarmingConfig.UseRend && !WorldState.TargetHasRend && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
                 {
-                    Keyboard.KeyPress(WowInput.REND_KEY);
+                    Keyboard.KeyPress(WowInput.WARRIOR_REND_KEY);
                 }
                 else if(WorldState.AttackerCount > 1)
                 {
                     if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
                     {
-                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+                        Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
                     }
                     else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST))
                     {
                         // Cleave only if we have enough spare rage to bloodthirst right after
-                        await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
+                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_CLEAVE_MACRO);
                     }
                 }
                 else if (WorldState.AttackerCount <= 1) // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
                 {
                     if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
                     {
-                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+                        Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
                     }else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
                     {
                         // Heroic only if we have enough spare rage to bloodthirst right after
-                        Keyboard.KeyPress(WowInput.HEROIC_STRIKE_KEY);
+                        Keyboard.KeyPress(WowInput.WARRIOR_HEROIC_STRIKE_KEY);
                     }
                     // TODO: Actually split out Heroic Strike and cast if we have really surplus rage
                 }
@@ -472,7 +472,7 @@ namespace WoWHelper
                     }
                     else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
                     {
-                        Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
+                        Keyboard.KeyPress(WowInput.WARRIOR_FIND_TARGET_MACRO);
                     }
                     else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
                     {
@@ -482,7 +482,7 @@ namespace WoWHelper
                         }
                         else
                         {
-                            Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
+                            Keyboard.KeyPress(WowInput.WARRIOR_FIND_TARGET_MACRO);
                         }  
                     }
 

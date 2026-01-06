@@ -140,6 +140,7 @@
     <Compile Include="Code\Config\Definitions\WowLocationConfiguration.cs" />
     <Compile Include="Code\Config\WowLocationConfigs.cs" />
     <Compile Include="Code\Gameplay\WowPathfinding.cs" />
+    <Compile Include="Code\Gameplay\WowWarriorTasks.cs" />
     <Compile Include="Code\Shared\KeyPoller.cs" />
     <Compile Include="Code\Constants\WowImageConstants.cs" />
     <Compile Include="Code\Constants\WowInput.cs" />

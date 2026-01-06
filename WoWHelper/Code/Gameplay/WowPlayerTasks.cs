@@ -74,7 +74,7 @@ namespace WoWHelper
         public async Task<bool> StartLogoutTask()
         {
             Console.WriteLine($"Starting logout: {LogoutReason}");
-            await WowInput.PressKeyWithShift(WowInput.SHIFT_LOGOUT_MACRO);
+            await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_LOGOUT_MACRO);
             return true;
         }
 
@@ -107,7 +107,7 @@ namespace WoWHelper
                 await UpdateWorldStateAsync();
             }
 
-            await WowInput.PressKeyWithShift(WowInput.SHIFT_PETRIFICATION_FLASK);
+            await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_PETRIFICATION_FLASK);
             await Task.Delay(750);
             await WowInput.PressKeyWithAlt(WowInput.ALT_FORCE_QUIT_KEY);
             return true;
@@ -123,7 +123,7 @@ namespace WoWHelper
 
             await Task.Delay(250);
 
-            await WowInput.PressKeyWithShift(WowInput.SHIFT_TARGET_DUMMY);
+            await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_TARGET_DUMMY);
             await Task.Delay(250);
             return true;
         }
@@ -155,7 +155,7 @@ namespace WoWHelper
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
-                await WowInput.PressKeyWithShift(WowInput.SHIFT_EAT_FOOD_KEY);
+                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_EAT_FOOD_KEY);
             }
 
             return true;
@@ -185,12 +185,12 @@ namespace WoWHelper
 
             if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
-                Keyboard.KeyPress(WowInput.CHARGE_KEY);
+                Keyboard.KeyPress(WowInput.WARRIOR_CHARGE_KEY);
                 return true;
             }
             else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
             {
-                Keyboard.KeyPress(WowInput.SHOOT_MACRO);
+                Keyboard.KeyPress(WowInput.WARRIOR_SHOOT_MACRO);
                 return true;
             }
 
@@ -204,14 +204,14 @@ namespace WoWHelper
             if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
                 await TurnABitToTheLeftTask();
-                Keyboard.KeyPress(WowInput.CHARGE_KEY);
+                Keyboard.KeyPress(WowInput.WARRIOR_CHARGE_KEY);
             }
             else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
             {
                 if (!WorldState.WaitingToShoot)
                 {
                     await TurnABitToTheLeftTask();
-                    Keyboard.KeyPress(WowInput.SHOOT_MACRO);
+                    Keyboard.KeyPress(WowInput.WARRIOR_SHOOT_MACRO);
                 }
             }
 
@@ -223,7 +223,7 @@ namespace WoWHelper
             await Task.Delay(0);
 
             // always kick things off with heroic strike macro to /startattack
-            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
 
             return true;
         }
@@ -246,13 +246,13 @@ namespace WoWHelper
             if (tooFarAway)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
-                Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
+                Keyboard.KeyPress(WowInput.WARRIOR_CLEAR_TARGET_MACRO);
             }
 
             if (attackerJustDied || inCombatButNotAutoAttacking || tooFarAway)
             {
                 // /startattack
-                Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+                Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
             }
 
             return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront;
@@ -271,7 +271,7 @@ namespace WoWHelper
                 {
                     await UpdateWorldStateAsync();
                 }
-                await WowInput.PressKeyWithShift(WowInput.SHIFT_RETALIATION_KEY);
+                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION_KEY);
 
                 LogoutReason = "Got into a Retaliation situation, logging off for safety";
                 LogoutTriggered = true;
@@ -288,7 +288,7 @@ namespace WoWHelper
             {
                 Mouse.Move(1770, 770);
                 await Task.Delay(50);
-                Keyboard.KeyPress(WowInput.DYNAMITE_KEY);
+                Keyboard.KeyPress(WowInput.WARRIOR_DYNAMITE_KEY);
                 await Task.Delay(50);
                 Mouse.PressButton(Mouse.MouseKeys.Left);
                 await Task.Delay(1000);
@@ -307,7 +307,7 @@ namespace WoWHelper
                 {
                     SlackHelper.SendMessageToChannel("Potion used!");
                 }
-                Keyboard.KeyPress(WowInput.HEALING_POTION_KEY);
+                Keyboard.KeyPress(WowInput.WARRIOR_HEALING_POTION_KEY);
                 await Task.Delay(0);
             }
 
@@ -322,7 +322,7 @@ namespace WoWHelper
             if (shouldUseDiamondFlask)
             {
                 HealingTrinketTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                await WowInput.PressKeyWithShift(WowInput.SHIFT_HEALING_TRINKET);
+                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_HEALING_TRINKET);
             }
 
             return shouldUseDiamondFlask;
@@ -336,7 +336,7 @@ namespace WoWHelper
             if (shouldUseHealingTrinket)
             {
                 HealingTrinketTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                await WowInput.PressKeyWithShift(WowInput.SHIFT_HEALING_TRINKET);
+                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_HEALING_TRINKET);
             }
 
             return shouldUseHealingTrinket;
@@ -344,15 +344,15 @@ namespace WoWHelper
 
         public async Task<bool> StartOfCombatBerserkerRage()
         {
-            await WowInput.PressKeyWithShift(WowInput.SHIFT_BERSERKER_RAGE_MACRO);
+            await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_BERSERKER_RAGE_MACRO);
             await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
             await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
             await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
             await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
+            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
 
             return true;
         }

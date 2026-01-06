@@ -7,29 +7,29 @@ namespace WoWHelper.Code
     public static class WowInput
     {
         // Warrior Input
-        public const Keys FIND_TARGET_MACRO = Keys.D1;
-        public const Keys CHARGE_KEY = Keys.D2;
-        public const Keys MORTALSTRIKE_BLOODTHIRST_MACRO = Keys.D3;
-        public const Keys HEROIC_STRIKE_KEY = Keys.D4;
-        public const Keys DYNAMITE_KEY = Keys.D5;
-        public const Keys HEALING_POTION_KEY = Keys.D6;
-        public const Keys BATTLE_SHOUT_KEY = Keys.D7;
-        public const Keys SHOOT_MACRO = Keys.D8;
-        public const Keys OVERPOWER_KEY = Keys.D9;
-        public const Keys CLEAR_TARGET_MACRO = Keys.D0;
-        public const Keys REND_KEY = Keys.OemMinus;
-        public const Keys EXECUTE_KEY = Keys.Oemplus;
+        public const Keys WARRIOR_FIND_TARGET_MACRO = Keys.D1;
+        public const Keys WARRIOR_CHARGE_KEY = Keys.D2;
+        public const Keys WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO = Keys.D3;
+        public const Keys WARRIOR_HEROIC_STRIKE_KEY = Keys.D4;
+        public const Keys WARRIOR_DYNAMITE_KEY = Keys.D5;
+        public const Keys WARRIOR_HEALING_POTION_KEY = Keys.D6;
+        public const Keys WARRIOR_BATTLE_SHOUT_KEY = Keys.D7;
+        public const Keys WARRIOR_SHOOT_MACRO = Keys.D8;
+        public const Keys WARRIOR_OVERPOWER_KEY = Keys.D9;
+        public const Keys WARRIOR_CLEAR_TARGET_MACRO = Keys.D0;
+        public const Keys WARRIOR_REND_KEY = Keys.OemMinus;
+        public const Keys WARRIOR_EXECUTE_KEY = Keys.Oemplus;
 
-        public const Keys SHIFT_RETALIATION_KEY = Keys.D1;
-        public const Keys SHIFT_BERSERKER_RAGE_MACRO = Keys.D2;
-        public const Keys SHIFT_WHIRLWIND_MACRO = Keys.D3;
-        public const Keys SHIFT_CLEAVE_MACRO = Keys.D4;
-        public const Keys SHIFT_LOGOUT_MACRO = Keys.D5;
-        public const Keys SHIFT_SHIELD_WALL = Keys.D6;
-        public const Keys SHIFT_HEALING_TRINKET = Keys.D7;
-        public const Keys SHIFT_TARGET_DUMMY = Keys.D8;
-        public const Keys SHIFT_PETRIFICATION_FLASK = Keys.D9;
-        public const Keys SHIFT_EAT_FOOD_KEY = Keys.D0;
+        public const Keys WARRIOR_SHIFT_RETALIATION_KEY = Keys.D1;
+        public const Keys WARRIOR_SHIFT_BERSERKER_RAGE_MACRO = Keys.D2;
+        public const Keys WARRIOR_SHIFT_WHIRLWIND_MACRO = Keys.D3;
+        public const Keys WARRIOR_SHIFT_CLEAVE_MACRO = Keys.D4;
+        public const Keys WARRIOR_SHIFT_LOGOUT_MACRO = Keys.D5;
+        public const Keys WARRIOR_SHIFT_SHIELD_WALL = Keys.D6;
+        public const Keys WARRIOR_SHIFT_HEALING_TRINKET = Keys.D7;
+        public const Keys WARRIOR_SHIFT_TARGET_DUMMY = Keys.D8;
+        public const Keys WARRIOR_SHIFT_PETRIFICATION_FLASK = Keys.D9;
+        public const Keys WARRIOR_SHIFT_EAT_FOOD_KEY = Keys.D0;
 
         // Mage Input
         // Using Shift Keys built into the macros instead of binding a bar to the shift keys,

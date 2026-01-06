@@ -4,10 +4,17 @@ using static WoWHelper.Code.WorldState.WowLocationConfiguration;
 
 namespace WoWHelper.Code.Gameplay
 {
+    public enum WowCombatConfiguration
+    {
+        Warrior = 0,
+        Mage = 1,
+    }
+
     public class WowFarmingConfiguration
     {
         public WowLocationConfiguration LocationConfiguration { get; set; }
         public WowManagementConfiguration ManagementConfiguration { get; set; }
+        public WowCombatConfiguration CombatConfiguration { get; set; }
 
         public bool AlertOnPotionUsed => ManagementConfiguration.AlertOnPotionUsed;
         public bool AlertOnFullBags => ManagementConfiguration.AlertOnFullBags;
@@ -20,6 +27,9 @@ namespace WoWHelper.Code.Gameplay
         public bool PreemptFear => LocationConfiguration.PreemptFear;
         public int TooManyAttackersThreshold => LocationConfiguration.TooManyAttackersThreshold;
 
-        public WowFarmingConfiguration() { }
+        public WowFarmingConfiguration()
+        {
+            CombatConfiguration = WowCombatConfiguration.Mage;
+        }
     }
 }
