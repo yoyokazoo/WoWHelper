@@ -18,9 +18,20 @@ namespace WoWHelper.Code.WorldState
             ALTERNATE // alternate between the two
         }
 
+        public enum EngagementMethod
+        {
+            Charge,
+            Shoot
+        }
+
         public List<Vector2> Waypoints { get; set; }
         public WaypointTraversalMethod TraversalMethod { get; set; }
         public WaypointTargetFindMethod TargetFindMethod { get; set; }
         public float DistanceTolerance { get; set; } = 0.5f;
+
+        public EngagementMethod EngageMethod { get; set; }
+        public bool UseRend { get; set; } // some mobs are immune to bleed
+        public bool PreemptFear { get; set; } // if fighting mobs that Fear, start each fight with Berserker Rage
+        public int TooManyAttackersThreshold { get; set; } // how many mobs to panic at (sometimes mobs spawn tiny bugs or something that will get counted)
     }
 }

@@ -107,11 +107,11 @@ namespace WoWHelper
 
         public bool CanEngageTarget()
         {
-            if (FarmingConfig.EngageMethod == EngagementMethod.Charge)
+            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
                 return WorldState.CanChargeTarget;
             }
-            else if (FarmingConfig.EngageMethod == EngagementMethod.Shoot)
+            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
             {
                 return WorldState.CanShootTarget;
             }

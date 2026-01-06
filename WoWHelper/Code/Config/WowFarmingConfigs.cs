@@ -11,9 +11,6 @@ namespace WoWHelper.Code.Constants
         {
             LocationConfiguration = WowLocationConfigs.LEVEL_58_SILITHUS_RUMBLERS,
             ManagementConfiguration = WowManagementConfigs.SLEEPING_FOR_LOOT,
-            EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
-            UseRend = false,
-            TooManyAttackersThreshold = 3
         };
 
         // Essence of Earth
@@ -22,9 +19,6 @@ namespace WoWHelper.Code.Constants
         {
             LocationConfiguration = WowLocationConfigs.LEVEL_58_SILITHUS_RUMBLERS,
             ManagementConfiguration = WowManagementConfigs.SLEEPING_FOR_LOOT,
-            EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
-            UseRend = false,
-            TooManyAttackersThreshold = 3
         };
 
         // AOE Farmed, worms
@@ -32,9 +26,6 @@ namespace WoWHelper.Code.Constants
         {
             LocationConfiguration = WowLocationConfigs.LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
             ManagementConfiguration = WowManagementConfigs.SLEEPING_FOR_LOOT,
-            EngageMethod = WowFarmingConfiguration.EngagementMethod.Shoot,
-            UseRend = true,
-            TooManyAttackersThreshold = 4
         };
 
         // Skeletons that fear and are immune to rend, worms.  Other Dalson's Tear spot is preferred but AOE farmed
@@ -43,9 +34,6 @@ namespace WoWHelper.Code.Constants
         {
             LocationConfiguration = WowLocationConfigs.LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL,
             ManagementConfiguration = WowManagementConfigs.SLEEPING_FOR_LOOT,
-            EngageMethod = WowFarmingConfiguration.EngagementMethod.Shoot,
-            UseRend = false,
-            TooManyAttackersThreshold = 4
         };
     }
 }

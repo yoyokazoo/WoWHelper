@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
+using WoWHelper.Code.Gameplay;
+using static WoWHelper.Code.WorldState.WowLocationConfiguration;
 
 namespace WoWHelper.Code.WorldState
 {
@@ -23,7 +25,10 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.1f
+            DistanceTolerance = 0.1f,
+            EngageMethod = EngagementMethod.Charge,
+            UseRend = false,
+            TooManyAttackersThreshold = 3
         };
 
         public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL = new WowLocationConfiguration
@@ -43,7 +48,10 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.05f
+            DistanceTolerance = 0.05f,
+            EngageMethod = EngagementMethod.Shoot,
+            UseRend = true,
+            TooManyAttackersThreshold = 4
         };
 
         public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL = new WowLocationConfiguration
@@ -65,7 +73,10 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.1f
+            DistanceTolerance = 0.1f,
+            EngageMethod = EngagementMethod.Shoot,
+            UseRend = false,
+            TooManyAttackersThreshold = 4
         };
 
         /*
