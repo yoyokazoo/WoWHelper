@@ -130,7 +130,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Code\Config\Definitions\WowManagementConfiguration.cs" />
     <Compile Include="Code\Config\WowFarmingConfigs.cs" />
+    <Compile Include="Code\Config\WowManagementConfigs.cs" />
     <Compile Include="Code\Constants\WowGameplayConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerStates.cs" />

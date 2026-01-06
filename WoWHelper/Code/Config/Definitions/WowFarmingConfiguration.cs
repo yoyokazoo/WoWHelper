@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using WoWHelper.Code.Config.Definitions;
 using WoWHelper.Code.WorldState;
 
 namespace WoWHelper.Code.Gameplay
@@ -21,30 +17,29 @@ namespace WoWHelper.Code.Gameplay
             Fury
         }
 
-        public WowLocationConfiguration WaypointDefinition { get; set; }
+        public WowLocationConfiguration LocationConfiguration { get; set; }
+        public WowManagementConfiguration ManagementConfiguration { get; set; }
+
         public EngagementMethod EngageMethod { get; set; }
-        public WarriorSpec Spec { get; set; }
-        public bool AlertOnPotionUsed { get; set; }
-        public bool AlertOnFullBags { get; set; }
-        public bool AlertOnUnreadWhisper { get; set; }
-        public bool LogoutOnLowDynamite { get; set; }
-        public bool LogoutOnFullBags { get; set; }
+
+        public bool AlertOnPotionUsed => ManagementConfiguration.AlertOnPotionUsed;
+        public bool AlertOnFullBags => ManagementConfiguration.AlertOnFullBags;
+        public bool AlertOnUnreadWhisper => ManagementConfiguration.AlertOnUnreadWhisper;
+        public bool LogoutOnFullBags => ManagementConfiguration.LogoutOnFullBags;
+        public bool LogoutOnLowDynamite => ManagementConfiguration.LogoutOnLowDynamite;
+
+
+        
         public bool UseRend { get; set; } // some mobs are immune to bleed
-        public int TooManyAttackersThreshold { get; set; }
         public bool PreemptFear { get; set; } // if fighting mobs that Fear, start each fight with Berserker Rage
+        public int TooManyAttackersThreshold { get; set; } // how many mobs to panic at (sometimes mobs spawn tiny bugs or something that will get counted)
 
         public WowFarmingConfiguration()
         {
             EngageMethod = EngagementMethod.Shoot;
-            AlertOnPotionUsed = true;
-            AlertOnFullBags = true;
-            AlertOnUnreadWhisper = true;
-            LogoutOnLowDynamite = true;
-            LogoutOnFullBags = false;
             UseRend = true;
             TooManyAttackersThreshold = 3;
             PreemptFear = true;
-            Spec = WarriorSpec.Fury;
         }
     }
 }

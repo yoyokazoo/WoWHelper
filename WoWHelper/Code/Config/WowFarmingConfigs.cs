@@ -1,4 +1,5 @@
-﻿using WoWHelper.Code.Gameplay;
+﻿using WoWHelper.Code.Config;
+using WoWHelper.Code.Gameplay;
 using WoWHelper.Code.WorldState;
 
 namespace WoWHelper.Code.Constants
@@ -8,13 +9,9 @@ namespace WoWHelper.Code.Constants
         // TODO: split into zone specific properties and "am i home/asleep" type properties
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowLocationConfigs.LEVEL_58_SILITHUS_RUMBLERS,
+            LocationConfiguration = WowLocationConfigs.LEVEL_58_SILITHUS_RUMBLERS,
+            ManagementConfiguration = WowManagementConfigs.SLEEPING_FOR_LOOT,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
-            AlertOnPotionUsed = false,
-            AlertOnFullBags = false,
-            AlertOnUnreadWhisper = false,
-            LogoutOnLowDynamite = false,
-            LogoutOnFullBags = true,
             UseRend = false,
             TooManyAttackersThreshold = 3
         };
@@ -23,13 +20,9 @@ namespace WoWHelper.Code.Constants
         // /target desert rumbler
         public static readonly WowFarmingConfiguration LEVEL_58_SILITHUS_RUMBLERS = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowLocationConfigs.LEVEL_58_SILITHUS_RUMBLERS,
+            LocationConfiguration = WowLocationConfigs.LEVEL_58_SILITHUS_RUMBLERS,
+            ManagementConfiguration = WowManagementConfigs.SLEEPING_FOR_LOOT,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Charge,
-            AlertOnPotionUsed = false,
-            AlertOnFullBags = false,
-            AlertOnUnreadWhisper = true,
-            LogoutOnLowDynamite = false,
-            LogoutOnFullBags = true,
             UseRend = false,
             TooManyAttackersThreshold = 3
         };
@@ -37,13 +30,9 @@ namespace WoWHelper.Code.Constants
         // AOE Farmed, worms
         public static readonly WowFarmingConfiguration LEVEL_56_DALSONS_TEAR_FRONTSIDE = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowLocationConfigs.LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
+            LocationConfiguration = WowLocationConfigs.LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
+            ManagementConfiguration = WowManagementConfigs.SLEEPING_FOR_LOOT,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Shoot,
-            AlertOnPotionUsed = true,
-            AlertOnFullBags = false,
-            AlertOnUnreadWhisper = false,
-            LogoutOnLowDynamite = false,
-            LogoutOnFullBags = true,
             UseRend = true,
             TooManyAttackersThreshold = 4
         };
@@ -52,12 +41,9 @@ namespace WoWHelper.Code.Constants
         // Issues with targeting mobs in buildings (not in line of sight)
         public static readonly WowFarmingConfiguration LEVEL_56_DALSONS_TEAR_BACKSIDE = new WowFarmingConfiguration
         {
-            WaypointDefinition = WowLocationConfigs.LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL,
+            LocationConfiguration = WowLocationConfigs.LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL,
+            ManagementConfiguration = WowManagementConfigs.SLEEPING_FOR_LOOT,
             EngageMethod = WowFarmingConfiguration.EngagementMethod.Shoot,
-            AlertOnPotionUsed = true,
-            AlertOnFullBags = true,
-            AlertOnUnreadWhisper = true,
-            LogoutOnLowDynamite = false,
             UseRend = false,
             TooManyAttackersThreshold = 4
         };

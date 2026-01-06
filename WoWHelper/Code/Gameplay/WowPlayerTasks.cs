@@ -364,14 +364,14 @@ namespace WoWHelper
         // Rotates towards the waypoint or walks towards the waypoint, depending
         public async Task<bool> MoveTowardsWaypointTask()
         {
-            var waypoint = FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex];
+            var waypoint = FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex];
             float waypointDistance = Vector2.Distance(WorldState.PlayerLocation, waypoint);
             float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, waypoint);
             float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
 
             Console.WriteLine($"Heading towards waypoint {waypoint}. At {WorldState.MapX},{WorldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {WorldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
-            if (waypointDistance <= FarmingConfig.WaypointDefinition.DistanceTolerance)
+            if (waypointDistance <= FarmingConfig.LocationConfiguration.DistanceTolerance)
             {
                 Console.WriteLine($"Arrived at {waypoint} ({WorldState.MapX},{WorldState.MapY})");
                 await EndWalkForwardTask();

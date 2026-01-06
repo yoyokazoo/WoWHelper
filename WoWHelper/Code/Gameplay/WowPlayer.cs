@@ -123,6 +123,7 @@ namespace WoWHelper
         {
             KeyPoller.EscPressed += async () => {
                 Console.WriteLine("ESC detected! Performing cleanup then quitting");
+                await Task.Delay(0);
 
                 // Make sure we don't have any lingering keys pressed down
                 Keyboard.KeyUp(WowInput.MOVE_FORWARD);
@@ -401,50 +402,14 @@ namespace WoWHelper
                 }
                 else if(WorldState.AttackerCount > 1)
                 {
-                    if (FarmingConfig.Spec == WarriorSpec.Arms)
+                    if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
                     {
-                        if (WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent < WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
-                        {
-                            // Popping SS ASAP is priority
-                            continue;
-                        }
-
-                        /*
-                        if (WorldState.SweepingStrikesCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
-                        {
-                            await WowInput.PressKeyWithShift(WowInput.SHIFT_SWEEPING_STRIKES_MACRO);
-                        }
-                        */
-
-                        if (WorldState.WhirlwindCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.WHIRLWIND_RAGE_COST)
-                        {
-                            await WowInput.PressKeyWithShift(WowInput.SHIFT_WHIRLWIND_MACRO);
-                            await Task.Delay(150);
-                            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
-                            await Task.Delay(150);
-                            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
-                            await Task.Delay(150);
-                            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
-                            await Task.Delay(150);
-                            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
-                        }
-                        else if (!WorldState.WhirlwindCooledDown && !WorldState.HeroicStrikeQueued && WorldState.ResourcePercent >= WowGameplayConstants.CLEAVE_RAGE_COST)
-                        {
-                            // if WW is cooled down, prefer waiting for rage for that over cleaving
-                            await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
-                        }
+                        Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
                     }
-                    else if (FarmingConfig.Spec == WarriorSpec.Fury)
+                    else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST))
                     {
-                        if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
-                        {
-                            Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
-                        }
-                        else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST))
-                        {
-                            // Cleave only if we have enough spare rage to bloodthirst right after
-                            await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
-                        }
+                        // Cleave only if we have enough spare rage to bloodthirst right after
+                        await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAVE_MACRO);
                     }
                 }
                 else if (WorldState.AttackerCount <= 1) // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
@@ -501,15 +466,15 @@ namespace WoWHelper
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                    if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.TAB)
+                    if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.TAB)
                     {
                         Keyboard.KeyPress(WowInput.TAB_TARGET);
                     }
-                    else if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
+                    else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
                     {
                         Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
                     }
-                    else if (FarmingConfig.WaypointDefinition.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
+                    else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
                     {
                         if (targetChecks % 2 == 0)
                         {
@@ -595,7 +560,7 @@ namespace WoWHelper
                         {
                             // we've never picked a waypoint yet, so find the closest one
                             Vector2 playerLocation = new Vector2(WorldState.MapX, WorldState.MapY);
-                            CurrentWaypointIndex = FarmingConfig.WaypointDefinition.Waypoints
+                            CurrentWaypointIndex = FarmingConfig.LocationConfiguration.Waypoints
                                 .Select((p, i) => (dist: Vector2.Distance(playerLocation, p), index: i))
                                 .OrderBy(t => t.dist)
                                 .First()
@@ -603,20 +568,20 @@ namespace WoWHelper
 
                             // Circular always goes in the same direction, so if you interrupt and restart, you'll still be going the same direction.
                             // For linear let's do our best guess to pick the best direction
-                            if (FarmingConfig.WaypointDefinition.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
+                            if (FarmingConfig.LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
                             {
                                 if (CurrentWaypointIndex == 0)
                                 {
                                     WaypointTraversalDirection = 1;
                                 }
-                                else if (CurrentWaypointIndex == FarmingConfig.WaypointDefinition.Waypoints.Count - 1)
+                                else if (CurrentWaypointIndex == FarmingConfig.LocationConfiguration.Waypoints.Count - 1)
                                 {
                                     WaypointTraversalDirection = -1;
                                 }
                                 else
                                 {
-                                    var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex], FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex + 1]);
-                                    var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex], FarmingConfig.WaypointDefinition.Waypoints[CurrentWaypointIndex - 1]);
+                                    var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex], FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex + 1]);
+                                    var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex], FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex - 1]);
                                     var facingDegrees = WorldState.FacingDegrees;
                                     var forwardDiff = WowPathfinding.GetDegreesToMove(facingDegrees, forwardDegrees);
                                     var backwardsDiff = WowPathfinding.GetDegreesToMove(facingDegrees, backwardsDegrees);
@@ -641,13 +606,13 @@ namespace WoWHelper
                             // otherwise cycle through them
                             CurrentWaypointIndex += WaypointTraversalDirection;
 
-                            if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= FarmingConfig.WaypointDefinition.Waypoints.Count)
+                            if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= FarmingConfig.LocationConfiguration.Waypoints.Count)
                             {
-                                if (FarmingConfig.WaypointDefinition.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR)
+                                if (FarmingConfig.LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR)
                                 {
                                     CurrentWaypointIndex = 0;
                                 }
-                                else if (FarmingConfig.WaypointDefinition.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
+                                else if (FarmingConfig.LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
                                 {
                                     // since we detect this when we've gone out of bounds, switch direction.
                                     // first addition puts us back in bounds, but we know we're already there, so do a second addition
