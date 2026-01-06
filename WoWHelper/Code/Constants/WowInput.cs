@@ -11,7 +11,7 @@ namespace WoWHelper.Code
         public const Keys WARRIOR_CHARGE_KEY = Keys.D2;
         public const Keys WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO = Keys.D3;
         public const Keys WARRIOR_HEROIC_STRIKE_KEY = Keys.D4;
-        public const Keys WARRIOR_DYNAMITE_KEY = Keys.D5;
+        //public const Keys WARRIOR_DYNAMITE_KEY = Keys.D5;
         public const Keys WARRIOR_HEALING_POTION_KEY = Keys.D6;
         public const Keys WARRIOR_BATTLE_SHOUT_KEY = Keys.D7;
         public const Keys WARRIOR_SHOOT_MACRO = Keys.D8;
@@ -24,11 +24,11 @@ namespace WoWHelper.Code
         public const Keys WARRIOR_SHIFT_BERSERKER_RAGE_MACRO = Keys.D2;
         public const Keys WARRIOR_SHIFT_WHIRLWIND_MACRO = Keys.D3;
         public const Keys WARRIOR_SHIFT_CLEAVE_MACRO = Keys.D4;
-        public const Keys WARRIOR_SHIFT_LOGOUT_MACRO = Keys.D5;
+        //public const Keys WARRIOR_SHIFT_LOGOUT_MACRO = Keys.D5;
         public const Keys WARRIOR_SHIFT_SHIELD_WALL = Keys.D6;
         public const Keys WARRIOR_SHIFT_HEALING_TRINKET = Keys.D7;
-        public const Keys WARRIOR_SHIFT_TARGET_DUMMY = Keys.D8;
-        public const Keys WARRIOR_SHIFT_PETRIFICATION_FLASK = Keys.D9;
+        //public const Keys WARRIOR_SHIFT_TARGET_DUMMY = Keys.D8;
+        //public const Keys WARRIOR_SHIFT_PETRIFICATION_FLASK = Keys.D9;
         public const Keys WARRIOR_SHIFT_EAT_FOOD_KEY = Keys.D0;
 
         // Mage Input
@@ -72,7 +72,14 @@ namespace WoWHelper.Code
         public const Keys MAGE_SHIFT_PLUS = Keys.Oemplus;
 
 
-        // Generic Input
+        // Common Input
+        // For the sake of sharing tasks, forcing these common keys to be shared
+        public const Keys THROW_DYNAMITE = Keys.OemMinus;
+        public const Keys SHIFT_TARGET_DUMMY = Keys.OemMinus;
+
+        public const Keys LOGOUT_MACRO = Keys.Oemplus;
+        public const Keys SHIFT_PETRIFICATION_FLASK = Keys.Oemplus;
+
         public const Keys ALT_FORCE_QUIT_KEY = Keys.F4;
 
         public const Keys TURN_LEFT = Keys.A;
