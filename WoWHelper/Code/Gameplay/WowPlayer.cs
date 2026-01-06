@@ -472,7 +472,7 @@ namespace WoWHelper
                     }
                     else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
                     {
-                        Keyboard.KeyPress(WowInput.WARRIOR_FIND_TARGET_MACRO);
+                        Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
                     }
                     else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
                     {
@@ -482,7 +482,7 @@ namespace WoWHelper
                         }
                         else
                         {
-                            Keyboard.KeyPress(WowInput.WARRIOR_FIND_TARGET_MACRO);
+                            Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
                         }  
                     }
 

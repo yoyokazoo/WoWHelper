@@ -139,6 +139,7 @@
     <Compile Include="Code\Config\Definitions\WowFarmingConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowLocationConfiguration.cs" />
     <Compile Include="Code\Config\WowLocationConfigs.cs" />
+    <Compile Include="Code\Gameplay\WowCommonCombatTasks.cs" />
     <Compile Include="Code\Gameplay\WowManagementTasks.cs" />
     <Compile Include="Code\Gameplay\WowMovementTasks.cs" />
     <Compile Include="Code\Gameplay\WowPathfinding.cs" />

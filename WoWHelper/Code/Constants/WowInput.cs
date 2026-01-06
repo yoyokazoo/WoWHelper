@@ -7,12 +7,12 @@ namespace WoWHelper.Code
     public static class WowInput
     {
         // Warrior Input
-        public const Keys WARRIOR_FIND_TARGET_MACRO = Keys.D1;
+        //public const Keys WARRIOR_FIND_TARGET_MACRO = Keys.D1;
         public const Keys WARRIOR_CHARGE_KEY = Keys.D2;
         public const Keys WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO = Keys.D3;
         public const Keys WARRIOR_HEROIC_STRIKE_KEY = Keys.D4;
         //public const Keys WARRIOR_DYNAMITE_KEY = Keys.D5;
-        public const Keys WARRIOR_HEALING_POTION_KEY = Keys.D6;
+        //public const Keys WARRIOR_HEALING_POTION_KEY = Keys.D6;
         public const Keys WARRIOR_BATTLE_SHOUT_KEY = Keys.D7;
         public const Keys WARRIOR_SHOOT_MACRO = Keys.D8;
         public const Keys WARRIOR_OVERPOWER_KEY = Keys.D9;
@@ -74,6 +74,9 @@ namespace WoWHelper.Code
 
         // Common Input
         // For the sake of sharing tasks, forcing these common keys to be shared
+        public const Keys FIND_TARGET_MACRO = Keys.D0;
+        public const Keys SHIFT_HEALING_POTION = Keys.D0;
+
         public const Keys THROW_DYNAMITE = Keys.OemMinus;
         public const Keys SHIFT_TARGET_DUMMY = Keys.OemMinus;
 
