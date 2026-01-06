@@ -6,6 +6,7 @@ namespace WoWHelper.Code
 {
     public static class WowInput
     {
+        // Warrior Input
         public const Keys FIND_TARGET_MACRO = Keys.D1;
         public const Keys CHARGE_KEY = Keys.D2;
         public const Keys MORTALSTRIKE_BLOODTHIRST_MACRO = Keys.D3;
@@ -30,6 +31,48 @@ namespace WoWHelper.Code
         public const Keys SHIFT_PETRIFICATION_FLASK = Keys.D9;
         public const Keys SHIFT_EAT_FOOD_KEY = Keys.D0;
 
+        // Mage Input
+        // Using Shift Keys built into the macros instead of binding a bar to the shift keys,
+        // as it screws up regular bars if we bind a bar to shift
+
+        public const Keys MAGE_WAND = Keys.D1;
+        public const Keys MAGE_SHIFT_1 = Keys.D1;
+
+        public const Keys MAGE_FROSTBOLT = Keys.D2;
+        public const Keys MAGE_SHIFT_2 = Keys.D2;
+
+        public const Keys MAGE_FIREBLAST = Keys.D3;
+        public const Keys MAGE_SHIFT_CONE_OF_COLD = Keys.D3;
+
+        public const Keys MAGE_ARCANE_EXPLOSION = Keys.D4;
+        public const Keys MAGE_SHIFT_THROW_DYNAMITE = Keys.D4;
+
+        public const Keys MAGE_5 = Keys.D5;
+        public const Keys MAGE_SHIFT_5 = Keys.D5;
+
+        public const Keys MAGE_6 = Keys.D6;
+        public const Keys MAGE_SHIFT_6 = Keys.D6;
+
+        public const Keys MAGE_7 = Keys.D7;
+        public const Keys MAGE_SHIFT_7 = Keys.D7;
+
+        public const Keys MAGE_FROST_ARMOR = Keys.D8;
+        public const Keys MAGE_SHIFT_ARCANE_INTELLECT = Keys.D8;
+
+        public const Keys MAGE_CONJURE_WATER = Keys.D9;
+        public const Keys MAGE_SHIFT_CONJURE_FOOD = Keys.D9;
+
+        public const Keys MAGE_DRINK_WATER = Keys.D0;
+        public const Keys MAGE_SHIFT_EAT_FOOD = Keys.D0;
+
+        public const Keys MAGE_HEALTH_POTION = Keys.OemMinus;
+        public const Keys MAGE_SHIFT_MINUS = Keys.OemMinus;
+
+        public const Keys MAGE_FIND_TARGET_MACRO = Keys.Oemplus;
+        public const Keys MAGE_SHIFT_PLUS = Keys.Oemplus;
+
+
+        // Generic Input
         public const Keys ALT_FORCE_QUIT_KEY = Keys.F4;
 
         public const Keys TURN_LEFT = Keys.A;

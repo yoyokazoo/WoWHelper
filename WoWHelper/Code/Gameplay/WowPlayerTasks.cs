@@ -38,7 +38,7 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Health Potions";
             }
-            else if (WorldState.LowOnAmmo && FarmingConfig.EngageMethod == WowFarmingConfiguration.EngagementMethod.Shoot)
+            else if (WorldState.LowOnAmmo && FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Ammo";
@@ -183,12 +183,12 @@ namespace WoWHelper
             await Task.Delay(0);
             EngageAttempts = 1;
 
-            if (FarmingConfig.EngageMethod == WowFarmingConfiguration.EngagementMethod.Charge)
+            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
                 Keyboard.KeyPress(WowInput.CHARGE_KEY);
                 return true;
             }
-            else if (FarmingConfig.EngageMethod == WowFarmingConfiguration.EngagementMethod.Shoot)
+            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
             {
                 Keyboard.KeyPress(WowInput.SHOOT_MACRO);
                 return true;
@@ -201,12 +201,12 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
-            if (FarmingConfig.EngageMethod == WowFarmingConfiguration.EngagementMethod.Charge)
+            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
                 await TurnABitToTheLeftTask();
                 Keyboard.KeyPress(WowInput.CHARGE_KEY);
             }
-            else if (FarmingConfig.EngageMethod == WowFarmingConfiguration.EngagementMethod.Shoot)
+            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
             {
                 if (!WorldState.WaitingToShoot)
                 {
@@ -220,6 +220,8 @@ namespace WoWHelper
 
         public async Task<bool> StartAttackTask()
         {
+            await Task.Delay(0);
+
             // always kick things off with heroic strike macro to /startattack
             Keyboard.KeyPress(WowInput.MORTALSTRIKE_BLOODTHIRST_MACRO);
 
