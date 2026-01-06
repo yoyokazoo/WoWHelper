@@ -140,6 +140,7 @@
     <Compile Include="Code\Config\Definitions\WowLocationConfiguration.cs" />
     <Compile Include="Code\Config\WowLocationConfigs.cs" />
     <Compile Include="Code\Gameplay\WowCommonCombatTasks.cs" />
+    <Compile Include="Code\Gameplay\WowMageTasks.cs" />
     <Compile Include="Code\Gameplay\WowManagementTasks.cs" />
     <Compile Include="Code\Gameplay\WowMovementTasks.cs" />
     <Compile Include="Code\Gameplay\WowPathfinding.cs" />
@@ -151,7 +152,6 @@
     <Compile Include="Code\Gameplay\WowWorldState.cs" />
     <Compile Include="Code\Shared\PathSubdivision.cs" />
     <Compile Include="Code\Shared\TessaractSingleton.cs" />
-    <Compile Include="Code\Gameplay\WowPlayerTasks.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

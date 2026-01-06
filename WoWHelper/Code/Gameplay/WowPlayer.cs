@@ -220,13 +220,13 @@ namespace WoWHelper
                         break;
                     case PlayerState.START_BATTLE_READY_RECOVERY:
                         Console.WriteLine("Waiting until battle ready");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartBattleReadyRecoverTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(WarriorStartBattleReadyRecoverTask(),
                             PlayerState.WAIT_UNTIL_BATTLE_READY,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.WAIT_UNTIL_BATTLE_READY:
                         Console.WriteLine("Waiting until battle ready");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(WaitUntilBattleReadyTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(WarriorWaitUntilBattleReadyTask(),
                             PlayerState.CHECK_FOR_VALID_TARGET,
                             PlayerState.WAIT_UNTIL_BATTLE_READY);
                         break;
@@ -238,13 +238,13 @@ namespace WoWHelper
                         break;
                     case PlayerState.INITIATE_ENGAGE_TARGET:
                         Console.WriteLine("Trying to engage target");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(KickOffEngageTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(WarriorKickOffEngageTask(),
                             PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
                             PlayerState.CHECK_FOR_LOGOUT);
                         break;
                     case PlayerState.CONTINUE_TO_TRY_TO_ENGAGE:
                         Console.WriteLine("Continuing to engage target");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(FaceCorrectDirectionToEngageTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(WarriorFaceCorrectDirectionToEngageTask(),
                             PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
                             PlayerState.CHECK_FOR_LOGOUT);
                         break;
@@ -291,7 +291,7 @@ namespace WoWHelper
             bool tooManyAttackersActionsTaken = false;
             bool startOfCombatWiggled = false;
 
-            await StartAttackTask();
+            await WarriorStartAttackTask();
             
             do
             {
@@ -319,13 +319,13 @@ namespace WoWHelper
                 }
 
                 // First do our "Make sure we're not standing around doing nothing" checks
-                if (await MakeSureWeAreAttackingEnemyTask())
+                if (await WarriorMakeSureWeAreAttackingEnemyTask())
                 {
                     continue;
                 }
 
                 // Next, check if we need to pop any big cooldowns
-                if (!tooManyAttackersActionsTaken && await TooManyAttackersTask())
+                if (!tooManyAttackersActionsTaken && await WarriorTooManyAttackersTask())
                 {
                     tooManyAttackersActionsTaken = true;
                     continue;
@@ -365,7 +365,7 @@ namespace WoWHelper
                     continue;
                 }
 
-                if (!healingTrinketUsed && await UseDiamondFlaskTask())
+                if (!healingTrinketUsed && await WarriorUseDiamondFlaskTask())
                 {
                     healingTrinketUsed = true;
                     continue;
@@ -379,7 +379,7 @@ namespace WoWHelper
 
                 if (FarmingConfig.PreemptFear && !CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS))
                 {
-                    await StartOfCombatBerserkerRage();
+                    await WarriorStartOfCombatBerserkerRage();
                     BerserkerRageTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
 
