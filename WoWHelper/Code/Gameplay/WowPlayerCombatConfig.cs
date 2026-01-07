@@ -58,16 +58,13 @@ namespace WoWHelper
 
         public bool CanEngageTarget()
         {
-            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
+            switch (FarmingConfig.EngageMethod)
             {
-                return WorldState.CanChargeTarget;
+                case WowLocationConfiguration.EngagementMethod.Charge: return WorldState.CanChargeTarget;
+                case WowLocationConfiguration.EngagementMethod.Shoot: return WorldState.CanShootTarget;
+                case WowLocationConfiguration.EngagementMethod.Frostbolt: return WorldState.CanShootTarget;
+                default: throw new System.NotImplementedException();
             }
-            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
-            {
-                return WorldState.CanShootTarget;
-            }
-
-            return false;
         }
     }
 }

@@ -37,6 +37,11 @@ namespace WoWHelper
         public bool BagsAreFull { get; private set; }
         public bool IsPlayerPetrified { get; private set; }
         public bool HasUnseenWhisper { get; private set; }
+        public bool CanFrostboltTarget { get; private set; }
+        public bool ShouldRefreshMageArmor { get; private set; }
+        public bool ShouldRefreshArcaneIntellect { get; private set; }
+        public bool ShouldSummonWater { get; private set; }
+        public bool ShouldSummonFood { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -80,6 +85,7 @@ namespace WoWHelper
             UpdateFacingDegrees(bmp);
 
             UpdateMultiBoolOne(bmp);
+            UpdateMultiBoolTwo(bmp);
             UpdateMultiIntOne(bmp);
             UpdateMultiIntTwo(bmp);
 
@@ -170,6 +176,19 @@ namespace WoWHelper
             HeroicStrikeQueued = b1;
             IsPlayerPetrified = b2;
             HasUnseenWhisper = b3;
+            CanFrostboltTarget = b4;
+            ShouldRefreshMageArmor = b5;
+            ShouldRefreshArcaneIntellect = b6;
+            ShouldSummonWater = b7;
+            ShouldSummonFood = b8;
+        }
+
+        public void UpdateMultiBoolOne(Bitmap bmp)
+        {
+            Color color = bmp.GetPixel(WowImageConstants.MULTI_BOOL_ONE_POSITION.X, WowImageConstants.MULTI_BOOL_ONE_POSITION.Y);
+            DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
+            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
+            DecodeByte(color.B, out var b1, out var b2, out var b3, out var b4, out var b5, out var b6, out var b7, out var b8);
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)
