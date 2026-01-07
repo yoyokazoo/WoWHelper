@@ -8,6 +8,23 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
+        // ensureValidState updates state before checking
+        // Set to false only if you're sure we haven't clicked a button between the last world state update
+        public async Task<bool> WaitForGlobalCooldownTask(bool ensureValidState = true)
+        {
+            if (ensureValidState)
+            {
+                await UpdateWorldStateAsync();
+            }
+
+            while (!WorldState.GCDCooledDown)
+            {
+                await UpdateWorldStateAsync();
+            }
+
+            return true;
+        }
+
         public async Task<bool> ThrowDynamiteTask()
         {
             bool shouldThrowDynamite = WorldState.AttackerCount > 1;

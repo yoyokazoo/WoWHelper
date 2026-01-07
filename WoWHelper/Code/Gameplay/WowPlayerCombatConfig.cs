@@ -11,7 +11,7 @@ namespace WoWHelper
             switch (FarmingConfig.CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorStartBattleReadyRecoverTask();
-                case Code.Gameplay.WowCombatConfiguration.Mage: return await WarriorStartBattleReadyRecoverTask();
+                case Code.Gameplay.WowCombatConfiguration.Mage: return await MageStartBattleReadyRecoverTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -21,7 +21,7 @@ namespace WoWHelper
             switch (FarmingConfig.CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorWaitUntilBattleReadyTask();
-                case Code.Gameplay.WowCombatConfiguration.Mage: return await WarriorWaitUntilBattleReadyTask();
+                case Code.Gameplay.WowCombatConfiguration.Mage: return await MageWaitUntilBattleReadyTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -31,7 +31,7 @@ namespace WoWHelper
             switch (FarmingConfig.CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorKickOffEngageTask();
-                case Code.Gameplay.WowCombatConfiguration.Mage: return await WarriorKickOffEngageTask();
+                case Code.Gameplay.WowCombatConfiguration.Mage: return await MageKickOffEngageTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -41,7 +41,7 @@ namespace WoWHelper
             switch (FarmingConfig.CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorFaceCorrectDirectionToEngageTask();
-                case Code.Gameplay.WowCombatConfiguration.Mage: return await WarriorFaceCorrectDirectionToEngageTask();
+                case Code.Gameplay.WowCombatConfiguration.Mage: return await MageFaceCorrectDirectionToEngageTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -51,7 +51,7 @@ namespace WoWHelper
             switch (FarmingConfig.CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorCombatLoopTask();
-                case Code.Gameplay.WowCombatConfiguration.Mage: return await WarriorCombatLoopTask();
+                case Code.Gameplay.WowCombatConfiguration.Mage: return await MageCombatLoopTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -62,7 +62,7 @@ namespace WoWHelper
             {
                 case WowLocationConfiguration.EngagementMethod.Charge: return WorldState.CanChargeTarget;
                 case WowLocationConfiguration.EngagementMethod.Shoot: return WorldState.CanShootTarget;
-                case WowLocationConfiguration.EngagementMethod.Frostbolt: return WorldState.CanShootTarget;
+                case WowLocationConfiguration.EngagementMethod.Frostbolt: return WorldState.CanFrostboltTarget;
                 default: throw new System.NotImplementedException();
             }
         }

@@ -354,8 +354,11 @@ function HasBuffNamed(buffName)
     end
 end
 
-function IsOverpowerUsable()
-    return IsUsableSpell(7384) -- overpower rank 1
+-- overpower rank 1, 7384
+-- fireblast rank 1, 2136
+-- cone of cold rank 1, 
+function IsSpellUsable(spellId)
+    return IsUsableSpell(spellId)
 end
 
 function AreEnemyNameplatesTurnedOn()
@@ -502,6 +505,11 @@ function IsPlayerPetrified()
     return false
 end
 
+function IsPlayerCasting()
+    return UnitCastingInfo("player") ~= nil
+        or UnitChannelInfo("player") ~= nil
+end
+
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = HasBuffNamed("Battle Shout")
@@ -510,7 +518,7 @@ function GetMultiBoolOne()
     local boolR5 = TargetHasRend()
     local boolR6 = CanShootTarget()
     local boolR7 = AreWeLowOnAmmo()
-    local boolR8 = IsOverpowerUsable()
+    local boolR8 = IsSpellUsable(7384) -- overpower rank 1, 7384
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
 
@@ -540,14 +548,14 @@ function GetMultiBoolOne()
 end
 
 function GetMultiBoolTwo()
-    local boolR1 = false
-    local boolR2 = false
-    local boolR3 = false
+    local boolR1 = IsInMeleeRange()
+    local boolR2 = SpellIsCooledDown(2136) -- fireblast rank 1, 2136
+    local boolR3 = IsPlayerCasting()
     local boolR4 = false
     local boolR5 = false
     local boolR6 = false
     local boolR7 = false
-    local boolR8 = IsInMeleeRange()
+    local boolR8 = IsPlayerCasting()
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
 
@@ -558,7 +566,7 @@ function GetMultiBoolTwo()
     local boolG5 = false
     local boolG6 = false
     local boolG7 = false
-    local boolG8 = false
+    local boolG8 = IsPlayerCasting()
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
@@ -569,7 +577,7 @@ function GetMultiBoolTwo()
     local boolB5 = false
     local boolB6 = false
     local boolB7 = false
-    local boolB8 = false
+    local boolB8 = IsPlayerCasting()
 
     local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
 
