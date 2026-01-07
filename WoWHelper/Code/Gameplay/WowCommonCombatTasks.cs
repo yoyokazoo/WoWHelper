@@ -52,6 +52,7 @@ namespace WoWHelper
                 {
                     SlackHelper.SendMessageToChannel("Potion used!");
                 }
+                await Task.Delay(200); // there's a brief, non-gcd limiter that prevents clicking everything simultaneously
                 await WowInput.PressKeyWithShift(WowInput.SHIFT_HEALING_POTION);
             }
 

@@ -120,6 +120,25 @@ function SpellIsInRangeAndCooledDown(spellId)
     return false
 end
 
+function SpellIsInRange(spellId)
+    local unit = "target"
+
+    -- Resolve spell name from its ID
+    local spellName = GetSpellInfo(spellId)
+    if not spellName then
+        -- Should never happen unless spell is unknown (e.g., very low level)
+        return false
+    end
+
+    -- 1) Range check
+    local inRange = IsSpellInRange(spellName, unit)
+    if inRange ~= 1 then
+        return false
+    end
+
+    return true
+end
+
 -- 100 is level 1 charge, but still works since range doesnt change and shares cooldown
 function CanChargeTarget()
     if not ShouldWeAttackTarget() then
@@ -147,7 +166,8 @@ function CanFrostboltTarget()
         return false
     end
 
-    return SpellIsInRangeAndCooledDown(116)
+    -- it goes on cooldown right when we start casting it, so we can assume its cooled down
+    return SpellIsInRange(116)
 end
 
 function WaitingToShoot()
@@ -370,8 +390,9 @@ end
 -- greater healing potion, level 21, 1710
 -- superior healing potion, level 35, 3928
 -- major healing potion, level 45, 13446
+-- TODO: pick dynamically based on player level
 function AreWeLowOnHealthPotions()
-    local healthPotCount = GetItemCount(13446, false)
+    local healthPotCount = GetItemCount(858, false)
     return healthPotCount < 2
 end
 
@@ -436,9 +457,11 @@ function TargetHasRend()
   return false
 end
 
--- Look at Rend, since it has no cooldown beyond GCD
+-- Look at Rend, since it has no cooldown beyond GCD (772)
+-- SpellIsCooledDown doesn't work if the character doesn't have the spell, so we need to find something everyone has
+-- temporarily switching to frost armor (6116)
 function IsGlobalCooldownCooledDown()
-    return SpellIsCooledDown(772)
+    return SpellIsCooledDown(6116)
 end
 
 -- WW rank 1, 1680

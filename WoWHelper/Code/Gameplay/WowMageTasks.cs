@@ -43,6 +43,12 @@ namespace WoWHelper
                 }
                 */
 
+                // First do our "Make sure we're not standing around doing nothing" checks
+                if (await MageMakeSureWeAreAttackingEnemyTask())
+                {
+                    continue;
+                }
+
                 // Next, check if we need to pop any big cooldowns
                 if (!tooManyAttackersActionsTaken && await MageTooManyAttackersTask())
                 {
@@ -78,7 +84,7 @@ namespace WoWHelper
                 }
 
                 // Finally, if we've made it this far, do standard combat actions
-                if (WorldState.ShouldRefreshMageArmor)
+                if (!WorldState.MageArmorActive)
                 {
                     Keyboard.KeyPress(WowInput.MAGE_FROST_ARMOR);
                 }
@@ -135,14 +141,14 @@ namespace WoWHelper
                 // TODO: make this a bit smarter so we take mana pool into account,
                 // and we don't try to wait to conjure food/water when we could get aggroed
                 bool buffedOrConjured = false;
-                if (WorldState.ShouldRefreshArcaneIntellect)
+                if (!WorldState.ArcaneIntellectActive)
                 {
                     await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.MAGE_SHIFT_ARCANE_INTELLECT);
                     buffedOrConjured = true;
                 }
 
-                if (WorldState.ShouldRefreshMageArmor)
+                if (!WorldState.MageArmorActive)
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.MAGE_FROST_ARMOR);
@@ -153,7 +159,7 @@ namespace WoWHelper
                 {
                     await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.MAGE_SHIFT_CONJURE_FOOD);
-                    await Task.Delay(1500);
+                    await Task.Delay(3500);
                     buffedOrConjured = true;
                 }
 
@@ -161,12 +167,13 @@ namespace WoWHelper
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.MAGE_CONJURE_WATER);
-                    await Task.Delay(1500);
+                    await Task.Delay(3500);
                     buffedOrConjured = true;
                 }
 
                 if (buffedOrConjured)
                 {
+                    Keyboard.KeyPress(WowInput.MAGE_DRINK_WATER);
                     return false;
                 }
             }
@@ -179,7 +186,9 @@ namespace WoWHelper
             await Task.Delay(0);
             EngageAttempts = 1;
 
+            Console.WriteLine($"MageKickOffEngageTask, clicking frostbolt");
             Keyboard.KeyPress(WowInput.MAGE_FROSTBOLT);
+            await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
             return true;
         }
 
@@ -187,13 +196,37 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
+            Console.WriteLine($"MageFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}");
             if (!WorldState.IsCurrentlyCasting)
             {
                 await TurnABitToTheLeftTask();
                 Keyboard.KeyPress(WowInput.MAGE_FROSTBOLT);
+                await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
             }
 
             return CanEngageTarget();
+        }
+
+        public async Task<bool> MageMakeSureWeAreAttackingEnemyTask()
+        {
+            bool attackerJustDied = PreviousWorldState?.AttackerCount > WorldState.AttackerCount && WorldState.AttackerCount > 0;
+            bool tooFarAway = WorldState.TooFarAway;
+            bool facingWrongWay = WorldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
+            bool targetNeedsToBeInFront = WorldState.TargetNeedsToBeInFront;
+
+            if (facingWrongWay || targetNeedsToBeInFront)
+            {
+                // one of the mobs just died, scoot back to make sure the next mob is in front of you
+                await ScootBackwardsTask();
+            }
+
+            if (tooFarAway)
+            {
+                // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
+                Keyboard.KeyPress(WowInput.MAGE_CLEAR_TARGET_MACRO);
+            }
+
+            return attackerJustDied || tooFarAway || facingWrongWay || targetNeedsToBeInFront;
         }
 
         // Eventually we want to nova, blink, run, but until then just send a slack message and keep blasting

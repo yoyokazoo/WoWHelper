@@ -187,7 +187,7 @@ namespace WoWHelper
                             PlayerState.START_BATTLE_READY_RECOVERY);
                         break;
                     case PlayerState.START_LOGGING_OUT:
-                        Console.WriteLine("Started logging out");
+                        Console.WriteLine($"Started logging out ({LogoutReason})");
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartLogoutTask(),
                             PlayerState.WAITING_TO_LOG_OUT,
                             PlayerState.IN_CORE_COMBAT_LOOP);
@@ -204,7 +204,7 @@ namespace WoWHelper
                         CurrentPlayerState = PlayerState.EXITING_CORE_GAMEPLAY_LOOP;
                         break;
                     case PlayerState.START_BATTLE_READY_RECOVERY:
-                        Console.WriteLine("Waiting until battle ready");
+                        Console.WriteLine("Starting battle ready recovery");
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartBattleReadyTask(),
                             PlayerState.WAIT_UNTIL_BATTLE_READY,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);

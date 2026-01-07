@@ -490,8 +490,10 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(36.30f, 53.50f)
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.TAB,
-            DistanceTolerance = 0.5f
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.2f,
+            EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
+            TooManyAttackersThreshold = 2,
         };
     }
 }

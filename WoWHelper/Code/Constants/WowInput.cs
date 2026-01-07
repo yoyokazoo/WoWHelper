@@ -50,26 +50,17 @@ namespace WoWHelper.Code
         public const Keys MAGE_5 = Keys.D5;
         public const Keys MAGE_SHIFT_5 = Keys.D5;
 
-        public const Keys MAGE_6 = Keys.D6;
-        public const Keys MAGE_SHIFT_6 = Keys.D6;
+        public const Keys MAGE_FROST_ARMOR = Keys.D6;
+        public const Keys MAGE_SHIFT_ARCANE_INTELLECT = Keys.D6;
 
-        public const Keys MAGE_7 = Keys.D7;
-        public const Keys MAGE_SHIFT_7 = Keys.D7;
+        public const Keys MAGE_CONJURE_WATER = Keys.D7;
+        public const Keys MAGE_SHIFT_CONJURE_FOOD = Keys.D7;
 
-        public const Keys MAGE_FROST_ARMOR = Keys.D8;
-        public const Keys MAGE_SHIFT_ARCANE_INTELLECT = Keys.D8;
+        public const Keys MAGE_DRINK_WATER = Keys.D8;
+        public const Keys MAGE_SHIFT_EAT_FOOD = Keys.D8;
 
-        public const Keys MAGE_CONJURE_WATER = Keys.D9;
-        public const Keys MAGE_SHIFT_CONJURE_FOOD = Keys.D9;
-
-        public const Keys MAGE_DRINK_WATER = Keys.D0;
-        public const Keys MAGE_SHIFT_EAT_FOOD = Keys.D0;
-
-        public const Keys MAGE_HEALTH_POTION = Keys.OemMinus;
-        public const Keys MAGE_SHIFT_MINUS = Keys.OemMinus;
-
-        public const Keys MAGE_FIND_TARGET_MACRO = Keys.Oemplus;
-        public const Keys MAGE_SHIFT_PLUS = Keys.Oemplus;
+        public const Keys MAGE_CLEAR_TARGET_MACRO = Keys.D9; // TODO: combine these to common
+        public const Keys MAGE_SHIFT_9 = Keys.D9;
 
 
         // Common Input

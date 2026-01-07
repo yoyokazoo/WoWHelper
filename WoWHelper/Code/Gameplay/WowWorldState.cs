@@ -38,8 +38,8 @@ namespace WoWHelper
         public bool IsPlayerPetrified { get; private set; }
         public bool HasUnseenWhisper { get; private set; }
         public bool CanFrostboltTarget { get; private set; }
-        public bool ShouldRefreshMageArmor { get; private set; }
-        public bool ShouldRefreshArcaneIntellect { get; private set; }
+        public bool MageArmorActive { get; private set; }
+        public bool ArcaneIntellectActive { get; private set; }
         public bool ShouldSummonWater { get; private set; }
         public bool ShouldSummonFood { get; private set; }
         public bool IsInMeleeRange { get; private set; }
@@ -180,8 +180,8 @@ namespace WoWHelper
             IsPlayerPetrified = b2;
             HasUnseenWhisper = b3;
             CanFrostboltTarget = b4;
-            ShouldRefreshMageArmor = b5;
-            ShouldRefreshArcaneIntellect = b6;
+            MageArmorActive = b5;
+            ArcaneIntellectActive = b6;
             ShouldSummonWater = b7;
             ShouldSummonFood = b8;
         }
