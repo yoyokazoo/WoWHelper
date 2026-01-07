@@ -1,14 +1,230 @@
 ﻿using InputManager;
 using System;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
+using WoWHelper.Code.WorldState;
+using static WoWHelper.Code.WowPlayerStates;
 
 namespace WoWHelper
 {
     public partial class WowPlayer
     {
+        public async Task<bool> PathfindingLoopTask()
+        {
+            Console.WriteLine("Kicking off core pathfinding loop");
+
+            bool stationaryJumpAttemptedOnce = false;
+            bool stationaryWiggleAttemptedOnce = false;
+            bool stationaryWiggleAttemptedTwice = false;
+            bool stationaryAlertSent = false;
+            long lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+            await FocusOnWindowTask();
+
+            // Count loops of the waypoints, if we haven't found a target in N loops, error out
+            int maxTargetChecks = 1000;
+            int targetChecks = 0;
+            //bool lookingForDangerousTarget = false;
+            while (targetChecks < maxTargetChecks)
+            {
+                await UpdateWorldStateAsync();
+
+                // don't drown
+                if (WorldState.Underwater)
+                {
+                    await GetOutOfWater();
+                }
+
+                // ping if unseen message
+                if (FarmingConfig.AlertOnUnreadWhisper && !(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
+                {
+                    SlackHelper.SendMessageToChannel($"Unseen Whisper!");
+                }
+
+                if (!CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
+                {
+                    LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+                    if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.TAB)
+                    {
+                        Keyboard.KeyPress(WowInput.TAB_TARGET);
+                    }
+                    else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
+                    {
+                        Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
+                    }
+                    else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
+                    {
+                        if (targetChecks % 2 == 0)
+                        {
+                            Keyboard.KeyPress(WowInput.TAB_TARGET);
+                        }
+                        else
+                        {
+                            Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
+                        }
+                    }
+
+                    targetChecks++;
+                }
+
+                if (!CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
+                {
+                    LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    Keyboard.KeyPress(WowInput.JUMP);
+                }
+
+                if (WorldState.IsInCombat)
+                {
+                    await EndWalkForwardTask();
+                    // return true if we can charge, false if we're already in combat
+                    return false;
+                }
+
+                if (CanEngageTarget())
+                {
+                    await EndWalkForwardTask();
+                    return true;
+                }
+
+                // If we haven't moved in a long time, alert
+                if (PreviousWorldState?.MapX != WorldState.MapX || PreviousWorldState?.MapY != WorldState.MapY)
+                {
+                    lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                }
+
+
+
+                if (!stationaryJumpAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
+                {
+                    await AvoidObstacleByJumping();
+                    stationaryJumpAttemptedOnce = true;
+                }
+
+                if (!stationaryWiggleAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
+                {
+                    // first wiggle try left
+                    await AvoidObstacle(left: true);
+                    stationaryWiggleAttemptedOnce = true;
+                }
+
+                if (!stationaryWiggleAttemptedTwice && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE))
+                {
+                    // second wiggle try right
+                    await AvoidObstacle(left: false);
+                    stationaryWiggleAttemptedTwice = true;
+                }
+
+                if (!stationaryAlertSent && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_ALERT))
+                {
+                    //SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
+                    //stationaryAlertSent = true;
+                    LogoutTriggered = true;
+                    LogoutReason = "Stuck for a long time, couldn't wiggle out";
+                    return true;
+                }
+
+                if (CanEngageTarget() || WorldState.IsInCombat)
+                {
+                    await EndWalkForwardTask();
+                    // return true if we can charge/shoot, false if we're already in combat
+                    return !WorldState.IsInCombat;
+                }
+
+                switch (CurrentPathfindingState)
+                {
+                    case PathfindingState.PICKING_NEXT_WAYPOINT:
+                        Console.WriteLine($"Picking next waypoint");
+                        if (CurrentWaypointIndex == -1)
+                        {
+                            // we've never picked a waypoint yet, so find the closest one
+                            Vector2 playerLocation = new Vector2(WorldState.MapX, WorldState.MapY);
+                            CurrentWaypointIndex = FarmingConfig.LocationConfiguration.Waypoints
+                                .Select((p, i) => (dist: Vector2.Distance(playerLocation, p), index: i))
+                                .OrderBy(t => t.dist)
+                                .First()
+                                .index;
+
+                            // Circular always goes in the same direction, so if you interrupt and restart, you'll still be going the same direction.
+                            // For linear let's do our best guess to pick the best direction
+                            if (FarmingConfig.LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
+                            {
+                                if (CurrentWaypointIndex == 0)
+                                {
+                                    WaypointTraversalDirection = 1;
+                                }
+                                else if (CurrentWaypointIndex == FarmingConfig.LocationConfiguration.Waypoints.Count - 1)
+                                {
+                                    WaypointTraversalDirection = -1;
+                                }
+                                else
+                                {
+                                    var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex], FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex + 1]);
+                                    var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex], FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex - 1]);
+                                    var facingDegrees = WorldState.FacingDegrees;
+                                    var forwardDiff = WowPathfinding.GetDegreesToMove(facingDegrees, forwardDegrees);
+                                    var backwardsDiff = WowPathfinding.GetDegreesToMove(facingDegrees, backwardsDegrees);
+
+                                    if (backwardsDiff < forwardDiff)
+                                    {
+                                        WaypointTraversalDirection = -1;
+                                    }
+
+                                    Console.WriteLine("Forward/Backwards/Facing/AbsFor/AbsBack");
+                                    Console.WriteLine(forwardDegrees);
+                                    Console.WriteLine(backwardsDegrees);
+                                    Console.WriteLine(facingDegrees);
+                                    Console.WriteLine(forwardDiff);
+                                    Console.WriteLine(backwardsDiff);
+
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // otherwise cycle through them
+                            CurrentWaypointIndex += WaypointTraversalDirection;
+
+                            if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= FarmingConfig.LocationConfiguration.Waypoints.Count)
+                            {
+                                if (FarmingConfig.LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR)
+                                {
+                                    CurrentWaypointIndex = 0;
+                                }
+                                else if (FarmingConfig.LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
+                                {
+                                    // since we detect this when we've gone out of bounds, switch direction.
+                                    // first addition puts us back in bounds, but we know we're already there, so do a second addition
+                                    WaypointTraversalDirection *= -1;
+                                    CurrentWaypointIndex += WaypointTraversalDirection;
+                                    CurrentWaypointIndex += WaypointTraversalDirection;
+                                }
+                            }
+                        }
+
+                        CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
+                        break;
+                    case PathfindingState.MOVING_TOWARDS_WAYPOINT:
+                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(MoveTowardsWaypointTask(),
+                            PathfindingState.PICKING_NEXT_WAYPOINT,
+                            PathfindingState.MOVING_TOWARDS_WAYPOINT);
+                        break;
+                }
+            }
+
+            SlackHelper.SendMessageToChannel($"Haven't found a target in ~4 minutes.  Something wrong?");
+            Console.WriteLine("Exited Pathfinding loop.  Too many loops without a successful target find.");
+            LogoutTriggered = true;
+            LogoutReason = "4 minutes without finding a target";
+
+            return true;
+        }
+
         // Returns true if we've reached the waypoint
         // Returns false if we haven't yet reached the waypoint
         // Rotates towards the waypoint or walks towards the waypoint, depending
