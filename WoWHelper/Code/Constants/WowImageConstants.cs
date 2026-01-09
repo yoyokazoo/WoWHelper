@@ -19,7 +19,7 @@ namespace WoWHelper
         public const int BOOL_TOP_COORD = TEXT_TOP_COORD;
         public const int BOOL_SECTION_HEIGHT = TEXT_BOX_HEIGHT;
 
-        private static readonly Color ERROR_TEXT_COLOR = Color.FromArgb(255, 25, 25);
+        public static readonly Color ERROR_TEXT_COLOR = Color.FromArgb(255, 25, 25);
 
         public static readonly ImageMatchColorPositions FACING_WRONG_WAY_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {
             new ColorPosition(1529, 217, ERROR_TEXT_COLOR),
@@ -37,6 +37,18 @@ namespace WoWHelper
             new ColorPosition(1506, 216, ERROR_TEXT_COLOR),
             new ColorPosition(1524, 218, ERROR_TEXT_COLOR),
             new ColorPosition(1531, 219, ERROR_TEXT_COLOR),
+        });
+
+        public static readonly ImageMatchColorPositions INVALID_TARGET_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {
+            new ColorPosition(1637, 217, ERROR_TEXT_COLOR),
+            new ColorPosition(1654, 221, ERROR_TEXT_COLOR),
+            new ColorPosition(1662, 216, ERROR_TEXT_COLOR),
+        });
+
+        public static readonly ImageMatchColorPositions OUT_OF_RANGE_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {
+            new ColorPosition(1637, 217, ERROR_TEXT_COLOR),
+            new ColorPosition(1654, 221, ERROR_TEXT_COLOR),
+            new ColorPosition(1662, 216, ERROR_TEXT_COLOR),
         });
 
         private static readonly Color LOGIN_SCREEN_COLOR_ONE = Color.FromArgb(241, 221, 175);

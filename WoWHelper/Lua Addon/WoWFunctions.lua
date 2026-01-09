@@ -434,7 +434,7 @@ end
 -- Level 45 Conjured Sweet Roll, 8076
 -- Level 55 Conjured Cinnamon Roll, 22895
 function ShouldWeSummonFood()
-    local foodCount = GetItemCount(5349, false)
+    local foodCount = GetItemCount(1113, false)
     return foodCount < 2
 end
 

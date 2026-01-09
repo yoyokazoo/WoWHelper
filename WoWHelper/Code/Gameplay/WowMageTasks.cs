@@ -173,7 +173,6 @@ namespace WoWHelper
 
                 if (buffedOrConjured)
                 {
-                    Keyboard.KeyPress(WowInput.MAGE_DRINK_WATER);
                     return false;
                 }
             }
@@ -213,6 +212,9 @@ namespace WoWHelper
             bool tooFarAway = WorldState.TooFarAway;
             bool facingWrongWay = WorldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
             bool targetNeedsToBeInFront = WorldState.TargetNeedsToBeInFront;
+            bool invalidTarget = WorldState.InvalidTarget;
+
+            Console.WriteLine($"MageMakeSureWeAreAttackingEnemyTask: {attackerJustDied} {tooFarAway} {facingWrongWay} {targetNeedsToBeInFront} {invalidTarget}");
 
             if (facingWrongWay || targetNeedsToBeInFront)
             {
@@ -220,13 +222,13 @@ namespace WoWHelper
                 await ScootBackwardsTask();
             }
 
-            if (tooFarAway)
+            if (tooFarAway || invalidTarget)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
                 Keyboard.KeyPress(WowInput.MAGE_CLEAR_TARGET_MACRO);
             }
 
-            return attackerJustDied || tooFarAway || facingWrongWay || targetNeedsToBeInFront;
+            return attackerJustDied || tooFarAway || facingWrongWay || targetNeedsToBeInFront || invalidTarget;
         }
 
         // Eventually we want to nova, blink, run, but until then just send a slack message and keep blasting

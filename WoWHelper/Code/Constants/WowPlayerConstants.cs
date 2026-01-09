@@ -8,7 +8,7 @@
         public const long FARM_TIME_LIMIT_MILLIS = 7 * 60 * 60 * 1000; // 7 hours
 
         public const int STOP_RESTING_HP_THRESHOLD = 94;
-        public const int STOP_RESTING_MP_THRESHOLD = 90;
+        public const int STOP_RESTING_MP_THRESHOLD = 98;
 
         public const int EAT_FOOD_HP_THRESHOLD = 90;
         public const int DRINK_WATER_MP_THRESHOLD = 80;

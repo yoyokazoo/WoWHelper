@@ -279,6 +279,8 @@
     <Content Include="Source Images\FacingWrongWay.bmp" />
     <Content Include="Source Images\HpPercent100.bmp" />
     <Content Include="Source Images\HpPercent98.bmp" />
+    <Content Include="Source Images\invalidtarget.bmp" />
+    <Content Include="Source Images\lighttargetneedstobeinfront.bmp" />
     <Content Include="Source Images\login screen.bmp" />
     <Content Include="Source Images\NoBattleshout.bmp" />
     <Content Include="Source Images\NumbersAsColors.bmp" />

@@ -241,6 +241,7 @@ namespace WoWHelper
             bool tooFarAway = WorldState.TooFarAway;
             bool facingWrongWay = WorldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
             bool targetNeedsToBeInFront = WorldState.TargetNeedsToBeInFront;
+            bool invalidTarget = WorldState.InvalidTarget;
 
             // now since we have more accurate "are they in front" checking, try not backing up if attacker just died
             if (/*attackerJustDied || */facingWrongWay || targetNeedsToBeInFront)
@@ -249,7 +250,7 @@ namespace WoWHelper
                 await ScootBackwardsTask();
             }
 
-            if (tooFarAway)
+            if (tooFarAway || invalidTarget)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
                 Keyboard.KeyPress(WowInput.WARRIOR_CLEAR_TARGET_MACRO);
@@ -261,7 +262,7 @@ namespace WoWHelper
                 Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
             }
 
-            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront;
+            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || invalidTarget;
         }
 
         public async Task<bool> WarriorTooManyAttackersTask()

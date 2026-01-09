@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.SymbolStore;
 using System.Drawing;
 using System.Numerics;
+using WindowsGameAutomationTools.ImageDetection;
 using WindowsGameAutomationTools.Images;
 
 namespace WoWHelper
@@ -49,6 +50,8 @@ namespace WoWHelper
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
         public bool TargetNeedsToBeInFront { get; private set; }
+        public bool InvalidTarget { get; private set; }
+        public bool OutOfRange { get; private set; }
         public bool OnLoginScreen { get; private set; }
         public bool Underwater { get; private set; }
 
@@ -92,9 +95,8 @@ namespace WoWHelper
             UpdateMultiIntOne(bmp);
             UpdateMultiIntTwo(bmp);
 
-            UpdateFacingWrongWay(bmp);
-            UpdateTooFarAway(bmp);
-            UpdateTargetNeedsToBeInFront(bmp);
+            UpdateRedErrorTextMessages(bmp);
+
             UpdateOnLoginScreen(bmp);
             UpdateBreathBar(bmp);
         }
@@ -214,19 +216,13 @@ namespace WoWHelper
             AttackerCount = color.R;
         }
 
-        public void UpdateFacingWrongWay(Bitmap bmp)
+        public void UpdateRedErrorTextMessages(Bitmap bmp)
         {
-            FacingWrongWay = WowImageConstants.FACING_WRONG_WAY_POSITIONS.MatchesSourceImage(bmp);
-        }
-
-        public void UpdateTooFarAway(Bitmap bmp)
-        {
-            TooFarAway = WowImageConstants.TOO_FAR_AWAY_POSITIONS.MatchesSourceImage(bmp);
-        }
-
-        public void UpdateTargetNeedsToBeInFront(Bitmap bmp)
-        {
-            TargetNeedsToBeInFront = WowImageConstants.TARGET_NEEDS_TO_BE_IN_FRONT_POSITIONS.MatchesSourceImage(bmp);
+            FacingWrongWay = MatchesErrorTextColor(bmp, WowImageConstants.FACING_WRONG_WAY_POSITIONS);
+            TooFarAway = MatchesErrorTextColor(bmp, WowImageConstants.TOO_FAR_AWAY_POSITIONS);
+            TargetNeedsToBeInFront = MatchesErrorTextColor(bmp, WowImageConstants.TARGET_NEEDS_TO_BE_IN_FRONT_POSITIONS);
+            InvalidTarget = MatchesErrorTextColor(bmp, WowImageConstants.INVALID_TARGET_POSITIONS);
+            OutOfRange = MatchesErrorTextColor(bmp, WowImageConstants.OUT_OF_RANGE_POSITIONS);
         }
 
         public void UpdateOnLoginScreen(Bitmap bmp)
@@ -237,6 +233,30 @@ namespace WoWHelper
         public void UpdateBreathBar(Bitmap bmp)
         {
             Underwater = WowImageConstants.BREATH_BAR_SCREEN_POSITIONS.MatchesSourceImage(bmp);
+        }
+
+        public bool MatchesErrorTextColor(Bitmap bmp, ImageMatchColorPositions positions)
+        {
+            foreach (var position in positions.ColorPositions)
+            {
+                var color = bmp.GetPixel(position.X, position.Y);
+                if (color.R < WowImageConstants.ERROR_TEXT_COLOR.R)
+                {
+                    return false;
+                }
+
+                if (color.G != color.B)
+                {
+                    return false;
+                }
+
+                if (color.G > color.R)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
