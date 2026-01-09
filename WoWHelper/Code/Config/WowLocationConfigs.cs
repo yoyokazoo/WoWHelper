@@ -458,7 +458,7 @@ namespace WoWHelper.Code.WorldState
             DistanceTolerance = 0.5f
         };
 
-        public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRACE_WAYPOINTS = new WowLocationConfiguration
+        public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
             {
@@ -470,8 +470,10 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(56.60f, 22.00f)
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
-            DistanceTolerance = 0.5f
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.2f,
+            EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
+            TooManyAttackersThreshold = 2,
         };
 
         public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration { 
