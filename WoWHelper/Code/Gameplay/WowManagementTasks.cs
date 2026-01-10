@@ -53,6 +53,11 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = $"Bags are full!";
             }
+            else if (!WorldState.EnemyNameplatesAreTurnedOn)
+            {
+                LogoutTriggered = true;
+                LogoutReason = $"Enemy nameplates aren't turned on!";
+            }
 
             // also send once-per-session alerts here
             if (FarmingConfig.AlertOnFullBags && !FullBagsAlertSent && WorldState.BagsAreFull)

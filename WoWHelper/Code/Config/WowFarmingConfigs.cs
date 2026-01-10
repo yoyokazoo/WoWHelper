@@ -10,7 +10,7 @@ namespace WoWHelper.Code.Constants
         {
             LocationConfiguration = WowLocationConfigs.LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS,
             ManagementConfiguration = WowManagementConfigs.FULL_BABYSIT,
-            CombatConfiguration = WowCombatConfiguration.Mage
+            CombatConfiguration = WowCombatConfiguration.Warrior
         };
     }
 }

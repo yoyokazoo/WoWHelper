@@ -9,14 +9,20 @@ namespace WoWHelper
     public class WowWorldState
     {
         public bool Initialized { get; private set; }
-        public int PlayerHpPercent { get; private set; }
-        public int ResourcePercent { get; private set; }
-        public int TargetHpPercent { get; private set; }
+        
         public float MapX { get; private set; }
         public float MapY { get; private set; }
         public Vector2 PlayerLocation { get; private set; }
         public float FacingDegrees { get; private set; }
+
+        // Multi Int One
+        public int PlayerHpPercent { get; private set; }
+        public int ResourcePercent { get; private set; }
+        public int TargetHpPercent { get; private set; }
+
+        // Multi Int Two
         public int AttackerCount { get; private set; }
+        public int PlayerLevel { get; private set; }
 
         public bool IsInCombat { get; private set; }
         public bool CanChargeTarget { get; private set; }
@@ -46,6 +52,7 @@ namespace WoWHelper
         public bool IsInMeleeRange { get; private set; }
         public bool IsFireblastCooledDown { get; private set; }
         public bool IsCurrentlyCasting { get; private set; }
+        public bool EnemyNameplatesAreTurnedOn { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -68,6 +75,7 @@ namespace WoWHelper
             PlayerLocation = Vector2.Zero;
             FacingDegrees = -1;
             AttackerCount = -1;
+            PlayerLevel = -1;
 
             //TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
         }
@@ -200,6 +208,7 @@ namespace WoWHelper
             IsInMeleeRange = r1;
             IsFireblastCooledDown = r2;
             IsCurrentlyCasting = r3;
+            EnemyNameplatesAreTurnedOn = r4;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)
@@ -216,6 +225,7 @@ namespace WoWHelper
             Color color = bmp.GetPixel(WowImageConstants.MULTI_INT_TWO_POSITION.X, WowImageConstants.MULTI_INT_TWO_POSITION.Y);
 
             AttackerCount = color.R;
+            PlayerLevel = color.G;
         }
 
         public void UpdateRedErrorTextMessages(Bitmap bmp)

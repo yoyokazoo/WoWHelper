@@ -440,14 +440,26 @@ function AreEnemyNameplatesTurnedOn()
     return GetCVarBool("nameplateShowEnemies")
 end
 
--- lesser healing potion, level 3, 858
--- healing potion, level 12, 929
--- greater healing potion, level 21, 1710
--- superior healing potion, level 35, 3928
--- major healing potion, level 45, 13446
--- TODO: pick dynamically based on player level
 function AreWeLowOnHealthPotions()
-    local healthPotCount = GetItemCount(858, false)
+    local level = UnitLevel("player")
+    -- who cares before 5
+    if level < 5 then
+        return false
+    end
+
+    local healthPotId = 13446 -- major healing potion, level 45
+
+    if level < 12 then
+        healthPotId = 858 -- lesser healing potion, level 3
+    elseif level < 21 then
+        healthPotId = 929 -- healing potion, level 12
+    elseif level < 35 then
+        healthPotId = 1710 -- greater healing potion, level 21
+    elseif level < 45 then
+        healthPotId = 3928 -- superior healing potion, level 35
+    end
+
+    local healthPotCount = GetItemCount(healthPotId, false)
     return healthPotCount < 2
 end
 
@@ -629,7 +641,7 @@ function GetMultiBoolTwo()
     local boolR1 = IsInMeleeRange()
     local boolR2 = SpellIsCooledDownIgnoringGCD(2136) -- fireblast rank 1, 2136
     local boolR3 = IsPlayerCasting()
-    local boolR4 = false
+    local boolR4 = AreEnemyNameplatesTurnedOn()
     local boolR5 = false
     local boolR6 = false
     local boolR7 = false
@@ -672,7 +684,7 @@ end
 
 function GetMultiIntTwo()
     local r = CountAttackers()
-    local g = 0
+    local g = UnitLevel("player")
     local b = 0
 
     return r/255.0, g/255.0, b/255.0

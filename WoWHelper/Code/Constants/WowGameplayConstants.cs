@@ -18,6 +18,12 @@
         public const int HEALING_POTION_HP_THRESHOLD = 50;
         public const int EXECUTE_HP_THRESHOLD = 20;
 
+        // Mage
+        public const int CONJURE_WATER_LEVEL = 2;
+        public const int CONJURE_FOOD_LEVEL = 2;
+        public const int FIREBLAST_LEVEL = 8;
+        public const int ARCANE_EXPLOSION_LEVEL = 14;
+
         // The healing trinket isn't very good, so spam it to keep the run going faster
         public const int HEALING_TRINKET_HP_THRESHOLD = 91;
 
@@ -26,5 +32,8 @@
         public const int HEALING_TRINKET_COOLDOWN_MILLIS = 5 * 60 * 1000;
         public const int DIAMOND_FLASK_COOLDOWN_MILLIS = 6 * 60 * 1000;
         public const int BERSERKER_RAGE_COOLDOWN_MILLIS = 30 * 1000;
+
+        // Shared
+        public const int DYNAMITE_LEVEL = 10;
     }
 }
