@@ -36,7 +36,7 @@ namespace WoWHelper
         public static readonly ImageMatchColorPositions TARGET_NEEDS_TO_BE_IN_FRONT_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {
             new ColorPosition(1506, 216, ERROR_TEXT_COLOR),
             new ColorPosition(1524, 218, ERROR_TEXT_COLOR),
-            new ColorPosition(1531, 219, ERROR_TEXT_COLOR),
+            //new ColorPosition(1531, 219, ERROR_TEXT_COLOR), // This one seems to be spotty
         });
 
         public static readonly ImageMatchColorPositions INVALID_TARGET_POSITIONS = new ImageMatchColorPositions(0, 0, new List<ColorPosition> {

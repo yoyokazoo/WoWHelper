@@ -1,4 +1,5 @@
 ﻿using InputManager;
+using SlackAPI;
 using System;
 using System.Threading.Tasks;
 using WindowsGameAutomationTools.Slack;
@@ -216,12 +217,27 @@ namespace WoWHelper
             bool invalidTarget = WorldState.InvalidTarget;
             bool outOfRange = WorldState.OutOfRange;
 
-            Console.WriteLine($"MageMakeSureWeAreAttackingEnemyTask: {attackerJustDied} {tooFarAway} {facingWrongWay} {targetNeedsToBeInFront} {invalidTarget}");
+            Console.WriteLine($"MageMakeSureWeAreAttackingEnemyTask: {attackerJustDied} {tooFarAway} {facingWrongWay} {targetNeedsToBeInFront} {invalidTarget} {outOfRange}");
+            /*
+             * new ColorPosition(1506, 216, ERROR_TEXT_COLOR),
+            new ColorPosition(1524, 218, ERROR_TEXT_COLOR),
+            new ColorPosition(1531, 219, ERROR_TEXT_COLOR),
+             * */
+            //Console.WriteLine(string.Join(",", WowImageConstants.TARGET_NEEDS_TO_BE_IN_FRONT_POSITIONS));
+            //Console.WriteLine(WorldState.bit)
+            //Console.WriteLine(WorldState.Bmp.GetPixel(1506, 216));
+            //Console.WriteLine(WorldState.Bmp.GetPixel(1524, 218));
+            //Console.WriteLine(WorldState.Bmp.GetPixel(1531, 219));
 
-            if (facingWrongWay || targetNeedsToBeInFront)
+            if (facingWrongWay)
             {
                 // one of the mobs just died, scoot back to make sure the next mob is in front of you
                 await ScootBackwardsTask();
+            }
+
+            if (targetNeedsToBeInFront)
+            {
+                await TurnABitToTheLeftTask();
             }
 
             if (tooFarAway || invalidTarget || outOfRange)

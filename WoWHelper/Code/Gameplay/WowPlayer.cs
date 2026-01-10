@@ -67,6 +67,7 @@ namespace WoWHelper
             int timeToWaitClamped = (int)Math.Max(0, timeToWait);
             await Task.Delay(timeToWaitClamped);
 
+            PreviousWorldState?.Bmp?.Dispose();
             PreviousWorldState = WorldState;
             WorldState = WowWorldState.GetWoWWorldState();
 
@@ -77,6 +78,7 @@ namespace WoWHelper
         {
             var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
+            PreviousWorldState?.Bmp?.Dispose();
             PreviousWorldState = WorldState;
             WorldState = WowWorldState.GetWoWWorldState();
 

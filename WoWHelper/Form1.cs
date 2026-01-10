@@ -26,6 +26,9 @@ namespace WoWHelper
 
             StartPosition = FormStartPosition.Manual;
             Location = new Point(600, 600);
+
+            // always stay up to date, for now since I'm the only one using it we know the path is right
+            CopyLuaAddonToWoW(textBox1.Text);
         }
 
         private void button1_Click(object sender, EventArgs e)

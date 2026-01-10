@@ -55,6 +55,8 @@ namespace WoWHelper
         public bool OnLoginScreen { get; private set; }
         public bool Underwater { get; private set; }
 
+        public Bitmap Bmp { get; private set; }
+
         public WowWorldState()
         {
             Initialized = false;
@@ -74,9 +76,9 @@ namespace WoWHelper
         {
             WowWorldState currentState = new WowWorldState();
 
-            Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, WowImageConstants.WIDTH_OF_SCREEN_TO_SLICE, WowImageConstants.HEIGHT_OF_SCREEN_TO_SLICE));
-            currentState.UpdateFromBitmap(wowBitmap);
-            wowBitmap.Dispose();
+            currentState.Bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, WowImageConstants.WIDTH_OF_SCREEN_TO_SLICE, WowImageConstants.HEIGHT_OF_SCREEN_TO_SLICE));
+            currentState.UpdateFromBitmap(currentState.Bmp);
+            //wowBitmap.Dispose(); // TODO: Implement IDisposable
 
             return currentState;
         }

@@ -38,7 +38,9 @@ function ShouldWeAttackTarget()
     end
 
     -- don't charge oranges
-    if UnitLevel("player") - UnitLevel(unit) <= -3 then
+    --if UnitLevel("player") - UnitLevel(unit) <= -3 then
+    -- temp changing
+    if UnitLevel("player") - UnitLevel(unit) <= -4 then
         return false
     end
 
