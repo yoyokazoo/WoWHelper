@@ -93,12 +93,19 @@ namespace WoWHelper
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.MAGE_FIREBLAST);
+                    await Task.Delay(50);
+                    Keyboard.KeyPress(WowInput.MAGE_FIREBLAST);
+                    await Task.Delay(50);
+                    Keyboard.KeyPress(WowInput.MAGE_FIREBLAST);
                 }
                 else
                 {
                     if (WorldState.IsInMeleeRange)
                     {
-                        Keyboard.KeyPress(WowInput.MAGE_WAND);
+                        if (!WorldState.WaitingToShoot)
+                        {
+                            Keyboard.KeyPress(WowInput.MAGE_WAND);
+                        }
                     }
                     else
                     {
@@ -237,7 +244,9 @@ namespace WoWHelper
 
             if (targetNeedsToBeInFront)
             {
-                await TurnABitToTheLeftTask();
+                // for turning to work, we'd need to click a button after each turn, otherwise the text stays on the screen too long
+                //await TurnABitToTheLeftTask();
+                await ScootBackwardsTask();
             }
 
             if (tooFarAway || invalidTarget || outOfRange)

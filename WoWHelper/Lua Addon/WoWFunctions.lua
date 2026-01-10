@@ -61,12 +61,6 @@ function SpellIsCooledDown(spellId)
 
     local start, duration, enabled = GetSpellCooldown(spellName)
 
-    -- removing this check for now -> we should be using macros to hop into correct stance
-    -- If it's not enabled, you can't use it (e.g., disabled by stance/form)
-    --if enabled == 0 then
-    --    return false
-    --end
-
     if start == nil then
         return false
     end
@@ -81,6 +75,60 @@ function SpellIsCooledDown(spellId)
         return true
     end
 
+    return false
+end
+
+-- Classic: this spellId is commonly used to query the global cooldown
+local GCD_SPELL_ID = 61304
+
+-- Returns true if the *spell's own* cooldown is finished.
+-- If the only cooldown present is the GCD, returns true.
+function SpellIsCooledDownIgnoringGCD(spellId)
+    local spellName = GetSpellInfo(spellId)
+    if not spellName then
+        return false
+    end
+
+    local start, duration, enabled = GetSpellCooldown(spellName)
+
+    -- If API returns nil or spell is unusable for some reason
+    if not start or enabled == 0 then
+        return false
+    end
+
+    -- Ready
+    if duration == 0 then
+        return true
+    end
+
+    -- Compute remaining
+    local remaining = start + duration - GetTime()
+    if remaining <= 0 then
+        return true
+    end
+
+    -- If we're here, spell has a cooldown reported. It might just be the GCD.
+    local gcdStart, gcdDuration = GetSpellCooldown(GCD_SPELL_ID)
+
+    -- If no GCD data, fall back to original behavior
+    if not gcdStart or gcdDuration == 0 then
+        return false
+    end
+
+    -- Heuristic:
+    -- If the spell cooldown window is essentially the GCD window, ignore it.
+    -- Use a small tolerance because durations can differ by a few ms.
+    local eps = 0.05
+
+    local isJustGCD =
+        math.abs(start - gcdStart) <= eps and
+        duration <= (gcdDuration + eps)
+
+    if isJustGCD then
+        return true
+    end
+
+    -- Otherwise, the spell is on a real cooldown beyond GCD.
     return false
 end
 
@@ -172,8 +220,9 @@ function CanFrostboltTarget()
     return SpellIsInRange(116)
 end
 
+-- shoot gun, shoot crossbow
 function WaitingToShoot()
-    return IsCurrentSpell(7918) or IsCurrentSpell(2480)
+    return IsCurrentSpell(7918) or IsCurrentSpell(2480) or IsCurrentSpell(5019)
 end
 
 function IsAnyNextSwingSpellQueued()
@@ -310,6 +359,10 @@ function GetPlayerFacingInRadians()
 end
 
 function GetPlayerFacingInDegrees()
+    local facing = GetPlayerFacing()
+    if (facing == nil) then
+        return 0
+    end
     return round2(GetPlayerFacing() * 180 / math.pi)
 end
 
@@ -574,13 +627,13 @@ end
 
 function GetMultiBoolTwo()
     local boolR1 = IsInMeleeRange()
-    local boolR2 = SpellIsCooledDown(2136) -- fireblast rank 1, 2136
+    local boolR2 = SpellIsCooledDownIgnoringGCD(2136) -- fireblast rank 1, 2136
     local boolR3 = IsPlayerCasting()
     local boolR4 = false
     local boolR5 = false
     local boolR6 = false
     local boolR7 = false
-    local boolR8 = IsPlayerCasting()
+    local boolR8 = SpellIsCooledDownIgnoringGCD(2136)
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
 
@@ -591,7 +644,7 @@ function GetMultiBoolTwo()
     local boolG5 = false
     local boolG6 = false
     local boolG7 = false
-    local boolG8 = IsPlayerCasting()
+    local boolG8 = SpellIsCooledDownIgnoringGCD(2136)
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
@@ -602,7 +655,7 @@ function GetMultiBoolTwo()
     local boolB5 = false
     local boolB6 = false
     local boolB7 = false
-    local boolB8 = IsPlayerCasting()
+    local boolB8 = SpellIsCooledDownIgnoringGCD(2136)
 
     local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
 
