@@ -93,10 +93,10 @@ namespace WoWHelper
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.MAGE_FIREBLAST);
-                    await Task.Delay(50);
-                    Keyboard.KeyPress(WowInput.MAGE_FIREBLAST);
-                    await Task.Delay(50);
-                    Keyboard.KeyPress(WowInput.MAGE_FIREBLAST);
+                }
+                else if (WorldState.AttackerCount > 1)
+                {
+                    Keyboard.KeyPress(WowInput.MAGE_ARCANE_EXPLOSION);
                 }
                 else
                 {
