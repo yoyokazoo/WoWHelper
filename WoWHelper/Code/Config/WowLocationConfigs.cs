@@ -502,6 +502,8 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration
         {
+            // /target Dire
+            // /target Clattering
             Waypoints = new List<Vector2>
             {
                 new Vector2(51.82f, 66.99f),
@@ -514,19 +516,20 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(54.00f, 59.60f),
                 new Vector2(53.94f, 58.08f),
                 new Vector2(53.59f, 55.13f),
-                new Vector2(53.13f, 52.54f),
+                new Vector2(52.96f, 53.19f),
                 new Vector2(53.94f, 50.60f),
                 new Vector2(53.74f, 47.89f),
                 new Vector2(51.56f, 48.48f),
-                new Vector2(51.82f, 51.09f),
+                new Vector2(52.21f, 50.67f),
                 new Vector2(52.67f, 52.46f),
                 new Vector2(51.94f, 54.02f),
                 new Vector2(52.02f, 55.96f),
-                new Vector2(52.64f, 58.28f),
+                new Vector2(52.69f, 57.70f),
                 new Vector2(53.28f, 60.76f),
-                new Vector2(53.02f, 63.46f),
-                new Vector2(51.30f, 63.76f),
-                new Vector2(52.09f, 65.87f),
+                new Vector2(53.22f, 62.94f),
+                //new Vector2(51.30f, 63.76f),
+                //new Vector2(52.09f, 65.87f),
+                new Vector2(52.44f, 64.81f),
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,

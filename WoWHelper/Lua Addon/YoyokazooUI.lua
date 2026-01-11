@@ -70,13 +70,18 @@ frame:SetScript("OnEvent", function(self, event, ...)
         local level = ...
         
         -- When you level, XP resets to 0. Compute how much XP the last level needed.
-        local maxBefore = UnitXPMax("player")
-
-        xpTracker.totalGained = xpTracker.totalGained + (maxBefore - xpTracker.currentXP)
-        xpTracker.currentXP = 0
+        --local maxBefore = UnitXPMax("player")
+        --xpTracker.totalGained = xpTracker.totalGained + (maxBefore - xpTracker.currentXP)
+        --xpTracker.currentXP = 0
 
         print("Level up! Now level", level)
         print("Total session XP so far:", xpTracker.totalGained)
+
+        -- Reset xp/hour, since it'll change level to level
+        xpTracker.startXP    = UnitXP("player")
+        xpTracker.currentXP  = xpTracker.startXP
+        xpTracker.totalGained = 0
+        xpTracker.startTime   = GetTime()
     end
 end)
 
