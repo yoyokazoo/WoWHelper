@@ -50,12 +50,27 @@ namespace WoWHelper.Code
         public const Keys MAGE_5 = Keys.D5;
         public const Keys MAGE_SHIFT_5 = Keys.D5;
 
+        /*
+#showtooltip [mod:shift] Arcane Intellect; Frost Armor
+/use [nomod] Frost Armor
+/use [mod:shift] Arcane Intellect
+        */
         public const Keys MAGE_FROST_ARMOR = Keys.D6;
         public const Keys MAGE_SHIFT_ARCANE_INTELLECT = Keys.D6;
 
+        /*
+#showtooltip [mod:shift] Conjure Food; Conjure Water
+/cast [nomod] Conjure Water
+/cast [mod:shift] Conjure Food
+        */
         public const Keys MAGE_CONJURE_WATER = Keys.D7;
         public const Keys MAGE_SHIFT_CONJURE_FOOD = Keys.D7;
 
+        /*
+#showtooltip [mod:shift] Conjured Bread; Conjured Fresh Water
+/use [nomod] Conjured Fresh Water
+/use [mod:shift] Conjured Bread
+        */
         public const Keys MAGE_DRINK_WATER = Keys.D8;
         public const Keys MAGE_SHIFT_EAT_FOOD = Keys.D8;
 
@@ -65,12 +80,31 @@ namespace WoWHelper.Code
 
         // Common Input
         // For the sake of sharing tasks, forcing these common keys to be shared
+
+        /*
+#showtooltip [mod:shift] Healing Potion; Target
+/use [mod:shift] Healing Potion
+/stopmacro [mod:shift]
+/cleartarget
+/target Fleeting
+        */
         public const Keys FIND_TARGET_MACRO = Keys.D0;
         public const Keys SHIFT_HEALING_POTION = Keys.D0;
 
+        /*
+#showtooltip [mod:shift] Target Dummy; Rough Dynamite
+/use [nomod] Rough Dynamite
+/use [mod:shift] Target Dummy
+        */
         public const Keys THROW_DYNAMITE = Keys.OemMinus;
         public const Keys SHIFT_TARGET_DUMMY = Keys.OemMinus;
 
+        /*
+#showtooltip [mod:shift] Flask of Petrification; Logout
+/cast [mod:shift] Flask of Petrification
+/stopmacro [mod:shift]
+/logout
+        */
         public const Keys LOGOUT_MACRO = Keys.Oemplus;
         public const Keys SHIFT_PETRIFICATION_FLASK = Keys.Oemplus;
 

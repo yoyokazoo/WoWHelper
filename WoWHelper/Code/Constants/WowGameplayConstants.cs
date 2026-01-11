@@ -19,6 +19,7 @@
         public const int EXECUTE_HP_THRESHOLD = 20;
 
         // Mage
+        public const int ARCANE_INTELLECT_LEVEL = 2;
         public const int CONJURE_WATER_LEVEL = 2;
         public const int CONJURE_FOOD_LEVEL = 2;
         public const int FIREBLAST_LEVEL = 8;

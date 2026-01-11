@@ -89,12 +89,12 @@ namespace WoWHelper
                 {
                     Keyboard.KeyPress(WowInput.MAGE_FROST_ARMOR);
                 }
-                else if (WorldState.IsInMeleeRange && WorldState.IsFireblastCooledDown)
+                else if (WorldState.IsInMeleeRange && WorldState.IsFireblastCooledDown && WorldState.PlayerLevel >= WowGameplayConstants.FIREBLAST_LEVEL)
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.MAGE_FIREBLAST);
                 }
-                else if (WorldState.AttackerCount > 1)
+                else if (WorldState.AttackerCount > 1 && WorldState.PlayerLevel >= WowGameplayConstants.ARCANE_EXPLOSION_LEVEL)
                 {
                     Keyboard.KeyPress(WowInput.MAGE_ARCANE_EXPLOSION);
                 }
@@ -102,10 +102,7 @@ namespace WoWHelper
                 {
                     if (WorldState.IsInMeleeRange)
                     {
-                        if (!WorldState.WaitingToShoot)
-                        {
-                            Keyboard.KeyPress(WowInput.MAGE_WAND);
-                        }
+                        Keyboard.KeyPress(WowInput.MAGE_WAND);
                     }
                     else
                     {
@@ -150,21 +147,21 @@ namespace WoWHelper
                 // TODO: make this a bit smarter so we take mana pool into account,
                 // and we don't try to wait to conjure food/water when we could get aggroed
                 bool buffedOrConjured = false;
-                if (!WorldState.ArcaneIntellectActive)
+                if (!WorldState.ArcaneIntellectActive && WorldState.PlayerLevel >= WowGameplayConstants.ARCANE_INTELLECT_LEVEL)
                 {
                     await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.MAGE_SHIFT_ARCANE_INTELLECT);
                     buffedOrConjured = true;
                 }
 
-                if (!WorldState.MageArmorActive)
+                if (!WorldState.MageArmorActive) // frost armor is known at level 1!
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.MAGE_FROST_ARMOR);
                     buffedOrConjured = true;
                 }
 
-                if (WorldState.ShouldSummonFood)
+                if (WorldState.ShouldSummonFood && WorldState.PlayerLevel >= WowGameplayConstants.CONJURE_FOOD_LEVEL)
                 {
                     await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.MAGE_SHIFT_CONJURE_FOOD);
@@ -172,7 +169,7 @@ namespace WoWHelper
                     buffedOrConjured = true;
                 }
 
-                if (WorldState.ShouldSummonWater)
+                if (WorldState.ShouldSummonWater && WorldState.PlayerLevel >= WowGameplayConstants.CONJURE_WATER_LEVEL)
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.MAGE_CONJURE_WATER);
@@ -191,7 +188,6 @@ namespace WoWHelper
 
         public async Task<bool> MageKickOffEngageTask()
         {
-            await Task.Delay(0);
             EngageAttempts = 1;
 
             Console.WriteLine($"MageKickOffEngageTask, clicking frostbolt");

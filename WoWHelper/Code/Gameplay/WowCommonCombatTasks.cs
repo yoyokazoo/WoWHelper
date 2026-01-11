@@ -27,7 +27,7 @@ namespace WoWHelper
 
         public async Task<bool> ThrowDynamiteTask()
         {
-            bool shouldThrowDynamite = WorldState.AttackerCount > 1;
+            bool shouldThrowDynamite = WorldState.AttackerCount > 1 && WorldState.PlayerLevel >= WowGameplayConstants.DYNAMITE_LEVEL;
 
             if (shouldThrowDynamite)
             {
