@@ -36,7 +36,7 @@ namespace WoWHelper
                 }
 
                 // ping on level up
-                if (PreviousWorldState != null && PreviousWorldState.PlayerLevel > 0 && PreviousWorldState.PlayerLevel != WorldState.PlayerLevel)
+                if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState != null && PreviousWorldState.PlayerLevel > 0 && PreviousWorldState.PlayerLevel != WorldState.PlayerLevel)
                 {
                     SlackHelper.SendMessageToChannel($"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!");
                 }
@@ -164,6 +164,7 @@ namespace WoWHelper
                 {
                     await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.MAGE_SHIFT_ARCANE_INTELLECT);
+                    await Task.Delay(500); // make sure worldstate has time to update so we don't double buff
                     buffedOrConjured = true;
                 }
 

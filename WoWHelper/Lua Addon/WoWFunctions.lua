@@ -216,7 +216,7 @@ function CanFrostboltTarget()
     end
 
     local spellId = 116 -- frostbolt
-    if UnitLevel("player") < 6 then
+    if UnitLevel("player") < 4 then
         spellId = 133 -- player doesn't learn frostbolt till 4, so use fireball
     end
 
@@ -447,7 +447,7 @@ end
 function AreWeLowOnHealthPotions()
     local level = UnitLevel("player")
     -- who cares before 5
-    if level < 5 then
+    if level < 10 then -- temp
         return false
     end
 
@@ -492,8 +492,10 @@ end
 -- Level 35 Conjured Mineral Water, 8077
 -- Level 45 Conjured Sparkling Water, 8078
 -- Level 55 Conjured Crystal Water, 8079
+-- TODO: pick based on level
+-- TODO: store level in a variable we can reference?
 function ShouldWeSummonWater()
-    local waterCount = GetItemCount(2288, false)
+    local waterCount = GetItemCount(5350, false)
     return waterCount < 2
 end
 

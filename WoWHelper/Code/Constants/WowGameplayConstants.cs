@@ -20,7 +20,7 @@
 
         // Mage
         public const int ARCANE_INTELLECT_LEVEL = 2;
-        public const int CONJURE_WATER_LEVEL = 20;
+        public const int CONJURE_WATER_LEVEL = 6;
         public const int CONJURE_FOOD_LEVEL = 20;
         public const int FIREBLAST_LEVEL = 12;
         public const int ARCANE_EXPLOSION_LEVEL = 14;
@@ -39,6 +39,6 @@
         public const int BERSERKER_RAGE_COOLDOWN_MILLIS = 30 * 1000;
 
         // Shared
-        public const int DYNAMITE_LEVEL = 10;
+        public const int DYNAMITE_LEVEL = 6;
     }
 }

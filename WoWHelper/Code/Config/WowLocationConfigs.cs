@@ -500,6 +500,59 @@ namespace WoWHelper.Code.WorldState
             TooManyAttackersThreshold = 2,
         };
 
+        public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(51.82f, 66.99f),
+                //new Vector2(53.86f, 67.21f),
+                //new Vector2(54.40f, 64.83f),
+                new Vector2(53.14f, 66.34f),
+                new Vector2(53.31f, 63.53f),
+                new Vector2(54.53f, 61.59f),
+                new Vector2(54.19f, 61.04f),
+                new Vector2(54.00f, 59.60f),
+                new Vector2(53.94f, 58.08f),
+                new Vector2(53.59f, 55.13f),
+                new Vector2(53.13f, 52.54f),
+                new Vector2(53.94f, 50.60f),
+                new Vector2(53.74f, 47.89f),
+                new Vector2(51.56f, 48.48f),
+                new Vector2(51.82f, 51.09f),
+                new Vector2(52.67f, 52.46f),
+                new Vector2(51.94f, 54.02f),
+                new Vector2(52.02f, 55.96f),
+                new Vector2(52.64f, 58.28f),
+                new Vector2(53.28f, 60.76f),
+                new Vector2(53.02f, 63.46f),
+                new Vector2(51.30f, 63.76f),
+                new Vector2(52.09f, 65.87f),
+            },
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.2f,
+            EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
+            TooManyAttackersThreshold = 3,
+        };
+
+        public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration
+        {
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(46.78f, 57.33f),
+                new Vector2(46.40f, 59.10f),
+                new Vector2(44.91f, 59.08f),
+                new Vector2(43.54f, 58.77f),
+                new Vector2(43.88f, 56.90f),
+                new Vector2(45.27f, 57.40f),
+            },
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.2f,
+            EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
+            TooManyAttackersThreshold = 2,
+        };
+
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
         {
             Waypoints = new List<Vector2>
@@ -516,7 +569,7 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.2f,
             EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
-            TooManyAttackersThreshold = 3,
+            TooManyAttackersThreshold = 2,
         };
     }
 }
