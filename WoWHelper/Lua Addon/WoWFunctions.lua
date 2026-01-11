@@ -210,14 +210,18 @@ function CanShootTarget()
     return SpellIsInRangeAndCooledDown(7918)
 end
 
--- 116
 function CanFrostboltTarget()
     if not ShouldWeAttackTarget() then
         return false
     end
 
+    local spellId = 116 -- frostbolt
+    if UnitLevel("player") < 6 then
+        spellId = 133 -- player doesn't learn frostbolt till 4, so use fireball
+    end
+
     -- it goes on cooldown right when we start casting it, so we can assume its cooled down
-    return SpellIsInRange(116)
+    return SpellIsInRange(spellId)
 end
 
 -- shoot gun, shoot crossbow

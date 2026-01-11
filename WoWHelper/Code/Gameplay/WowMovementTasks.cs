@@ -46,6 +46,12 @@ namespace WoWHelper
                     SlackHelper.SendMessageToChannel($"Unseen Whisper!");
                 }
 
+                // ping on level up
+                if (PreviousWorldState != null && PreviousWorldState.PlayerLevel > 0 && PreviousWorldState.PlayerLevel != WorldState.PlayerLevel)
+                {
+                    SlackHelper.SendMessageToChannel($"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!");
+                }
+
                 if (!CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();

@@ -52,8 +52,10 @@ namespace WoWHelper.Code
 
         /*
 #showtooltip [mod:shift] Arcane Intellect; Frost Armor
-/use [nomod] Frost Armor
-/use [mod:shift] Arcane Intellect
+/cast [nomod] Frost Armor
+/stopmacro [nomod]
+/cleartarget
+/cast Arcane Intellect
         */
         public const Keys MAGE_FROST_ARMOR = Keys.D6;
         public const Keys MAGE_SHIFT_ARCANE_INTELLECT = Keys.D6;

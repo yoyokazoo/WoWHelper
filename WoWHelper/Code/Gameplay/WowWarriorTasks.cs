@@ -36,6 +36,12 @@ namespace WoWHelper
                     SlackHelper.SendMessageToChannel($"Unseen Whisper!");
                 }
 
+                // ping on level up
+                if (PreviousWorldState != null && PreviousWorldState.PlayerLevel > 0 && PreviousWorldState.PlayerLevel != WorldState.PlayerLevel)
+                {
+                    SlackHelper.SendMessageToChannel($"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!");
+                }
+
                 // If we're about to die, petri alt+f4
                 if (WorldState.PlayerHpPercent <= WowPlayerConstants.PETRI_ALTF4_HP_THRESHOLD)
                 {

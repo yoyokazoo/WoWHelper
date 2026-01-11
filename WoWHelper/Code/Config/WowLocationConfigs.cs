@@ -499,5 +499,24 @@ namespace WoWHelper.Code.WorldState
             EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 2,
         };
+
+        public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
+        {
+            Waypoints = new List<Vector2>
+            { 
+                new Vector2(44.19f, 66.23f),
+                new Vector2(43.31f, 64.90f),
+                new Vector2(41.03f, 64.58f),
+                new Vector2(41.22f, 63.01f),
+                new Vector2(42.96f, 62.43f),
+                new Vector2(44.29f, 62.22f),
+                new Vector2(45.49f, 64.54f),
+            },
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.2f,
+            EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
+            TooManyAttackersThreshold = 3,
+        };
     }
 }

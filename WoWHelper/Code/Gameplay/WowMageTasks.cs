@@ -15,12 +15,14 @@ namespace WoWHelper
             Console.WriteLine("Kicking off core combat loop");
             bool thrownDynamite = false;
             bool potionUsed = false;
+            bool lowManaAlerted = false;
             bool tooManyAttackersActionsTaken = false;
 
             do
             {
                 await UpdateWorldStateAsync();
 
+                // TODO: combine these into a shared task
                 // don't drown
                 if (WorldState.Underwater)
                 {
@@ -31,6 +33,12 @@ namespace WoWHelper
                 if (FarmingConfig.AlertOnUnreadWhisper && !(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
                 {
                     SlackHelper.SendMessageToChannel($"Unseen Whisper!");
+                }
+
+                // ping on level up
+                if (PreviousWorldState != null && PreviousWorldState.PlayerLevel > 0 && PreviousWorldState.PlayerLevel != WorldState.PlayerLevel)
+                {
+                    SlackHelper.SendMessageToChannel($"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!");
                 }
 
                 // If we're about to die, petri alt+f4
@@ -81,6 +89,13 @@ namespace WoWHelper
                 {
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     potionUsed = true;
+                    continue;
+                }
+
+                // Next, check if we need to pop any big cooldowns
+                if (!tooManyAttackersActionsTaken && await MageTooManyAttackersTask())
+                {
+                    tooManyAttackersActionsTaken = true;
                     continue;
                 }
 
@@ -141,8 +156,6 @@ namespace WoWHelper
 
             if (battleReady)
             {
-                await ScootForwardsTask();
-
                 // after passive recovery, rebuff and reconjure if needed, and return false if we did anything
                 // TODO: make this a bit smarter so we take mana pool into account,
                 // and we don't try to wait to conjure food/water when we could get aggroed
@@ -181,6 +194,8 @@ namespace WoWHelper
                 {
                     return false;
                 }
+
+                await ScootForwardsTask();
             }
 
             return battleReady;

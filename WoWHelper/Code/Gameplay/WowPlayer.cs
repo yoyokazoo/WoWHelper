@@ -145,10 +145,16 @@ namespace WoWHelper
             Environment.Exit(0);
             
             */
+
+            /*
             await FocusOnWindowTask();
             await ThrowTargetDummyTask();
 
             await Task.Delay(0);
+            return true;
+            */
+
+            SlackHelper.SendMessageToChannel($"Testing notification!");
             return true;
         }
 
@@ -173,6 +179,12 @@ namespace WoWHelper
                 if (FarmingConfig.AlertOnUnreadWhisper && !(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
                 {
                     SlackHelper.SendMessageToChannel($"Unseen Whisper!");
+                }
+
+                // ping on level up
+                if (PreviousWorldState != null && PreviousWorldState.PlayerLevel > 0 && PreviousWorldState.PlayerLevel != WorldState.PlayerLevel)
+                {
+                    SlackHelper.SendMessageToChannel($"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!");
                 }
 
                 switch (CurrentPlayerState)
