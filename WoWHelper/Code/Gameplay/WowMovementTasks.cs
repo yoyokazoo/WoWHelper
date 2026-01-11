@@ -50,6 +50,11 @@ namespace WoWHelper
                 if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState != null && PreviousWorldState.PlayerLevel > 0 && PreviousWorldState.PlayerLevel != WorldState.PlayerLevel)
                 {
                     SlackHelper.SendMessageToChannel($"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!");
+                    if (FarmingConfig.LogoffLevel == WorldState.PlayerLevel)
+                    {
+                        LogoutTriggered = true;
+                        LogoutReason = $"Reached log out level {FarmingConfig.LogoffLevel}";
+                    }
                 }
 
                 if (!CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))

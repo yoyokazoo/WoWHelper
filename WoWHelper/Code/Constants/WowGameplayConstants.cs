@@ -19,12 +19,14 @@
         public const int EXECUTE_HP_THRESHOLD = 20;
 
         // Mage
-        public const int ARCANE_INTELLECT_LEVEL = 2;
-        public const int CONJURE_WATER_LEVEL = 6;
+        public const int ARCANE_INTELLECT_LEVEL = 8;
+        public const int CONJURE_WATER_LEVEL = 8;
         public const int CONJURE_FOOD_LEVEL = 20;
         public const int FIREBLAST_LEVEL = 12;
         public const int ARCANE_EXPLOSION_LEVEL = 14;
         public const int MANA_GEM_LEVEL = 20;
+
+        public const int FROSTBOLT_MANA_COST = 30;
 
         public const int MANA_GEM_MP_THRESHOLD = 20;
         public const int MANA_LOW_ALERT_THRESHOLD = 30;

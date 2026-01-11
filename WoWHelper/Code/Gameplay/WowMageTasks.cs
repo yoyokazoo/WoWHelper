@@ -39,6 +39,11 @@ namespace WoWHelper
                 if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState != null && PreviousWorldState.PlayerLevel > 0 && PreviousWorldState.PlayerLevel != WorldState.PlayerLevel)
                 {
                     SlackHelper.SendMessageToChannel($"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!");
+                    if (FarmingConfig.LogoffLevel == WorldState.PlayerLevel)
+                    {
+                        LogoutTriggered = true;
+                        LogoutReason = $"Reached log out level {FarmingConfig.LogoffLevel}";
+                    }
                 }
 
                 // If we're about to die, petri alt+f4
@@ -115,6 +120,12 @@ namespace WoWHelper
                 }
                 else
                 {
+                    Keyboard.KeyPress(WowInput.MAGE_WAND);
+                    if (WorldState.ResourcePercent >= WowGameplayConstants.FROSTBOLT_MANA_COST)
+                    {
+                        Keyboard.KeyPress(WowInput.MAGE_FROSTBOLT);
+                    }
+                    /*
                     if (WorldState.IsInMeleeRange)
                     {
                         Keyboard.KeyPress(WowInput.MAGE_WAND);
@@ -123,6 +134,7 @@ namespace WoWHelper
                     {
                         Keyboard.KeyPress(WowInput.MAGE_FROSTBOLT);
                     }
+                    */
                 }
             } while (WorldState.IsInCombat);
 

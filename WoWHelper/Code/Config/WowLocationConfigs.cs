@@ -537,6 +537,8 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration
         {
+            // /target Scorpid
+            // /target Vile
             Waypoints = new List<Vector2>
             {
                 new Vector2(46.78f, 57.33f),
@@ -551,10 +553,13 @@ namespace WoWHelper.Code.WorldState
             DistanceTolerance = 0.2f,
             EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 2,
+            LogoffLevel = 7,
         };
 
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
         {
+            // /target Mottled
+            // /target Scorpid
             Waypoints = new List<Vector2>
             { 
                 new Vector2(44.19f, 66.23f),
@@ -570,6 +575,7 @@ namespace WoWHelper.Code.WorldState
             DistanceTolerance = 0.2f,
             EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 2,
+            LogoffLevel = 4,
         };
     }
 }

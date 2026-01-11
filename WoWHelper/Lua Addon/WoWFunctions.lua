@@ -216,7 +216,7 @@ function CanFrostboltTarget()
     end
 
     local spellId = 116 -- frostbolt
-    if UnitLevel("player") < 4 then
+    if UnitLevel("player") < 8 then
         spellId = 133 -- player doesn't learn frostbolt till 4, so use fireball
     end
 

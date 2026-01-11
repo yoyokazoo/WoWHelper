@@ -26,6 +26,7 @@ namespace WoWHelper.Code.Gameplay
         public bool UseRend => LocationConfiguration.UseRend;
         public bool PreemptFear => LocationConfiguration.PreemptFear;
         public int TooManyAttackersThreshold => LocationConfiguration.TooManyAttackersThreshold;
+        public int LogoffLevel => LocationConfiguration.LogoffLevel;
 
         public WowFarmingConfiguration()
         {
