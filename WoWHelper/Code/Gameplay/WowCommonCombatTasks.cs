@@ -78,16 +78,26 @@ namespace WoWHelper
             if (tooFarAway || invalidTarget || outOfRange)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
-                Keyboard.KeyPress(WowInput.WARRIOR_CLEAR_TARGET_MACRO);
+                Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
             }
 
             if (attackerJustDied || inCombatButNotAutoAttacking || tooFarAway)
             {
                 // /startattack
-                Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+                Keyboard.KeyPress(WowInput.START_ATTACK);
             }
 
             return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || invalidTarget || outOfRange;
+        }
+
+        public async Task<bool> StartAttackTask()
+        {
+            await Task.Delay(0);
+
+            // always kick things off with /startattack
+            Keyboard.KeyPress(WowInput.START_ATTACK);
+
+            return true;
         }
     }
 }

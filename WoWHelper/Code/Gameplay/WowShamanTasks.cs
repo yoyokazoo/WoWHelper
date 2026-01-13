@@ -14,18 +14,16 @@ namespace WoWHelper
             Console.WriteLine("Kicking off core combat loop");
             bool thrownDynamite = false;
             bool potionUsed = false;
-            bool tooManyAttackersActionsTaken = false;
+            bool emergencyActionTaken = false;
             bool startOfCombatWiggled = false;
 
-            await ShamanStartAttackTask();
+            await StartAttackTask();
 
             do
             {
                 await UpdateWorldStateAsync();
 
                 await EveryWorldStateUpdateTasks();
-
-                
 
                 // First do our "Make sure we're not standing around doing nothing" checks
                 if (await MeleeMakeSureWeAreAttackingEnemyTask())
@@ -34,29 +32,9 @@ namespace WoWHelper
                 }
 
                 // Next, check if we need to pop any big cooldowns
-                if (!tooManyAttackersActionsTaken && await ShamanTooManyAttackersTask())
+                if (!emergencyActionTaken && await ShamanEmergencyTask())
                 {
-                    tooManyAttackersActionsTaken = true;
-                    continue;
-                }
-
-                // Just in case, if for some reason things are going really poorly, try to pop retal regardless
-                if (!tooManyAttackersActionsTaken && WorldState.PlayerHpPercent <= WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD)
-                {
-                    SlackHelper.SendMessageToChannel($"{WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD}% Retal popped, not sure what went wrong!");
-
-                    // cast retaliation once GCD is cooled down
-                    while (!WorldState.GCDCooledDown)
-                    {
-                        await UpdateWorldStateAsync();
-                    }
-                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION_KEY);
-
-                    tooManyAttackersActionsTaken = true;
-
-                    LogoutReason = $"Got down to {WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD}% somehow";
-                    LogoutTriggered = true;
-
+                    emergencyActionTaken = true;
                     continue;
                 }
 
@@ -81,38 +59,14 @@ namespace WoWHelper
                 }
 
                 // Finally, if we've made it this far, do standard combat actions
-                if (!WorldState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
+                if (!WorldState.HasRockbiterWeaponOn)
                 {
-                    Keyboard.KeyPress(WowInput.WARRIOR_BATTLE_SHOUT_KEY);
+                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
                 }
-                else if (FarmingConfig.UseRend && !WorldState.TargetHasRend && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
+                else// if (WorldState.AttackerCount <= 1)
                 {
-                    Keyboard.KeyPress(WowInput.WARRIOR_REND_KEY);
-                }
-                else if (WorldState.AttackerCount > 1)
-                {
-                    if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
-                    {
-                        Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
-                    }
-                    else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST))
-                    {
-                        // Cleave only if we have enough spare rage to bloodthirst right after
-                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_CLEAVE_MACRO);
-                    }
-                }
-                else if (WorldState.AttackerCount <= 1) // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
-                {
-                    if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
-                    {
-                        Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
-                    }
-                    else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
-                    {
-                        // Heroic only if we have enough spare rage to bloodthirst right after
-                        Keyboard.KeyPress(WowInput.WARRIOR_HEROIC_STRIKE_KEY);
-                    }
-                    // TODO: Actually split out Heroic Strike and cast if we have really surplus rage
+                    // we should already be attacking
+                    //Keyboard.KeyPress(WowInput.SHAMAN_ATTACK);
                 }
             } while (WorldState.IsInCombat);
 
@@ -160,8 +114,7 @@ namespace WoWHelper
         {
             EngageAttempts = 1;
 
-            Console.WriteLine($"MageKickOffEngageTask, clicking frostbolt");
-            Keyboard.KeyPress(WowInput.MAGE_FROSTBOLT);
+            Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
             await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
             return true;
         }
@@ -170,11 +123,11 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
-            Console.WriteLine($"MageFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}");
+            Console.WriteLine($"ShamanFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}");
             if (!WorldState.IsCurrentlyCasting)
             {
                 await TurnABitToTheLeftTask();
-                Keyboard.KeyPress(WowInput.MAGE_FROSTBOLT);
+                Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
                 await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
                 await UpdateWorldStateAsync();
             }
@@ -182,28 +135,20 @@ namespace WoWHelper
             return CanEngageTarget();
         }
 
-        public async Task<bool> ShamanStartAttackTask()
-        {
-            await Task.Delay(0);
-
-            // always kick things off with heroic strike macro to /startattack
-            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
-
-            return true;
-        }
-
-        public async Task<bool> ShamanTooManyAttackersTask()
+        public async Task<bool> ShamanEmergencyTask()
         {
             await Task.Delay(0);
             bool tooManyAttackers = WorldState.AttackerCount >= FarmingConfig.TooManyAttackersThreshold;
+            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD;
 
-            if (tooManyAttackers)
+            if (tooManyAttackers || emergencyHpThreshold)
             {
-                SlackHelper.SendMessageToChannel($"TOO MANY ATTACKERS HELP");
+                string warningMessage = tooManyAttackers ? "TOO MANY ATTACKERS HELP" : $"Emergency HP Threshold hit ({WorldState.PlayerHpPercent})";
+                SlackHelper.SendMessageToChannel(warningMessage);
 
                 // Figure out what to do here.  War stomp? Magma Totem? War stomp -> ghost wolf -> run to safety?
 
-                LogoutReason = "Got into a Retaliation situation, logging off for safety";
+                LogoutReason = $"Got into an emergency situation ({warningMessage}), logging off for safety";
                 LogoutTriggered = true;
             }
 

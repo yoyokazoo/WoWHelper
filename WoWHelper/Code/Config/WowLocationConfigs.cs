@@ -474,7 +474,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.2f,
-            EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 2,
         };
 
@@ -496,7 +496,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.2f,
-            EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 2,
         };
 
@@ -534,7 +534,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.2f,
-            EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 3,
         };
 
@@ -554,7 +554,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.2f,
-            EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 2,
             LogoffLevel = 7,
         };
@@ -576,7 +576,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.2f,
-            EngageMethod = EngagementMethod.Frostbolt, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 2,
             LogoffLevel = 4,
         };

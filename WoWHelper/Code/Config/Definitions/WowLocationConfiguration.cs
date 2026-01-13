@@ -20,9 +20,9 @@ namespace WoWHelper.Code.WorldState
 
         public enum EngagementMethod
         {
-            Charge,
-            Shoot,
-            Frostbolt
+            Charge, // charge
+            Shoot, // shoot bow, shoot gun
+            Spellcast // frost bolt, lightning bolt, etc.
         }
 
         public List<Vector2> Waypoints { get; set; }

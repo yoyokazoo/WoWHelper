@@ -44,7 +44,7 @@ namespace WoWHelper
         public bool BagsAreFull { get; private set; }
         public bool IsPlayerPetrified { get; private set; }
         public bool HasUnseenWhisper { get; private set; }
-        public bool CanFrostboltTarget { get; private set; }
+        public bool CanSpellcastPullTarget { get; private set; }
         public bool MageArmorActive { get; private set; }
         public bool ArcaneIntellectActive { get; private set; }
         public bool ShouldSummonWater { get; private set; }
@@ -53,6 +53,7 @@ namespace WoWHelper
         public bool IsFireblastCooledDown { get; private set; }
         public bool IsCurrentlyCasting { get; private set; }
         public bool EnemyNameplatesAreTurnedOn { get; private set; }
+        public bool HasRockbiterWeaponOn { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -191,7 +192,7 @@ namespace WoWHelper
             HeroicStrikeQueued = b1;
             IsPlayerPetrified = b2;
             HasUnseenWhisper = b3;
-            CanFrostboltTarget = b4;
+            CanSpellcastPullTarget = b4;
             MageArmorActive = b5;
             ArcaneIntellectActive = b6;
             ShouldSummonWater = b7;
@@ -209,6 +210,7 @@ namespace WoWHelper
             IsFireblastCooledDown = r2;
             IsCurrentlyCasting = r3;
             EnemyNameplatesAreTurnedOn = r4;
+            HasRockbiterWeaponOn = r5;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

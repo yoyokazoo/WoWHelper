@@ -12,6 +12,7 @@ namespace WoWHelper
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorStartBattleReadyRecoverTask();
                 case Code.Gameplay.WowCombatConfiguration.Mage: return await MageStartBattleReadyRecoverTask();
+                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -22,6 +23,7 @@ namespace WoWHelper
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorWaitUntilBattleReadyTask();
                 case Code.Gameplay.WowCombatConfiguration.Mage: return await MageWaitUntilBattleReadyTask();
+                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -32,6 +34,7 @@ namespace WoWHelper
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorKickOffEngageTask();
                 case Code.Gameplay.WowCombatConfiguration.Mage: return await MageKickOffEngageTask();
+                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -42,6 +45,7 @@ namespace WoWHelper
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorFaceCorrectDirectionToEngageTask();
                 case Code.Gameplay.WowCombatConfiguration.Mage: return await MageFaceCorrectDirectionToEngageTask();
+                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -52,6 +56,7 @@ namespace WoWHelper
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorCombatLoopTask();
                 case Code.Gameplay.WowCombatConfiguration.Mage: return await MageCombatLoopTask();
+                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -62,7 +67,7 @@ namespace WoWHelper
             {
                 case WowLocationConfiguration.EngagementMethod.Charge: return WorldState.CanChargeTarget;
                 case WowLocationConfiguration.EngagementMethod.Shoot: return WorldState.CanShootTarget;
-                case WowLocationConfiguration.EngagementMethod.Frostbolt: return WorldState.CanFrostboltTarget;
+                case WowLocationConfiguration.EngagementMethod.Spellcast: return WorldState.CanSpellcastPullTarget;
                 default: throw new System.NotImplementedException();
             }
         }

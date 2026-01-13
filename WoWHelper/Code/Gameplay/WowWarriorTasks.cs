@@ -18,7 +18,7 @@ namespace WoWHelper
             bool tooManyAttackersActionsTaken = false;
             bool startOfCombatWiggled = false;
 
-            await WarriorStartAttackTask();
+            await StartAttackTask();
 
             do
             {
@@ -203,16 +203,6 @@ namespace WoWHelper
             }
 
             return CanEngageTarget();
-        }
-
-        public async Task<bool> WarriorStartAttackTask()
-        {
-            await Task.Delay(0);
-
-            // always kick things off with heroic strike macro to /startattack
-            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
-
-            return true;
         }
 
         public async Task<bool> WarriorTooManyAttackersTask()

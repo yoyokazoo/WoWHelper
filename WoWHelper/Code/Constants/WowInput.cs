@@ -6,6 +6,9 @@ namespace WoWHelper.Code
 {
     public static class WowInput
     {
+        // Using Shift Keys built into the macros instead of binding a bar to the shift keys,
+        // as it screws up regular bars if we bind a bar to shift
+
         #region Warrior
         // Warrior Input
         //public const Keys WARRIOR_FIND_TARGET_MACRO = Keys.D1;
@@ -35,8 +38,6 @@ namespace WoWHelper.Code
 
         #region Mage
         // Mage Input
-        // Using Shift Keys built into the macros instead of binding a bar to the shift keys,
-        // as it screws up regular bars if we bind a bar to shift
 
         public const Keys MAGE_WAND = Keys.D1;
         public const Keys MAGE_SHIFT_1 = Keys.D1;
@@ -77,11 +78,37 @@ namespace WoWHelper.Code
 
         #region Shaman
 
+        public const Keys SHAMAN_LIGHTNING_BOLT = Keys.D2;
+        public const Keys SHAMAN_SHIFT_2 = Keys.D2;
+
+        public const Keys SHAMAN_SHOCK = Keys.D3;
+        public const Keys SHAMAN_SHIFT_3 = Keys.D3;
+
+        /*
+#showtooltip [mod:shift] Rockbiter Weapon; Lightning Shield
+/use [nomod] Lightning Shield
+/use [mod:shift] Rockbiter Weapon
+        */
+        public const Keys SHAMAN_LIGHTNING_SHIELD = Keys.D4;
+        public const Keys SHAMAN_SHIFT_ROCKBITER_WEAPON = Keys.D4;
+
+        public const Keys SHAMAN_5 = Keys.D5;
+        public const Keys SHAMAN_SHIFT_5 = Keys.D5;
+
+        public const Keys SHAMAN_6 = Keys.D6;
+        public const Keys SHAMAN_SHIFT_6 = Keys.D6;
+
+        public const Keys SHAMAN_7 = Keys.D7;
+        public const Keys SHAMAN_SHIFT_7 = Keys.D7;
+
         #endregion
 
         #region Common
         // Common Input
         // For the sake of sharing tasks, forcing these common keys to be shared
+
+        public const Keys START_ATTACK = Keys.D1;
+        public const Keys SHIFT_1 = Keys.D1;
 
         /*
 #showtooltip [mod:shift] Conjured Fresh Water; Conjured Bread

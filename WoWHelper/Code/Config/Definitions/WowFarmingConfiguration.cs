@@ -8,6 +8,7 @@ namespace WoWHelper.Code.Gameplay
     {
         Warrior = 0,
         Mage = 1,
+        Shaman = 2,
     }
 
     public class WowFarmingConfiguration

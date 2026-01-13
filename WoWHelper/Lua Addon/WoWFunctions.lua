@@ -210,17 +210,28 @@ function CanShootTarget()
     return SpellIsInRangeAndCooledDown(7918)
 end
 
-function CanFrostboltTarget()
+function CanSpellcastPullTarget()
     if not ShouldWeAttackTarget() then
         return false
     end
 
-    local spellId = 116 -- frostbolt
-    if UnitLevel("player") < 8 then
-        spellId = 133 -- player doesn't learn frostbolt till 4, so use fireball
+    local _, classFile = UnitClass("player")
+
+    local spellId
+
+    if classFile == "SHAMAN" then
+        spellId = 403 -- Lightning Bolt (Rank 1)
+    else
+        -- Mage logic
+        -- Frostbolt (Rank 1) learned at level 4
+        if UnitLevel("player") < 4 then
+            spellId = 133 -- Fireball (Rank 1)
+        else
+            spellId = 116 -- Frostbolt (Rank 1)
+        end
     end
 
-    -- it goes on cooldown right when we start casting it, so we can assume its cooled down
+    -- Goes on cooldown as soon as casting starts, so range check is sufficient
     return SpellIsInRange(spellId)
 end
 
@@ -606,6 +617,17 @@ function IsPlayerCasting()
         or UnitChannelInfo("player") ~= nil
 end
 
+function HasRockbiterWeaponMainHand()
+    local hasMainHandEnchant,
+          mainHandExpiration,
+          mainHandCharges,
+          hasOffHandEnchant,
+          offHandExpiration,
+          offHandCharges = GetWeaponEnchantInfo()
+
+    return hasMainHandEnchant == true
+end
+
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = HasBuffNamed("Battle Shout")
@@ -632,7 +654,7 @@ function GetMultiBoolOne()
     local boolB1 = IsAnyNextSwingSpellQueued()
     local boolB2 = IsPlayerPetrified()
     local boolB3 = HasUnseenWhisper()
-    local boolB4 = CanFrostboltTarget()
+    local boolB4 = CanSpellcastPullTarget()
     local boolB5 = HasBuffNamed("Frost Armor")
     local boolB6 = HasBuffNamed("Arcane Intellect")
     local boolB7 = ShouldWeSummonWater()
@@ -648,10 +670,10 @@ function GetMultiBoolTwo()
     local boolR2 = SpellIsCooledDownIgnoringGCD(2136) -- fireblast rank 1, 2136
     local boolR3 = IsPlayerCasting()
     local boolR4 = AreEnemyNameplatesTurnedOn()
-    local boolR5 = false
+    local boolR5 = HasRockbiterWeaponMainHand()
     local boolR6 = false
     local boolR7 = false
-    local boolR8 = SpellIsCooledDownIgnoringGCD(2136)
+    local boolR8 = false
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
 
@@ -662,7 +684,7 @@ function GetMultiBoolTwo()
     local boolG5 = false
     local boolG6 = false
     local boolG7 = false
-    local boolG8 = SpellIsCooledDownIgnoringGCD(2136)
+    local boolG8 = HasRockbiterWeaponMainHand()
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
@@ -673,7 +695,7 @@ function GetMultiBoolTwo()
     local boolB5 = false
     local boolB6 = false
     local boolB7 = false
-    local boolB8 = SpellIsCooledDownIgnoringGCD(2136)
+    local boolB8 = HasRockbiterWeaponMainHand()
 
     local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
 
