@@ -15,7 +15,6 @@ namespace WoWHelper
             Console.WriteLine("Kicking off core combat loop");
             bool thrownDynamite = false;
             bool potionUsed = false;
-            bool lowManaAlerted = false;
             bool tooManyAttackersActionsTaken = false;
 
             do
@@ -112,12 +111,12 @@ namespace WoWHelper
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
-                await WowInput.PressKeyWithShift(WowInput.MAGE_SHIFT_EAT_FOOD);
+                Keyboard.KeyPress(WowInput.EAT_FOOD);
             }
 
             if (WorldState.ResourcePercent < WowPlayerConstants.DRINK_WATER_MP_THRESHOLD)
             {
-                Keyboard.KeyPress(WowInput.MAGE_DRINK_WATER);
+                await WowInput.PressKeyWithShift(WowInput.SHIFT_DRINK_WATER);
             }
 
             return true;
@@ -243,7 +242,7 @@ namespace WoWHelper
             if (tooFarAway || invalidTarget || outOfRange)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
-                Keyboard.KeyPress(WowInput.MAGE_CLEAR_TARGET_MACRO);
+                Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
             }
 
             return attackerJustDied || tooFarAway || facingWrongWay || targetNeedsToBeInFront || invalidTarget || outOfRange;

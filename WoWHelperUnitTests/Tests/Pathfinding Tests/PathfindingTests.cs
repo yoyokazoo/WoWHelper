@@ -10,7 +10,7 @@ namespace WoWHelperUnitTests
     [TestClass]
     public class PathfindingTests : UnitTestBase
     {
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(52f, 47f, 55.39f, 54.26f, 215.03d)]
         public void VerifyGetDirectionInDegrees(float x1, float y1, float x2, float y2, double expectedDirection)
         {
@@ -21,7 +21,7 @@ namespace WoWHelperUnitTests
             AssertExtensions.DoublesAreAlmostEqual(expectedDirection, direction);
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(250f, 200f, -50f)]
         [DataRow(9f, 330f, -39f)]
         [DataRow(40f, 107f, 67f)]
@@ -32,7 +32,7 @@ namespace WoWHelperUnitTests
             AssertExtensions.DoublesAreAlmostEqual(expectedDegrees, degreesToMove);
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(97f, 0.12f)]
         [DataRow(83f, -0.12f)]
         public void VerifyLateralDistance(float facingDegrees, float expectedDistance)

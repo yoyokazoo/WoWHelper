@@ -123,8 +123,17 @@ namespace WoWHelper
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
-                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_EAT_FOOD_KEY);
+                Keyboard.KeyPress(WowInput.EAT_FOOD);
             }
+
+            // water??
+            await Task.Delay(0);
+            /*
+            if (WorldState.PlayerHpPercent < WowPlayerConstants.DRINK_WATER_MP_THRESHOLD)
+            {
+                await WowInput.PressKeyWithShift(WowInput.SHIFT_DRINK_WATER);
+            }
+            */
 
             return true;
         }
@@ -135,8 +144,9 @@ namespace WoWHelper
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
 
             bool hpRecovered = WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD;
+            bool mpRecovered = WorldState.ResourcePercent >= WowPlayerConstants.STOP_RESTING_MP_THRESHOLD;
             bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
-            bool battleReady = hpRecovered && potionIsCooledDown;
+            bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
 
             if (battleReady)
             {

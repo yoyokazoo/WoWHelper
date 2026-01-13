@@ -6,6 +6,7 @@ namespace WoWHelper.Code
 {
     public static class WowInput
     {
+        #region Warrior
         // Warrior Input
         //public const Keys WARRIOR_FIND_TARGET_MACRO = Keys.D1;
         public const Keys WARRIOR_CHARGE_KEY = Keys.D2;
@@ -30,7 +31,9 @@ namespace WoWHelper.Code
         //public const Keys WARRIOR_SHIFT_TARGET_DUMMY = Keys.D8;
         //public const Keys WARRIOR_SHIFT_PETRIFICATION_FLASK = Keys.D9;
         public const Keys WARRIOR_SHIFT_EAT_FOOD_KEY = Keys.D0;
+        #endregion
 
+        #region Mage
         // Mage Input
         // Using Shift Keys built into the macros instead of binding a bar to the shift keys,
         // as it screws up regular bars if we bind a bar to shift
@@ -45,7 +48,7 @@ namespace WoWHelper.Code
         public const Keys MAGE_SHIFT_CONE_OF_COLD = Keys.D3;
 
         public const Keys MAGE_ARCANE_EXPLOSION = Keys.D4;
-        public const Keys MAGE_SHIFT_THROW_DYNAMITE = Keys.D4;
+        public const Keys MAGE_SHIFT_4 = Keys.D4;
 
         public const Keys MAGE_5 = Keys.D5;
         public const Keys MAGE_SHIFT_5 = Keys.D5;
@@ -68,20 +71,28 @@ namespace WoWHelper.Code
         public const Keys MAGE_CONJURE_WATER = Keys.D7;
         public const Keys MAGE_SHIFT_CONJURE_FOOD = Keys.D7;
 
-        /*
-#showtooltip [mod:shift] Conjured Bread; Conjured Fresh Water
-/use [nomod] Conjured Fresh Water
-/use [mod:shift] Conjured Bread
-        */
-        public const Keys MAGE_DRINK_WATER = Keys.D8;
-        public const Keys MAGE_SHIFT_EAT_FOOD = Keys.D8;
-
-        public const Keys MAGE_CLEAR_TARGET_MACRO = Keys.D9; // TODO: combine these to common
-        public const Keys MAGE_SHIFT_9 = Keys.D9;
 
 
+        #endregion
+
+        #region Shaman
+
+        #endregion
+
+        #region Common
         // Common Input
         // For the sake of sharing tasks, forcing these common keys to be shared
+
+        /*
+#showtooltip [mod:shift] Conjured Fresh Water; Conjured Bread
+/use [nomod] Conjured Bread
+/use [mod:shift] Conjured Fresh Water
+        */
+        public const Keys EAT_FOOD = Keys.D8;
+        public const Keys SHIFT_DRINK_WATER = Keys.D8;
+
+        public const Keys CLEAR_TARGET_MACRO = Keys.D9;
+        public const Keys SHIFT_9 = Keys.D9;
 
         /*
 #showtooltip [mod:shift] Healing Potion; Target
@@ -124,6 +135,10 @@ namespace WoWHelper.Code
         public const Keys TAB_TARGET = Keys.Tab;
         public const Keys JUMP = Keys.Space;
 
+        #endregion
+
+        #region Shift/Alt Handling
+
         // For when we exit the program with ESC, make sure we don't have any lingering keys pressed down
         public static Keys LatestShiftKey;
         public static async Task PressKeyWithModifier(Keys key, Keys modifier)
@@ -151,5 +166,6 @@ namespace WoWHelper.Code
             // Why is it not Keys.Alt, which exists? no one knows!
             await PressKeyWithModifier(key, Keys.Menu);
         }
+        #endregion
     }
 }

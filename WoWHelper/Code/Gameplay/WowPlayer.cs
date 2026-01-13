@@ -155,6 +155,7 @@ namespace WoWHelper
             */
 
             SlackHelper.SendMessageToChannel($"Testing notification!");
+            await Task.Delay(0);
             return true;
         }
 
