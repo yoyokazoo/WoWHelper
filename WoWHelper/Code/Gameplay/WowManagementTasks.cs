@@ -21,6 +21,44 @@ namespace WoWHelper
             return true;
         }
 
+        // 
+        public async Task<bool> EveryWorldStateUpdateTasks()
+        {
+            // TODO: combine these into a shared task
+            // don't drown
+            if (WorldState.Underwater)
+            {
+                await GetOutOfWater();
+            }
+
+            // ping if unseen message
+            if (FarmingConfig.AlertOnUnreadWhisper && !(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
+            {
+                SlackHelper.SendMessageToChannel($"Unseen Whisper!");
+            }
+
+            // ping on level up
+            if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState != null && PreviousWorldState.PlayerLevel > 0 && PreviousWorldState.PlayerLevel != WorldState.PlayerLevel)
+            {
+                SlackHelper.SendMessageToChannel($"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!");
+                if (FarmingConfig.LogoffLevel == WorldState.PlayerLevel)
+                {
+                    LogoutTriggered = true;
+                    LogoutReason = $"Reached log out level {FarmingConfig.LogoffLevel}";
+                }
+            }
+
+            // If we're about to die, petri alt+f4
+            if (WorldState.PlayerHpPercent <= WowPlayerConstants.PETRI_ALTF4_HP_THRESHOLD && WorldState.PlayerLevel >= WowGameplayConstants.PETRIFICATION_FLASK_LEVEL)
+            {
+                SlackHelper.SendMessageToChannel($"Petri Alt+F4ed at ~{WorldState.PlayerHpPercent}%!  Consider using Unstuck instead of logging back in");
+                await PetriAltF4Task();
+                Environment.Exit(0);
+            }
+
+            return true;
+        }
+
         public async Task<bool> SetLogoutVariablesTask()
         {
             if (FarmingConfig.LogoutOnLowDynamite && WorldState.LowOnDynamite)

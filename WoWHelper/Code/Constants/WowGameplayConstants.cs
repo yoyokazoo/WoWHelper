@@ -42,5 +42,6 @@
 
         // Shared
         public const int DYNAMITE_LEVEL = 6;
+        public const int PETRIFICATION_FLASK_LEVEL = 50;
     }
 }

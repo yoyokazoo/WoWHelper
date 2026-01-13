@@ -9,22 +9,23 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        public async Task<bool> WarriorCombatLoopTask()
+        public async Task<bool> ShamanCombatLoopTask()
         {
             Console.WriteLine("Kicking off core combat loop");
             bool thrownDynamite = false;
             bool potionUsed = false;
-            bool healingTrinketUsed = false;
             bool tooManyAttackersActionsTaken = false;
             bool startOfCombatWiggled = false;
 
-            await WarriorStartAttackTask();
+            await ShamanStartAttackTask();
 
             do
             {
                 await UpdateWorldStateAsync();
 
                 await EveryWorldStateUpdateTasks();
+
+                
 
                 // First do our "Make sure we're not standing around doing nothing" checks
                 if (await MeleeMakeSureWeAreAttackingEnemyTask())
@@ -33,7 +34,7 @@ namespace WoWHelper
                 }
 
                 // Next, check if we need to pop any big cooldowns
-                if (!tooManyAttackersActionsTaken && await WarriorTooManyAttackersTask())
+                if (!tooManyAttackersActionsTaken && await ShamanTooManyAttackersTask())
                 {
                     tooManyAttackersActionsTaken = true;
                     continue;
@@ -73,36 +74,16 @@ namespace WoWHelper
                     continue;
                 }
 
-                if (!healingTrinketUsed && await WarriorUseDiamondFlaskTask())
-                {
-                    healingTrinketUsed = true;
-                    continue;
-                }
-
                 if (!startOfCombatWiggled && PreviousWorldState?.TargetHpPercent == 100 && WorldState.TargetHpPercent < 100)
                 {
                     await StartOfCombatWiggle();
                     startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
-                if (FarmingConfig.PreemptFear && !CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS))
-                {
-                    await WarriorStartOfCombatBerserkerRage();
-                    BerserkerRageTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                }
-
                 // Finally, if we've made it this far, do standard combat actions
                 if (!WorldState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
                 {
                     Keyboard.KeyPress(WowInput.WARRIOR_BATTLE_SHOUT_KEY);
-                }
-                else if (WorldState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
-                {
-                    Keyboard.KeyPress(WowInput.WARRIOR_OVERPOWER_KEY);
-                }
-                else if (WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST)
-                {
-                    Keyboard.KeyPress(WowInput.WARRIOR_EXECUTE_KEY);
                 }
                 else if (FarmingConfig.UseRend && !WorldState.TargetHasRend && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
                 {
@@ -138,7 +119,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> WarriorStartBattleReadyRecoverTask()
+        public async Task<bool> ShamanStartBattleReadyRecoverTask()
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
@@ -148,7 +129,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> WarriorWaitUntilBattleReadyTask()
+        public async Task<bool> ShamanWaitUntilBattleReadyTask()
         {
             // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
@@ -165,47 +146,33 @@ namespace WoWHelper
             return battleReady;
         }
 
-        public async Task<bool> WarriorKickOffEngageTask()
+        public async Task<bool> ShamanKickOffEngageTask()
         {
-            await Task.Delay(0);
             EngageAttempts = 1;
 
-            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
-            {
-                Keyboard.KeyPress(WowInput.WARRIOR_CHARGE_KEY);
-                return true;
-            }
-            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
-            {
-                Keyboard.KeyPress(WowInput.WARRIOR_SHOOT_MACRO);
-                return true;
-            }
-
-            return false;
+            Console.WriteLine($"MageKickOffEngageTask, clicking frostbolt");
+            Keyboard.KeyPress(WowInput.MAGE_FROSTBOLT);
+            await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
+            return true;
         }
 
-        public async Task<bool> WarriorFaceCorrectDirectionToEngageTask()
+        public async Task<bool> ShamanFaceCorrectDirectionToEngageTask()
         {
             EngageAttempts++;
 
-            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
+            Console.WriteLine($"MageFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}");
+            if (!WorldState.IsCurrentlyCasting)
             {
                 await TurnABitToTheLeftTask();
-                Keyboard.KeyPress(WowInput.WARRIOR_CHARGE_KEY);
-            }
-            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
-            {
-                if (!WorldState.WaitingToShoot)
-                {
-                    await TurnABitToTheLeftTask();
-                    Keyboard.KeyPress(WowInput.WARRIOR_SHOOT_MACRO);
-                }
+                Keyboard.KeyPress(WowInput.MAGE_FROSTBOLT);
+                await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
+                await UpdateWorldStateAsync();
             }
 
             return CanEngageTarget();
         }
 
-        public async Task<bool> WarriorStartAttackTask()
+        public async Task<bool> ShamanStartAttackTask()
         {
             await Task.Delay(0);
 
@@ -215,69 +182,22 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> WarriorTooManyAttackersTask()
+        public async Task<bool> ShamanTooManyAttackersTask()
         {
+            await Task.Delay(0);
             bool tooManyAttackers = WorldState.AttackerCount >= FarmingConfig.TooManyAttackersThreshold;
 
             if (tooManyAttackers)
             {
                 SlackHelper.SendMessageToChannel($"TOO MANY ATTACKERS HELP");
 
-                // cast retaliation once GCD is cooled down
-                while (!WorldState.GCDCooledDown)
-                {
-                    await UpdateWorldStateAsync();
-                }
-                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION_KEY);
+                // Figure out what to do here.  War stomp? Magma Totem? War stomp -> ghost wolf -> run to safety?
 
                 LogoutReason = "Got into a Retaliation situation, logging off for safety";
                 LogoutTriggered = true;
             }
 
             return tooManyAttackers;
-        }
-
-        public async Task<bool> WarriorUseDiamondFlaskTask()
-        {
-            bool shouldUseDiamondFlask = WorldState.AttackerCount > 1 &&
-                !CurrentTimeInsideDuration(HealingTrinketTime, WowGameplayConstants.DIAMOND_FLASK_COOLDOWN_MILLIS);
-
-            if (shouldUseDiamondFlask)
-            {
-                HealingTrinketTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_HEALING_TRINKET);
-            }
-
-            return shouldUseDiamondFlask;
-        }
-
-        public async Task<bool> WarriorUseHealingTrinketTask()
-        {
-            bool shouldUseHealingTrinket = WorldState.PlayerHpPercent <= WowGameplayConstants.HEALING_TRINKET_HP_THRESHOLD &&
-                !CurrentTimeInsideDuration(HealingTrinketTime, WowGameplayConstants.HEALING_TRINKET_COOLDOWN_MILLIS);
-
-            if (shouldUseHealingTrinket)
-            {
-                HealingTrinketTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_HEALING_TRINKET);
-            }
-
-            return shouldUseHealingTrinket;
-        }
-
-        public async Task<bool> WarriorStartOfCombatBerserkerRage()
-        {
-            await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_BERSERKER_RAGE_MACRO);
-            await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
-            await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
-            await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
-            await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
-
-            return true;
         }
     }
 }

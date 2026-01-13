@@ -58,5 +58,36 @@ namespace WoWHelper
 
             return shouldUseHealingPotion;
         }
+
+        public async Task<bool> MeleeMakeSureWeAreAttackingEnemyTask()
+        {
+            bool attackerJustDied = PreviousWorldState?.AttackerCount > WorldState.AttackerCount && WorldState.AttackerCount > 0;
+            bool inCombatButNotAutoAttacking = WorldState.IsInCombat && !WorldState.IsAutoAttacking;
+            bool tooFarAway = WorldState.TooFarAway;
+            bool facingWrongWay = WorldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
+            bool targetNeedsToBeInFront = WorldState.TargetNeedsToBeInFront;
+            bool invalidTarget = WorldState.InvalidTarget;
+            bool outOfRange = WorldState.OutOfRange;
+
+            if (facingWrongWay || targetNeedsToBeInFront)
+            {
+                // scoot back to make sure the mob is in front of you
+                await ScootBackwardsTask();
+            }
+
+            if (tooFarAway || invalidTarget || outOfRange)
+            {
+                // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
+                Keyboard.KeyPress(WowInput.WARRIOR_CLEAR_TARGET_MACRO);
+            }
+
+            if (attackerJustDied || inCombatButNotAutoAttacking || tooFarAway)
+            {
+                // /startattack
+                Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+            }
+
+            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || invalidTarget || outOfRange;
+        }
     }
 }
