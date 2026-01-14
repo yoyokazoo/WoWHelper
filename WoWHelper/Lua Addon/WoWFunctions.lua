@@ -558,6 +558,11 @@ function CanCastSweepingStrikes()
     return SpellIsCooledDown(12292)
 end
 
+-- Earth Shock Rank 1, 8042
+function CanCastEarthShock()
+    return SpellIsCooledDown(8042)
+end
+
 -- Mortal Strike, 12294
 -- Bloodthirst, 23881
 -- only one can be active at a time, so do both in one
@@ -671,7 +676,7 @@ function GetMultiBoolTwo()
     local boolR3 = IsPlayerCasting()
     local boolR4 = AreEnemyNameplatesTurnedOn()
     local boolR5 = HasRockbiterWeaponMainHand()
-    local boolR6 = false
+    local boolR6 = CanCastEarthShock()
     local boolR7 = false
     local boolR8 = false
 
@@ -684,7 +689,7 @@ function GetMultiBoolTwo()
     local boolG5 = false
     local boolG6 = false
     local boolG7 = false
-    local boolG8 = HasRockbiterWeaponMainHand()
+    local boolG8 = CanCastEarthShock()
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 

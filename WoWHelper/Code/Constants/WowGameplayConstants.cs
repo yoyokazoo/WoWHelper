@@ -31,6 +31,8 @@
         public const int MANA_GEM_MP_THRESHOLD = 20;
         public const int MANA_LOW_ALERT_THRESHOLD = 30;
 
+        // Shaman
+
         // The healing trinket isn't very good, so spam it to keep the run going faster
         public const int HEALING_TRINKET_HP_THRESHOLD = 91;
 

@@ -28,7 +28,7 @@ namespace WoWHelper.Code.WorldState
         public List<Vector2> Waypoints { get; set; }
         public WaypointTraversalMethod TraversalMethod { get; set; }
         public WaypointTargetFindMethod TargetFindMethod { get; set; }
-        public float DistanceTolerance { get; set; } = 0.5f;
+        public float DistanceTolerance { get; set; }
 
         public EngagementMethod EngageMethod { get; set; }
         public bool UseRend { get; set; } // some mobs are immune to bleed
@@ -38,6 +38,10 @@ namespace WoWHelper.Code.WorldState
 
         public WowLocationConfiguration()
         {
+            TraversalMethod = WaypointTraversalMethod.CIRCULAR;
+            TargetFindMethod = WaypointTargetFindMethod.ALTERNATE;
+            DistanceTolerance = 0.2f;
+
             LogoffLevel = 61;
         }
     }

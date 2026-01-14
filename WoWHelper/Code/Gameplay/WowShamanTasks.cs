@@ -63,6 +63,10 @@ namespace WoWHelper
                 {
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
                 }
+                if (WorldState.CanCastEarthShock && (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20)) // don't shock almost dead targets unless we have multiples
+                {
+                    Keyboard.KeyPress(WowInput.SHAMAN_SHOCK);
+                }
                 else// if (WorldState.AttackerCount <= 1)
                 {
                     // we should already be attacking

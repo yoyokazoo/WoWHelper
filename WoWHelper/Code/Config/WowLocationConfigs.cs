@@ -551,12 +551,27 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(43.88f, 56.90f),
                 new Vector2(45.27f, 57.40f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f,
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 2,
             LogoffLevel = 7,
+        };
+
+        public static readonly WowLocationConfiguration LEVEL_4_MULGORE_MOUNTAIN_COUGARS = new WowLocationConfiguration
+        {
+            // /target Plains
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(46.54f, 88.68f),
+                new Vector2(46.45f, 90.95f),
+                new Vector2(44.38f, 93.00f),
+                new Vector2(42.82f, 89.71f),
+                new Vector2(41.21f, 88.86f),
+                new Vector2(42.75f, 86.92f),
+                new Vector2(43.54f, 88.74f),
+            },
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            TooManyAttackersThreshold = 2,
+            LogoffLevel = 6,
         };
 
         public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
@@ -570,9 +585,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(49.42f, 80.53f),
                 new Vector2(46.44f, 78.21f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f,
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 2,
             LogoffLevel = 4,
@@ -592,9 +604,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.29f, 62.22f),
                 new Vector2(45.49f, 64.54f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f,
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 2,
             LogoffLevel = 4,

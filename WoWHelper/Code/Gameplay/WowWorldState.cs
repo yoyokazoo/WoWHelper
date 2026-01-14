@@ -54,6 +54,7 @@ namespace WoWHelper
         public bool IsCurrentlyCasting { get; private set; }
         public bool EnemyNameplatesAreTurnedOn { get; private set; }
         public bool HasRockbiterWeaponOn { get; private set; }
+        public bool CanCastEarthShock { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -211,6 +212,7 @@ namespace WoWHelper
             IsCurrentlyCasting = r3;
             EnemyNameplatesAreTurnedOn = r4;
             HasRockbiterWeaponOn = r5;
+            CanCastEarthShock = r6;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)
