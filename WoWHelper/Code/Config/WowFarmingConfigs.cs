@@ -8,9 +8,9 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            LocationConfiguration = WowLocationConfigs.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
+            LocationConfiguration = WowLocationConfigs.LEVEL_1_MULGORE_PLAINSTRIDERS,
             ManagementConfiguration = WowManagementConfigs.FULL_BABYSIT,
-            CombatConfiguration = WowCombatConfiguration.Mage
+            CombatConfiguration = WowCombatConfiguration.Shaman
         };
     }
 }

@@ -23,7 +23,7 @@ namespace WoWHelper
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorWaitUntilBattleReadyTask();
                 case Code.Gameplay.WowCombatConfiguration.Mage: return await MageWaitUntilBattleReadyTask();
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask();
+                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanWaitUntilBattleReadyTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -34,7 +34,7 @@ namespace WoWHelper
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorKickOffEngageTask();
                 case Code.Gameplay.WowCombatConfiguration.Mage: return await MageKickOffEngageTask();
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask();
+                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanKickOffEngageTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -45,7 +45,7 @@ namespace WoWHelper
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorFaceCorrectDirectionToEngageTask();
                 case Code.Gameplay.WowCombatConfiguration.Mage: return await MageFaceCorrectDirectionToEngageTask();
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask();
+                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanFaceCorrectDirectionToEngageTask();
                 default: throw new System.NotImplementedException();
             }
         }
@@ -56,7 +56,7 @@ namespace WoWHelper
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorCombatLoopTask();
                 case Code.Gameplay.WowCombatConfiguration.Mage: return await MageCombatLoopTask();
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask();
+                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanCombatLoopTask();
                 default: throw new System.NotImplementedException();
             }
         }

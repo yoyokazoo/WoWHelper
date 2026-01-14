@@ -559,6 +559,25 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 7,
         };
 
+        public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
+        {
+            // /target Plains
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(46.26f, 76.52f),
+                new Vector2(48.83f, 76.44f),
+                new Vector2(51.83f, 75.29f),
+                new Vector2(49.42f, 80.53f),
+                new Vector2(46.44f, 78.21f),
+            },
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.2f,
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            TooManyAttackersThreshold = 2,
+            LogoffLevel = 4,
+        };
+
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
         {
             // /target Mottled

@@ -75,6 +75,8 @@ namespace WoWHelper
                 await ScootBackwardsTask();
             }
 
+            // TODO: count attackers, add bool to see if our currently targeted mob is tagged by us
+            // so we don't spam clear if we don't have to
             if (tooFarAway || invalidTarget || outOfRange)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
