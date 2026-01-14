@@ -556,9 +556,28 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 7,
         };
 
+        public static readonly WowLocationConfiguration LEVEL_6_MULGORE_BATTLEBOARS = new WowLocationConfiguration
+        {
+            // /target Battleboar
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(55.20f, 75.76f),
+                new Vector2(55.27f, 79.62f),
+                new Vector2(54.18f, 80.59f),
+                new Vector2(53.69f, 81.98f),
+                new Vector2(56.43f, 84.50f),
+                new Vector2(58.30f, 88.36f),
+                new Vector2(59.84f, 88.61f),
+            },
+            TraversalMethod = WaypointTraversalMethod.LINEAR,
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            TooManyAttackersThreshold = 3,
+            LogoffLevel = 8,
+        };
+
         public static readonly WowLocationConfiguration LEVEL_4_MULGORE_MOUNTAIN_COUGARS = new WowLocationConfiguration
         {
-            // /target Plains
+            // /target Mountain
             Waypoints = new List<Vector2>
             {
                 new Vector2(46.54f, 88.68f),

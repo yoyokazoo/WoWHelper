@@ -8,7 +8,7 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            LocationConfiguration = WowLocationConfigs.LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
+            LocationConfiguration = WowLocationConfigs.LEVEL_6_MULGORE_BATTLEBOARS,
             ManagementConfiguration = WowManagementConfigs.FULL_BABYSIT,
             CombatConfiguration = WowCombatConfiguration.Shaman
         };

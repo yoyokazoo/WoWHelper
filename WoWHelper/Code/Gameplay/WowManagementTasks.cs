@@ -38,7 +38,7 @@ namespace WoWHelper
             }
 
             // ping on level up
-            if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState != null && PreviousWorldState.PlayerLevel > 0 && PreviousWorldState.PlayerLevel != WorldState.PlayerLevel)
+            if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState != null && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
             {
                 SlackHelper.SendMessageToChannel($"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!");
                 if (FarmingConfig.LogoffLevel == WorldState.PlayerLevel)
