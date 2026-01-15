@@ -72,7 +72,8 @@ namespace WoWHelper
                 if (WorldState.IsInCombat)
                 {
                     await EndWalkForwardTask();
-                    // return true if we can charge, false if we're already in combat
+                    Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
+
                     return false;
                 }
 

@@ -55,6 +55,7 @@ namespace WoWHelper
         public bool EnemyNameplatesAreTurnedOn { get; private set; }
         public bool HasRockbiterWeaponOn { get; private set; }
         public bool CanCastEarthShock { get; private set; }
+        public bool HasLightningShieldOn { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -213,6 +214,7 @@ namespace WoWHelper
             EnemyNameplatesAreTurnedOn = r4;
             HasRockbiterWeaponOn = r5;
             CanCastEarthShock = r6;
+            HasLightningShieldOn = r7;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

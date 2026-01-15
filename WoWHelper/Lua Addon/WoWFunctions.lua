@@ -677,7 +677,7 @@ function GetMultiBoolTwo()
     local boolR4 = AreEnemyNameplatesTurnedOn()
     local boolR5 = HasRockbiterWeaponMainHand()
     local boolR6 = CanCastEarthShock()
-    local boolR7 = false
+    local boolR7 = HasBuffNamed("Lightning Shield")
     local boolR8 = false
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)

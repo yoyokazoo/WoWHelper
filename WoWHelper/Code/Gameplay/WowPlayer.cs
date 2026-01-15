@@ -174,6 +174,7 @@ namespace WoWHelper
                 if (!WorldState.OnLoginScreen && WorldState.IsInCombat)
                 {
                     CurrentPlayerState = PlayerState.IN_CORE_COMBAT_LOOP;
+                    Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
                 }
 
                 await EveryWorldStateUpdateTasks();

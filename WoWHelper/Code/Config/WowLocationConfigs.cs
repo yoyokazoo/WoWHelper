@@ -556,6 +556,25 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 7,
         };
 
+        public static readonly WowLocationConfiguration LEVEL_8_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
+        {
+            // /target Battleboar
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(43.44f, 66.44f),
+                new Vector2(40.87f, 70.93f),
+                new Vector2(38.80f, 70.32f),
+                new Vector2(36.35f, 71.71f),
+                new Vector2(36.80f, 67.05f),
+                new Vector2(40.00f, 65.46f),
+                new Vector2(41.77f, 65.69f),
+            },
+            TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            TooManyAttackersThreshold = 3,
+            LogoffLevel = 10,
+        };
+
         public static readonly WowLocationConfiguration LEVEL_6_MULGORE_BATTLEBOARS = new WowLocationConfiguration
         {
             // /target Battleboar

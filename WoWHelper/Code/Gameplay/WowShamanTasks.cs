@@ -63,7 +63,11 @@ namespace WoWHelper
                 {
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
                 }
-                if (WorldState.CanCastEarthShock && (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20)) // don't shock almost dead targets unless we have multiples
+                else if (!WorldState.HasLightningShieldOn)
+                {
+                    Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
+                }
+                if (WorldState.CanCastEarthShock/* && (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20)*/) // don't shock almost dead targets unless we have multiples.  temp turning off so we blast runners
                 {
                     Keyboard.KeyPress(WowInput.SHAMAN_SHOCK);
                 }
@@ -108,6 +112,23 @@ namespace WoWHelper
 
             if (battleReady)
             {
+                bool buffed = false;
+                if (!WorldState.HasRockbiterWeaponOn)
+                {
+                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
+                    buffed = true;
+                }
+                else if (!WorldState.HasLightningShieldOn)
+                {
+                    Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
+                    buffed = true;
+                }
+
+                if (buffed)
+                {
+                    return false;
+                }
+
                 await ScootForwardsTask();
             }
 
@@ -151,6 +172,8 @@ namespace WoWHelper
                 SlackHelper.SendMessageToChannel(warningMessage);
 
                 // Figure out what to do here.  War stomp? Magma Totem? War stomp -> ghost wolf -> run to safety?
+                // Stoneskin totem for now
+                Keyboard.KeyPress(WowInput.SHAMAN_5);
 
                 LogoutReason = $"Got into an emergency situation ({warningMessage}), logging off for safety";
                 LogoutTriggered = true;
