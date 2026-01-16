@@ -54,10 +54,10 @@ namespace WoWHelper
 
         private void button2_Click(object sender, EventArgs e)
         {
-            SlackHelper.SendMessageToChannel("Test slack message!", OnPostMessageCompleted);
+            //SlackHelper.SendMessageToChannel("Test slack message!", OnPostMessageCompleted);
             //SlackHelper.SendScreenshotToChannel();
-            //WowPlayer player = new WowPlayer();
-            //player.AdHocTest();
+            WowPlayer player = new WowPlayer();
+            player.AdHocTest();
         }
 
         private void OnPostMessageCompleted(PostMessageResponse response)
