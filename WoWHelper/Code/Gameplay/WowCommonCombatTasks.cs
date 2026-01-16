@@ -80,7 +80,11 @@ namespace WoWHelper
             if (tooFarAway || invalidTarget || outOfRange)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
-                Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
+                // but don't if attacker count == 0, since then we can be sure they're far away from us
+                if (WorldState.AttackerCount > 0)
+                {
+                    Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
+                }
             }
 
             if (attackerJustDied || inCombatButNotAutoAttacking || tooFarAway)

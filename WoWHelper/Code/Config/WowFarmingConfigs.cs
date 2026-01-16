@@ -8,7 +8,7 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            LocationConfiguration = WowLocationConfigs.LEVEL_8_MULGORE_MIXED_BEASTS,
+            LocationConfiguration = WowLocationConfigs.LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS,
             ManagementConfiguration = WowManagementConfigs.FULL_BABYSIT,
             CombatConfiguration = WowCombatConfiguration.Shaman
         };

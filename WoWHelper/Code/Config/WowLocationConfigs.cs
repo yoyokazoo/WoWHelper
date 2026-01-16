@@ -460,6 +460,9 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS = new WowLocationConfiguration
         {
+            // /target Fleeting
+            // /target Zhevra
+            // /target Sunscale
             Waypoints = new List<Vector2>
             {
                 new Vector2(55.00f, 21.13f),
@@ -471,18 +474,22 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(56.29f, 22.47f),
                 new Vector2(56.60f, 22.00f)
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f,
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
-            TooManyAttackersThreshold = 2,
+            TooManyAttackersThreshold = 3,
+            LogoffLevel = 17,
         };
 
-        public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration { 
+        public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration
+        {
+            // /target /target Vemon
+            // /target Elder
+            // /target Blood
+            // /target Corrupted
             Waypoints = new List<Vector2>
             { 
                 //new Vector2(38.13f, 16.10f),
                 new Vector2(37.52f, 22.80f),
+                new Vector2(37.47f, 24.77f),
                 new Vector2(37.07f, 27.55f),
                 new Vector2(36.30f, 31.59f),
                 new Vector2(36.03f, 33.09f),
@@ -494,10 +501,9 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(36.30f, 53.50f)
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f,
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
-            TooManyAttackersThreshold = 2,
+            TooManyAttackersThreshold = 3,
+            LogoffLevel = 14
         };
 
         public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration
@@ -554,6 +560,26 @@ namespace WoWHelper.Code.WorldState
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             TooManyAttackersThreshold = 2,
             LogoffLevel = 7,
+        };
+
+        public static readonly WowLocationConfiguration LEVEL_10_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
+        {
+            // /target Swoop
+            // /target Flatland
+            // /target Prairie
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(49.82f, 40.08f),
+                new Vector2(49.82f, 36.88f),
+                new Vector2(49.82f, 33.47f),
+                new Vector2(52.35f, 33.47f),
+                new Vector2(52.07f, 37.26f),
+                new Vector2(51.60f, 39.78f),
+            },
+            TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            TooManyAttackersThreshold = 4,
+            LogoffLevel = 13,
         };
 
         public static readonly WowLocationConfiguration LEVEL_8_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
