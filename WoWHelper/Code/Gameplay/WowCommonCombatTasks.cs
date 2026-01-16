@@ -31,7 +31,7 @@ namespace WoWHelper
 
             if (shouldThrowDynamite)
             {
-                Mouse.Move(1770, 770);
+                Mouse.Move(1720, 690);
                 await Task.Delay(50);
                 Keyboard.KeyPress(WowInput.THROW_DYNAMITE);
                 await Task.Delay(50);

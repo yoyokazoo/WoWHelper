@@ -41,6 +41,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WaypointTraversalMethod.CIRCULAR;
             TargetFindMethod = WaypointTargetFindMethod.ALTERNATE;
             DistanceTolerance = 0.2f;
+            TooManyAttackersThreshold = 3;
 
             LogoffLevel = 61;
         }

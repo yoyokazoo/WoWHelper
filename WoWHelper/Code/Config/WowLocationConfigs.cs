@@ -454,8 +454,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(42.24f, 20.87f)
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.TAB,
-            DistanceTolerance = 0.5f
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
         };
 
         public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS = new WowLocationConfiguration
@@ -475,8 +474,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(56.60f, 22.00f)
             },
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
-            TooManyAttackersThreshold = 3,
-            LogoffLevel = 17,
+            LogoffLevel = 18,
         };
 
         public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration
@@ -502,7 +500,6 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
-            TooManyAttackersThreshold = 3,
             LogoffLevel = 14
         };
 
@@ -537,11 +534,7 @@ namespace WoWHelper.Code.WorldState
                 //new Vector2(52.09f, 65.87f),
                 new Vector2(52.44f, 64.81f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f,
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
-            TooManyAttackersThreshold = 3,
         };
 
         public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration
@@ -597,7 +590,6 @@ namespace WoWHelper.Code.WorldState
             },
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
-            TooManyAttackersThreshold = 3,
             LogoffLevel = 10,
         };
 
@@ -616,7 +608,6 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WaypointTraversalMethod.LINEAR,
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
-            TooManyAttackersThreshold = 3,
             LogoffLevel = 8,
         };
 
