@@ -7,17 +7,8 @@ using System.Runtime.InteropServices;
 
 public static class BitmapDifferenceVisualizer
 {
-    public static Bitmap BuildDifferenceHeatmap(IReadOnlyList<Bitmap> bitmaps, int ignoreXMin, int ignoreXMax, int ignoreYMin, int ignoreYMax)
+    public static Bitmap BuildDifferenceHeatmap(List<Point> points, int width, int height, int ignoreXMin, int ignoreXMax, int ignoreYMin, int ignoreYMax)
     {
-        var points = FindHotspots(bitmaps, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
-
-        int width = bitmaps[0].Width;
-        int height = bitmaps[0].Height;
-
-        
-
-        var bestOffset = FindBestSquareOffset(points, width, height, 200);
-
         Bitmap output = new Bitmap(width, height);
 
         foreach(var point in points)

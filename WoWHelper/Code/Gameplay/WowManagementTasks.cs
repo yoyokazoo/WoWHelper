@@ -131,7 +131,7 @@ namespace WoWHelper
 
         public async Task<bool> LootTask()
         {
-            Mouse.Move(1720, 720);
+            Mouse.Move(LootX, LootY);
             Mouse.PressButton(Mouse.MouseKeys.Right);
             await Task.Delay(1500);
             return true;
@@ -139,7 +139,7 @@ namespace WoWHelper
 
         public async Task<bool> SkinTask()
         {
-            Mouse.Move(1720, 720);
+            Mouse.Move(LootX, LootY);
             Mouse.PressButton(Mouse.MouseKeys.Right);
             await Task.Delay(3000);
             return true;

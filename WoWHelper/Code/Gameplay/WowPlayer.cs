@@ -35,6 +35,9 @@ namespace WoWHelper
 
         public int EngageAttempts { get; private set; }
 
+        public int LootX { get; private set; }
+        public int LootY { get; private set; }
+
         public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }
         public PlayerState CurrentPlayerState { get; private set; }
@@ -157,6 +160,7 @@ namespace WoWHelper
             return true;
             */
 
+            await Task.Delay(2000);
             await CreateHeatmapForLooting();
 
             //SlackHelper.SendMessageToChannel($"Testing notification!");
@@ -171,10 +175,10 @@ namespace WoWHelper
             int snippetWidth = 426;
             int snippetHeight = 341;
 
-            int ignoreXOffset = 1663;
-            int ignoreYOffset = 672;
-            int ignoreWidth = 109;
-            int ignoreHeight = 101;
+            int ignoreXOffset = 1655;
+            int ignoreYOffset = 655;
+            int ignoreWidth = 130;
+            int ignoreHeight = 135;
 
             List<Bitmap> screenChunks = new List<Bitmap>();
             for (int i = 0; i < 20; i++)
@@ -194,8 +198,29 @@ namespace WoWHelper
             int ignoreYMin = ignoreYOffset - yOffset;
             int ignoreYMax = ignoreYMin + ignoreHeight;
 
-            var asdf = BitmapDifferenceVisualizer.BuildDifferenceHeatmap(screenChunks, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
+            int squareSize = 40;
+            int halfSquareSize = squareSize / 2;
+
+            var points = BitmapDifferenceVisualizer.FindHotspots(screenChunks, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
+            var bestSquareOffset = BitmapDifferenceVisualizer.FindBestSquareOffset(points, snippetWidth, snippetHeight, squareSize);
+            var asdf = BitmapDifferenceVisualizer.BuildDifferenceHeatmap(points, snippetWidth, snippetHeight, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
+
+            Console.WriteLine($"Best Offset = {bestSquareOffset}, click at {new Point(bestSquareOffset.offsetX + halfSquareSize, bestSquareOffset.offsetY + halfSquareSize)}");
+            LootX = xOffset + bestSquareOffset.offsetX + halfSquareSize;
+            LootY = yOffset + bestSquareOffset.offsetY + halfSquareSize;
+
             ScreenCapture.SaveBitmapToFile(asdf, "Heatmap.bmp");
+
+            Bitmap example = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(
+                    new Rectangle(xOffset, yOffset, snippetWidth, snippetHeight));
+            ScreenCapture.SaveBitmapToFile(example, "Example.bmp");
+
+            foreach (Bitmap bmp in screenChunks)
+            {
+                bmp.Dispose();
+            }
+            asdf.Dispose();
+            example.Dispose();
 
             return true;
         }
@@ -289,6 +314,8 @@ namespace WoWHelper
                         break;
                     case PlayerState.TARGET_DEFEATED:
                         Console.WriteLine("Target defeated, trying to loot");
+                        await Task.Delay(4000);
+                        await CreateHeatmapForLooting();
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
                             PlayerState.LOOT_ATTEMPT_TWO,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
