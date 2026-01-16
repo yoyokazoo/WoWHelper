@@ -1,10 +1,13 @@
 ﻿using InputManager;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
 using WoWHelper.Code.Constants;
@@ -154,8 +157,46 @@ namespace WoWHelper
             return true;
             */
 
-            SlackHelper.SendMessageToChannel($"Testing notification!");
+            await CreateHeatmapForLooting();
+
+            //SlackHelper.SendMessageToChannel($"Testing notification!");
             await Task.Delay(0);
+            return true;
+        }
+
+        public async Task<bool> CreateHeatmapForLooting()
+        {
+            int xOffset = 1495;
+            int yOffset = 516;
+            int snippetWidth = 426;
+            int snippetHeight = 341;
+
+            int ignoreXOffset = 1663;
+            int ignoreYOffset = 672;
+            int ignoreWidth = 109;
+            int ignoreHeight = 101;
+
+            List<Bitmap> screenChunks = new List<Bitmap>();
+            for (int i = 0; i < 20; i++)
+            {
+                int width = Screen.PrimaryScreen.Bounds.Width;
+                int height = Screen.PrimaryScreen.Bounds.Height;
+
+                Bitmap bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(
+                    new Rectangle(xOffset, yOffset, snippetWidth, snippetHeight));
+                screenChunks.Add(bmp);
+                await Task.Delay(100);
+            }
+
+            // convert from absolute coords to relative to the snippet we took
+            int ignoreXMin = ignoreXOffset - xOffset;
+            int ignoreXMax = ignoreXMin + ignoreWidth;
+            int ignoreYMin = ignoreYOffset - yOffset;
+            int ignoreYMax = ignoreYMin + ignoreHeight;
+
+            var asdf = BitmapDifferenceVisualizer.BuildDifferenceHeatmap(screenChunks, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
+            ScreenCapture.SaveBitmapToFile(asdf, "Heatmap.bmp");
+
             return true;
         }
 

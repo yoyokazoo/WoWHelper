@@ -147,6 +147,7 @@
     <Compile Include="Code\Gameplay\WowPlayerCombatConfig.cs" />
     <Compile Include="Code\Gameplay\WowShamanTasks.cs" />
     <Compile Include="Code\Gameplay\WowWarriorTasks.cs" />
+    <Compile Include="Code\Shared\BitmapDifferenceVisualizer.cs" />
     <Compile Include="Code\Shared\KeyPoller.cs" />
     <Compile Include="Code\Constants\WowImageConstants.cs" />
     <Compile Include="Code\Constants\WowInput.cs" />
