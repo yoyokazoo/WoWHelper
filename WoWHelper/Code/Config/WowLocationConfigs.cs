@@ -399,22 +399,13 @@ namespace WoWHelper.Code.WorldState
         {
             Waypoints = new List<Vector2>
             {
-                /*
-                new Vector2(16.63f, 28.01f),
-                new Vector2(16.51f, 30.17f),
-                new Vector2(17.81f, 30.54f),
-                new Vector2(18.59f, 32.78f),
-                new Vector2(19.16f, 33.77f),
-                new Vector2(20.00f, 36.17f),
-                new Vector2(21.18f, 38.39f),
-                new Vector2(22.32f, 38.82f),
-                */
                 new Vector2(16.67f, 28.15f),
                 new Vector2(16.07f, 29.94f),
                 new Vector2(17.30f, 30.17f),
                 new Vector2(18.18f, 31.92f),
                 new Vector2(19.11f, 33.88f),
                 new Vector2(18.30f, 35.24f),
+                new Vector2(17.71f, 36.24f),
                 new Vector2(17.51f, 36.78f),
                 new Vector2(16.84f, 37.41f),
                 new Vector2(17.15f, 39.34f),
@@ -434,9 +425,8 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(17.68f, 30.43f),
                 new Vector2(16.72f, 29.32f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.TAB,
-            DistanceTolerance = 0.2f
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            LogoffLevel = 24,
         };
 
         public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WowLocationConfiguration
@@ -455,6 +445,7 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            LogoffLevel = 21,
         };
 
         public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS = new WowLocationConfiguration
