@@ -130,8 +130,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Code\Config\Definitions\WowScreenConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowManagementConfiguration.cs" />
     <Compile Include="Code\Config\WowFarmingConfigs.cs" />
+    <Compile Include="Code\Config\WowScreenConfigs.cs" />
     <Compile Include="Code\Config\WowManagementConfigs.cs" />
     <Compile Include="Code\Constants\WowGameplayConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerConstants.cs" />
@@ -149,7 +151,6 @@
     <Compile Include="Code\Gameplay\WowWarriorTasks.cs" />
     <Compile Include="Code\Shared\BitmapDifferenceVisualizer.cs" />
     <Compile Include="Code\Shared\KeyPoller.cs" />
-    <Compile Include="Code\Constants\WowImageConstants.cs" />
     <Compile Include="Code\Constants\WowInput.cs" />
     <Compile Include="Code\Gameplay\WowPlayer.cs" />
     <Compile Include="Code\Gameplay\WowWorldState.cs" />
