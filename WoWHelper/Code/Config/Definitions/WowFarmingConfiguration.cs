@@ -1,4 +1,5 @@
-﻿using WoWHelper.Code.Config.Definitions;
+﻿using WoWHelper.Code.Config;
+using WoWHelper.Code.Config.Definitions;
 using WoWHelper.Code.WorldState;
 using static WoWHelper.Code.WorldState.WowLocationConfiguration;
 
@@ -15,6 +16,7 @@ namespace WoWHelper.Code.Gameplay
     {
         public WowLocationConfiguration LocationConfiguration { get; set; }
         public WowManagementConfiguration ManagementConfiguration { get; set; }
+        public WowScreenConfiguration ScreenConfiguration { get; set; }
         public WowCombatConfiguration CombatConfiguration { get; set; }
 
         public bool AlertOnPotionUsed => ManagementConfiguration.AlertOnPotionUsed;
@@ -31,7 +33,7 @@ namespace WoWHelper.Code.Gameplay
 
         public WowFarmingConfiguration()
         {
-            CombatConfiguration = WowCombatConfiguration.Mage;
+            ScreenConfiguration = WowScreenConfigs.RESOLUTION_3440_X_1440;
         }
     }
 }

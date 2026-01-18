@@ -54,15 +54,15 @@ namespace WoWHelper
 
         public WowPlayer()
         {
-            PreviousWorldState = new WowWorldState();
-            WorldState = new WowWorldState();
-
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS_ON_WINDOW;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
             WaypointTraversalDirection = 1;
 
             FarmingConfig = WowFarmingConfigs.CURRENT_CONFIG;
+
+            PreviousWorldState = new WowWorldState(FarmingConfig.ScreenConfiguration);
+            WorldState = new WowWorldState(FarmingConfig.ScreenConfiguration);
         }
 
         public async Task UpdateWorldStateAsync()
@@ -75,7 +75,7 @@ namespace WoWHelper
 
             PreviousWorldState?.Bmp?.Dispose();
             PreviousWorldState = WorldState;
-            WorldState = WowWorldState.GetWoWWorldState();
+            WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
 
             NextUpdateTime = now + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
@@ -86,7 +86,7 @@ namespace WoWHelper
 
             PreviousWorldState?.Bmp?.Dispose();
             PreviousWorldState = WorldState;
-            WorldState = WowWorldState.GetWoWWorldState();
+            WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
 
             NextUpdateTime = now + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }

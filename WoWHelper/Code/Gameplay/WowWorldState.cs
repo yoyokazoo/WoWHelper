@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Numerics;
 using WindowsGameAutomationTools.ImageDetection;
 using WindowsGameAutomationTools.Images;
+using WoWHelper.Code.Config;
 
 namespace WoWHelper
 {
@@ -67,7 +68,9 @@ namespace WoWHelper
 
         public Bitmap Bmp { get; private set; }
 
-        public WowWorldState()
+        public WowScreenConfiguration ScreenConfig { get; private set; }
+
+        public WowWorldState(WowScreenConfiguration screenConfig)
         {
             Initialized = false;
             PlayerHpPercent = -1;
@@ -79,15 +82,17 @@ namespace WoWHelper
             FacingDegrees = -1;
             AttackerCount = -1;
             PlayerLevel = -1;
+            ScreenConfig = screenConfig;
 
             //TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
         }
 
-        public static WowWorldState GetWoWWorldState()
+        public static WowWorldState GetWoWWorldState(WowScreenConfiguration screenConfig)
         {
-            WowWorldState currentState = new WowWorldState();
+            WowWorldState currentState = new WowWorldState(screenConfig);
 
-            currentState.Bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, WowImageConstants.WIDTH_OF_SCREEN_TO_SLICE, WowImageConstants.HEIGHT_OF_SCREEN_TO_SLICE));
+            currentState.Bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(
+                new Rectangle(0, 0, screenConfig.WidthOfScreenToSlice, screenConfig.WidthOfScreenToSlice));
             currentState.UpdateFromBitmap(currentState.Bmp);
             //wowBitmap.Dispose(); // TODO: Implement IDisposable
 
@@ -150,25 +155,25 @@ namespace WoWHelper
 
         public void UpdateMapX(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WowImageConstants.MAP_X_POSITION.X, WowImageConstants.MAP_X_POSITION.Y);
+            Color color = bmp.GetPixel(ScreenConfig.MapXPosition.X, ScreenConfig.MapXPosition.Y);
             MapX = GetFloatFromColor(color);
         }
 
         public void UpdateMapY(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WowImageConstants.MAP_Y_POSITION.X, WowImageConstants.MAP_Y_POSITION.Y);
+            Color color = bmp.GetPixel(ScreenConfig.MapYPosition.X, ScreenConfig.MapYPosition.Y);
             MapY = GetFloatFromColor(color);
         }
 
         public void UpdateFacingDegrees(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WowImageConstants.FACING_DEGREES_POSITION.X, WowImageConstants.FACING_DEGREES_POSITION.Y);
+            Color color = bmp.GetPixel(ScreenConfig.FacingDegreesPosition.X, ScreenConfig.FacingDegreesPosition.Y);
             FacingDegrees = GetFloatFromColor(color);
         }
 
         public void UpdateMultiBoolOne(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WowImageConstants.MULTI_BOOL_ONE_POSITION.X, WowImageConstants.MULTI_BOOL_ONE_POSITION.Y);
+            Color color = bmp.GetPixel(ScreenConfig.MultiBoolOnePosition.X, ScreenConfig.MultiBoolOnePosition.Y);
             DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
             DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
             DecodeByte(color.B, out var b1, out var b2, out var b3, out var b4, out var b5, out var b6, out var b7, out var b8);
@@ -203,7 +208,7 @@ namespace WoWHelper
 
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WowImageConstants.MULTI_BOOL_TWO_POSITION.X, WowImageConstants.MULTI_BOOL_TWO_POSITION.Y);
+            Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
             DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
             DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
             DecodeByte(color.B, out var b1, out var b2, out var b3, out var b4, out var b5, out var b6, out var b7, out var b8);
@@ -219,7 +224,7 @@ namespace WoWHelper
 
         public void UpdateMultiIntOne(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WowImageConstants.MULTI_INT_ONE_POSITION.X, WowImageConstants.MULTI_INT_ONE_POSITION.Y);
+            Color color = bmp.GetPixel(ScreenConfig.MultiIntOnePosition.X, ScreenConfig.MultiIntOnePosition.Y);
             
             PlayerHpPercent = color.R;
             ResourcePercent = color.G;
@@ -228,7 +233,7 @@ namespace WoWHelper
 
         public void UpdateMultiIntTwo(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(WowImageConstants.MULTI_INT_TWO_POSITION.X, WowImageConstants.MULTI_INT_TWO_POSITION.Y);
+            Color color = bmp.GetPixel(ScreenConfig.MultiIntTwoPosition.X, ScreenConfig.MultiIntTwoPosition.Y);
 
             AttackerCount = color.R;
             PlayerLevel = color.G;
@@ -236,21 +241,21 @@ namespace WoWHelper
 
         public void UpdateRedErrorTextMessages(Bitmap bmp)
         {
-            FacingWrongWay = MatchesErrorTextColor(bmp, WowImageConstants.FACING_WRONG_WAY_POSITIONS);
-            TooFarAway = MatchesErrorTextColor(bmp, WowImageConstants.TOO_FAR_AWAY_POSITIONS);
-            TargetNeedsToBeInFront = MatchesErrorTextColor(bmp, WowImageConstants.TARGET_NEEDS_TO_BE_IN_FRONT_POSITIONS);
-            InvalidTarget = MatchesErrorTextColor(bmp, WowImageConstants.INVALID_TARGET_POSITIONS);
-            OutOfRange = MatchesErrorTextColor(bmp, WowImageConstants.OUT_OF_RANGE_POSITIONS);
+            FacingWrongWay = MatchesErrorTextColor(bmp, ScreenConfig.FacingWrongWayPositions);
+            TooFarAway = MatchesErrorTextColor(bmp, ScreenConfig.TooFarAwayPositions);
+            TargetNeedsToBeInFront = MatchesErrorTextColor(bmp, ScreenConfig.TargetNeedsToBeInFrontPositions);
+            InvalidTarget = MatchesErrorTextColor(bmp, ScreenConfig.InvalidTargetPositions);
+            OutOfRange = MatchesErrorTextColor(bmp, ScreenConfig.OutOfRangePositions);
         }
 
         public void UpdateOnLoginScreen(Bitmap bmp)
         {
-            OnLoginScreen = WowImageConstants.ON_LOGIN_SCREEN_POSITIONS.MatchesSourceImage(bmp);
+            OnLoginScreen = ScreenConfig.OnLoginScreenPositions.MatchesSourceImage(bmp);
         }
 
         public void UpdateBreathBar(Bitmap bmp)
         {
-            Underwater = WowImageConstants.BREATH_BAR_SCREEN_POSITIONS.MatchesSourceImage(bmp);
+            Underwater = ScreenConfig.BreathBarScreenPositions.MatchesSourceImage(bmp);
         }
 
         public bool MatchesErrorTextColor(Bitmap bmp, ImageMatchColorPositions positions)
@@ -258,7 +263,7 @@ namespace WoWHelper
             foreach (var position in positions.ColorPositions)
             {
                 var color = bmp.GetPixel(position.X, position.Y);
-                if (color.R < WowImageConstants.ERROR_TEXT_COLOR.R)
+                if (color.R < WowScreenConfiguration.ERROR_TEXT_COLOR.R)
                 {
                     return false;
                 }
