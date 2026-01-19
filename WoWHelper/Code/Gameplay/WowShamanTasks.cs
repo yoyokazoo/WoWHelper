@@ -25,6 +25,19 @@ namespace WoWHelper
 
                 await EveryWorldStateUpdateTasks();
 
+                // Make sure to buff
+                // TODO: this needs to be changed to raw resource
+                if (!WorldState.HasRockbiterWeaponOn && WorldState.ResourcePercent >= 8)
+                {
+                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
+                    continue;
+                }
+                else if (!WorldState.HasLightningShieldOn && WorldState.ResourcePercent >= 12)
+                {
+                    Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
+                    continue;
+                }
+
                 // First do our "Make sure we're not standing around doing nothing" checks
                 if (await MeleeMakeSureWeAreAttackingEnemyTask())
                 {
@@ -58,15 +71,6 @@ namespace WoWHelper
                     startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
-                // Finally, if we've made it this far, do standard combat actions
-                if (!WorldState.HasRockbiterWeaponOn)
-                {
-                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
-                }
-                else if (!WorldState.HasLightningShieldOn)
-                {
-                    Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
-                }
                 if (WorldState.CanCastEarthShock/* && (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20)*/) // don't shock almost dead targets unless we have multiples.  temp turning off so we blast runners
                 {
                     Keyboard.KeyPress(WowInput.SHAMAN_SHOCK);
