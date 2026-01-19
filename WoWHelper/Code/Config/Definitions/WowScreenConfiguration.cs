@@ -20,12 +20,16 @@ namespace WoWHelper
 
         #endregion
 
+        // /console cameraDistanceMaxZoomFactor 2.6
         // TODO: init instead of set would be nice. What would it take to migrate?
         public string Name { get; set; }
         public Size Resolution { get; set; }
 
         public int WidthOfScreenToSlice { get; set; }
         public int HeightOfScreenToSlice { get; set; }
+
+        public int DynamiteAndDummyX { get; set; }
+        public int DynamiteAndDummyY { get; set; }
 
         public int TextLeftCoord { get; set; }
         public int TextTopCoord { get; set; }

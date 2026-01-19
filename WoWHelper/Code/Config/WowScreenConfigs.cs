@@ -18,6 +18,9 @@ namespace WoWHelper.Code.Config
             WidthOfScreenToSlice = 1700,
             HeightOfScreenToSlice = 800,
 
+            DynamiteAndDummyX = 1720,
+            DynamiteAndDummyY = 690,
+
             TextLeftCoord = 75,
             TextTopCoord = 200,
             TextBoxHeight = 40,
@@ -80,10 +83,13 @@ namespace WoWHelper.Code.Config
             WidthOfScreenToSlice = 1700,
             HeightOfScreenToSlice = 800,
 
-            TextLeftCoord = 75,
-            TextTopCoord = 200,
-            TextBoxHeight = 40,
-            TextBoxWidth = 270,
+            DynamiteAndDummyX = 960,
+            DynamiteAndDummyY = 500,
+
+            TextLeftCoord = 57,
+            TextTopCoord = 151,
+            TextBoxHeight = 30,
+            TextBoxWidth = 203,
 
             FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
