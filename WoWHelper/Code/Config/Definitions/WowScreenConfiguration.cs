@@ -25,6 +25,8 @@ namespace WoWHelper
         public string Name { get; set; }
         public Size Resolution { get; set; }
 
+        // TODO: instead of grabbing a giant chunk, modify addon to be smaller, only grab that chunk and the text notification space chunk
+        // Note: we don't need to include the heatmap in this slice, it's handled on its own
         public int WidthOfScreenToSlice { get; set; }
         public int HeightOfScreenToSlice { get; set; }
 
