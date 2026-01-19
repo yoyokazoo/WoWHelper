@@ -314,6 +314,7 @@ namespace WoWHelper
                         break;
                     case PlayerState.TARGET_DEFEATED:
                         Console.WriteLine("Target defeated, trying to loot");
+                        // TODO: /canceltarget and /stopcasting and /stopattack here so we don't accidentally attack something
                         await Task.Delay(4000);
                         await CreateHeatmapForLooting();
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
