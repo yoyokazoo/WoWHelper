@@ -127,5 +127,17 @@ namespace WoWHelperUnitTests
 
             Assert.AreEqual(expected, Player.WorldState.InvalidTarget);
         }
+
+        [TestMethod]
+        [DataRow(false, "..\\..\\Source Images\\targetneedstobeinfront.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\outofrange.bmp")]
+        public void VerifyOutOfRange(bool expected, string fileName)
+        {
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+
+            Player.UpdateFromBitmap(new Bitmap(filePath));
+
+            Assert.AreEqual(expected, Player.WorldState.OutOfRange);
+        }
     }
 }
