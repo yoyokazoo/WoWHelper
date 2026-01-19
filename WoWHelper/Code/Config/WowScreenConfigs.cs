@@ -21,6 +21,16 @@ namespace WoWHelper.Code.Config
             DynamiteAndDummyX = 1720,
             DynamiteAndDummyY = 690,
 
+            LootHeatmapX = 1495,
+            LootHeatmapY = 516,
+            LootHeatmapWidth = 426,
+            LootHeatmapHeight = 341,
+
+            LootHeatmapIgnoreX = 1655,
+            LootHeatmapIgnoreY = 655,
+            LootHeatmapIgnoreWidth = 130,
+            LootHeatmapIgnoreHeight = 135,
+
             TextLeftCoord = 75,
             TextTopCoord = 200,
             TextBoxHeight = 40,
@@ -85,6 +95,16 @@ namespace WoWHelper.Code.Config
 
             DynamiteAndDummyX = 960,
             DynamiteAndDummyY = 500,
+
+            LootHeatmapX = 812,
+            LootHeatmapY = 395,
+            LootHeatmapWidth = 303,
+            LootHeatmapHeight = 231,
+
+            LootHeatmapIgnoreX = 919,
+            LootHeatmapIgnoreY = 499,
+            LootHeatmapIgnoreWidth = 77,
+            LootHeatmapIgnoreHeight = 75,
 
             TextLeftCoord = 57,
             TextTopCoord = 151,

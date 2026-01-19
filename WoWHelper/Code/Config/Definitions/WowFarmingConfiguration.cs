@@ -1,4 +1,5 @@
-﻿using WoWHelper.Code.Config;
+﻿using System.Windows.Forms;
+using WoWHelper.Code.Config;
 using WoWHelper.Code.Config.Definitions;
 using WoWHelper.Code.WorldState;
 using static WoWHelper.Code.WorldState.WowLocationConfiguration;
@@ -33,7 +34,21 @@ namespace WoWHelper.Code.Gameplay
 
         public WowFarmingConfiguration()
         {
-            ScreenConfiguration = WowScreenConfigs.RESOLUTION_3440_X_1440;
+            int width = Screen.PrimaryScreen.Bounds.Width;
+            int height = Screen.PrimaryScreen.Bounds.Height;
+
+            if (width == 1920 && height == 1080)
+            {
+                ScreenConfiguration = WowScreenConfigs.RESOLUTION_1920_X_1080;
+            }
+            else if (width == 3440 && height == 1440)
+            {
+                ScreenConfiguration = WowScreenConfigs.RESOLUTION_3440_X_1440;
+            }
+            else
+            {
+                throw new System.Exception($"No screen config for resolution {width}x{height}!");
+            }
         }
     }
 }

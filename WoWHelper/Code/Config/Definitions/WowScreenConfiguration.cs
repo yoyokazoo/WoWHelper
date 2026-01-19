@@ -31,6 +31,16 @@ namespace WoWHelper
         public int DynamiteAndDummyX { get; set; }
         public int DynamiteAndDummyY { get; set; }
 
+        public int LootHeatmapX { get; set; }
+        public int LootHeatmapY { get; set; }
+        public int LootHeatmapWidth { get; set; }
+        public int LootHeatmapHeight { get; set; }
+
+        public int LootHeatmapIgnoreX { get; set; }
+        public int LootHeatmapIgnoreY { get; set; }
+        public int LootHeatmapIgnoreWidth { get; set; }
+        public int LootHeatmapIgnoreHeight { get; set; }
+
         public int TextLeftCoord { get; set; }
         public int TextTopCoord { get; set; }
         public int TextBoxHeight { get; set; }

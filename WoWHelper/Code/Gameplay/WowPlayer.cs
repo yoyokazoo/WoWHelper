@@ -20,6 +20,8 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
+        // TODO: add task to zoom out and point camera down
+
         // TODO: write custom getters/setters for these so we can keep checking the time until they're off cooldown,
         // then use the cached value until they get dirtied again?
         public long FarmStartTime { get; private set; }
@@ -170,49 +172,41 @@ namespace WoWHelper
 
         public async Task<bool> CreateHeatmapForLooting()
         {
-            int xOffset = 1495;
-            int yOffset = 516;
-            int snippetWidth = 426;
-            int snippetHeight = 341;
-
-            int ignoreXOffset = 1655;
-            int ignoreYOffset = 655;
-            int ignoreWidth = 130;
-            int ignoreHeight = 135;
-
             List<Bitmap> screenChunks = new List<Bitmap>();
+
+            var lootHeatmapRectangle = new Rectangle(
+                        FarmingConfig.ScreenConfiguration.LootHeatmapX,
+                        FarmingConfig.ScreenConfiguration.LootHeatmapY,
+                        FarmingConfig.ScreenConfiguration.LootHeatmapWidth,
+                        FarmingConfig.ScreenConfiguration.LootHeatmapHeight);
+
             for (int i = 0; i < 20; i++)
             {
-                int width = Screen.PrimaryScreen.Bounds.Width;
-                int height = Screen.PrimaryScreen.Bounds.Height;
-
-                Bitmap bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(
-                    new Rectangle(xOffset, yOffset, snippetWidth, snippetHeight));
+                Bitmap bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(lootHeatmapRectangle);
                 screenChunks.Add(bmp);
                 await Task.Delay(100);
             }
 
             // convert from absolute coords to relative to the snippet we took
-            int ignoreXMin = ignoreXOffset - xOffset;
-            int ignoreXMax = ignoreXMin + ignoreWidth;
-            int ignoreYMin = ignoreYOffset - yOffset;
-            int ignoreYMax = ignoreYMin + ignoreHeight;
+            int ignoreXMin = FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreX - FarmingConfig.ScreenConfiguration.LootHeatmapX;
+            int ignoreXMax = ignoreXMin + FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreWidth;
+            int ignoreYMin = FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreY - FarmingConfig.ScreenConfiguration.LootHeatmapY;
+            int ignoreYMax = ignoreYMin + FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreHeight;
 
             int squareSize = 40;
             int halfSquareSize = squareSize / 2;
 
             var points = BitmapDifferenceVisualizer.FindHotspots(screenChunks, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
-            var bestSquareOffset = BitmapDifferenceVisualizer.FindBestSquareOffset(points, snippetWidth, snippetHeight, squareSize);
-            var asdf = BitmapDifferenceVisualizer.BuildDifferenceHeatmap(points, snippetWidth, snippetHeight, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
+            var bestSquareOffset = BitmapDifferenceVisualizer.FindBestSquareOffset(points, FarmingConfig.ScreenConfiguration.LootHeatmapWidth, FarmingConfig.ScreenConfiguration.LootHeatmapHeight, squareSize);
+            var asdf = BitmapDifferenceVisualizer.BuildDifferenceHeatmap(points, FarmingConfig.ScreenConfiguration.LootHeatmapWidth, FarmingConfig.ScreenConfiguration.LootHeatmapHeight, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
 
             Console.WriteLine($"Best Offset = {bestSquareOffset}, click at {new Point(bestSquareOffset.offsetX + halfSquareSize, bestSquareOffset.offsetY + halfSquareSize)}");
-            LootX = xOffset + bestSquareOffset.offsetX + halfSquareSize;
-            LootY = yOffset + bestSquareOffset.offsetY + halfSquareSize;
+            LootX = FarmingConfig.ScreenConfiguration.LootHeatmapX + bestSquareOffset.offsetX + halfSquareSize;
+            LootY = FarmingConfig.ScreenConfiguration.LootHeatmapY + bestSquareOffset.offsetY + halfSquareSize;
 
             ScreenCapture.SaveBitmapToFile(asdf, "Heatmap.bmp");
 
-            Bitmap example = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(
-                    new Rectangle(xOffset, yOffset, snippetWidth, snippetHeight));
+            Bitmap example = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(lootHeatmapRectangle);
             ScreenCapture.SaveBitmapToFile(example, "Example.bmp");
 
             foreach (Bitmap bmp in screenChunks)
