@@ -27,12 +27,13 @@ namespace WoWHelper
 
                 // Make sure to buff
                 // TODO: this needs to be changed to raw resource
+                // TODO: move these to helpers since they're used in a couple places?
                 if (!WorldState.HasRockbiterWeaponOn && WorldState.ResourcePercent >= 8)
                 {
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
                     continue;
                 }
-                else if (!WorldState.HasLightningShieldOn && WorldState.ResourcePercent >= 12)
+                else if (!WorldState.HasLightningShieldOn && WorldState.ResourcePercent >= 12 && WorldState.PlayerLevel >= WowGameplayConstants.LIGHTNING_SHIELD_LEVEL)
                 {
                     Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
                     continue;
@@ -71,8 +72,10 @@ namespace WoWHelper
                     startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
+                // level handled by lua (Can Cast will return false if unlearned -- maybe we should push other things like this to lua as well?)
                 if (WorldState.CanCastEarthShock/* && (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20)*/) // don't shock almost dead targets unless we have multiples.  temp turning off so we blast runners
                 {
+                    Console.WriteLine($"Trying to Earth Shock!");
                     Keyboard.KeyPress(WowInput.SHAMAN_SHOCK);
                 }
                 else// if (WorldState.AttackerCount <= 1)
@@ -117,12 +120,12 @@ namespace WoWHelper
             if (battleReady)
             {
                 bool buffed = false;
-                if (!WorldState.HasRockbiterWeaponOn)
+                if (!WorldState.HasRockbiterWeaponOn && WorldState.ResourcePercent >= 8)
                 {
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
                     buffed = true;
                 }
-                else if (!WorldState.HasLightningShieldOn)
+                else if (!WorldState.HasLightningShieldOn && WorldState.ResourcePercent >= 12 && WorldState.PlayerLevel >= WowGameplayConstants.LIGHTNING_SHIELD_LEVEL)
                 {
                     Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
                     buffed = true;

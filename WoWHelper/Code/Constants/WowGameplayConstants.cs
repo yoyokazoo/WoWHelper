@@ -32,6 +32,8 @@
         public const int MANA_LOW_ALERT_THRESHOLD = 30;
 
         // Shaman
+        // Rockbiter available at level 1
+        public const int LIGHTNING_SHIELD_LEVEL = 10; // 8
 
         // The healing trinket isn't very good, so spam it to keep the run going faster
         public const int HEALING_TRINKET_HP_THRESHOLD = 91;

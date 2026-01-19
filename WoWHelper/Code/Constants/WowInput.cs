@@ -78,6 +78,11 @@ namespace WoWHelper.Code
 
         #region Shaman
 
+        /*
+         * 2 Bolt
+#showtooltip Lightning Bolt
+/cast Lightning Bolt
+        */
         public const Keys SHAMAN_LIGHTNING_BOLT = Keys.D2;
         public const Keys SHAMAN_SHIFT_2 = Keys.D2;
 
@@ -85,6 +90,7 @@ namespace WoWHelper.Code
         public const Keys SHAMAN_SHIFT_3 = Keys.D3;
 
         /*
+         * 4 Buff
 #showtooltip [mod:shift] Rockbiter Weapon; Lightning Shield
 /use [nomod] Lightning Shield
 /use [mod:shift] Rockbiter Weapon
@@ -111,6 +117,7 @@ namespace WoWHelper.Code
         public const Keys SHIFT_1 = Keys.D1;
 
         /*
+         * 8 Eat
 #showtooltip [mod:shift] Conjured Fresh Water; Conjured Bread
 /use [nomod] Conjured Bread
 /use [mod:shift] Conjured Fresh Water
@@ -118,10 +125,15 @@ namespace WoWHelper.Code
         public const Keys EAT_FOOD = Keys.D8;
         public const Keys SHIFT_DRINK_WATER = Keys.D8;
 
+        /*
+         * 1 Atk
+/startattack
+        */
         public const Keys CLEAR_TARGET_MACRO = Keys.D9;
         public const Keys SHIFT_9 = Keys.D9;
 
         /*
+         * 0 Targ
 #showtooltip [mod:shift] Healing Potion; Target
 /use [mod:shift] Healing Potion
 /stopmacro [mod:shift]
@@ -132,6 +144,7 @@ namespace WoWHelper.Code
         public const Keys SHIFT_HEALING_POTION = Keys.D0;
 
         /*
+         * - Dyn
 #showtooltip [mod:shift] Target Dummy; Rough Dynamite
 /use [nomod] Rough Dynamite
 /use [mod:shift] Target Dummy
@@ -140,6 +153,7 @@ namespace WoWHelper.Code
         public const Keys SHIFT_TARGET_DUMMY = Keys.OemMinus;
 
         /*
+         * + Log
 #showtooltip [mod:shift] Flask of Petrification; Logout
 /cast [mod:shift] Flask of Petrification
 /stopmacro [mod:shift]
