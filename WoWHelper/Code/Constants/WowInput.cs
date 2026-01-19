@@ -113,6 +113,10 @@ namespace WoWHelper.Code
         // Common Input
         // For the sake of sharing tasks, forcing these common keys to be shared
 
+        /*
+         * 1 Atk
+/startattack
+        */
         public const Keys START_ATTACK = Keys.D1;
         public const Keys SHIFT_1 = Keys.D1;
 
@@ -126,8 +130,8 @@ namespace WoWHelper.Code
         public const Keys SHIFT_DRINK_WATER = Keys.D8;
 
         /*
-         * 1 Atk
-/startattack
+         * 9 Clr
+/cleartarget
         */
         public const Keys CLEAR_TARGET_MACRO = Keys.D9;
         public const Keys SHIFT_9 = Keys.D9;

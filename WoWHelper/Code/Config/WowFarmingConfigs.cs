@@ -8,8 +8,8 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            LocationConfiguration = WowLocationConfigs.LEVEL_21_ZORAMGAR_WAYPOINTS,
-            ManagementConfiguration = WowManagementConfigs.FULL_BABYSIT,
+            LocationConfiguration = WowLocationConfigs.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
+            ManagementConfiguration = WowManagementConfigs.SLEEPING_FOR_EXP,
             CombatConfiguration = WowCombatConfiguration.Shaman
         };
     }

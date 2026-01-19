@@ -470,7 +470,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration
         {
-            // /target /target Vemon
+            // /target Venom
             // /target Elder
             // /target Blood
             // /target Corrupted
@@ -526,6 +526,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(52.44f, 64.81f),
             },
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            LogoffLevel = 10,
         };
 
         public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration
@@ -542,7 +543,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(45.27f, 57.40f),
             },
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
-            TooManyAttackersThreshold = 2,
+            TooManyAttackersThreshold = 3,
             LogoffLevel = 7,
         };
 

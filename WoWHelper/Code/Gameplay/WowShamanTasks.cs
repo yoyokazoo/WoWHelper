@@ -163,6 +163,7 @@ namespace WoWHelper
                 await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
                 await UpdateWorldStateAsync();
             }
+            // TODO; short circuit into  and stop casting so we don't finish our bolt if something aggroes us
 
             return CanEngageTarget();
         }
