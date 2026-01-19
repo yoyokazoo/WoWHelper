@@ -633,6 +633,14 @@ function HasRockbiterWeaponMainHand()
     return hasMainHandEnchant == true
 end
 
+function ShouldCastRockbiterWeapon()
+    return IsSpellKnown(8017) and IsSpellUsable(8017) and not HasRockbiterWeaponMainHand()
+end
+
+function ShouldCastLightningShield()
+    return IsSpellKnown(324) and IsSpellUsable(324) and not HasBuffNamed("Lightning Shield")
+end
+
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = HasBuffNamed("Battle Shout")
@@ -675,9 +683,9 @@ function GetMultiBoolTwo()
     local boolR2 = SpellIsCooledDownIgnoringGCD(2136) -- fireblast rank 1, 2136
     local boolR3 = IsPlayerCasting()
     local boolR4 = AreEnemyNameplatesTurnedOn()
-    local boolR5 = HasRockbiterWeaponMainHand()
+    local boolR5 = ShouldCastRockbiterWeapon()
     local boolR6 = CanCastEarthShock()
-    local boolR7 = HasBuffNamed("Lightning Shield")
+    local boolR7 = ShouldCastLightningShield()
     local boolR8 = false
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)

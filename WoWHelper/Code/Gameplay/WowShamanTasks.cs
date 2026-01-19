@@ -28,12 +28,12 @@ namespace WoWHelper
                 // Make sure to buff
                 // TODO: this needs to be changed to raw resource
                 // TODO: move these to helpers since they're used in a couple places?
-                if (!WorldState.HasRockbiterWeaponOn && WorldState.ResourcePercent >= 8)
+                if (WorldState.ShouldCastRockbiterWeapon)
                 {
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
                     continue;
                 }
-                else if (!WorldState.HasLightningShieldOn && WorldState.ResourcePercent >= 12 && WorldState.PlayerLevel >= WowGameplayConstants.LIGHTNING_SHIELD_LEVEL)
+                else if (WorldState.ShouldCastLightningShield)
                 {
                     Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
                     continue;
@@ -120,12 +120,12 @@ namespace WoWHelper
             if (battleReady)
             {
                 bool buffed = false;
-                if (!WorldState.HasRockbiterWeaponOn && WorldState.ResourcePercent >= 8)
+                if (WorldState.ShouldCastRockbiterWeapon)
                 {
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
                     buffed = true;
                 }
-                else if (!WorldState.HasLightningShieldOn && WorldState.ResourcePercent >= 12 && WorldState.PlayerLevel >= WowGameplayConstants.LIGHTNING_SHIELD_LEVEL)
+                else if (WorldState.ShouldCastLightningShield)
                 {
                     Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
                     buffed = true;

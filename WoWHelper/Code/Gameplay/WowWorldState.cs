@@ -54,9 +54,9 @@ namespace WoWHelper
         public bool IsFireblastCooledDown { get; private set; }
         public bool IsCurrentlyCasting { get; private set; }
         public bool EnemyNameplatesAreTurnedOn { get; private set; }
-        public bool HasRockbiterWeaponOn { get; private set; }
+        public bool ShouldCastRockbiterWeapon { get; private set; }
         public bool CanCastEarthShock { get; private set; }
-        public bool HasLightningShieldOn { get; private set; }
+        public bool ShouldCastLightningShield { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -217,9 +217,9 @@ namespace WoWHelper
             IsFireblastCooledDown = r2;
             IsCurrentlyCasting = r3;
             EnemyNameplatesAreTurnedOn = r4;
-            HasRockbiterWeaponOn = r5;
+            ShouldCastRockbiterWeapon = r5;
             CanCastEarthShock = r6;
-            HasLightningShieldOn = r7;
+            ShouldCastLightningShield = r7;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)
