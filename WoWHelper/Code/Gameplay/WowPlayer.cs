@@ -317,7 +317,7 @@ namespace WoWHelper
                         break;
                     case PlayerState.LOOT_ATTEMPT_TWO:
                         Console.WriteLine("Trying to loot a second time, in case the dying anim is slow");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
                             PlayerState.SKIN_ATTEMPT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
@@ -326,6 +326,7 @@ namespace WoWHelper
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
                             PlayerState.CHECK_FOR_LOGOUT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        await ScootForwardsTask();
                         break;
                 }
             }

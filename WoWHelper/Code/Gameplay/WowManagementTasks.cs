@@ -142,7 +142,6 @@ namespace WoWHelper
             Mouse.Move(LootX, LootY);
             Mouse.PressButton(Mouse.MouseKeys.Right);
             await Task.Delay(3000);
-            await ScootForwardsTask();
             return true;
         }
 

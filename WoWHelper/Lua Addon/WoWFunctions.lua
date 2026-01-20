@@ -560,7 +560,7 @@ end
 
 -- Earth Shock Rank 1, 8042
 function CanCastEarthShock()
-    return SpellIsCooledDown(8042)
+    return SpellIsCooledDown(8042) and IsSpellUsable(8042)
 end
 
 -- Mortal Strike, 12294

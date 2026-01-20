@@ -494,6 +494,40 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 14
         };
 
+        public static readonly WowLocationConfiguration LEVEL_9_DUROTAR_SKULL_ROCK_COAST_WAYPOINTS = new WowLocationConfiguration
+        {
+            /*
+/target Elder
+/target Venom
+/target Armored
+/target Blood
+            */
+            Waypoints = new List<Vector2>
+            { 
+                new Vector2(52.93f, 17.36f),
+                new Vector2(54.78f, 18.67f),
+                new Vector2(55.12f, 19.66f),
+                new Vector2(55.82f, 21.31f),
+                new Vector2(56.17f, 23.66f),
+                new Vector2(56.20f, 24.87f),
+                new Vector2(56.92f, 25.92f),
+
+                new Vector2(56.30f, 27.25f),
+                new Vector2(56.18f, 28.78f),
+                new Vector2(56.57f, 30.35f),
+                new Vector2(58.30f, 27.74f),
+                new Vector2(58.88f, 23.79f),
+
+                new Vector2(57.34f, 24.08f),
+                new Vector2(56.11f, 23.68f),
+                new Vector2(55.94f, 21.49f),
+                new Vector2(54.90f, 18.83f),
+                new Vector2(53.57f, 17.68f)
+            },
+            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            LogoffLevel = 12
+        };
+
         public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration
         {
             // /target Dire

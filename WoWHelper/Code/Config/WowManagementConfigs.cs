@@ -13,6 +13,15 @@ namespace WoWHelper.Code.Config
             LogoutOnFullBags = false,
         };
 
+        public static readonly WowManagementConfiguration LOOT_BABYSIT = new WowManagementConfiguration
+        {
+            AlertOnPotionUsed = false,
+            AlertOnFullBags = true,
+            AlertOnUnreadWhisper = true,
+            LogoutOnLowDynamite = false,
+            LogoutOnFullBags = false,
+        };
+
         public static readonly WowManagementConfiguration SLEEPING_FOR_LOOT = new WowManagementConfiguration
         {
             AlertOnPotionUsed = false,
