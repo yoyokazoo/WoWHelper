@@ -187,7 +187,7 @@ namespace WoWHelper
                 LogoutTriggered = true;
             }
 
-            return tooManyAttackers;
+            return tooManyAttackers || emergencyHpThreshold;
         }
     }
 }

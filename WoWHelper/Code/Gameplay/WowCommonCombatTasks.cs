@@ -84,6 +84,11 @@ namespace WoWHelper
                 if (WorldState.AttackerCount > 0)
                 {
                     Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
+
+                    // if it's actually too far away, waiting a bit won't matter
+                    // if we have mistargeted something far away, give the attacker a bit of time to hit us before /startattack,
+                    // otherwise /startattack auto targets in front of us, sometimes not the right mob and we get stuck in a loop
+                    await Task.Delay(300);
                 }
             }
 

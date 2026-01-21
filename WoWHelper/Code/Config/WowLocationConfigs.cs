@@ -431,6 +431,13 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WowLocationConfiguration
         {
+            /*
+/target Zhevra
+/target Savannah
+/target Hecklefang
+/target Ornery
+/target Sunscale
+            */
             Waypoints = new List<Vector2>
             {
                 new Vector2(47.30f, 13.91f),
@@ -439,6 +446,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.00f, 14.78f),
                 new Vector2(45.13f, 15.02f),
                 new Vector2(45.15f, 17.36f),
+
                 new Vector2(44.20f, 18.71f),
                 new Vector2(43.27f, 20.00f),
                 new Vector2(42.24f, 20.87f)
@@ -450,9 +458,11 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS = new WowLocationConfiguration
         {
-            // /target Fleeting
-            // /target Zhevra
-            // /target Sunscale
+            /*
+/target Fleeting
+/target Zhevra
+/target Sunscale
+             */
             Waypoints = new List<Vector2>
             {
                 new Vector2(55.00f, 21.13f),
@@ -470,10 +480,12 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration
         {
-            // /target Venom
-            // /target Elder
-            // /target Blood
-            // /target Corrupted
+            /*
+/target Venom
+/target Elder
+/target Blood
+/target Corrupted
+            */
             Waypoints = new List<Vector2>
             { 
                 //new Vector2(38.13f, 16.10f),

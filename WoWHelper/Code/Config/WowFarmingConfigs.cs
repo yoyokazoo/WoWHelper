@@ -8,8 +8,8 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            LocationConfiguration = WowLocationConfigs.LEVEL_9_DUROTAR_SKULL_ROCK_COAST_WAYPOINTS,
-            ManagementConfiguration = WowManagementConfigs.LOOT_BABYSIT,
+            LocationConfiguration = WowLocationConfigs.LEVEL_17_NORTHERN_BARRENS_WAYPOINTS,
+            ManagementConfiguration = WowManagementConfigs.FULL_BABYSIT,
             CombatConfiguration = WowCombatConfiguration.Shaman
         };
     }

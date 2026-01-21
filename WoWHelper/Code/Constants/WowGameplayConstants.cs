@@ -15,7 +15,6 @@
 
         public const int MORTAL_STRIKE_BLOODTHIRST_RAGE_COST = 30;
 
-        public const int HEALING_POTION_HP_THRESHOLD = 50;
         public const int EXECUTE_HP_THRESHOLD = 20;
 
         // Mage
@@ -45,5 +44,7 @@
         // Shared
         public const int DYNAMITE_LEVEL = 6;
         public const int PETRIFICATION_FLASK_LEVEL = 50;
+
+        public const int HEALING_POTION_HP_THRESHOLD = 30; // 50
     }
 }
