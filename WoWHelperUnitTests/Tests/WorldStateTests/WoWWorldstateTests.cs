@@ -81,7 +81,8 @@ namespace WoWHelperUnitTests
 
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\NoBattleshout.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\login screen.bmp")]
+        [DataRow(false, "..\\..\\Source Images\\login screen.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\new login screen.bmp")]
         public void VerifyOnLoginScreen(bool expected, string fileName)
         {
             string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);

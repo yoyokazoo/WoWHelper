@@ -374,6 +374,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_24_STONETALON_WAYPOINTS = new WowLocationConfiguration
         {
+            /*
+/target Antlered
+/target Sap
+            */
             Waypoints = new List<Vector2>
             {
                 new Vector2(44.43f, 19.01f),
@@ -390,19 +394,23 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.19f, 22.95f),
                 new Vector2(44.71f, 20.78f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            EngageMethod = EngagementMethod.Spellcast,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f
         };
 
         public static readonly WowLocationConfiguration LEVEL_21_ZORAMGAR_WAYPOINTS = new WowLocationConfiguration
         {
+            /*
+/target Wild
+/target Ghostpaw
+            */
             Waypoints = new List<Vector2>
             {
                 new Vector2(16.67f, 28.15f),
                 new Vector2(16.07f, 29.94f),
                 new Vector2(17.30f, 30.17f),
                 new Vector2(18.18f, 31.92f),
+                new Vector2(18.50f, 32.45f),
                 new Vector2(19.11f, 33.88f),
                 new Vector2(18.30f, 35.24f),
                 new Vector2(17.71f, 36.24f),
@@ -422,6 +430,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(19.80f, 35.25f),
                 new Vector2(19.46f, 33.86f),
                 new Vector2(18.48f, 32.51f),
+                new Vector2(18.08f, 31.35f),
                 new Vector2(17.68f, 30.43f),
                 new Vector2(16.72f, 29.32f),
             },

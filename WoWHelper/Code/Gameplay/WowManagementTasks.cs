@@ -17,7 +17,7 @@ namespace WoWHelper
 
             ScreenCapture.SetForegroundWindow(h);
 
-            await Task.Delay(750);
+            await Task.Delay(1750);
             return true;
         }
 
@@ -38,7 +38,7 @@ namespace WoWHelper
             }
 
             // ping if logged out (still needs testing.  they changed login screen??)
-            if (!(PreviousWorldState?.OnLoginScreen ?? true) && WorldState.OnLoginScreen)
+            if (!(PreviousWorldState?.OnLoginScreen ?? true) && WorldState.OnLoginScreen && !LogoutTriggered)
             {
                 SlackHelper.SendMessageToChannel($"DISCONNECT?? Unexpectedly found self on logout screen");
             }

@@ -14,9 +14,9 @@ namespace WoWHelper
         public static readonly Color BREATH_BAR_COLOR_ONE = Color.FromArgb(0, 77, 155);
         public static readonly Color BREATH_BAR_COLOR_TWO = Color.FromArgb(0, 31, 62);
 
-        public static readonly Color LOGIN_SCREEN_COLOR_ONE = Color.FromArgb(241, 221, 175);
-        public static readonly Color LOGIN_SCREEN_COLOR_TWO = Color.FromArgb(52, 51, 60);
-        public static readonly Color LOGIN_SCREEN_COLOR_THREE = Color.FromArgb(229, 38, 39);
+        public static readonly Color LOGIN_SCREEN_COLOR_ONE = Color.FromArgb(254, 246, 246);
+        public static readonly Color LOGIN_SCREEN_COLOR_TWO = Color.FromArgb(214, 33, 33);
+        public static readonly Color LOGIN_SCREEN_COLOR_THREE = Color.FromArgb(8, 12, 8);
 
         #endregion
 

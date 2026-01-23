@@ -148,9 +148,9 @@ namespace WoWHelper.Code.Config
 
             OnLoginScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
-                    new ColorPosition(0, 0, WowScreenConfiguration.LOGIN_SCREEN_COLOR_ONE),
-                    new ColorPosition(0, 0,  WowScreenConfiguration.LOGIN_SCREEN_COLOR_TWO),
-                    new ColorPosition(0, 0, WowScreenConfiguration.LOGIN_SCREEN_COLOR_THREE),
+                    new ColorPosition(103, 78, WowScreenConfiguration.LOGIN_SCREEN_COLOR_ONE),
+                    new ColorPosition(116, 164,  WowScreenConfiguration.LOGIN_SCREEN_COLOR_TWO),
+                    new ColorPosition(147, 48, WowScreenConfiguration.LOGIN_SCREEN_COLOR_THREE),
                 }),
 
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
