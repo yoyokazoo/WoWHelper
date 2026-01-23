@@ -32,19 +32,19 @@ namespace WoWHelper
             }
 
             // ping if unseen message
-            if (FarmingConfig.AlertOnUnreadWhisper && !(PreviousWorldState?.HasUnseenWhisper ?? true) && WorldState.HasUnseenWhisper)
+            if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState.Initialized && !PreviousWorldState.HasUnseenWhisper && WorldState.HasUnseenWhisper)
             {
                 SlackHelper.SendMessageToChannel($"Unseen Whisper!");
             }
 
             // ping if logged out (still needs testing.  they changed login screen??)
-            if (!(PreviousWorldState?.OnLoginScreen ?? true) && WorldState.OnLoginScreen && !LogoutTriggered)
+            if (!PreviousWorldState.OnLoginScreen && WorldState.OnLoginScreen && !LogoutTriggered)
             {
                 SlackHelper.SendMessageToChannel($"DISCONNECT?? Unexpectedly found self on logout screen");
             }
 
             // ping on level up
-            if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState != null && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
+            if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
             {
                 SlackHelper.SendMessageToChannel($"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!");
                 if (FarmingConfig.LogoffLevel == WorldState.PlayerLevel)

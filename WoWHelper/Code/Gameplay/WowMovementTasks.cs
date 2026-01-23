@@ -84,7 +84,7 @@ namespace WoWHelper
                 }
 
                 // If we haven't moved in a long time, alert
-                if (PreviousWorldState?.MapX != WorldState.MapX || PreviousWorldState?.MapY != WorldState.MapY)
+                if (PreviousWorldState.MapX != WorldState.MapX || PreviousWorldState.MapY != WorldState.MapY)
                 {
                     lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }

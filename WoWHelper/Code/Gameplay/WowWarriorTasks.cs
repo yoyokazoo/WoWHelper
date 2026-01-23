@@ -79,7 +79,7 @@ namespace WoWHelper
                     continue;
                 }
 
-                if (!startOfCombatWiggled && PreviousWorldState?.TargetHpPercent == 100 && WorldState.TargetHpPercent < 100)
+                if (!startOfCombatWiggled && PreviousWorldState.TargetHpPercent == 100 && WorldState.TargetHpPercent < 100)
                 {
                     await StartOfCombatWiggle();
                     startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?

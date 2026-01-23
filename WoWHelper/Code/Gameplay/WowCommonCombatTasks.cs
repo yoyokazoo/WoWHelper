@@ -61,7 +61,7 @@ namespace WoWHelper
 
         public async Task<bool> MeleeMakeSureWeAreAttackingEnemyTask()
         {
-            bool attackerJustDied = PreviousWorldState?.AttackerCount > WorldState.AttackerCount && WorldState.AttackerCount > 0;
+            bool attackerJustDied = PreviousWorldState.AttackerCount > WorldState.AttackerCount && WorldState.AttackerCount > 0;
             bool inCombatButNotAutoAttacking = WorldState.IsInCombat && !WorldState.IsAutoAttacking;
             bool tooFarAway = WorldState.TooFarAway;
             bool facingWrongWay = WorldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
