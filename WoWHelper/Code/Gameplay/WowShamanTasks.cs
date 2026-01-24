@@ -73,10 +73,15 @@ namespace WoWHelper
                 }
 
                 // level handled by lua (Can Cast will return false if unlearned -- maybe we should push other things like this to lua as well?)
-                if (WorldState.CanCastEarthShock/* && (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20)*/) // don't shock almost dead targets unless we have multiples.  temp turning off so we blast runners
+                if (WorldState.ShouldCastFlameShock && WorldState.TargetHpPercent > 75)
+                {
+                    Console.WriteLine($"Trying to Flame Shock!");
+                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_FLAME_SHOCK);
+                }
+                else if (WorldState.CanCastEarthShock/* && (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20)*/) // don't shock almost dead targets unless we have multiples.  temp turning off so we blast runners
                 {
                     Console.WriteLine($"Trying to Earth Shock!");
-                    Keyboard.KeyPress(WowInput.SHAMAN_SHOCK);
+                    Keyboard.KeyPress(WowInput.SHAMAN_EARTH_SHOCK);
                 }
                 else// if (WorldState.AttackerCount <= 1)
                 {

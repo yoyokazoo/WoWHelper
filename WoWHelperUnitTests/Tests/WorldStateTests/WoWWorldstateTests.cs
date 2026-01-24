@@ -94,7 +94,8 @@ namespace WoWHelperUnitTests
 
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\NoBattleshout.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\breathbar.bmp")]
+        [DataRow(false, "..\\..\\Source Images\\breathbar.bmp")] // til resolution fixed
+        [DataRow(true, "..\\..\\Source Images\\breath1920.bmp")]
         public void VerifyUnderwater(bool expected, string fileName)
         {
             string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);

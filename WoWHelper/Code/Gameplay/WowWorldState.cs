@@ -57,6 +57,7 @@ namespace WoWHelper
         public bool ShouldCastRockbiterWeapon { get; private set; }
         public bool CanCastEarthShock { get; private set; }
         public bool ShouldCastLightningShield { get; private set; }
+        public bool ShouldCastFlameShock { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -220,6 +221,7 @@ namespace WoWHelper
             ShouldCastRockbiterWeapon = r5;
             CanCastEarthShock = r6;
             ShouldCastLightningShield = r7;
+            ShouldCastFlameShock = r8;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

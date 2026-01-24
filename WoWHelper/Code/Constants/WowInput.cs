@@ -86,8 +86,14 @@ namespace WoWHelper.Code
         public const Keys SHAMAN_LIGHTNING_BOLT = Keys.D2;
         public const Keys SHAMAN_SHIFT_2 = Keys.D2;
 
-        public const Keys SHAMAN_SHOCK = Keys.D3;
-        public const Keys SHAMAN_SHIFT_3 = Keys.D3;
+        /*
+         * 3 Shk
+#showtooltip [mod:shift] Flame Shock; Earth Shock
+/use [nomod] Earth Shock
+/use [mod:shift] Flame Shock
+        */
+        public const Keys SHAMAN_EARTH_SHOCK = Keys.D3;
+        public const Keys SHAMAN_SHIFT_FLAME_SHOCK = Keys.D3;
 
         /*
          * 4 Buff
