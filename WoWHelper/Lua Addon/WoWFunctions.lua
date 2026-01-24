@@ -522,6 +522,32 @@ function ShouldWeSummonFood()
     return foodCount < 2
 end
 
+function TargetHasDebuffSpellId(debuffSpellId)
+  for i = 1, 40 do
+    local _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("target", i)
+    if not spellId then break end
+
+    if spellId == debuffSpellId then
+      return true
+    end
+  end
+
+  return false
+end
+
+function TargetHasDebuffSpellName(debuffSpellName)
+  for i = 1, 40 do
+    local spellName, _, _, _, _, _, _, _, _, _ = UnitDebuff("target", i)
+    if not spellName then break end
+
+    if spellName == debuffSpellName then
+      return true
+    end
+  end
+
+  return false
+end
+
 -- rank 1, 772
 -- rank 2, 6546
 -- rank 3, 6547
@@ -530,15 +556,18 @@ end
 -- rank 6, 11573
 -- rank 7, 11574
 function TargetHasRend()
-  for i = 1, 40 do
-    local _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("target", i)
-    if not spellId then break end
+  return TargetHasDebuffSpellId(11574)
+end
 
-    if spellId == 11574 then
-      return true
-    end
-  end
-  return false
+-- TODO: set dynamically on startup and on levelup
+-- rank 1, 8050
+-- rank 2, 8052
+-- rank 3, 8053
+-- rank 4, 10447
+-- rank 5, 
+-- rank 6, 
+function TargetHasFlameShock()
+  return TargetHasDebuffSpellName("Flame Shock")
 end
 
 -- Look at Rend, since it has no cooldown beyond GCD (772)
@@ -641,6 +670,10 @@ function ShouldCastLightningShield()
     return IsSpellKnown(324) and IsSpellUsable(324) and not HasBuffNamed("Lightning Shield")
 end
 
+function ShouldCastFlameShock()
+    return SpellIsCooledDown(8050) and IsSpellUsable(8050) and not TargetHasFlameShock()
+end
+
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = HasBuffNamed("Battle Shout")
@@ -686,7 +719,7 @@ function GetMultiBoolTwo()
     local boolR5 = ShouldCastRockbiterWeapon()
     local boolR6 = CanCastEarthShock()
     local boolR7 = ShouldCastLightningShield()
-    local boolR8 = false
+    local boolR8 = ShouldCastFlameShock()
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
 
@@ -708,7 +741,7 @@ function GetMultiBoolTwo()
     local boolB5 = false
     local boolB6 = false
     local boolB7 = false
-    local boolB8 = HasRockbiterWeaponMainHand()
+    local boolB8 = TargetHasFlameShock()
 
     local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
 
