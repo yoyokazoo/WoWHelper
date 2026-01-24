@@ -122,11 +122,14 @@ namespace WoWHelper
                 bool buffed = false;
                 if (WorldState.ShouldCastRockbiterWeapon)
                 {
+                    await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
                     buffed = true;
                 }
-                else if (WorldState.ShouldCastLightningShield)
+                
+                if (WorldState.ShouldCastLightningShield)
                 {
+                    await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
                     buffed = true;
                 }

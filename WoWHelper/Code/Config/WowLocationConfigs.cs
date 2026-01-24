@@ -325,6 +325,12 @@ namespace WoWHelper.Code.WorldState
         // Don't recommend this one without WBs
         public static readonly WowLocationConfiguration LEVEL_27_NORTH_ASHENVALE_WAYPOINTS = new WowLocationConfiguration
         {
+            /*
+/target Elder
+/target Ghostpaw
+/target Withered
+/target Crazed
+            */
             Waypoints = new List<Vector2>
             {
                 new Vector2(60.43f, 39.81f),
@@ -332,7 +338,10 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(58.47f, 37.08f),
                 new Vector2(58.70f, 35.47f),
                 new Vector2(57.98f, 34.11f),
+                new Vector2(57.83f, 33.64f),
                 new Vector2(57.50f, 31.07f),
+                /*
+                 * West side was dangerous last time I ran it (a few 3 mob pulls), let's try just running north and south on the east side
                 new Vector2(56.00f, 31.00f),
                 new Vector2(55.79f, 32.64f),
                 new Vector2(54.88f, 32.73f),
@@ -344,10 +353,11 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(57.53f, 41.97f),
                 new Vector2(58.87f, 41.32f),
                 new Vector2(59.55f, 39.57f),
+                */
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.TAB,
-            DistanceTolerance = 0.2f
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            EngageMethod = EngagementMethod.Spellcast,
+            TooManyAttackersThreshold = 3,
         };
 
         public static readonly WowLocationConfiguration LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS = new WowLocationConfiguration

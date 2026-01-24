@@ -45,6 +45,6 @@
         public const int DYNAMITE_LEVEL = 6;
         public const int PETRIFICATION_FLASK_LEVEL = 50;
 
-        public const int HEALING_POTION_HP_THRESHOLD = 30; // 50
+        public const int HEALING_POTION_HP_THRESHOLD = 45; // 50
     }
 }

@@ -8,8 +8,8 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            LocationConfiguration = WowLocationConfigs.LEVEL_24_STONETALON_WAYPOINTS,
-            ManagementConfiguration = WowManagementConfigs.SLEEPING_FOR_EXP,
+            LocationConfiguration = WowLocationConfigs.LEVEL_27_NORTH_ASHENVALE_WAYPOINTS,
+            ManagementConfiguration = WowManagementConfigs.FULL_BABYSIT,
             CombatConfiguration = WowCombatConfiguration.Shaman
         };
     }

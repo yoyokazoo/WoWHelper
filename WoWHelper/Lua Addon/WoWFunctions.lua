@@ -543,9 +543,9 @@ end
 
 -- Look at Rend, since it has no cooldown beyond GCD (772)
 -- SpellIsCooledDown doesn't work if the character doesn't have the spell, so we need to find something everyone has
--- temporarily switching to frost armor (6116)
+-- temporarily switching to lightning shield
 function IsGlobalCooldownCooledDown()
-    return SpellIsCooledDown(6116)
+    return SpellIsCooledDown(324)
 end
 
 -- WW rank 1, 1680
