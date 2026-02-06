@@ -43,8 +43,15 @@ namespace WoWHelper
         public int LootHeatmapIgnoreWidth { get; set; }
         public int LootHeatmapIgnoreHeight { get; set; }
 
+        /// <summary>
+        /// X of the center of the top left color box
+        /// </summary>
         public int TextLeftCoord { get; set; }
         public int TextTopCoord { get; set; }
+
+        /// <summary>
+        /// Vertical distance between the centers of the color boxes
+        /// </summary>
         public int TextBoxHeight { get; set; }
         public int TextBoxWidth { get; set; }
 

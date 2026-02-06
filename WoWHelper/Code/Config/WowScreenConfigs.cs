@@ -85,6 +85,81 @@ namespace WoWHelper.Code.Config
                 }),
         };
 
+        public static readonly WowScreenConfiguration RESOLUTION_2560_X_1600 = new WowScreenConfiguration
+        {
+            Name = "2560x1600",
+            Resolution = new Size(2560, 1600),
+
+            WidthOfScreenToSlice = 0,
+            HeightOfScreenToSlice = 0,
+
+            DynamiteAndDummyX = 1273,
+            DynamiteAndDummyY = 739,
+
+            LootHeatmapX = 1081,
+            LootHeatmapY = 650,
+            LootHeatmapWidth = 407,
+            LootHeatmapHeight = 268,
+
+            LootHeatmapIgnoreX = 1207,
+            LootHeatmapIgnoreY = 731,
+            LootHeatmapIgnoreWidth = 143,
+            LootHeatmapIgnoreHeight = 138,
+
+            TextLeftCoord = 84,
+            TextTopCoord = 224,
+            TextBoxHeight = 45,
+            TextBoxWidth = 300,
+
+            FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(818, 163, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(830, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(842, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                }),
+
+            TooFarAwayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(863, 165, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(875, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(887, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                }),
+
+            TargetNeedsToBeInFrontPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(802, 157, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(812, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(820, 163, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                }),
+
+            InvalidTargetPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(897, 162, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(908, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(919, 169, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                }),
+
+            OutOfRangePositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(904, 157, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(919, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(929, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                }),
+
+            OnLoginScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(103, 78, WowScreenConfiguration.LOGIN_SCREEN_COLOR_ONE),
+                    new ColorPosition(116, 164,  WowScreenConfiguration.LOGIN_SCREEN_COLOR_TWO),
+                    new ColorPosition(147, 48, WowScreenConfiguration.LOGIN_SCREEN_COLOR_THREE),
+                }),
+
+            BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(846, 130, WowScreenConfiguration.BREATH_BAR_COLOR_ONE),
+                    new ColorPosition(845, 134, WowScreenConfiguration.BREATH_BAR_COLOR_TWO),
+                }),
+        };
+
         public static readonly WowScreenConfiguration RESOLUTION_1920_X_1080 = new WowScreenConfiguration
         {
             Name = "1920x1080",
