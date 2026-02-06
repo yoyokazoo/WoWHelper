@@ -162,8 +162,18 @@ namespace WoWHelper
             return true;
             */
 
+            /*
             await Task.Delay(2000);
             await CreateHeatmapForLooting();
+            */
+
+            await FocusOnWindowTask();
+            await Task.Delay(10000);
+            await PutMoneyInTradeTask();
+            await AcceptTradeTask();
+            // wait for button to not be greyed out, and for other player to accept trade
+            await Task.Delay(7000);
+            await AcceptTradeConfirmationTask();
 
             //SlackHelper.SendMessageToChannel($"Testing notification!");
             await Task.Delay(0);

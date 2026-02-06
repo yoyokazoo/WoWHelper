@@ -45,6 +45,10 @@ namespace WoWHelper.Code.Gameplay
             {
                 ScreenConfiguration = WowScreenConfigs.RESOLUTION_3440_X_1440;
             }
+            else if (width == 2560 && height == 1600) // TODO: fix DPI issue
+            {
+                ScreenConfiguration = WowScreenConfigs.RESOLUTION_2560_X_1600;
+            }
             else
             {
                 throw new System.Exception($"No screen config for resolution {width}x{height}!");

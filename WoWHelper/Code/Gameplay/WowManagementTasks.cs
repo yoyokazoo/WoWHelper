@@ -173,5 +173,49 @@ namespace WoWHelper
             await Task.Delay(250);
             return true;
         }
+
+        public async Task<bool> PutMoneyInTradeTask()
+        {
+            Mouse.Move(215, 350);
+            await Task.Delay(500);
+            Mouse.PressButton(Mouse.MouseKeys.Left);
+            await Task.Delay(200);
+
+            Keyboard.KeyPress(System.Windows.Forms.Keys.D1);
+            await Task.Delay(200);
+
+            Mouse.Move(290, 350);
+            await Task.Delay(500);
+            Mouse.PressButton(Mouse.MouseKeys.Left);
+            await Task.Delay(200);
+
+            Keyboard.KeyPress(System.Windows.Forms.Keys.D4);
+            await Task.Delay(200);
+            Keyboard.KeyPress(System.Windows.Forms.Keys.D0);
+            await Task.Delay(200);
+
+            return true;
+        }
+
+        public async Task<bool> AcceptTradeTask()
+        {
+            Mouse.Move(440, 1025);
+            await Task.Delay(500);
+            Mouse.PressButton(Mouse.MouseKeys.Left);
+            await Task.Delay(200);
+
+            return true;
+        }
+
+        public async Task<bool> AcceptTradeConfirmationTask()
+        {
+            
+            Mouse.Move(1155, 400);
+            await Task.Delay(500);
+            Mouse.PressButton(Mouse.MouseKeys.Left);
+            await Task.Delay(200);
+
+            return true;
+        }
     }
 }
