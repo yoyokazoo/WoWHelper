@@ -158,6 +158,28 @@ namespace WoWHelper.Code.Config
                     new ColorPosition(846, 130, WowScreenConfiguration.BREATH_BAR_COLOR_ONE),
                     new ColorPosition(845, 134, WowScreenConfiguration.BREATH_BAR_COLOR_TWO),
                 }),
+
+            TradeWindowScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(31, 328, WowScreenConfiguration.TRADE_SCREEN_COLOR_ONE),
+                    new ColorPosition(169, 220, WowScreenConfiguration.TRADE_SCREEN_COLOR_TWO),
+                    new ColorPosition(169, 350, WowScreenConfiguration.TRADE_SCREEN_COLOR_THREE),
+                }),
+
+            TradeWindowAcceptedScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(360, 377, WowScreenConfiguration.TRADE_SCREEN_ACCEPTED_COLOR_ONE),
+                    new ColorPosition(360, 382, WowScreenConfiguration.TRADE_SCREEN_ACCEPTED_COLOR_TWO),
+                }),
+
+            TradeWindowConfirmationScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(889, 290, WowScreenConfiguration.TRADE_SCREEN_CONFIRMATION_COLOR_ONE),
+                    new ColorPosition(947, 329, WowScreenConfiguration.TRADE_SCREEN_CONFIRMATION_COLOR_TWO),
+                    new ColorPosition(1051, 400, WowScreenConfiguration.TRADE_SCREEN_CONFIRMATION_COLOR_THREE),
+                }),
+
+            TradeWindowRecipientTextArea = new ImageMatchTextArea(464, 222, 158, 33),
         };
 
         public static readonly WowScreenConfiguration RESOLUTION_1920_X_1080 = new WowScreenConfiguration

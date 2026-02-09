@@ -18,6 +18,17 @@ namespace WoWHelper
         public static readonly Color LOGIN_SCREEN_COLOR_TWO = Color.FromArgb(214, 33, 33);
         public static readonly Color LOGIN_SCREEN_COLOR_THREE = Color.FromArgb(8, 12, 8);
 
+        public static readonly Color TRADE_SCREEN_COLOR_ONE = Color.FromArgb(93, 88, 86);
+        public static readonly Color TRADE_SCREEN_COLOR_TWO = Color.FromArgb(167, 165, 161);
+        public static readonly Color TRADE_SCREEN_COLOR_THREE = Color.FromArgb(212, 177, 42);
+
+        public static readonly Color TRADE_SCREEN_ACCEPTED_COLOR_ONE = Color.FromArgb(38, 64, 33);
+        public static readonly Color TRADE_SCREEN_ACCEPTED_COLOR_TWO = Color.FromArgb(140, 223, 0);
+
+        public static readonly Color TRADE_SCREEN_CONFIRMATION_COLOR_ONE = Color.FromArgb(68, 66, 64);
+        public static readonly Color TRADE_SCREEN_CONFIRMATION_COLOR_TWO = Color.FromArgb(233, 181, 43);
+        public static readonly Color TRADE_SCREEN_CONFIRMATION_COLOR_THREE = Color.FromArgb(87, 0, 0);
+
         #endregion
 
         // /console cameraDistanceMaxZoomFactor 2.6
@@ -71,6 +82,12 @@ namespace WoWHelper
 
         // Breath bar detections
         public ImageMatchColorPositions BreathBarScreenPositions { get; set; }
+
+        // Trade window
+        public ImageMatchColorPositions TradeWindowScreenPositions { get; set; }
+        public ImageMatchColorPositions TradeWindowAcceptedScreenPositions { get; set; }
+        public ImageMatchColorPositions TradeWindowConfirmationScreenPositions { get; set; }
+        public ImageMatchTextArea TradeWindowRecipientTextArea { get; set; }
 
         // Text readback points (computed)
         public Point MapXPosition => new Point(TextLeftCoord, TextTopCoord + (TextBoxHeight * 3));
