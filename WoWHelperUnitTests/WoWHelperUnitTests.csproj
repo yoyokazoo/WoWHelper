@@ -250,7 +250,9 @@
   <ItemGroup>
     <Compile Include="Tests\Pathfinding Tests\PathfindingTests.cs" />
     <Compile Include="Tests\Shared\CustomAssertions.cs" />
+    <Compile Include="Tests\Shared\DpiAwareness.cs" />
     <Compile Include="Tests\Shared\UnitTestBase.cs" />
+    <Compile Include="Tests\WorldStateTests\WowTradeTests.cs" />
     <Compile Include="Tests\WorldStateTests\WoWWorldstateTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -269,6 +271,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Source Images\2560trade.bmp" />
+    <Content Include="Source Images\2560tradeaccepted.bmp" />
     <Content Include="Source Images\BagCursor.bmp" />
     <Content Include="Source Images\Bars.bmp" />
     <Content Include="Source Images\BattleShout.bmp" />
