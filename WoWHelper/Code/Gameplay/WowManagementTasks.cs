@@ -226,6 +226,16 @@ namespace WoWHelper
             return true;
         }
 
+        public async Task<bool> CancelTradeTask()
+        {
+
+            Mouse.Move(650, 237);
+            await Task.Delay(500);
+            Mouse.PressButton(Mouse.MouseKeys.Left);
+            await Task.Delay(200);
+
+            return true;
+        }
 
 
         public async Task<bool> CupidTradeLoopTask()
@@ -307,6 +317,7 @@ namespace WoWHelper
                         break;
                     case TradeState.CANCELING_TRADE:
                         Console.WriteLine($"Canceling trade");
+                        await CancelTradeTask();
                         currentTradeState = TradeState.WAITING_FOR_TRADE_WINDOW;
                         break;
                 }
