@@ -90,8 +90,8 @@ namespace WoWHelper.Code.Config
             Name = "2560x1600",
             Resolution = new Size(2560, 1600),
 
-            WidthOfScreenToSlice = 0,
-            HeightOfScreenToSlice = 0,
+            WidthOfScreenToSlice = 1400,
+            HeightOfScreenToSlice = 1000,
 
             DynamiteAndDummyX = 1273,
             DynamiteAndDummyY = 739,

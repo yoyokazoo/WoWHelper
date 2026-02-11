@@ -31,5 +31,14 @@
             MOVING_TOWARDS_WAYPOINT,
             ARRIVED_AT_WAYPOINT
         }
+
+        public enum TradeState
+        {
+            WAITING_FOR_TRADE_WINDOW,
+            CHECKING_BLOCKLIST,
+            POPULATING_TRADE_WINDOW,
+            WAITING_FOR_TRADE_ACCEPTANCE,
+            CONFIRMING_TRADE
+        }
     }
 }

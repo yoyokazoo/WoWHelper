@@ -141,7 +141,8 @@ namespace WoWHelper
 
         public void AdHocTest()
         {
-            _ = AdHocTestTask();
+            //_ = AdHocTestTask();
+            _ = CupidTradeLoopTask();
         }
 
         public async Task<bool> AdHocTestTask()

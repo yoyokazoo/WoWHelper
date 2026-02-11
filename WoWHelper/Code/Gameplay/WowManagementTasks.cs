@@ -1,10 +1,14 @@
 ﻿using InputManager;
 using System;
+using System.Drawing;
+using System.Numerics;
 using System.Threading.Tasks;
 using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
 using WoWHelper.Code.WorldState;
+using WoWHelper.Shared;
+using static WoWHelper.Code.WowPlayerStates;
 
 namespace WoWHelper
 {
@@ -214,6 +218,64 @@ namespace WoWHelper
             await Task.Delay(500);
             Mouse.PressButton(Mouse.MouseKeys.Left);
             await Task.Delay(200);
+
+            return true;
+        }
+
+
+
+        public async Task<bool> CupidTradeLoopTask()
+        {
+            Console.WriteLine("Kicking off cupid trade loop");
+            var currentTradeState = TradeState.WAITING_FOR_TRADE_WINDOW;
+
+            await FocusOnWindowTask();
+            await Task.Delay(500);
+
+            while (true)
+            {
+                Bitmap bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, WorldState.ScreenConfig.WidthOfScreenToSlice, WorldState.ScreenConfig.WidthOfScreenToSlice));
+                bool tradeWindowUp = WorldState.ScreenConfig.TradeWindowScreenPositions.MatchesSourceImage(bmp);
+                bool tradeWindowAccepted = WorldState.ScreenConfig.TradeWindowAcceptedScreenPositions.MatchesSourceImage(bmp);
+                bool tradeWindowConfirmationUp = WorldState.ScreenConfig.TradeWindowConfirmationScreenPositions.MatchesSourceImage(bmp);
+                String tradeRecipient = WorldState.ScreenConfig.TradeWindowRecipientTextArea.GetText(TesseractEngineSingleton.Instance, bmp).Trim();
+                bmp.Dispose();
+
+                if (currentTradeState == TradeState.POPULATING_TRADE_WINDOW && !tradeWindowUp)
+                {
+                    Console.WriteLine("Trade canceled");
+                    currentTradeState = TradeState.WAITING_FOR_TRADE_WINDOW;
+                }
+
+                switch (currentTradeState)
+                {
+                    case TradeState.WAITING_FOR_TRADE_WINDOW:
+                        Console.WriteLine("Waiting for trade window");
+                        if (tradeWindowUp)
+                        {
+                            currentTradeState = TradeState.CHECKING_BLOCKLIST;
+                        }
+                        break;
+                    case TradeState.CHECKING_BLOCKLIST:
+                        Console.WriteLine($"Checking blocklist for {tradeRecipient}");
+                        if(true)
+                        {
+                            currentTradeState = TradeState.POPULATING_TRADE_WINDOW;
+                        }
+                        else
+                        {
+                            currentTradeState = TradeState.POPULATING_TRADE_WINDOW;
+                        }
+                        break;
+                    case TradeState.POPULATING_TRADE_WINDOW:
+                        Console.WriteLine($"Populating trade window");
+                        
+                        break;
+                }
+            }
+
+            Console.WriteLine("Exited Core Gameplay");
+            Environment.Exit(0);
 
             return true;
         }
