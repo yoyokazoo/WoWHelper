@@ -1,5 +1,6 @@
 ﻿using InputManager;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -208,6 +209,9 @@ namespace WoWHelper
             Mouse.PressButton(Mouse.MouseKeys.Left);
             await Task.Delay(200);
 
+            // Time for the button to become ungreyed out
+            await Task.Delay(2000);
+
             return true;
         }
 
@@ -228,6 +232,8 @@ namespace WoWHelper
         {
             Console.WriteLine("Kicking off cupid trade loop");
             var currentTradeState = TradeState.WAITING_FOR_TRADE_WINDOW;
+
+            HashSet<string> tradeBlocklist = new HashSet<string>();
 
             await FocusOnWindowTask();
             await Task.Delay(500);
@@ -258,9 +264,10 @@ namespace WoWHelper
                         break;
                     case TradeState.CHECKING_BLOCKLIST:
                         Console.WriteLine($"Checking blocklist for {tradeRecipient}");
-                        if(true)
+                        if(tradeBlocklist.Contains(tradeRecipient))
                         {
-                            currentTradeState = TradeState.POPULATING_TRADE_WINDOW;
+                            Console.WriteLine($"Trade opened by previous recipient, {tradeRecipient}, canceling");
+                            currentTradeState = TradeState.CANCELING_TRADE;
                         }
                         else
                         {
@@ -269,7 +276,38 @@ namespace WoWHelper
                         break;
                     case TradeState.POPULATING_TRADE_WINDOW:
                         Console.WriteLine($"Populating trade window");
+                        await PutMoneyInTradeTask();
+                        await AcceptTradeTask();
+                        currentTradeState = TradeState.WAITING_FOR_TRADE_ACCEPTANCE;
+                        /*
+                        currentTradeState = await ChangeStateBasedOnTaskResult(PutMoneyInTradeTask(),
+                            TradeState.WAITING_FOR_TRADE_ACCEPTANCE,
+                            TradeState.WAITING_FOR_TRADE_ACCEPTANCE);
+                        */
+                        break;
+                    case TradeState.WAITING_FOR_TRADE_ACCEPTANCE:
+                        Console.WriteLine($"Waiting for trade acceptance");
+                        if (tradeWindowAccepted)
+                        {
+                            Console.WriteLine($"Trade accepted");
+                            currentTradeState = TradeState.CONFIRMING_TRADE;
+                        }
+                        break;
+                    case TradeState.CONFIRMING_TRADE:
+                        Console.WriteLine($"Confirming trade");
                         
+                        await AcceptTradeConfirmationTask();
+                        Console.WriteLine($"Accepting trade, adding {tradeRecipient} to the blocklist");
+                        tradeBlocklist.Add(tradeRecipient);
+
+                        await Task.Delay(2000); // give it a couple seconds for the trade to complete so we don't screenshot instantly and think we're in a new trade
+
+                        currentTradeState = TradeState.WAITING_FOR_TRADE_WINDOW;
+
+                        break;
+                    case TradeState.CANCELING_TRADE:
+                        Console.WriteLine($"Canceling trade");
+                        currentTradeState = TradeState.WAITING_FOR_TRADE_WINDOW;
                         break;
                 }
             }

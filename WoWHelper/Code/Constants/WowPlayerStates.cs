@@ -38,7 +38,8 @@
             CHECKING_BLOCKLIST,
             POPULATING_TRADE_WINDOW,
             WAITING_FOR_TRADE_ACCEPTANCE,
-            CONFIRMING_TRADE
+            CONFIRMING_TRADE,
+            CANCELING_TRADE
         }
     }
 }
