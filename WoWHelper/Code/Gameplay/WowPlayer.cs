@@ -142,6 +142,25 @@ namespace WoWHelper
         public void AdHocTest()
         {
             //_ = AdHocTestTask();
+            KeyPoller.EscPressed += async () => {
+                Console.WriteLine("ESC detected! Performing cleanup then quitting");
+                await Task.Delay(0);
+
+                // Make sure we don't have any lingering keys pressed down
+                Keyboard.KeyUp(WowInput.MOVE_FORWARD);
+                Keyboard.KeyUp(WowInput.MOVE_BACK);
+                Keyboard.KeyUp(WowInput.TURN_LEFT);
+                Keyboard.KeyUp(WowInput.TURN_RIGHT);
+                Keyboard.KeyUp(WowInput.JUMP);
+                Keyboard.KeyUp(WowInput.STRAFE_LEFT);
+                Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
+                Keyboard.KeyUp(WowInput.LatestShiftKey);
+                Keyboard.KeyUp(Keys.LShiftKey);
+
+                Environment.Exit(0);
+            };
+            KeyPoller.Start();
+
             _ = CupidTradeLoopTask();
         }
 

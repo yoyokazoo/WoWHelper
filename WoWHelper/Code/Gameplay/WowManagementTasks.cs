@@ -186,7 +186,7 @@ namespace WoWHelper
             Mouse.PressButton(Mouse.MouseKeys.Left);
             await Task.Delay(200);
 
-            Keyboard.KeyPress(System.Windows.Forms.Keys.D1);
+            Keyboard.KeyPress(System.Windows.Forms.Keys.D2);
             await Task.Delay(200);
 
             Mouse.Move(290, 350);
@@ -194,7 +194,7 @@ namespace WoWHelper
             Mouse.PressButton(Mouse.MouseKeys.Left);
             await Task.Delay(200);
 
-            Keyboard.KeyPress(System.Windows.Forms.Keys.D4);
+            Keyboard.KeyPress(System.Windows.Forms.Keys.D1);
             await Task.Delay(200);
             Keyboard.KeyPress(System.Windows.Forms.Keys.D0);
             await Task.Delay(200);
@@ -248,8 +248,12 @@ namespace WoWHelper
             await FocusOnWindowTask();
             await Task.Delay(500);
 
+            long loopIterations = 0;
+
             while (true)
             {
+                loopIterations++;
+
                 Bitmap bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, WorldState.ScreenConfig.WidthOfScreenToSlice, WorldState.ScreenConfig.WidthOfScreenToSlice));
                 bool tradeWindowUp = WorldState.ScreenConfig.TradeWindowScreenPositions.MatchesSourceImage(bmp);
                 bool tradeWindowAccepted = WorldState.ScreenConfig.TradeWindowAcceptedScreenPositions.MatchesSourceImage(bmp);
@@ -259,25 +263,39 @@ namespace WoWHelper
 
                 if (currentTradeState == TradeState.POPULATING_TRADE_WINDOW && !tradeWindowUp)
                 {
-                    Console.WriteLine("Trade canceled");
+                    //Console.WriteLine("Trade canceled");
                     currentTradeState = TradeState.WAITING_FOR_TRADE_WINDOW;
+                }
+
+                if (currentTradeState == TradeState.WAITING_FOR_TRADE_WINDOW && loopIterations % 10000 == 0)
+                {
+                    Keyboard.KeyDown(WowInput.STRAFE_LEFT);
+                    await Task.Delay(100);
+                    Keyboard.KeyUp(WowInput.STRAFE_LEFT);
+                }
+                else if(currentTradeState == TradeState.WAITING_FOR_TRADE_WINDOW && loopIterations % 5000 == 0)
+                {
+                    Keyboard.KeyDown(WowInput.STRAFE_RIGHT);
+                    await Task.Delay(100);
+                    Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
                 }
 
                 switch (currentTradeState)
                 {
                     case TradeState.WAITING_FOR_TRADE_WINDOW:
-                        Console.WriteLine("Waiting for trade window");
+                        //Console.WriteLine("Waiting for trade window");
                         if (tradeWindowUp)
                         {
                             currentTradeState = TradeState.CHECKING_BLOCKLIST;
                         }
                         break;
                     case TradeState.CHECKING_BLOCKLIST:
-                        Console.WriteLine($"Checking blocklist for {tradeRecipient}");
+                        //Console.WriteLine($"Checking blocklist for {tradeRecipient}");
                         if(tradeBlocklist.Contains(tradeRecipient))
                         {
                             Console.WriteLine($"Trade opened by previous recipient, {tradeRecipient}, canceling");
-                            currentTradeState = TradeState.CANCELING_TRADE;
+                            //currentTradeState = TradeState.CANCELING_TRADE;
+                            currentTradeState = TradeState.POPULATING_TRADE_WINDOW;
                         }
                         else
                         {
@@ -285,7 +303,7 @@ namespace WoWHelper
                         }
                         break;
                     case TradeState.POPULATING_TRADE_WINDOW:
-                        Console.WriteLine($"Populating trade window");
+                        //Console.WriteLine($"Populating trade window");
                         await PutMoneyInTradeTask();
                         await AcceptTradeTask();
                         currentTradeState = TradeState.WAITING_FOR_TRADE_ACCEPTANCE;
@@ -296,15 +314,15 @@ namespace WoWHelper
                         */
                         break;
                     case TradeState.WAITING_FOR_TRADE_ACCEPTANCE:
-                        Console.WriteLine($"Waiting for trade acceptance");
+                        //Console.WriteLine($"Waiting for trade acceptance");
                         if (tradeWindowAccepted)
                         {
-                            Console.WriteLine($"Trade accepted");
+                            //Console.WriteLine($"Trade accepted");
                             currentTradeState = TradeState.CONFIRMING_TRADE;
                         }
                         break;
                     case TradeState.CONFIRMING_TRADE:
-                        Console.WriteLine($"Confirming trade");
+                        //Console.WriteLine($"Confirming trade");
                         
                         await AcceptTradeConfirmationTask();
                         Console.WriteLine($"Accepting trade, adding {tradeRecipient} to the blocklist");
@@ -316,7 +334,7 @@ namespace WoWHelper
 
                         break;
                     case TradeState.CANCELING_TRADE:
-                        Console.WriteLine($"Canceling trade");
+                        //Console.WriteLine($"Canceling trade");
                         await CancelTradeTask();
                         currentTradeState = TradeState.WAITING_FOR_TRADE_WINDOW;
                         break;
