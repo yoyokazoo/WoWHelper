@@ -54,22 +54,6 @@ namespace WoWHelper
         public int LootHeatmapIgnoreWidth { get; set; }
         public int LootHeatmapIgnoreHeight { get; set; }
 
-        /// <summary>
-        /// X of the center of the top left color box
-        /// </summary>
-        public int TextLeftCoord { get; set; }
-        public int TextTopCoord { get; set; }
-
-        /// <summary>
-        /// Vertical distance between the centers of the color boxes
-        /// </summary>
-        public int TextBoxHeight { get; set; }
-        public int TextBoxWidth { get; set; }
-
-        public int BoolLeftCoord => TextLeftCoord + TextBoxWidth;
-        public int BoolTopCoord => TextTopCoord;
-        public int BoolSectionHeight => TextBoxHeight;
-
         // Error text detections
         public ImageMatchColorPositions FacingWrongWayPositions { get; set; }
         public ImageMatchColorPositions TooFarAwayPositions { get; set; }
@@ -89,17 +73,28 @@ namespace WoWHelper
         public ImageMatchColorPositions TradeWindowConfirmationScreenPositions { get; set; }
         public ImageMatchTextArea TradeWindowRecipientTextArea { get; set; }
 
-        // Text readback points (computed)
-        public Point MapXPosition => new Point(TextLeftCoord, TextTopCoord + (TextBoxHeight * 3));
-        public Point MapYPosition => new Point(TextLeftCoord, TextTopCoord + (TextBoxHeight * 4));
-        public Point FacingDegreesPosition => new Point(TextLeftCoord, TextTopCoord + (TextBoxHeight * 5));
+        // Readback points for the machine-readable pixel row the Lua addon draws
+        // via InitializePixelRow() (UIFunctions.lua): a row of PixelSize x
+        // PixelSize swatches pinned to the screen's literal top-left corner.
+        // Fixed and resolution-independent -- no per-resolution calibration
+        // needed. We read the CENTER pixel of each swatch (not its top-left
+        // corner) for margin against edge blur/anti-aliasing. PixelSize here
+        // MUST match Lua's PIXEL_SIZE constant, and the indices passed to
+        // PixelRowPoint() must match the AddSwatch(index, ...) calls there.
+        private const int PixelSize = 3;
+        private const int PixelCenterOffset = PixelSize / 2;
 
-        // Multi bool readback points (computed)
-        public Point MultiBoolOnePosition => new Point(BoolLeftCoord, BoolTopCoord + (BoolSectionHeight * 4));
-        public Point MultiBoolTwoPosition => new Point(BoolLeftCoord, BoolTopCoord + (BoolSectionHeight * 5));
+        private static Point PixelRowPoint(int index) =>
+            new Point(index * PixelSize + PixelCenterOffset, PixelCenterOffset);
 
-        // Multi int readback points (computed)
-        public Point MultiIntOnePosition => new Point(BoolLeftCoord, BoolTopCoord + (BoolSectionHeight * 6));
-        public Point MultiIntTwoPosition => new Point(BoolLeftCoord, BoolTopCoord + (BoolSectionHeight * 7));
+        public Point MapXPosition => PixelRowPoint(3);
+        public Point MapYPosition => PixelRowPoint(4);
+        public Point FacingDegreesPosition => PixelRowPoint(5);
+
+        public Point MultiBoolOnePosition => PixelRowPoint(11);
+        public Point MultiBoolTwoPosition => PixelRowPoint(12);
+
+        public Point MultiIntOnePosition => PixelRowPoint(13);
+        public Point MultiIntTwoPosition => PixelRowPoint(14);
     }
 }

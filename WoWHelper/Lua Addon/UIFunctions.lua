@@ -88,20 +88,48 @@ function CreateIndicator(parent, label, colorFunc, orderY)
     }
 end
 
--- Creates a single exact 1x1 pixel anchored at a fixed (x, y) offset from the
+-- Measures the real physical-pixels-per-UIParent-local-unit ratio by
+-- comparing GetPhysicalScreenSize() against UIParent's own reported size,
+-- instead of trusting UIParent:GetEffectiveScale() / PixelUtil.
+--
+-- On at least one client (WoW Classic Era 1.15.9, post Edit-Mode UI update)
+-- these disagree: GetEffectiveScale() read 0.9, but the real ratio measured
+-- this way was 1.6875 -- confirmed by matching FOUR independent rendered
+-- sizes exactly (15, 1/0.9-compensated 15, 3, and 6 unit requests all scaled
+-- by precisely 1.6875, not 0.9 or 1/0.9). Comparing GetPhysicalScreenSize()
+-- to UIParent:GetWidth()/GetHeight() self-calibrates regardless of *why*
+-- GetEffectiveScale() is wrong here, so it should keep working even if this
+-- particular quirk changes or gets patched later.
+local function GetPhysicalPixelsPerLocalUnit()
+    local physWidth = GetPhysicalScreenSize()
+    return physWidth / UIParent:GetWidth()
+end
+
+-- Creates a single exact pixel anchored at a fixed (x, y) offset from the
 -- very top-left corner of the screen (not the draggable debug frame).
+-- x, y, and size are real screen pixels; converted to UIParent's local
+-- coordinate units via GetPhysicalPixelsPerLocalUnit() every update, so this
+-- stays correct even if the ratio changes live (resolution change, or
+-- whatever is causing GetEffectiveScale() to disagree with it).
+--
 -- parent    = parent frame (UIParent)
--- x, y      = pixel offset from the top-left corner of the screen
+-- x, y      = offset from the top-left corner of the screen, in real screen pixels
+-- size      = swatch width/height, in real screen pixels
 -- colorFunc = function returning r, g, b (each 0-1)
 --
 -- Returns: { frame = <texture>, update = <function> }
-function CreatePixelSwatch(parent, x, y, colorFunc)
+function CreatePixelSwatch(parent, x, y, size, colorFunc)
     local tex = parent:CreateTexture(nil, "OVERLAY")
-    tex:SetSize(1, 1)
-    tex:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y)
     tex:SetColorTexture(0, 0, 0, 1)
 
     local function UpdateSwatch()
+        local pixelsPerUnit = GetPhysicalPixelsPerLocalUnit()
+        local localSize = size / pixelsPerUnit
+
+        tex:ClearAllPoints()
+        tex:SetSize(localSize, localSize)
+        tex:SetPoint("TOPLEFT", parent, "TOPLEFT", x / pixelsPerUnit, -(y / pixelsPerUnit))
+
         local r, g, b = colorFunc()
         tex:SetColorTexture(r, g, b, 1)
     end
@@ -115,17 +143,25 @@ function CreatePixelSwatch(parent, x, y, colorFunc)
 end
 
 -- Section 1 of the redesigned addon UI: the 15 values/flags also shown in
--- InitializeIndicators() below, re-rendered as a row of exact 1x1 pixels
--- pinned to the screen's top-left corner (0,0) through (14,0) -- one pixel
--- per field, in a fixed, resolution-independent spot. This is currently
+-- InitializeIndicators() below, re-rendered as a row of exact pixels pinned
+-- to the screen's top-left corner at PIXEL_SIZE spacing -- one swatch per
+-- field, in a fixed, resolution-independent spot. This is currently
 -- redundant with the boxes InitializeIndicators() draws in the draggable
 -- debug frame; once the C# side reads this row instead, those old boxes and
 -- their per-resolution calibrated positions can be removed.
 function InitializePixelRow()
+    -- Size of each swatch, in real screen pixels; also its spacing, so
+    -- swatches never overlap. C# reads the CENTER pixel of each PIXEL_SIZE x
+    -- PIXEL_SIZE block (offset PIXEL_SIZE//2 from this swatch's top-left
+    -- corner) for margin against any residual edge blur. Must match
+    -- WowScreenConfiguration's pixel-row Points on the C# side if this
+    -- changes.
+    local PIXEL_SIZE = 3
+
     local swatches = {}
 
-    local function AddSwatch(x, colorFunc)
-        table.insert(swatches, CreatePixelSwatch(UIParent, x, 0, colorFunc))
+    local function AddSwatch(index, colorFunc)
+        table.insert(swatches, CreatePixelSwatch(UIParent, index * PIXEL_SIZE, 0, PIXEL_SIZE, colorFunc))
     end
 
     AddSwatch(0,  function() return EncodeFloatToColor(GetPlayerHealthPercent()) end)

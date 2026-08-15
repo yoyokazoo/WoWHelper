@@ -32,11 +32,6 @@ namespace WoWHelper.Code.Config
             LootHeatmapIgnoreWidth = 130,
             LootHeatmapIgnoreHeight = 135,
 
-            TextLeftCoord = 75,
-            TextTopCoord = 200,
-            TextBoxHeight = 40,
-            TextBoxWidth = 270,
-
             FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
                     new ColorPosition(1529, 217, WowScreenConfiguration.ERROR_TEXT_COLOR),
@@ -106,11 +101,6 @@ namespace WoWHelper.Code.Config
             LootHeatmapIgnoreY = 731,
             LootHeatmapIgnoreWidth = 143,
             LootHeatmapIgnoreHeight = 138,
-
-            TextLeftCoord = 84,
-            TextTopCoord = 224,
-            TextBoxHeight = 45,
-            TextBoxWidth = 300,
 
             FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
@@ -203,11 +193,6 @@ namespace WoWHelper.Code.Config
             LootHeatmapIgnoreY = 499,
             LootHeatmapIgnoreWidth = 77,
             LootHeatmapIgnoreHeight = 75,
-
-            TextLeftCoord = 57,
-            TextTopCoord = 151,
-            TextBoxHeight = 30,
-            TextBoxWidth = 203,
 
             FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
