@@ -98,7 +98,18 @@ of truth — edits should be made here, not in the WoW install directory.
   cooldown detection, attacker counting, etc.) — the "is X true" logic layer.
 - **`UIFunctions.lua`** — builds the on-screen indicator frame/swatches and
   encodes values/booleans into the colors the C# side decodes
-  (`EncodeFloatToColor` and friends).
+  (`EncodeFloatToColor` and friends). Two rendering paths currently coexist,
+  both fed by the same underlying value/color functions:
+  - `InitializeIndicators()` — the original 20x20-box draggable debug frame
+    (`YoyokazooUIFrame`), still what `WowScreenConfigs.cs` positions
+    (`TextLeftCoord`/`BoolLeftCoord` etc., manually calibrated per resolution)
+    actually read.
+  - `InitializePixelRow()` — an in-progress redesign: the same 15 values, each
+    as an exact 1x1 pixel pinned to the screen's literal top-left corner,
+    `(0,0)` through `(14,0)`, needing no per-resolution calibration. Currently
+    redundant/cosmetic only — the C# side does not read this row yet. Once it
+    does, `InitializeIndicators()` and the calibrated `WowScreenConfigs.cs`
+    positions can be retired.
 - **`MathFunctions.lua`** — small numeric helpers shared by the above.
 - **`YoyokazooUI.lua`** — addon entry point/event wiring (login, XP/level-up
   tracking, whisper tracking for "unseen whisper" alerts) and indicator

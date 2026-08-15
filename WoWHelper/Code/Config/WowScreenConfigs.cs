@@ -26,6 +26,7 @@ namespace WoWHelper.Code.Config
             LootHeatmapWidth = 426,
             LootHeatmapHeight = 341,
 
+            // Does this account for /console cameraDistanceMaxZoomFactor 3.5 ??
             LootHeatmapIgnoreX = 1655,
             LootHeatmapIgnoreY = 655,
             LootHeatmapIgnoreWidth = 130,

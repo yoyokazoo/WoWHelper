@@ -50,6 +50,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
 
         print("XP session started. Level:", xpTracker.startLevel, "XP:", xpTracker.startXP)
         InitializeIndicators()
+        InitializePixelRow()
     end
 
     if event == "PLAYER_XP_UPDATE" then

@@ -88,6 +88,77 @@ function CreateIndicator(parent, label, colorFunc, orderY)
     }
 end
 
+-- Creates a single exact 1x1 pixel anchored at a fixed (x, y) offset from the
+-- very top-left corner of the screen (not the draggable debug frame).
+-- parent    = parent frame (UIParent)
+-- x, y      = pixel offset from the top-left corner of the screen
+-- colorFunc = function returning r, g, b (each 0-1)
+--
+-- Returns: { frame = <texture>, update = <function> }
+function CreatePixelSwatch(parent, x, y, colorFunc)
+    local tex = parent:CreateTexture(nil, "OVERLAY")
+    tex:SetSize(1, 1)
+    tex:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y)
+    tex:SetColorTexture(0, 0, 0, 1)
+
+    local function UpdateSwatch()
+        local r, g, b = colorFunc()
+        tex:SetColorTexture(r, g, b, 1)
+    end
+
+    UpdateSwatch()
+
+    return {
+        frame = tex,
+        update = UpdateSwatch,
+    }
+end
+
+-- Section 1 of the redesigned addon UI: the 15 values/flags also shown in
+-- InitializeIndicators() below, re-rendered as a row of exact 1x1 pixels
+-- pinned to the screen's top-left corner (0,0) through (14,0) -- one pixel
+-- per field, in a fixed, resolution-independent spot. This is currently
+-- redundant with the boxes InitializeIndicators() draws in the draggable
+-- debug frame; once the C# side reads this row instead, those old boxes and
+-- their per-resolution calibrated positions can be removed.
+function InitializePixelRow()
+    local swatches = {}
+
+    local function AddSwatch(x, colorFunc)
+        table.insert(swatches, CreatePixelSwatch(UIParent, x, 0, colorFunc))
+    end
+
+    AddSwatch(0,  function() return EncodeFloatToColor(GetPlayerHealthPercent()) end)
+    AddSwatch(1,  function() return EncodeFloatToColor(GetPlayerResourcePercent()) end)
+    AddSwatch(2,  function() return EncodeFloatToColor(GetTargetHealthPercent()) end)
+    AddSwatch(3,  function() return EncodeFloatToColor(GetPlayerMapX()) end)
+    AddSwatch(4,  function() return EncodeFloatToColor(GetPlayerMapY()) end)
+    AddSwatch(5,  function() return EncodeFloatToColor(GetPlayerFacingInDegrees()) end)
+    AddSwatch(6,  function() return EncodeFloatToColor(CountAttackers()) end)
+    AddSwatch(7,  IsAttackingColor)
+    AddSwatch(8,  IsInCombatColor)
+    AddSwatch(9,  CanChargeTargetColor)
+    AddSwatch(10, IsAnyNextSwingSpellQueuedColor)
+    AddSwatch(11, GetMultiBoolOne)
+    AddSwatch(12, GetMultiBoolTwo)
+    AddSwatch(13, GetMultiIntOne)
+    AddSwatch(14, GetMultiIntTwo)
+
+    local checkInterval = 0.1
+    local elapsedTime = 0
+
+    local updaterFrame = CreateFrame("Frame")
+    updaterFrame:SetScript("OnUpdate", function(self, elapsed)
+        elapsedTime = elapsedTime + elapsed
+        if elapsedTime < checkInterval then return end
+        elapsedTime = 0
+
+        for _, swatch in ipairs(swatches) do
+            swatch.update()
+        end
+    end)
+end
+
 function InitializeIndicators()
     -- Create the "Hello World" text on bottom, can be used for debug
     local text = YoyokazooUIFrame:CreateFontString("HELLO", "OVERLAY", "GameFontNormalSmall")
@@ -198,7 +269,7 @@ Creates a "picker" button:
 - On hover, spawns (and shows) a vertical list of option buttons (each an item).
 - Clicking an option:
     - Saves the chosen itemID into SavedVariables (your table)
-    - Updates parent icon to the chosen item’s icon
+    - Updates parent icon to the chosen itemï¿½s icon
     - Hides the options
 
 Classic-friendly notes:
