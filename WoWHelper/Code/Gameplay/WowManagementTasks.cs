@@ -307,11 +307,6 @@ namespace WoWHelper
                         await PutMoneyInTradeTask();
                         await AcceptTradeTask();
                         currentTradeState = TradeState.WAITING_FOR_TRADE_ACCEPTANCE;
-                        /*
-                        currentTradeState = await ChangeStateBasedOnTaskResult(PutMoneyInTradeTask(),
-                            TradeState.WAITING_FOR_TRADE_ACCEPTANCE,
-                            TradeState.WAITING_FOR_TRADE_ACCEPTANCE);
-                        */
                         break;
                     case TradeState.WAITING_FOR_TRADE_ACCEPTANCE:
                         //Console.WriteLine($"Waiting for trade acceptance");
