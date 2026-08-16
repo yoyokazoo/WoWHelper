@@ -9,5 +9,8 @@
 
 MathFunctions.lua
 WoWFunctions.lua
+WarriorFunctions.lua
+MageFunctions.lua
+ShamanFunctions.lua
 UIFunctions.lua
 YoyokazooUI.lua

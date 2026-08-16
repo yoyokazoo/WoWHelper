@@ -32,7 +32,7 @@ than one internal API behavior.
 
 ## The color-encoding contract (the critical coupling point)
 
-`UIFunctions.lua`'s `InitializePixelRow()` paints a row of 15 `PIXEL_SIZE` x
+`UIFunctions.lua`'s `InitializePixelRow()` paints a row of 18 `PIXEL_SIZE` x
 `PIXEL_SIZE` (currently 3x3) swatches pinned to the screen's literal top-left
 corner — one field/slot per swatch, fixed and resolution-independent (no
 per-resolution calibration needed). Swatches are placed by converting desired
@@ -68,6 +68,11 @@ more recent note here before assuming it's fully settled.
 - **Packed percents/small ints** (pixels 13, 14 — `MultiIntOne`/`MultiIntTwo`):
   raw R/G/B channel value, 0-255 (HP%, resource%, target HP% / attacker
   count, level).
+- **Class-specific packed state** (pixels 15, 16, 17 — `ClassBool`/`ClassInt`,
+  see the "Class split" note below) — same bit-packing/raw-byte schemes as
+  above, but the *meaning* of a given bit depends on which class is
+  currently playing. **Not decoded by C# yet** — drawn by Lua only, staged
+  for a future migration off `MultiBoolOne/Two`.
 - **Text/UI state matched by exact pixel signature** (login screen, trade
   window open/accepted/confirmed, breath bar underwater, red error toast text
   like "facing wrong way" / "too far away" / "invalid target" / "out of
@@ -79,9 +84,28 @@ more recent note here before assuming it's fully settled.
 
 Pixels 0-2 and 6-10 of the row (individual HP%/resource%/target HP%/attacker
 count and the single-bool `InRange`/`InCombat`/`CanChargeTarget`/`HeroicQueued`
-slots) are drawn by Lua but **not yet read by C#** — the bot still gets that
-data from the packed pixels 11-14, same as before the row existed. They're
-placeholders for a future move away from bit-packing.
+slots), and pixels 15-17 (`ClassBool`/`ClassInt`), are drawn by Lua but **not
+yet read by C#** — the bot still gets that data from the packed pixels 11-14,
+same as before the row existed. They're placeholders for a future move away
+from bit-packing (0-2, 6-10) and away from lumping every class's flags into
+one shared pixel (15-17).
+
+**Class split (staged, Lua-only so far):** `GetMultiBoolOne/Two` still pack
+every class's flags together — any field marked `-- CLASS: X` in
+`WoWFunctions.lua` is class-specific and has NOT been stripped out yet, kept
+so nothing currently reading those pixels breaks. In parallel,
+`GetClassBoolOne/Two`/`GetClassIntOne` (also in `WoWFunctions.lua`) check
+`UnitClass("player")` and delegate to that class's own populate function
+(`GetWarriorClassBoolOne` in `WarriorFunctions.lua`, `GetMageClassBoolOne` in
+`MageFunctions.lua`, `GetShamanClassBoolOne` in `ShamanFunctions.lua`) — so
+the *same* pixel/bit position means something different depending on which
+class is playing. Once C# is updated to read `ClassBool`/`ClassInt` (and know
+the current class, to interpret them), the `-- CLASS: X` fields should be
+stripped out of `GetMultiBoolOne/Two` and those bits reclaimed. Note
+`CanSpellcastPullTarget()` stays in `WoWFunctions.lua` rather than being
+split into the class files — it's shared between Mage and Shaman under the
+same name, and duplicating that name into both class files would collide
+(last-loaded file wins silently, since addon globals are one flat namespace).
 
 Because both sides hardcode pixel coordinates and bit order, **the Lua encoder
 and the C# decoder must be changed together** — a one-sided change silently
@@ -138,15 +162,32 @@ of truth — edits should be made here, not in the WoW install directory.
 
 ## Lua addon (`WoWHelper/Lua Addon/`, `YoyokazooUI`)
 
-- **`YoyokazooUI.toc`** — addon manifest/load order.
-- **`WoWFunctions.lua`** — game-state queries (in melee range, in combat,
-  should-attack-target checks, spell cooldown/range checks incl. GCD-aware
-  cooldown detection, attacker counting, etc.) — the "is X true" logic layer.
+- **`YoyokazooUI.toc`** — addon manifest/load order. Loads
+  `MathFunctions.lua` → `WoWFunctions.lua` → `WarriorFunctions.lua` →
+  `MageFunctions.lua` → `ShamanFunctions.lua` → `UIFunctions.lua` →
+  `YoyokazooUI.lua`. Load order doesn't actually matter for correctness here
+  (everything is a plain global function, resolved at call time, and nothing
+  calls any of these before `PLAYER_ENTERING_WORLD`, well after every file
+  has finished loading) — this ordering is just for readability.
+- **`WoWFunctions.lua`** — class-agnostic game-state queries (in melee range,
+  in combat, should-attack-target checks, spell cooldown/range checks incl.
+  GCD-aware cooldown detection, attacker counting, etc.) — the "is X true"
+  logic layer, plus `GetMultiBoolOne/Two`/`GetMultiIntOne/Two` (shared-state
+  pixel populate functions) and `GetClassBoolOne/Two`/`GetClassIntOne`
+  (class-specific dispatchers — see "Class split" above).
+- **`WarriorFunctions.lua`** / **`MageFunctions.lua`** / **`ShamanFunctions.lua`**
+  — that class's specific checks (e.g. `TargetHasRend`, `CanCastWhirlwind` for
+  Warrior; `ShouldWeSummonWater`, `IsFireblastCooledDown` for Mage;
+  `ShouldCastRockbiterWeapon`, `CanCastEarthShock` for Shaman) plus a
+  `GetXClassBoolOne/Two`/`GetXClassIntOne` set that packs that class's state
+  into the ClassBool/ClassInt pixels. Split out of `WoWFunctions.lua` to keep
+  class-specific logic physically separated as more classes/fields get added.
 - **`UIFunctions.lua`** — builds the on-screen indicator frame/swatches and
   encodes values/booleans into the colors the C# side decodes
   (`EncodeFloatToColor` and friends). Two rendering paths coexist, both fed
   by the same underlying value/color functions:
-  - `InitializePixelRow()` — **the one the C# bot actually reads.** 15
+  - `InitializePixelRow()` — **the one the C# bot actually reads** (partially
+    — see "Class split" above for what's drawn but not yet decoded). 18
     `PIXEL_SIZE`-square swatches pinned to the screen's literal top-left
     corner, placed via the self-calibrating `GetPhysicalPixelsPerLocalUnit()`
     helper, matching the center-pixel `Point`s computed on
@@ -155,7 +196,7 @@ of truth — edits should be made here, not in the WoW install directory.
   - `InitializeIndicators()` — the original 20x20-box draggable debug frame
     (`YoyokazooUIFrame`). Purely a human-readable visual now; the bot no
     longer reads its position, but it's left in place as a human-facing
-    debug display since it shows the same 15 values legibly.
+    debug display since it shows the same 18 values legibly.
 - **`MathFunctions.lua`** — small numeric helpers shared by the above.
 - **`YoyokazooUI.lua`** — addon entry point/event wiring (login, XP/level-up
   tracking, whisper tracking for "unseen whisper" alerts) and indicator

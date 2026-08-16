@@ -179,6 +179,9 @@ function InitializePixelRow()
     AddSwatch(12, GetMultiBoolTwo)
     AddSwatch(13, GetMultiIntOne)
     AddSwatch(14, GetMultiIntTwo)
+    AddSwatch(15, GetClassBoolOne)
+    AddSwatch(16, GetClassBoolTwo)
+    AddSwatch(17, GetClassIntOne)
 
     local checkInterval = 0.1
     local elapsedTime = 0
@@ -230,6 +233,9 @@ function InitializeIndicators()
     local multiBoolTwo = CreateIndicator(YoyokazooUIFrame, "Multi Bool Two", GetMultiBoolTwo, 5)
     local multiIntOne = CreateIndicator(YoyokazooUIFrame, "Multi Int One", GetMultiIntOne, 6)
     local multiIntTwo = CreateIndicator(YoyokazooUIFrame, "Multi Int Two", GetMultiIntTwo, 7)
+    local classBoolOne = CreateIndicator(YoyokazooUIFrame, "Class Bool One", GetClassBoolOne, 8)
+    local classBoolTwo = CreateIndicator(YoyokazooUIFrame, "Class Bool Two", GetClassBoolTwo, 9)
+    local classIntOne = CreateIndicator(YoyokazooUIFrame, "Class Int One", GetClassIntOne, 10)
 
     local indicators = {
         inRangeBox.update,
@@ -239,7 +245,10 @@ function InitializeIndicators()
         multiBoolOne.update,
         multiBoolTwo.update,
         multiIntOne.update,
-        multiIntTwo.update
+        multiIntTwo.update,
+        classBoolOne.update,
+        classBoolTwo.update,
+        classIntOne.update
     }
 
     -- Melee Range Indicator

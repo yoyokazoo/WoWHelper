@@ -189,27 +189,11 @@ function SpellIsInRange(spellId)
     return true
 end
 
--- 100 is level 1 charge, but still works since range doesnt change and shares cooldown
-function CanChargeTarget()
-    if not ShouldWeAttackTarget() then
-        return false
-    end
+-- CanChargeTarget() and CanShootTarget() moved to WarriorFunctions.lua.
 
-    return SpellIsInRangeAndCooledDown(100)
-end
-
--- 75,    -- Auto Shot (Hunter)
--- 2480,  -- Shoot Bow
--- 7918,  -- Shoot Gun
--- 7919,  -- Shoot Crossbow
-function CanShootTarget()
-    if not ShouldWeAttackTarget() then
-        return false
-    end
-
-    return SpellIsInRangeAndCooledDown(7918)
-end
-
+-- Shared between Mage and Shaman (branches internally below), so it stays
+-- here rather than moving to a single class file -- see the note atop
+-- MageFunctions.lua/ShamanFunctions.lua about why it isn't split further.
 function CanSpellcastPullTarget()
     if not ShouldWeAttackTarget() then
         return false
@@ -235,18 +219,7 @@ function CanSpellcastPullTarget()
     return SpellIsInRange(spellId)
 end
 
--- shoot gun, shoot crossbow
-function WaitingToShoot()
-    return IsCurrentSpell(7918) or IsCurrentSpell(2480) or IsCurrentSpell(5019)
-end
-
-function IsAnyNextSwingSpellQueued()
-    -- Action queue abilities always satisfy IsCurrentSpell()
-    -- So check if ANY known next-swing spell is current.
-    if IsCurrentSpell("Heroic Strike") then return true end
-    if IsCurrentSpell("Cleave")        then return true end
-    return false
-end
+-- WaitingToShoot() and IsAnyNextSwingSpellQueued() moved to WarriorFunctions.lua.
 
 --------------------------------------------------
 -- Health: player (percent 0�100)
@@ -532,24 +505,7 @@ end
 -- Level 35 Conjured Mineral Water, 8077
 -- Level 45 Conjured Sparkling Water, 8078
 -- Level 55 Conjured Crystal Water, 8079
--- TODO: pick based on level
--- TODO: store level in a variable we can reference?
-function ShouldWeSummonWater()
-    local waterCount = GetItemCount(5350, false)
-    return waterCount < 2
-end
-
--- Level 1 Conjured Muffin, 5349
--- Level 5 Conjured Bread, 1113
--- Level 15 Conjured Rye, 1114
--- Level 25 Conjured Pumpernickel, 1487
--- Level 35 Conjured Sourdough, 8075
--- Level 45 Conjured Sweet Roll, 8076
--- Level 55 Conjured Cinnamon Roll, 22895
-function ShouldWeSummonFood()
-    local foodCount = GetItemCount(1113, false)
-    return foodCount < 2
-end
+-- ShouldWeSummonWater() and ShouldWeSummonFood() moved to MageFunctions.lua.
 
 function TargetHasDebuffSpellId(debuffSpellId)
   for i = 1, 40 do
@@ -577,27 +533,8 @@ function TargetHasDebuffSpellName(debuffSpellName)
   return false
 end
 
--- rank 1, 772
--- rank 2, 6546
--- rank 3, 6547
--- rank 4, 6548
--- rank 5, 11572
--- rank 6, 11573
--- rank 7, 11574
-function TargetHasRend()
-  return TargetHasDebuffSpellId(11574)
-end
-
--- TODO: set dynamically on startup and on levelup
--- rank 1, 8050
--- rank 2, 8052
--- rank 3, 8053
--- rank 4, 10447
--- rank 5, 
--- rank 6, 
-function TargetHasFlameShock()
-  return TargetHasDebuffSpellName("Flame Shock")
-end
+-- TargetHasRend() moved to WarriorFunctions.lua.
+-- TargetHasFlameShock() moved to ShamanFunctions.lua.
 
 -- Was checking Lightning Shield's (324) cooldown as a stand-in for the GCD --
 -- broken for any non-Shaman character (and low-level Shamans without it
@@ -616,27 +553,9 @@ function IsGlobalCooldownCooledDown()
     return remaining <= 0
 end
 
--- WW rank 1, 1680
-function CanCastWhirlwind()
-    return SpellIsCooledDown(1680)
-end
-
--- Sweeping Strikes, 12292
-function CanCastSweepingStrikes()
-    return SpellIsCooledDown(12292)
-end
-
--- Earth Shock Rank 1, 8042
-function CanCastEarthShock()
-    return SpellIsCooledDown(8042) and IsSpellUsable(8042)
-end
-
--- Mortal Strike, 12294
--- Bloodthirst, 23881
--- only one can be active at a time, so do both in one
-function CanCastMortalStrikeOrBloodthirst()
-    return SpellIsCooledDown(12294) or SpellIsCooledDown(23881)
-end
+-- CanCastWhirlwind(), CanCastSweepingStrikes(), and
+-- CanCastMortalStrikeOrBloodthirst() moved to WarriorFunctions.lua.
+-- CanCastEarthShock() moved to ShamanFunctions.lua.
 
 function GetFreeSlotsInBag(bag)
     local total = C_Container.GetContainerNumSlots(bag)
@@ -690,60 +609,48 @@ function IsPlayerCasting()
         or UnitChannelInfo("player") ~= nil
 end
 
-function HasRockbiterWeaponMainHand()
-    local hasMainHandEnchant,
-          mainHandExpiration,
-          mainHandCharges,
-          hasOffHandEnchant,
-          offHandExpiration,
-          offHandCharges = GetWeaponEnchantInfo()
+-- HasRockbiterWeaponMainHand(), ShouldCastRockbiterWeapon(),
+-- ShouldCastLightningShield(), and ShouldCastFlameShock() moved to
+-- ShamanFunctions.lua.
 
-    return hasMainHandEnchant == true
-end
-
-function ShouldCastRockbiterWeapon()
-    return IsSpellKnown(8017) and IsSpellUsable(8017) and not HasRockbiterWeaponMainHand()
-end
-
-function ShouldCastLightningShield()
-    return IsSpellKnown(324) and IsSpellUsable(324) and not HasBuffNamed("Lightning Shield")
-end
-
-function ShouldCastFlameShock()
-    return SpellIsCooledDown(8050) and IsSpellUsable(8050) and not TargetHasFlameShock()
-end
-
+-- NOTE: every field below marked "-- CLASS: X" is class-specific and now
+-- also populated via GetClassBoolOne/Two (see the dispatchers further down
+-- and GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
+-- ShamanFunctions.lua). Left in place here for now so nothing currently
+-- reading MultiBoolOne/Two/MultiIntOne/Two breaks -- once the C# side reads
+-- ClassBool/ClassInt instead, these marked fields should be stripped out of
+-- MultiBoolOne/Two and that pixel's now-unused bits reclaimed.
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
-    local boolR2 = HasBuffNamed("Battle Shout")
+    local boolR2 = HasBuffNamed("Battle Shout") -- CLASS: Warrior
     local boolR3 = AreWeLowOnHealthPotions()
     local boolR4 = AreWeLowOnDynamite()
-    local boolR5 = TargetHasRend()
-    local boolR6 = CanShootTarget()
+    local boolR5 = TargetHasRend() -- CLASS: Warrior
+    local boolR6 = CanShootTarget() -- CLASS: Warrior
     local boolR7 = AreWeLowOnAmmo()
-    local boolR8 = IsSpellUsable(7384) -- overpower rank 1, 7384
+    local boolR8 = IsSpellUsable(7384) -- CLASS: Warrior (overpower rank 1, 7384)
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
 
     local boolG1 = IsGlobalCooldownCooledDown()
-    local boolG2 = CanCastWhirlwind()
-    local boolG3 = CanCastSweepingStrikes()
-    local boolG4 = WaitingToShoot()
-    local boolG5 = CanCastMortalStrikeOrBloodthirst()
+    local boolG2 = CanCastWhirlwind() -- CLASS: Warrior
+    local boolG3 = CanCastSweepingStrikes() -- CLASS: Warrior
+    local boolG4 = WaitingToShoot() -- CLASS: Warrior
+    local boolG5 = CanCastMortalStrikeOrBloodthirst() -- CLASS: Warrior
     local boolG6 = AreBagsFull()
-    local boolG7 = CanChargeTarget()
+    local boolG7 = CanChargeTarget() -- CLASS: Warrior
     local boolG8 = IsInCombat()
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
-    local boolB1 = IsAnyNextSwingSpellQueued()
+    local boolB1 = IsAnyNextSwingSpellQueued() -- CLASS: Warrior
     local boolB2 = IsPlayerPetrified()
     local boolB3 = HasUnseenWhisper()
-    local boolB4 = CanSpellcastPullTarget()
-    local boolB5 = HasBuffNamed("Frost Armor")
-    local boolB6 = HasBuffNamed("Arcane Intellect")
-    local boolB7 = ShouldWeSummonWater()
-    local boolB8 = ShouldWeSummonFood()
+    local boolB4 = CanSpellcastPullTarget() -- CLASS: Mage + Shaman
+    local boolB5 = HasBuffNamed("Frost Armor") -- CLASS: Mage
+    local boolB6 = HasBuffNamed("Arcane Intellect") -- CLASS: Mage
+    local boolB7 = ShouldWeSummonWater() -- CLASS: Mage
+    local boolB8 = ShouldWeSummonFood() -- CLASS: Mage
 
     local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
 
@@ -752,13 +659,13 @@ end
 
 function GetMultiBoolTwo()
     local boolR1 = IsInMeleeRange()
-    local boolR2 = SpellIsCooledDownIgnoringGCD(2136) -- fireblast rank 1, 2136
+    local boolR2 = SpellIsCooledDownIgnoringGCD(2136) -- CLASS: Mage (fireblast rank 1, 2136)
     local boolR3 = IsPlayerCasting()
     local boolR4 = AreEnemyNameplatesTurnedOn()
-    local boolR5 = ShouldCastRockbiterWeapon()
-    local boolR6 = CanCastEarthShock()
-    local boolR7 = ShouldCastLightningShield()
-    local boolR8 = ShouldCastFlameShock()
+    local boolR5 = ShouldCastRockbiterWeapon() -- CLASS: Shaman
+    local boolR6 = CanCastEarthShock() -- CLASS: Shaman
+    local boolR7 = ShouldCastLightningShield() -- CLASS: Shaman
+    local boolR8 = ShouldCastFlameShock() -- CLASS: Shaman
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
 
@@ -769,7 +676,7 @@ function GetMultiBoolTwo()
     local boolG5 = false
     local boolG6 = false
     local boolG7 = false
-    local boolG8 = CanCastEarthShock()
+    local boolG8 = CanCastEarthShock() -- CLASS: Shaman
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
@@ -780,7 +687,7 @@ function GetMultiBoolTwo()
     local boolB5 = false
     local boolB6 = false
     local boolB7 = false
-    local boolB8 = TargetHasFlameShock()
+    local boolB8 = TargetHasFlameShock() -- CLASS: Shaman
 
     local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
 
@@ -803,6 +710,60 @@ function GetMultiIntTwo()
     return r/255.0, g/255.0, b/255.0
 end
 
+------------------------------------------------------------
+-- ClassBool/ClassInt dispatchers -- the class-specific counterpart to
+-- GetMultiBoolOne/Two/GetMultiIntOne/Two above. Each checks the player's
+-- class once and delegates to that class's own populate function (see
+-- GetWarriorClassBoolOne/Two, GetMageClassBoolOne/Two, and
+-- GetShamanClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
+-- ShamanFunctions.lua). Unsupported/unrecognized classes get all-zero.
+--
+-- Not read by C# yet -- see the note atop GetMultiBoolOne above for the
+-- plan to eventually strip the now-duplicated class-specific fields out of
+-- MultiBoolOne/Two once it is.
+------------------------------------------------------------
+function GetClassBoolOne()
+    local _, classFile = UnitClass("player")
+
+    if classFile == "WARRIOR" then
+        return GetWarriorClassBoolOne()
+    elseif classFile == "MAGE" then
+        return GetMageClassBoolOne()
+    elseif classFile == "SHAMAN" then
+        return GetShamanClassBoolOne()
+    end
+
+    return 0, 0, 0
+end
+
+function GetClassBoolTwo()
+    local _, classFile = UnitClass("player")
+
+    if classFile == "WARRIOR" then
+        return GetWarriorClassBoolTwo()
+    elseif classFile == "MAGE" then
+        return GetMageClassBoolTwo()
+    elseif classFile == "SHAMAN" then
+        return GetShamanClassBoolTwo()
+    end
+
+    return 0, 0, 0
+end
+
+function GetClassIntOne()
+    local _, classFile = UnitClass("player")
+
+    if classFile == "WARRIOR" then
+        return GetWarriorClassIntOne()
+    elseif classFile == "MAGE" then
+        return GetMageClassIntOne()
+    elseif classFile == "SHAMAN" then
+        return GetShamanClassIntOne()
+    end
+
+    return 0, 0, 0
+end
+
 function IsAttackingColor()
     return GetColorFromSingleBool(IsAttacking())
 end
@@ -815,10 +776,5 @@ function IsInCombatColor()
     return GetColorFromSingleBool(IsInCombat())
 end
 
-function CanChargeTargetColor()
-    return GetColorFromSingleBool(CanChargeTarget())
-end
-
-function IsAnyNextSwingSpellQueuedColor()
-    return GetColorFromSingleBool(IsAnyNextSwingSpellQueued())
-end
+-- CanChargeTargetColor() and IsAnyNextSwingSpellQueuedColor() moved to
+-- WarriorFunctions.lua.
