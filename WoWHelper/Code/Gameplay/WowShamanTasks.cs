@@ -163,15 +163,14 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
-            Console.WriteLine($"ShamanFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}");
-            if (!WorldState.IsCurrentlyCasting)
+            Console.WriteLine($"ShamanFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}, WorldState.IsInCombat? {WorldState.IsInCombat}");
+            if (!WorldState.IsCurrentlyCasting && !WorldState.IsInCombat)
             {
                 await TurnABitToTheLeftTask();
                 Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
                 await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
                 await UpdateWorldStateAsync();
             }
-            // TODO; short circuit into  and stop casting so we don't finish our bolt if something aggroes us
 
             return ShamanCanEngageTarget(classState);
         }

@@ -1,4 +1,5 @@
 ﻿using InputManager;
+using System;
 using System.Threading.Tasks;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
@@ -69,6 +70,8 @@ namespace WoWHelper
             bool invalidTarget = WorldState.InvalidTarget;
             bool outOfRange = WorldState.OutOfRange;
 
+            Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}");
+
             if (facingWrongWay || targetNeedsToBeInFront)
             {
                 // scoot back to make sure the mob is in front of you
@@ -80,9 +83,10 @@ namespace WoWHelper
             if (tooFarAway || invalidTarget || outOfRange)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
-                // but don't if attacker count == 0, since then we can be sure they're far away from us
+                // attacker count now updates immediately, so only clear target if mob isn't tagged by us OR mob is tagged by us and attackerCount >1
                 if (WorldState.AttackerCount > 0)
                 {
+                    Console.WriteLine($"tooFarAway || invalidTarget || outOfRange and WorldState.AttackerCount > 0 {WorldState.AttackerCount}");
                     Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
 
                     // if it's actually too far away, waiting a bit won't matter

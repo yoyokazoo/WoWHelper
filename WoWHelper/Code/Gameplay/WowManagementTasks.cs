@@ -26,10 +26,8 @@ namespace WoWHelper
             return true;
         }
 
-        // 
         public async Task<bool> EveryWorldStateUpdateTasks()
         {
-            // TODO: combine these into a shared task
             // don't drown
             if (WorldState.Underwater)
             {
