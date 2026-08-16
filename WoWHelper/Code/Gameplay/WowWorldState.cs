@@ -4,6 +4,7 @@ using System.Numerics;
 using WindowsGameAutomationTools.ImageDetection;
 using WindowsGameAutomationTools.Images;
 using WoWHelper.Code.Config;
+using WoWHelper.Code.WorldState;
 
 namespace WoWHelper
 {
@@ -24,6 +25,7 @@ namespace WoWHelper
         // Multi Int Two
         public int AttackerCount { get; private set; }
         public int PlayerLevel { get; private set; }
+        public WowZone CurrentZone { get; private set; }
 
         public bool IsInCombat { get; private set; }
 
@@ -201,6 +203,7 @@ namespace WoWHelper
 
             AttackerCount = color.R;
             PlayerLevel = color.G;
+            CurrentZone = (WowZone)color.B; // see GetCurrentZoneId() in WoWFunctions.lua
         }
 
         public void UpdateRedErrorTextMessages(Bitmap bmp)

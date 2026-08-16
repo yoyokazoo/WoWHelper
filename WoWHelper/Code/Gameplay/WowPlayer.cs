@@ -318,6 +318,7 @@ namespace WoWHelper
                         break;
                     case PlayerState.START_LOGGING_OUT:
                         Console.WriteLine($"Started logging out ({LogoutReason})");
+                        SlackHelper.SendMessageToChannel($"Logging out: {LogoutReason}");
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartLogoutTask(),
                             PlayerState.WAITING_TO_LOG_OUT,
                             PlayerState.IN_CORE_COMBAT_LOOP);
@@ -330,7 +331,6 @@ namespace WoWHelper
                         break;
                     case PlayerState.LOGGED_OUT:
                         Console.WriteLine("Logged out");
-                        SlackHelper.SendMessageToChannel($"Logged out: {LogoutReason}");
                         CurrentPlayerState = PlayerState.EXITING_CORE_GAMEPLAY_LOOP;
                         break;
                     case PlayerState.START_BATTLE_READY_RECOVERY:

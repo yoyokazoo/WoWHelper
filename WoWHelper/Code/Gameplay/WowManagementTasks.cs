@@ -72,7 +72,22 @@ namespace WoWHelper
 
         public async Task<bool> SetLogoutVariablesTask()
         {
-            if (FarmingConfig.LogoutOnLowDynamite && WorldState.LowOnDynamite)
+            // Checked first so a wrong-zone/under-level start gives the clearest possible
+            // reason, rather than getting masked behind some other logout condition that also
+            // happens to be true on the very first tick.
+            if (FarmingConfig.LocationConfiguration.MinimumLevel > 0 && WorldState.PlayerLevel < FarmingConfig.LocationConfiguration.MinimumLevel)
+            {
+                LogoutTriggered = true;
+                LogoutReason = $"Below minimum level for this route (level {WorldState.PlayerLevel}, need {FarmingConfig.LocationConfiguration.MinimumLevel}+)";
+            }
+            // Zone.Unknown means this route's config forgot to set Zone -- skip the check rather
+            // than have a misconfigured route always immediately abort every session.
+            else if (FarmingConfig.LocationConfiguration.Zone != WowZone.Unknown && WorldState.CurrentZone != FarmingConfig.LocationConfiguration.Zone)
+            {
+                LogoutTriggered = true;
+                LogoutReason = $"Wrong zone for this route (currently {WorldState.CurrentZone}, expected {FarmingConfig.LocationConfiguration.Zone})";
+            }
+            else if (FarmingConfig.LogoutOnLowDynamite && WorldState.LowOnDynamite)
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Dynamite";

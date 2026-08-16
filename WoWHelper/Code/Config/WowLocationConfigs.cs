@@ -9,6 +9,10 @@ namespace WoWHelper.Code.WorldState
     {
         public static readonly WowLocationConfiguration LEVEL_58_SILITHUS_RUMBLERS = new WowLocationConfiguration
         {
+            Title = "Silithus Rumblers (Level 58+)",
+            MinimumLevel = 58,
+            Zone = WowZone.Silithus,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(27.20f, 11.69f),
@@ -33,6 +37,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL = new WowLocationConfiguration
         {
+            Title = "Dalton's Tears Backside, Western Plaguelands (Level 56+)",
+            MinimumLevel = 56,
+            Zone = WowZone.WesternPlaguelands,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(48.41f, 51.75f),
@@ -56,6 +64,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL = new WowLocationConfiguration
         {
+            Title = "Dalton's Tears Frontside, Western Plaguelands (Level 56+)",
+            MinimumLevel = 56,
+            Zone = WowZone.WesternPlaguelands,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(45.96f, 56.01f),
@@ -110,6 +122,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_53_NORTH_FELWOOD = new WowLocationConfiguration
         {
+            Title = "North Felwood (Level 53+)",
+            MinimumLevel = 53,
+            Zone = WowZone.Felwood,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(50.88f, 15.57f),
@@ -163,6 +179,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_51_FELWOOD_SOUTH = new WowLocationConfiguration
         {
+            Title = "South Felwood (Level 51+)",
+            MinimumLevel = 51,
+            Zone = WowZone.Felwood,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(51.06f, 82.12f),
@@ -201,6 +221,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_48_FERALAS_HIPPOGRYPHS = new WowLocationConfiguration
         {
+            Title = "Feralas Hippogryphs (Level 48+)",
+            MinimumLevel = 48,
+            Zone = WowZone.Feralas,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(55.06f, 64.41f),
@@ -227,6 +251,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration TANARIS_TEST_PATHFINDING = new WowLocationConfiguration
         {
+            Title = "Tanaris Test Pathfinding", // not a real farming route, no level requirement
+            MinimumLevel = 0,
+            Zone = WowZone.Tanaris,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(68.42f, 34.13f),
@@ -242,6 +270,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_42_TANARIS_TURTLES = new WowLocationConfiguration
         {
+            Title = "Tanaris Turtles (Level 42+)",
+            MinimumLevel = 42,
+            Zone = WowZone.Tanaris,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(68.87f, 39.97f),
@@ -260,6 +292,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_37_KODO_GRAVEYARD = new WowLocationConfiguration
         {
+            Title = "Kodo Graveyard, Desolace (Level 37+)", // zone inferred from name/coords, please confirm
+            MinimumLevel = 37,
+            Zone = WowZone.Desolace,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(54.05f, 61.73f),
@@ -284,6 +320,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE = new WowLocationConfiguration
         {
+            Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
+            MinimumLevel = 34,
+            Zone = WowZone.ThousandNeedles,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(78.16f, 52.21f),
@@ -305,6 +345,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
         {
+            Title = "Shimmering Flats, Thousand Needles (Level 34+)",
+            MinimumLevel = 34,
+            Zone = WowZone.ThousandNeedles,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(81.79f, 52.12f),
@@ -325,6 +369,10 @@ namespace WoWHelper.Code.WorldState
         // Don't recommend this one without WBs
         public static readonly WowLocationConfiguration LEVEL_27_NORTH_ASHENVALE_WAYPOINTS = new WowLocationConfiguration
         {
+            Title = "North Ashenvale (Level 27+)",
+            MinimumLevel = 27,
+            Zone = WowZone.Ashenvale,
+
             /*
 /target Elder
 /target Ghostpaw
@@ -362,6 +410,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS = new WowLocationConfiguration
         {
+            Title = "Hillsbrad River (Level 29+)",
+            MinimumLevel = 29,
+            Zone = WowZone.HillsbradFoothills,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(70.12f, 11.00f),
@@ -384,6 +436,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_24_STONETALON_WAYPOINTS = new WowLocationConfiguration
         {
+            Title = "Stonetalon Mountains (Level 24+)",
+            MinimumLevel = 24,
+            Zone = WowZone.StonetalonMountains,
+
             /*
 /target Antlered
 /target Sap
@@ -410,6 +466,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_21_ZORAMGAR_WAYPOINTS = new WowLocationConfiguration
         {
+            Title = "Zoram'gar, Ashenvale (Level 21+)",
+            MinimumLevel = 21,
+            Zone = WowZone.Ashenvale,
+
             /*
 /target Wild
 /target Ghostpaw
@@ -450,6 +510,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WowLocationConfiguration
         {
+            Title = "Northern Barrens (Level 17+)",
+            MinimumLevel = 17,
+            Zone = WowZone.TheBarrens,
+
             /*
 /target Zhevra
 /target Savannah
@@ -477,6 +541,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS = new WowLocationConfiguration
         {
+            Title = "Barrens Entrance (Level 13+)",
+            MinimumLevel = 13,
+            Zone = WowZone.TheBarrens,
+
             /*
 /target Fleeting
 /target Zhevra
@@ -499,6 +567,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration
         {
+            Title = "Durotar Coast (Level 11+)",
+            MinimumLevel = 11,
+            Zone = WowZone.Durotar,
+
             /*
 /target Venom
 /target Elder
@@ -527,6 +599,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_9_DUROTAR_SKULL_ROCK_COAST_WAYPOINTS = new WowLocationConfiguration
         {
+            Title = "Durotar Skull Rock Coast (Level 9+)",
+            MinimumLevel = 9,
+            Zone = WowZone.Durotar,
+
             /*
 /target Elder
 /target Venom
@@ -561,6 +637,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration
         {
+            Title = "Durotar Boar Razor Hill Loop (Level 6+)",
+            MinimumLevel = 6,
+            Zone = WowZone.Durotar,
+
             // /target Dire
             // /target Clattering
             Waypoints = new List<Vector2>
@@ -596,6 +676,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration
         {
+            Title = "Durotar Imps (Level 4+)",
+            MinimumLevel = 4,
+            Zone = WowZone.Durotar,
+
             // /target Scorpid
             // /target Vile
             Waypoints = new List<Vector2>
@@ -614,6 +698,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_10_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
         {
+            Title = "Mulgore Mixed Beasts (Level 10+)",
+            MinimumLevel = 10,
+            Zone = WowZone.Mulgore,
+
             // /target Swoop
             // /target Flatland
             // /target Prairie
@@ -634,6 +722,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_8_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
         {
+            Title = "Mulgore Mixed Beasts (Level 8+)",
+            MinimumLevel = 8,
+            Zone = WowZone.Mulgore,
+
             // /target Battleboar
             Waypoints = new List<Vector2>
             {
@@ -652,6 +744,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_6_MULGORE_BATTLEBOARS = new WowLocationConfiguration
         {
+            Title = "Mulgore Battleboars (Level 6+)",
+            MinimumLevel = 6,
+            Zone = WowZone.Mulgore,
+
             // /target Battleboar
             Waypoints = new List<Vector2>
             {
@@ -670,6 +766,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_4_MULGORE_MOUNTAIN_COUGARS = new WowLocationConfiguration
         {
+            Title = "Mulgore Mountain Cougars (Level 4+)",
+            MinimumLevel = 4,
+            Zone = WowZone.Mulgore,
+
             // /target Mountain
             Waypoints = new List<Vector2>
             {
@@ -688,6 +788,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
         {
+            Title = "Mulgore Plainstriders (Level 1+)",
+            MinimumLevel = 1,
+            Zone = WowZone.Mulgore,
+
             // /target Plains
             Waypoints = new List<Vector2>
             {
@@ -704,6 +808,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
         {
+            Title = "Durotar Boars and Scorpions (Level 1+)",
+            MinimumLevel = 1,
+            Zone = WowZone.Durotar,
+
             // /target Mottled
             // /target Scorpid
             Waypoints = new List<Vector2>

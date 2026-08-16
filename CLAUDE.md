@@ -68,7 +68,7 @@ see "Adding a new pixel" below):
 | 2 | Facing degrees (float) | `WowWorldState.FacingDegrees` |
 | 3 | `MultiBoolOne` (packed bools, class-agnostic) | various `WowWorldState` bools |
 | 4 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
-| 5 | `MultiIntTwo` (packed R/G) | `AttackerCount`/`PlayerLevel` |
+| 5 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 6 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -80,6 +80,19 @@ signature** (login screen, trade window, breath bar, red error toast text)
 is an unrelated mechanism — resolution-specific coordinates in
 `WowScreenConfigs.cs`, compared via `ImageMatchColorPositions.MatchesSourceImage`,
 some validated against bitmaps in `WoWHelperUnitTests/Source Images/`.
+
+**Zone ID (`MultiIntTwo`'s B channel, `WowWorldState.CurrentZone`):** a
+WowHelper-defined numeric zone ID, NOT Blizzard's internal map ID (which
+doesn't fit in a single byte channel). Lua's `GetCurrentZoneId()`
+(`WoWFunctions.lua`) looks up `GetRealZoneText()` against a
+`ZONE_NAME_TO_ID` table (255 = not a known zone); the numeric values there
+MUST stay in sync with the `WowZone` enum in `WowLocationConfiguration.cs`
+(`Unknown = 255`) — two independent hardcoded tables that have to agree,
+same class of coupling as everything else in this contract. Each
+`WowLocationConfiguration` in `WowLocationConfigs.cs` also carries a `Zone`
+(plus `Title` and `MinimumLevel`), for validating the character is in the
+right place/level before a farming route starts — `CurrentZone` is the
+runtime half of that check; the validation logic itself isn't wired up yet.
 
 **Reserved-but-not-in-the-row:** `MultiBoolOne`'s B byte and all of `MultiBoolTwo`
 are reserved for the next class-agnostic bool (see `GetMultiBoolOne/Two` in
@@ -171,7 +184,11 @@ of truth — edits should be made here, not in the WoW install directory.
   (`WowScreenConfigs.cs`), management/alert toggles
   (`WowManagementConfigs.cs`), farming profile selection
   (`WowFarmingConfigs.cs`). `Config/Definitions/` holds the POCOs these
-  configs are instances of.
+  configs are instances of. Each `WowLocationConfiguration` carries a
+  `Title` (human-readable, includes the minimum level), `MinimumLevel`, and
+  `Zone` (`WowZone` enum, `WowLocationConfiguration.cs`) — see the zone ID
+  note in the color-encoding contract above for how `Zone` ties to
+  `WowWorldState.CurrentZone`.
 - **`Constants/`** — `WowInput.cs` maps logical actions to keybinds/macros the
   bot presses (expects specific in-game keybinds/macros to be set up to match),
   `WowPlayerConstants.cs` / `WowGameplayConstants.cs` hold thresholds/timings.

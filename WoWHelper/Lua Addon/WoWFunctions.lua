@@ -302,6 +302,37 @@ function GetPlayerMapY()
 end
 
 --------------------------------------------------
+-- Current zone, as a WowHelper-defined numeric ID (fits in a single byte
+-- channel) -- NOT Blizzard's internal map ID, which doesn't fit in one.
+-- MUST stay in sync with the WowZone enum in WowLocationConfiguration.cs.
+--------------------------------------------------
+local ZONE_NAME_TO_ID = {
+    ["Durotar"] = 0,
+    ["Mulgore"] = 1,
+    ["The Barrens"] = 2,
+    ["Ashenvale"] = 3,
+    ["Stonetalon Mountains"] = 4,
+    ["Hillsbrad Foothills"] = 5,
+    ["Thousand Needles"] = 6,
+    ["Desolace"] = 7,
+    ["Tanaris"] = 8,
+    ["Feralas"] = 9,
+    ["Felwood"] = 10,
+    ["Western Plaguelands"] = 11,
+    ["Silithus"] = 12,
+}
+
+-- 255 = current zone isn't one of WowHelper's known farming zones (matches
+-- WowZone.Unknown in WowLocationConfiguration.cs).
+function GetCurrentZoneId()
+    -- GetRealZoneText(), not GetZoneText(), so subzone/instance overlap
+    -- doesn't change the result -- location configs are zone-level, not
+    -- subzone-level.
+    local zoneName = GetRealZoneText()
+    return ZONE_NAME_TO_ID[zoneName] or 255
+end
+
+--------------------------------------------------
 -- Player facing as a normalized 2D direction
 -- Returns X and Y where:
 --   facing due East:  x =  1, y =  0
@@ -676,7 +707,7 @@ end
 function GetMultiIntTwo()
     local r = CountAttackers()
     local g = UnitLevel("player")
-    local b = 0
+    local b = GetCurrentZoneId()
 
     return r/255.0, g/255.0, b/255.0
 end

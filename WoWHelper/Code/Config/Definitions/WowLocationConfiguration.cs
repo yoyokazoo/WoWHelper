@@ -3,6 +3,30 @@ using System.Numerics;
 
 namespace WoWHelper.Code.WorldState
 {
+    // Zones WowLocationConfigs.cs's routes are known to live in. Numeric values are
+    // explicit and MUST stay in sync with the ZONE_NAME_TO_ID table in WoWFunctions.lua
+    // (GetCurrentZoneId()) -- that's what packs a zone into MultiIntTwo's B channel for
+    // WowWorldState.CurrentZone to decode. This is a WowHelper-defined ID scheme, not
+    // Blizzard's internal map/zone ID (which doesn't fit in a single byte channel).
+    public enum WowZone
+    {
+        Durotar = 0,
+        Mulgore = 1,
+        TheBarrens = 2,
+        Ashenvale = 3,
+        StonetalonMountains = 4,
+        HillsbradFoothills = 5,
+        ThousandNeedles = 6,
+        Desolace = 7,
+        Tanaris = 8,
+        Feralas = 9,
+        Felwood = 10,
+        WesternPlaguelands = 11,
+        Silithus = 12,
+
+        Unknown = 255, // current zone doesn't match any known entry
+    }
+
     public class WowLocationConfiguration
     {
         public enum WaypointTraversalMethod
@@ -25,6 +49,11 @@ namespace WoWHelper.Code.WorldState
             Spellcast // frost bolt, lightning bolt, etc.
         }
 
+        // Human-readable name, including the minimum level, e.g. "Durotar Imps (Level 4+)".
+        public string Title { get; set; }
+        public int MinimumLevel { get; set; } // for validation -- character should be at least this level before starting
+        public WowZone Zone { get; set; } // for validation -- character should be in this zone before starting
+
         public List<Vector2> Waypoints { get; set; }
         public WaypointTraversalMethod TraversalMethod { get; set; }
         public WaypointTargetFindMethod TargetFindMethod { get; set; }
@@ -44,6 +73,10 @@ namespace WoWHelper.Code.WorldState
             TooManyAttackersThreshold = 3;
 
             LogoffLevel = 61;
+
+            // Default to Unknown, not the implicit Durotar (enum value 0) -- a config that
+            // forgets to set Zone should fail loudly/obviously, not silently claim Durotar.
+            Zone = WowZone.Unknown;
         }
     }
 }
