@@ -249,7 +249,7 @@ function IsAnyNextSwingSpellQueued()
 end
 
 --------------------------------------------------
--- Health: player (percent 0–100)
+-- Health: player (percent 0ï¿½100)
 --------------------------------------------------
 function GetPlayerHealthPercent()
     local hp  = UnitHealth("player")
@@ -259,7 +259,7 @@ function GetPlayerHealthPercent()
 end
 
 --------------------------------------------------
--- Resource: player (rage / mana / energy, percent 0–100)
+-- Resource: player (rage / mana / energy, percent 0ï¿½100)
 --------------------------------------------------
 function GetPlayerResourcePercent()
     local powerType = UnitPowerType("player")            -- e.g. 0 = mana, 1 = rage, 3 = energy
@@ -271,7 +271,7 @@ function GetPlayerResourcePercent()
 end
 
 --------------------------------------------------
--- Target health (percent 0–100)
+-- Target health (percent 0ï¿½100)
 --------------------------------------------------
 function GetTargetHealthPercent()
     if not UnitExists("target") then
@@ -285,7 +285,7 @@ function GetTargetHealthPercent()
 end
 
 --------------------------------------------------
--- Map X coord (0–100, normalized across map)
+-- Map X coord (0ï¿½100, normalized across map)
 --------------------------------------------------
 function GetPlayerMapX()
     if not C_Map or not C_Map.GetBestMapForUnit then
@@ -302,12 +302,12 @@ function GetPlayerMapX()
         return 0
     end
 
-    -- pos.x is 0–1 across the map; convert to 0–100
+    -- pos.x is 0ï¿½1 across the map; convert to 0ï¿½100
     return math.floor((pos.x or 0) * 10000 + 0.5) / 100  -- two decimals
 end
 
 --------------------------------------------------
--- Map Y coord (0–100, normalized across map)
+-- Map Y coord (0ï¿½100, normalized across map)
 --------------------------------------------------
 function GetPlayerMapY()
     if not C_Map or not C_Map.GetBestMapForUnit then
@@ -324,7 +324,7 @@ function GetPlayerMapY()
         return 0
     end
 
-    -- pos.y is 0–1; convert to 0–100
+    -- pos.y is 0ï¿½1; convert to 0ï¿½100
     return math.floor((pos.y or 0) * 10000 + 0.5) / 100  -- two decimals
 end
 
@@ -339,7 +339,7 @@ end
 function GetPlayerFacingVector()
     local facing = GetPlayerFacing()
     if not facing then
-        return 0, -1  -- default “north-ish”
+        return 0, -1  -- default ï¿½north-ishï¿½
     end
 
     local x = -math.sin(facing)
@@ -381,19 +381,48 @@ function GetPlayerFacingInDegrees()
     return round2(GetPlayerFacing() * 180 / math.pi)
 end
 
+-- TEMP diagnostic switch: set true to print per-nameplate condition results.
+local COUNT_ATTACKERS_DEBUG = false
+
+-- Highest simultaneous nameplate WoW will assign a "nameplateN" unit token
+-- to. Generous on purpose -- UnitExists() on a token past the real cap just
+-- returns false harmlessly, so overshooting costs nothing.
+local MAX_NAMEPLATE_INDEX = 40
+
 function CountAttackers()
     local count = 0
-    local plates = C_NamePlate.GetNamePlates()
 
-    for _, plate in ipairs(plates) do
-        local unit = plate.namePlateUnitToken
-        if unit
-            and UnitCanAttack("player", unit)
-            and UnitAffectingCombat(unit)
-            and UnitIsUnit(unit.."target", "player")
-        then
-            count = count + 1
+    -- Iterate the stable "nameplateN" unit-token range directly instead of
+    -- pulling plate.namePlateUnitToken off C_NamePlate.GetNamePlates()'s
+    -- frames -- that field went nil for every plate after the Classic Era
+    -- 1.15.9 nameplate rework (GetNamePlates() itself still enumerates
+    -- plates fine, just not that convenience field anymore). nameplate1,
+    -- nameplate2, etc. are documented, stable unit tokens independent of
+    -- Blizzard's internal nameplate frame structure, so this should hold up
+    -- through future nameplate reworks too.
+    for i = 1, MAX_NAMEPLATE_INDEX do
+        local unit = "nameplate" .. i
+
+        if UnitExists(unit) then
+            local canAttack = UnitCanAttack("player", unit)
+            local inCombat = UnitAffectingCombat(unit)
+            local targetingMe = UnitIsUnit(unit.."target", "player")
+
+            if COUNT_ATTACKERS_DEBUG then
+                print(string.format(
+                    "  %s (%s): canAttack=%s inCombat=%s targetingMe=%s",
+                    unit, UnitName(unit) or "?",
+                    tostring(canAttack), tostring(inCombat), tostring(targetingMe)))
+            end
+
+            if canAttack and inCombat and targetingMe then
+                count = count + 1
+            end
         end
+    end
+
+    if COUNT_ATTACKERS_DEBUG then
+        print("CountAttackers: total =", count)
     end
 
     return count
@@ -413,7 +442,7 @@ function IsFacingTarget()
         return false
     end
 
-    local playerFacing = GetPlayerFacing()       -- 0–2pi radians
+    local playerFacing = GetPlayerFacing()       -- 0ï¿½2pi radians
     local angleToTarget = math.atan2(ty - py, tx - px)
 
     local diff = angleToTarget - playerFacing
@@ -570,11 +599,21 @@ function TargetHasFlameShock()
   return TargetHasDebuffSpellName("Flame Shock")
 end
 
--- Look at Rend, since it has no cooldown beyond GCD (772)
--- SpellIsCooledDown doesn't work if the character doesn't have the spell, so we need to find something everyone has
--- temporarily switching to lightning shield
+-- Was checking Lightning Shield's (324) cooldown as a stand-in for the GCD --
+-- broken for any non-Shaman character (and low-level Shamans without it
+-- yet), since it depends on the character actually knowing a specific
+-- class's spell. Query the GCD's own spell ID directly instead, same
+-- technique SpellIsCooledDownIgnoringGCD already uses above -- class-
+-- agnostic, no GetSpellInfo() lookup needed.
 function IsGlobalCooldownCooledDown()
-    return SpellIsCooledDown(324)
+    local start, duration = GetSpellCooldown(GCD_SPELL_ID)
+
+    if not start or duration == 0 then
+        return true
+    end
+
+    local remaining = start + duration - GetTime()
+    return remaining <= 0
 end
 
 -- WW rank 1, 1680

@@ -18,6 +18,18 @@ combat flags, etc.), but the external bot process can't call Lua directly. The
 addon acts as a one-way state → pixel-color encoder; the bot decodes those
 pixels every loop tick into a `WowWorldState` and drives play from there.
 
+**When debugging the Lua addon, add diagnostic logging before guessing at a
+fix.** The WoW Lua API's exact behavior for a given client version isn't
+verifiable by reading this repo's source — it depends on Blizzard's current
+FrameXML/engine internals, which change across patches (e.g. nameplate frame
+structure, UI scale plumbing) without being documented here. Two debugging
+sagas in this repo confirmed that reasoning from memory about what "should"
+be happening burns multiple guess-and-check round trips, while adding
+targeted `print()`/temporary debug flags, asking the user to reproduce
+in-game, and fixing from the actual returned values converges in one round
+trip. Prefer the latter whenever the failure could plausibly stem from more
+than one internal API behavior.
+
 ## The color-encoding contract (the critical coupling point)
 
 `UIFunctions.lua`'s `InitializePixelRow()` paints a row of 15 `PIXEL_SIZE` x

@@ -8,7 +8,7 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            LocationConfiguration = WowLocationConfigs.LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
+            LocationConfiguration = WowLocationConfigs.LEVEL_4_DUROTAR_IMPS,
             ManagementConfiguration = WowManagementConfigs.FULL_BABYSIT,
             CombatConfiguration = WowCombatConfiguration.Shaman
         };

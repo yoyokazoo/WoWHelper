@@ -87,7 +87,7 @@ namespace WoWHelper.Code
         public const Keys SHAMAN_SHIFT_2 = Keys.D2;
 
         /*
-         * 3 Shk
+         * 3 Shock
 #showtooltip [mod:shift] Flame Shock; Earth Shock
 /use [nomod] Earth Shock
 /use [mod:shift] Flame Shock
@@ -163,7 +163,7 @@ namespace WoWHelper.Code
         public const Keys SHIFT_TARGET_DUMMY = Keys.OemMinus;
 
         /*
-         * + Log
+         * = Log
 #showtooltip [mod:shift] Flask of Petrification; Logout
 /cast [mod:shift] Flask of Petrification
 /stopmacro [mod:shift]
