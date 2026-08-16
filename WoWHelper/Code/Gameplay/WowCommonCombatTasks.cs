@@ -83,8 +83,9 @@ namespace WoWHelper
             if (tooFarAway || invalidTarget || outOfRange)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
-                // attacker count now updates immediately, so only clear target if mob isn't tagged by us OR mob is tagged by us and attackerCount >1
-                if (WorldState.AttackerCount > 0)
+                // attacker count now updates immediately, so only clear target if mob isn't tagged by us
+                // OR mob is tagged by us and attackerCount >1
+                if (!WorldState.CurrentTargetIsTaggedByUs || (WorldState.CurrentTargetIsTaggedByUs && WorldState.AttackerCount > 1))
                 {
                     Console.WriteLine($"tooFarAway || invalidTarget || outOfRange and WorldState.AttackerCount > 0 {WorldState.AttackerCount}");
                     Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);

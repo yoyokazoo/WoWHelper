@@ -457,6 +457,27 @@ function AreEnemyNameplatesTurnedOn()
     return GetCVarBool("nameplateShowEnemies")
 end
 
+-- UnitIsTapped/UnitIsTappedByPlayer no longer exist on this client (both nil
+-- -- confirmed via /run print(...) after this broke on first deploy, see
+-- CLAUDE.md's "debug first" note). Only UnitIsTapDenied is present, and its
+-- sense is inverted: true means tap is DENIED to us (someone else has it, or
+-- we'd get reduced/no credit). "not UnitIsTapDenied" alone isn't enough --
+-- it's also true for a mob nobody has tapped yet, which isn't "tagged by
+-- us". Requiring UnitAffectingCombat too (already used elsewhere, e.g.
+-- IsInCombat() above) rules that case out: only true once the mob is
+-- actually engaged AND tap isn't denied to us.
+function CurrentTargetIsTaggedByUs()
+    if not UnitExists("target") then
+        return false
+    end
+
+    if not UnitAffectingCombat("target") then
+        return false
+    end
+
+    return not UnitIsTapDenied("target")
+end
+
 function AreWeLowOnHealthPotions()
     local level = UnitLevel("player")
     -- who cares before 5
@@ -616,11 +637,10 @@ end
 -- Class-specific fields (Battle Shout, Rend, Frost Armor, Rockbiter, etc.)
 -- moved to GetClassBoolOne/Two (see the dispatchers further down and
 -- GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
--- ShamanFunctions.lua) -- C# now reads those instead of these. Only 12
--- class-agnostic fields are left, which all fit in MultiBoolOne's R+G bytes,
--- so they're packed tightly there and MultiBoolTwo is left fully reserved
--- (rather than each carrying a few scattered bits) as clean room to grow
--- into for the next class-agnostic field, instead of needing a 3rd pixel.
+-- ShamanFunctions.lua) -- C# now reads those instead of these. All
+-- class-agnostic fields fit in MultiBoolOne's R+G bytes, packed tightly
+-- there (G6-G8 and the whole B byte still free) so MultiBoolTwo is left
+-- fully reserved as clean room to grow into, instead of needing a 3rd pixel.
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = AreWeLowOnHealthPotions()
@@ -637,7 +657,7 @@ function GetMultiBoolOne()
     local boolG2 = IsInMeleeRange()
     local boolG3 = IsPlayerCasting()
     local boolG4 = AreEnemyNameplatesTurnedOn()
-    local boolG5 = false
+    local boolG5 = CurrentTargetIsTaggedByUs()
     local boolG6 = false
     local boolG7 = false
     local boolG8 = false

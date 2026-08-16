@@ -38,6 +38,7 @@ namespace WoWHelper
         public bool IsInMeleeRange { get; private set; }
         public bool IsCurrentlyCasting { get; private set; }
         public bool EnemyNameplatesAreTurnedOn { get; private set; }
+        public bool CurrentTargetIsTaggedByUs { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -152,10 +153,10 @@ namespace WoWHelper
             FacingDegrees = GetFloatFromColor(color);
         }
 
-        // All 12 remaining class-agnostic bools are packed tightly into
-        // MultiBoolOne's R+G bytes (see GetMultiBoolOne() in WoWFunctions.lua) --
-        // MultiBoolTwo is left fully reserved for the next class-agnostic
-        // field rather than scattering a few bits across both pixels.
+        // All class-agnostic bools are packed tightly into MultiBoolOne's R+G
+        // bytes (see GetMultiBoolOne() in WoWFunctions.lua) -- MultiBoolTwo is
+        // left fully reserved for the next class-agnostic field rather than
+        // scattering a few bits across both pixels.
         public void UpdateMultiBoolOne(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolOnePosition.X, ScreenConfig.MultiBoolOnePosition.Y);
@@ -175,7 +176,8 @@ namespace WoWHelper
             IsInMeleeRange = g2;
             IsCurrentlyCasting = g3;
             EnemyNameplatesAreTurnedOn = g4;
-            // g5-g8 and the whole B byte are reserved/unused.
+            CurrentTargetIsTaggedByUs = g5;
+            // g6-g8 and the whole B byte are reserved/unused.
         }
 
         // MultiBoolTwo currently carries no decoded fields -- reserved for the
