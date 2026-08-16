@@ -69,13 +69,6 @@ namespace WoWHelper.Code.Config
                     new ColorPosition(1677, 214, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
-            OnLoginScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(581, 109, WowScreenConfiguration.LOGIN_SCREEN_COLOR_ONE),
-                    new ColorPosition(705, 64,  WowScreenConfiguration.LOGIN_SCREEN_COLOR_TWO),
-                    new ColorPosition(579, 248, WowScreenConfiguration.LOGIN_SCREEN_COLOR_THREE),
-                }),
-
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
                     new ColorPosition(1568, 173, WowScreenConfiguration.BREATH_BAR_COLOR_ONE),
@@ -137,13 +130,6 @@ namespace WoWHelper.Code.Config
                     new ColorPosition(904, 157, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(919, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(929, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            OnLoginScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(103, 78, WowScreenConfiguration.LOGIN_SCREEN_COLOR_ONE),
-                    new ColorPosition(116, 164,  WowScreenConfiguration.LOGIN_SCREEN_COLOR_TWO),
-                    new ColorPosition(147, 48, WowScreenConfiguration.LOGIN_SCREEN_COLOR_THREE),
                 }),
 
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
@@ -229,13 +215,6 @@ namespace WoWHelper.Code.Config
                     new ColorPosition(904, 157, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(919, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(929, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            OnLoginScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(103, 78, WowScreenConfiguration.LOGIN_SCREEN_COLOR_ONE),
-                    new ColorPosition(116, 164,  WowScreenConfiguration.LOGIN_SCREEN_COLOR_TWO),
-                    new ColorPosition(147, 48, WowScreenConfiguration.LOGIN_SCREEN_COLOR_THREE),
                 }),
 
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>

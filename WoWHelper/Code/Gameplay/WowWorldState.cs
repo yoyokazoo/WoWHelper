@@ -87,6 +87,11 @@ namespace WoWHelper
         {
             Initialized = true;
 
+            // Checked first (pixel-row index 0) -- if the addon isn't rendering, the rest
+            // of the row is garbage, so this is the one decode everything else implicitly
+            // depends on being meaningful.
+            UpdateOnLoginScreen(bmp);
+
             UpdateMapX(bmp);
             UpdateMapY(bmp);
             PlayerLocation = new Vector2(MapX, MapY);
@@ -99,7 +104,6 @@ namespace WoWHelper
 
             UpdateRedErrorTextMessages(bmp);
 
-            UpdateOnLoginScreen(bmp);
             UpdateBreathBar(bmp);
         }
 
@@ -215,9 +219,17 @@ namespace WoWHelper
             OutOfRange = MatchesErrorTextColor(bmp, ScreenConfig.OutOfRangePositions);
         }
 
+        // Index 0 of the pixel row is a fixed sentinel the addon paints, exactly
+        // ADDON_LOADED_COLOR. If it's there, the addon is loaded and the rest of the row
+        // is real; any other color -- including whatever's actually at this screen
+        // position when the addon isn't rendering, e.g. the login screen -- means
+        // OnLoginScreen. Replaces the old text/UI pixel-signature match.
         public void UpdateOnLoginScreen(Bitmap bmp)
         {
-            OnLoginScreen = ScreenConfig.OnLoginScreenPositions.MatchesSourceImage(bmp);
+            Color color = bmp.GetPixel(ScreenConfig.AddonLoadedPosition.X, ScreenConfig.AddonLoadedPosition.Y);
+            OnLoginScreen = !(color.R == WowScreenConfiguration.ADDON_LOADED_COLOR.R
+                && color.G == WowScreenConfiguration.ADDON_LOADED_COLOR.G
+                && color.B == WowScreenConfiguration.ADDON_LOADED_COLOR.B);
         }
 
         public void UpdateBreathBar(Bitmap bmp)

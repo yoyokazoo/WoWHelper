@@ -14,9 +14,13 @@ namespace WoWHelper
         public static readonly Color BREATH_BAR_COLOR_ONE = Color.FromArgb(0, 77, 155);
         public static readonly Color BREATH_BAR_COLOR_TWO = Color.FromArgb(0, 31, 62);
 
-        public static readonly Color LOGIN_SCREEN_COLOR_ONE = Color.FromArgb(254, 246, 246);
-        public static readonly Color LOGIN_SCREEN_COLOR_TWO = Color.FromArgb(214, 33, 33);
-        public static readonly Color LOGIN_SCREEN_COLOR_THREE = Color.FromArgb(8, 12, 8);
+        // Pixel-row index 0 (see AddonLoadedPosition below): fixed sentinel painted by
+        // the addon, exact match. Present (this exact color) means the addon is loaded
+        // and the rest of the row is real; anything else -- including whatever's really
+        // at this screen position when the addon isn't rendering, e.g. the login screen
+        // -- means OnLoginScreen. Replaces the old text/UI pixel-signature match against
+        // login-screen-specific colors.
+        public static readonly Color ADDON_LOADED_COLOR = Color.FromArgb(96, 255, 117);
 
         public static readonly Color TRADE_SCREEN_COLOR_ONE = Color.FromArgb(93, 88, 86);
         public static readonly Color TRADE_SCREEN_COLOR_TWO = Color.FromArgb(167, 165, 161);
@@ -67,9 +71,6 @@ namespace WoWHelper
         public ImageMatchColorPositions InvalidTargetPositions { get; set; }
         public ImageMatchColorPositions OutOfRangePositions { get; set; }
 
-        // Login screen detections
-        public ImageMatchColorPositions OnLoginScreenPositions { get; set; }
-
         // Breath bar detections
         public ImageMatchColorPositions BreathBarScreenPositions { get; set; }
 
@@ -98,15 +99,19 @@ namespace WoWHelper
         private static Point PixelRowPoint(int index) =>
             new Point(index * PixelSize + PixelCenterOffset, PixelCenterOffset);
 
-        public Point MapXPosition => PixelRowPoint(0);
-        public Point MapYPosition => PixelRowPoint(1);
-        public Point FacingDegreesPosition => PixelRowPoint(2);
+        // Index 0: fixed sentinel (see ADDON_LOADED_COLOR above), exact-color match --
+        // not decoded via GetFloatFromColor/DecodeByte like the rest of the row.
+        public Point AddonLoadedPosition => PixelRowPoint(0);
 
-        public Point MultiBoolOnePosition => PixelRowPoint(3);
+        public Point MapXPosition => PixelRowPoint(1);
+        public Point MapYPosition => PixelRowPoint(2);
+        public Point FacingDegreesPosition => PixelRowPoint(3);
 
-        public Point MultiIntOnePosition => PixelRowPoint(4);
-        public Point MultiIntTwoPosition => PixelRowPoint(5);
+        public Point MultiBoolOnePosition => PixelRowPoint(4);
 
-        public Point ClassBoolOnePosition => PixelRowPoint(6);
+        public Point MultiIntOnePosition => PixelRowPoint(5);
+        public Point MultiIntTwoPosition => PixelRowPoint(6);
+
+        public Point ClassBoolOnePosition => PixelRowPoint(7);
     }
 }

@@ -167,13 +167,20 @@ function InitializePixelRow()
         table.insert(swatches, CreatePixelSwatch(UIParent, index * PIXEL_SIZE, 0, PIXEL_SIZE, colorFunc))
     end
 
-    AddSwatch(0, function() return EncodeFloatToColor(GetPlayerMapX()) end)
-    AddSwatch(1, function() return EncodeFloatToColor(GetPlayerMapY()) end)
-    AddSwatch(2, function() return EncodeFloatToColor(GetPlayerFacingInDegrees()) end)
-    AddSwatch(3, GetMultiBoolOne)
-    AddSwatch(4, GetMultiIntOne)
-    AddSwatch(5, GetMultiIntTwo)
-    AddSwatch(6, GetClassBoolOne)
+    -- Fixed sentinel color, exactly (96, 255, 117) -- never produced by any of the
+    -- encoded/computed swatches below, so C# can tell "addon is loaded and this pixel
+    -- row is real" (exact match) apart from "on the login screen, or otherwise not
+    -- rendering" (anything else, including whatever's actually at this screen position
+    -- when the addon isn't loaded) via a single exact-color check, instead of the old
+    -- login-screen-specific text/UI pixel signature match.
+    AddSwatch(0, function() return 96/255, 255/255, 117/255 end)
+    AddSwatch(1, function() return EncodeFloatToColor(GetPlayerMapX()) end)
+    AddSwatch(2, function() return EncodeFloatToColor(GetPlayerMapY()) end)
+    AddSwatch(3, function() return EncodeFloatToColor(GetPlayerFacingInDegrees()) end)
+    AddSwatch(4, GetMultiBoolOne)
+    AddSwatch(5, GetMultiIntOne)
+    AddSwatch(6, GetMultiIntTwo)
+    AddSwatch(7, GetClassBoolOne)
 
     local checkInterval = 0.1
     local elapsedTime = 0

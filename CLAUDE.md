@@ -63,22 +63,31 @@ see "Adding a new pixel" below):
 
 | Index | Content | Decoded into |
 |---|---|---|
-| 0 | Map X (float) | `WowWorldState.MapX` |
-| 1 | Map Y (float) | `WowWorldState.MapY` |
-| 2 | Facing degrees (float) | `WowWorldState.FacingDegrees` |
-| 3 | `MultiBoolOne` (packed bools, class-agnostic) | various `WowWorldState` bools |
-| 4 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
-| 5 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
-| 6 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
+| 0 | Fixed sentinel, exactly `ADDON_LOADED_COLOR` (96, 255, 117) | `WowWorldState.OnLoginScreen` (inverted — see below) |
+| 1 | Map X (float) | `WowWorldState.MapX` |
+| 2 | Map Y (float) | `WowWorldState.MapY` |
+| 3 | Facing degrees (float) | `WowWorldState.FacingDegrees` |
+| 4 | `MultiBoolOne` (packed bools, class-agnostic) | various `WowWorldState` bools |
+| 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
+| 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
+| 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
 matching Lua's `EncodeFloatToColor`); packed bools bit-pack 8 flags per
 channel (`DecodeByte`, order MUST match between Lua's `EncodeBooleansToByte`
 call and the corresponding C# `Update...` method); packed ints use a raw
-0-255 value per channel. Separately, **text/UI state matched by exact pixel
-signature** (login screen, trade window, breath bar, red error toast text)
-is an unrelated mechanism — resolution-specific coordinates in
-`WowScreenConfigs.cs`, compared via `ImageMatchColorPositions.MatchesSourceImage`,
+0-255 value per channel. Index 0 is the one exception — a plain exact-color
+match (`WowScreenConfiguration.ADDON_LOADED_COLOR`), not one of the schemes
+above: if the pixel is exactly that color, the addon is loaded and rendering
+the row (so the rest of it is meaningful) and `OnLoginScreen` is false;
+*any* other color — including whatever's actually on-screen at that position
+when the addon isn't loaded — means `OnLoginScreen` is true. This replaced an
+older, unrelated mechanism (a multi-point text/UI pixel-signature match
+against login-screen-specific colors) since folding it into the row is more
+reliable than matching login-screen chrome. Separately, **text/UI state
+matched by exact pixel signature** (trade window, breath bar, red error toast
+text) is still its own unrelated mechanism — resolution-specific coordinates
+in `WowScreenConfigs.cs`, compared via `ImageMatchColorPositions.MatchesSourceImage`,
 some validated against bitmaps in `WoWHelperUnitTests/Source Images/`.
 
 **Zone ID (`MultiIntTwo`'s B channel, `WowWorldState.CurrentZone`):** a
