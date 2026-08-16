@@ -81,24 +81,26 @@ namespace WoWHelper
         // corner) for margin against edge blur/anti-aliasing. PixelSize here
         // MUST match Lua's PIXEL_SIZE constant, and the indices passed to
         // PixelRowPoint() must match the AddSwatch(index, ...) calls there.
+        //
+        // The row is condensed to exactly the pixels actually read below --
+        // no MultiBoolTwo/ClassBoolTwo/ClassIntOne Points exist because
+        // nothing currently decodes them. Add one back here (and a matching
+        // swatch in InitializePixelRow()) if/when a field needs it.
         private const int PixelSize = 3;
         private const int PixelCenterOffset = PixelSize / 2;
 
         private static Point PixelRowPoint(int index) =>
             new Point(index * PixelSize + PixelCenterOffset, PixelCenterOffset);
 
-        public Point MapXPosition => PixelRowPoint(3);
-        public Point MapYPosition => PixelRowPoint(4);
-        public Point FacingDegreesPosition => PixelRowPoint(5);
+        public Point MapXPosition => PixelRowPoint(0);
+        public Point MapYPosition => PixelRowPoint(1);
+        public Point FacingDegreesPosition => PixelRowPoint(2);
 
-        public Point MultiBoolOnePosition => PixelRowPoint(11);
-        public Point MultiBoolTwoPosition => PixelRowPoint(12);
+        public Point MultiBoolOnePosition => PixelRowPoint(3);
 
-        public Point MultiIntOnePosition => PixelRowPoint(13);
-        public Point MultiIntTwoPosition => PixelRowPoint(14);
+        public Point MultiIntOnePosition => PixelRowPoint(4);
+        public Point MultiIntTwoPosition => PixelRowPoint(5);
 
-        public Point ClassBoolOnePosition => PixelRowPoint(15);
-        public Point ClassBoolTwoPosition => PixelRowPoint(16);
-        public Point ClassIntOnePosition => PixelRowPoint(17);
+        public Point ClassBoolOnePosition => PixelRowPoint(6);
     }
 }

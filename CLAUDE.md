@@ -32,69 +32,71 @@ than one internal API behavior.
 
 ## The color-encoding contract (the critical coupling point)
 
-`UIFunctions.lua`'s `InitializePixelRow()` paints a row of 18 `PIXEL_SIZE` x
+`UIFunctions.lua`'s `InitializePixelRow()` paints a row of `PIXEL_SIZE` x
 `PIXEL_SIZE` (currently 3x3) swatches pinned to the screen's literal top-left
-corner — one field/slot per swatch, fixed and resolution-independent (no
-per-resolution calibration needed). Swatches are placed by converting desired
-physical-pixel x/y/size into UIParent's local coordinate units via
-`GetPhysicalPixelsPerLocalUnit()`, a **self-calibrating** ratio computed as
-`GetPhysicalScreenSize() / UIParent:GetWidth()` — NOT `UIParent:GetEffectiveScale()`
-and NOT Blizzard's `PixelUtil` library, both of which were tried first and
-gave wrong/inconsistent results. On the dev machine (Classic Era 1.15.9, post
-Edit-Mode UI update), `GetEffectiveScale()` read 0.9, but the real measured
-ratio was 1.6875 — confirmed by matching four independently-measured rendered
-sizes exactly, none of which matched any formula built from 0.9. Comparing
-`GetPhysicalScreenSize()` against `UIParent`'s own reported size sidesteps
-needing to know *why* `GetEffectiveScale()` disagrees with it, so it should
-keep working even if this particular quirk changes or gets patched later.
-`WowWorldState.cs` reads back the **center pixel** of each swatch
-(`PixelSize/2` in from its top-left corner) for margin against any residual
-edge blur — coordinates are computed via `PixelRowPoint(index)` on
-`WowScreenConfiguration.cs`, not hardcoded per property. `PixelSize` must be
-kept equal on both sides (Lua's `PIXEL_SIZE` local in `InitializePixelRow()`,
-C#'s `WowScreenConfiguration.PixelSize` const). This scale-correctness fix is
-still being iterated on/verified in-game as of this writing — check for a
-more recent note here before assuming it's fully settled.
+corner — fixed and resolution-independent (no per-resolution calibration
+needed). **The row is deliberately condensed to exactly the pixels the C#
+bot actually reads, in the order it reads them** — nothing decorative or
+debug-only lives here (that's what the separate `InitializeIndicators()`
+frame is for, see the Lua addon section below). Swatches are placed by
+converting desired physical-pixel x/y/size into UIParent's local coordinate
+units via `GetPhysicalPixelsPerLocalUnit()`, a **self-calibrating** ratio
+computed as `GetPhysicalScreenSize() / UIParent:GetWidth()` — NOT
+`UIParent:GetEffectiveScale()` and NOT Blizzard's `PixelUtil` library, both
+of which were tried first and gave wrong/inconsistent results. On the dev
+machine (Classic Era 1.15.9, post Edit-Mode UI update), `GetEffectiveScale()`
+read 0.9, but the real measured ratio was 1.6875 — confirmed by matching four
+independently-measured rendered sizes exactly, none of which matched any
+formula built from 0.9. Comparing `GetPhysicalScreenSize()` against
+`UIParent`'s own reported size sidesteps needing to know *why*
+`GetEffectiveScale()` disagrees with it, so it should keep working even if
+this particular quirk changes or gets patched later. `WowWorldState.cs`
+reads back the **center pixel** of each swatch (`PixelSize/2` in from its
+top-left corner) for margin against any residual edge blur — coordinates are
+computed via `PixelRowPoint(index)` on `WowScreenConfiguration.cs`, not
+hardcoded per property. `PixelSize` must be kept equal on both sides (Lua's
+`PIXEL_SIZE` local in `InitializePixelRow()`, C#'s
+`WowScreenConfiguration.PixelSize` const).
 
-`WowWorldState.cs` decodes those swatches into strongly-typed properties:
+Current row, index → content (both sides MUST stay in this exact order —
+see "Adding a new pixel" below):
 
-- **Floats** (map X/Y, facing degrees — pixels 3, 4, 5): `R*255 + G + B/255`
-  → `GetFloatFromColor`, matching Lua's `EncodeFloatToColor`.
-- **Packed booleans** (pixels 11, 12 — `MultiBoolOne`/`MultiBoolTwo`): a
-  single pixel's R/G/B bytes are each bit-packed (8 bools per channel) via
-  `DecodeByte`. Order of bits in the Lua encoder MUST match the order
-  `WowWorldState.UpdateMultiBoolOne/Two` decode them in. All 12 remaining
-  class-agnostic bools are packed into `MultiBoolOne`'s R+G bytes alone;
-  `MultiBoolOne`'s B byte and all of `MultiBoolTwo` are reserved/unused —
-  intentionally, as clean room for the next class-agnostic field, rather
-  than scattering a few bits across multiple pixels.
-- **Packed percents/small ints** (pixels 13, 14 — `MultiIntOne`/`MultiIntTwo`):
-  raw R/G/B channel value, 0-255 (HP%, resource%, target HP% / attacker
-  count, level).
-- **Class-specific packed state** (pixels 15, 16, 17 — `ClassBool`/`ClassInt`,
-  see the "Class split" note below) — same bit-packing/raw-byte schemes as
-  above, but the *meaning* of a given bit depends on which class is
-  currently playing. Decoded into a `WowClassState` subtype, not
-  `WowWorldState` — see the C# architecture section below.
-- **Text/UI state matched by exact pixel signature** (login screen, trade
-  window open/accepted/confirmed, breath bar underwater, red error toast text
-  like "facing wrong way" / "too far away" / "invalid target" / "out of
-  range"): a separate mechanism, unrelated to the pixel row above — compared
-  via `ImageMatchColorPositions.MatchesSourceImage` against known-good
-  reference colors/positions at resolution-specific coordinates
-  (`WowScreenConfigs.cs`), some validated against bitmaps in
-  `WoWHelperUnitTests/Source Images/`.
+| Index | Content | Decoded into |
+|---|---|---|
+| 0 | Map X (float) | `WowWorldState.MapX` |
+| 1 | Map Y (float) | `WowWorldState.MapY` |
+| 2 | Facing degrees (float) | `WowWorldState.FacingDegrees` |
+| 3 | `MultiBoolOne` (packed bools, class-agnostic) | various `WowWorldState` bools |
+| 4 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
+| 5 | `MultiIntTwo` (packed R/G) | `AttackerCount`/`PlayerLevel` |
+| 6 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
 
-Pixels 0-2 and 6-10 of the row (individual HP%/resource%/target HP%/attacker
-count and the single-bool `InRange`/`InCombat`/`CanChargeTarget`/`HeroicQueued`
-slots) are drawn by Lua but **not yet read by C#** — placeholders for a
-future move away from bit-packing. Pixels 15-17 (`ClassBool`/`ClassInt`) ARE
-now read (see below).
+Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
+matching Lua's `EncodeFloatToColor`); packed bools bit-pack 8 flags per
+channel (`DecodeByte`, order MUST match between Lua's `EncodeBooleansToByte`
+call and the corresponding C# `Update...` method); packed ints use a raw
+0-255 value per channel. Separately, **text/UI state matched by exact pixel
+signature** (login screen, trade window, breath bar, red error toast text)
+is an unrelated mechanism — resolution-specific coordinates in
+`WowScreenConfigs.cs`, compared via `ImageMatchColorPositions.MatchesSourceImage`,
+some validated against bitmaps in `WoWHelperUnitTests/Source Images/`.
+
+**Reserved-but-not-in-the-row:** `MultiBoolOne`'s B byte and all of `MultiBoolTwo`
+are reserved for the next class-agnostic bool (see `GetMultiBoolOne/Two` in
+`WoWFunctions.lua`); `ClassBoolTwo`/`ClassIntOne` are reserved for the next
+class-specific field. None of these have a pixel in the row or a `Point` on
+`WowScreenConfiguration` right now, **on purpose** — the row only grows when
+a field actually needs to go in it.
+
+**Adding a new pixel:** append a new `AddSwatch(N, ...)` call in
+`InitializePixelRow()` (Lua) AND a new `PixelRowPoint(N)`-based property on
+`WowScreenConfiguration.cs` (C#), keeping index `N` identical on both sides.
+Do this together — a one-sided change silently breaks the bot (wrong pixel
+read as wrong flag), it won't fail loudly.
 
 **Class split:** class-specific flags (Battle Shout, Rend, Frost Armor,
-Rockbiter, etc.) have been fully stripped out of `GetMultiBoolOne/Two` in
-`WoWFunctions.lua` — those pixels now carry only class-agnostic state (see
-above). `GetClassBoolOne/Two`/`GetClassIntOne` (also in `WoWFunctions.lua`) check
+Rockbiter, etc.) live only in `ClassBoolOne`, never in `MultiBoolOne/Two`.
+`GetClassBoolOne/Two`/`GetClassIntOne` (in `WoWFunctions.lua`) check
 `UnitClass("player")` and delegate to that class's own populate function
 (`GetWarriorClassBoolOne` in `WarriorFunctions.lua`, `GetMageClassBoolOne` in
 `MageFunctions.lua`, `GetShamanClassBoolOne` in `ShamanFunctions.lua`) — so
@@ -113,9 +115,6 @@ class-agnostic callers (e.g. `WowMovementTasks.PathfindingLoopTask`), while
 per `Wow*Tasks.cs`) hold the real per-class logic and take that class's
 typed `ClassState` directly.
 
-Because both sides hardcode pixel coordinates and bit order, **the Lua encoder
-and the C# decoder must be changed together** — a one-sided change silently
-breaks the bot (wrong bit read as wrong flag, etc.), it won't fail loudly.
 The `Screen.PrimaryScreen.Bounds`-based per-resolution config in
 `WowFarmingConfiguration` still selects a `WowScreenConfiguration`, but that
 now only matters for the screen-capture crop size and the text/UI-signature
@@ -212,17 +211,17 @@ of truth — edits should be made here, not in the WoW install directory.
   encodes values/booleans into the colors the C# side decodes
   (`EncodeFloatToColor` and friends). Two rendering paths coexist, both fed
   by the same underlying value/color functions:
-  - `InitializePixelRow()` — **the one the C# bot actually reads** (mostly —
-    pixels 0-2/6-10 are drawn but not yet decoded, see above). 18
+  - `InitializePixelRow()` — **the one the C# bot actually reads**, condensed
+    to exactly the 7 pixels it consumes (see the table in the color-encoding
+    contract above) — no debug-only or not-yet-decoded values live here.
     `PIXEL_SIZE`-square swatches pinned to the screen's literal top-left
     corner, placed via the self-calibrating `GetPhysicalPixelsPerLocalUnit()`
     helper, matching the center-pixel `Point`s computed on
-    `WowScreenConfiguration` (see color-encoding contract above). Needs no
-    per-resolution calibration.
+    `WowScreenConfiguration`. Needs no per-resolution calibration.
   - `InitializeIndicators()` — the original 20x20-box draggable debug frame
-    (`YoyokazooUIFrame`). Purely a human-readable visual now; the bot no
-    longer reads its position, but it's left in place as a human-facing
-    debug display since it shows the same 18 values legibly.
+    (`YoyokazooUIFrame`), showing every value (including ones the bot doesn't
+    consume) legibly with labels, for human debugging. The bot never reads
+    its position; kept purely as a human-facing debug display.
 - **`MathFunctions.lua`** — small numeric helpers shared by the above.
 - **`YoyokazooUI.lua`** — addon entry point/event wiring (login, XP/level-up
   tracking, whisper tracking for "unseen whisper" alerts) and indicator

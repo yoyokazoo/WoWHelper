@@ -142,13 +142,16 @@ function CreatePixelSwatch(parent, x, y, size, colorFunc)
     }
 end
 
--- Section 1 of the redesigned addon UI: the 15 values/flags also shown in
--- InitializeIndicators() below, re-rendered as a row of exact pixels pinned
--- to the screen's top-left corner at PIXEL_SIZE spacing -- one swatch per
--- field, in a fixed, resolution-independent spot. This is currently
--- redundant with the boxes InitializeIndicators() draws in the draggable
--- debug frame; once the C# side reads this row instead, those old boxes and
--- their per-resolution calibrated positions can be removed.
+-- Section 1 of the redesigned addon UI: a row of exact pixels pinned to the
+-- screen's top-left corner at PIXEL_SIZE spacing -- one swatch per field the
+-- C# bot actually reads, in a fixed, resolution-independent spot, in the
+-- same order it reads them in. Debug-only values (individual HP%/attacker
+-- count/etc, single-bool indicators) live only in the InitializeIndicators()
+-- debug frame below, not here -- this row is intentionally condensed to
+-- exactly what's consumed. MultiBoolTwo/ClassBoolTwo/ClassIntOne aren't
+-- here either since nothing on the C# side reads them yet (see
+-- WowScreenConfiguration.cs) -- add a swatch back here (and a matching
+-- Point there) if/when a field actually needs one of them.
 function InitializePixelRow()
     -- Size of each swatch, in real screen pixels; also its spacing, so
     -- swatches never overlap. C# reads the CENTER pixel of each PIXEL_SIZE x
@@ -164,24 +167,13 @@ function InitializePixelRow()
         table.insert(swatches, CreatePixelSwatch(UIParent, index * PIXEL_SIZE, 0, PIXEL_SIZE, colorFunc))
     end
 
-    AddSwatch(0,  function() return EncodeFloatToColor(GetPlayerHealthPercent()) end)
-    AddSwatch(1,  function() return EncodeFloatToColor(GetPlayerResourcePercent()) end)
-    AddSwatch(2,  function() return EncodeFloatToColor(GetTargetHealthPercent()) end)
-    AddSwatch(3,  function() return EncodeFloatToColor(GetPlayerMapX()) end)
-    AddSwatch(4,  function() return EncodeFloatToColor(GetPlayerMapY()) end)
-    AddSwatch(5,  function() return EncodeFloatToColor(GetPlayerFacingInDegrees()) end)
-    AddSwatch(6,  function() return EncodeFloatToColor(CountAttackers()) end)
-    AddSwatch(7,  IsAttackingColor)
-    AddSwatch(8,  IsInCombatColor)
-    AddSwatch(9,  CanChargeTargetColor)
-    AddSwatch(10, IsAnyNextSwingSpellQueuedColor)
-    AddSwatch(11, GetMultiBoolOne)
-    AddSwatch(12, GetMultiBoolTwo)
-    AddSwatch(13, GetMultiIntOne)
-    AddSwatch(14, GetMultiIntTwo)
-    AddSwatch(15, GetClassBoolOne)
-    AddSwatch(16, GetClassBoolTwo)
-    AddSwatch(17, GetClassIntOne)
+    AddSwatch(0, function() return EncodeFloatToColor(GetPlayerMapX()) end)
+    AddSwatch(1, function() return EncodeFloatToColor(GetPlayerMapY()) end)
+    AddSwatch(2, function() return EncodeFloatToColor(GetPlayerFacingInDegrees()) end)
+    AddSwatch(3, GetMultiBoolOne)
+    AddSwatch(4, GetMultiIntOne)
+    AddSwatch(5, GetMultiIntTwo)
+    AddSwatch(6, GetClassBoolOne)
 
     local checkInterval = 0.1
     local elapsedTime = 0
