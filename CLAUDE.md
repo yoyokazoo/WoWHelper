@@ -61,10 +61,13 @@ more recent note here before assuming it's fully settled.
 - **Floats** (map X/Y, facing degrees — pixels 3, 4, 5): `R*255 + G + B/255`
   → `GetFloatFromColor`, matching Lua's `EncodeFloatToColor`.
 - **Packed booleans** (pixels 11, 12 — `MultiBoolOne`/`MultiBoolTwo`): a
-  single pixel's R, G, and B bytes are each bit-packed (8 bools per channel)
-  via `DecodeByte`. Order of bits in the Lua encoder MUST match the order
-  `WowWorldState.UpdateMultiBoolOne/Two` decode them in. Only `MultiBoolTwo`'s
-  R byte is actually decoded — its G/B bytes are computed in Lua but unused.
+  single pixel's R/G/B bytes are each bit-packed (8 bools per channel) via
+  `DecodeByte`. Order of bits in the Lua encoder MUST match the order
+  `WowWorldState.UpdateMultiBoolOne/Two` decode them in. All 12 remaining
+  class-agnostic bools are packed into `MultiBoolOne`'s R+G bytes alone;
+  `MultiBoolOne`'s B byte and all of `MultiBoolTwo` are reserved/unused —
+  intentionally, as clean room for the next class-agnostic field, rather
+  than scattering a few bits across multiple pixels.
 - **Packed percents/small ints** (pixels 13, 14 — `MultiIntOne`/`MultiIntTwo`):
   raw R/G/B channel value, 0-255 (HP%, resource%, target HP% / attacker
   count, level).
@@ -88,15 +91,10 @@ slots) are drawn by Lua but **not yet read by C#** — placeholders for a
 future move away from bit-packing. Pixels 15-17 (`ClassBool`/`ClassInt`) ARE
 now read (see below).
 
-**Class split:** `GetMultiBoolOne/Two` in `WoWFunctions.lua` STILL pack
-every class's flags together (any field marked `-- CLASS: X` there is
-class-specific) — this is now genuinely **dead weight on the wire**: Lua
-still computes and transmits those bits, but nothing on the C# side decodes
-them anymore (`WowWorldState.UpdateMultiBoolOne/Two` only decode the
-remaining generic fields). Ready to strip out of the Lua encoder and reclaim
-those bits, just not done yet (ask before assuming it's wanted — it wasn't
-explicitly requested when the C# side was migrated).
-`GetClassBoolOne/Two`/`GetClassIntOne` (also in `WoWFunctions.lua`) check
+**Class split:** class-specific flags (Battle Shout, Rend, Frost Armor,
+Rockbiter, etc.) have been fully stripped out of `GetMultiBoolOne/Two` in
+`WoWFunctions.lua` — those pixels now carry only class-agnostic state (see
+above). `GetClassBoolOne/Two`/`GetClassIntOne` (also in `WoWFunctions.lua`) check
 `UnitClass("player")` and delegate to that class's own populate function
 (`GetWarriorClassBoolOne` in `WarriorFunctions.lua`, `GetMageClassBoolOne` in
 `MageFunctions.lua`, `GetShamanClassBoolOne` in `ShamanFunctions.lua`) — so

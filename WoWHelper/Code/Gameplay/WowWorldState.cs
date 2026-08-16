@@ -152,41 +152,36 @@ namespace WoWHelper
             FacingDegrees = GetFloatFromColor(color);
         }
 
-        // NOTE: MultiBoolOne/Two still transmit some class-specific bits over
-        // the wire (Lua's GetMultiBoolOne/Two -- see the "-- CLASS: X"
-        // comments there), but nothing on the C# side decodes them anymore
-        // now that class-specific state comes from WowClassState instead
-        // (see WowPlayer.ClassState, WowWarriorClassState, etc.). Those bits
-        // are dead weight ready to be stripped out of the Lua encoder and
-        // reclaimed.
+        // All 12 remaining class-agnostic bools are packed tightly into
+        // MultiBoolOne's R+G bytes (see GetMultiBoolOne() in WoWFunctions.lua) --
+        // MultiBoolTwo is left fully reserved for the next class-agnostic
+        // field rather than scattering a few bits across both pixels.
         public void UpdateMultiBoolOne(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolOnePosition.X, ScreenConfig.MultiBoolOnePosition.Y);
             DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
             DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
-            DecodeByte(color.B, out var b1, out var b2, out var b3, out var b4, out var b5, out var b6, out var b7, out var b8);
 
             IsAutoAttacking = r1;
-            LowOnHealthPotions = r3;
-            LowOnDynamite = r4;
-            LowOnAmmo = r7;
+            LowOnHealthPotions = r2;
+            LowOnDynamite = r3;
+            LowOnAmmo = r4;
+            GCDCooledDown = r5;
+            BagsAreFull = r6;
+            IsInCombat = r7;
+            IsPlayerPetrified = r8;
 
-            GCDCooledDown = g1;
-            BagsAreFull = g6;
-            IsInCombat = g8;
-
-            IsPlayerPetrified = b2;
-            HasUnseenWhisper = b3;
+            HasUnseenWhisper = g1;
+            IsInMeleeRange = g2;
+            IsCurrentlyCasting = g3;
+            EnemyNameplatesAreTurnedOn = g4;
+            // g5-g8 and the whole B byte are reserved/unused.
         }
 
+        // MultiBoolTwo currently carries no decoded fields -- reserved for the
+        // next class-agnostic flag (see GetMultiBoolTwo() in WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
-            DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
-
-            IsInMeleeRange = r1;
-            IsCurrentlyCasting = r3;
-            EnemyNameplatesAreTurnedOn = r4;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

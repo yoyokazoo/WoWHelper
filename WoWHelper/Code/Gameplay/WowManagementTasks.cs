@@ -77,11 +77,12 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Dynamite";
             }
-            else if (WorldState.LowOnHealthPotions)
-            {
-                LogoutTriggered = true;
-                LogoutReason = $"Low on Health Potions";
-            }
+            // TODO: Config this somehow??
+            //else if (WorldState.LowOnHealthPotions)
+            //{
+            //    LogoutTriggered = true;
+            //    LogoutReason = $"Low on Health Potions";
+            //}
             else if (WorldState.LowOnAmmo && FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
             {
                 LogoutTriggered = true;

@@ -613,85 +613,44 @@ end
 -- ShouldCastLightningShield(), and ShouldCastFlameShock() moved to
 -- ShamanFunctions.lua.
 
--- NOTE: every field below marked "-- CLASS: X" is class-specific and now
--- also populated via GetClassBoolOne/Two (see the dispatchers further down
--- and GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
--- ShamanFunctions.lua). Left in place here for now so nothing currently
--- reading MultiBoolOne/Two/MultiIntOne/Two breaks -- once the C# side reads
--- ClassBool/ClassInt instead, these marked fields should be stripped out of
--- MultiBoolOne/Two and that pixel's now-unused bits reclaimed.
+-- Class-specific fields (Battle Shout, Rend, Frost Armor, Rockbiter, etc.)
+-- moved to GetClassBoolOne/Two (see the dispatchers further down and
+-- GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
+-- ShamanFunctions.lua) -- C# now reads those instead of these. Only 12
+-- class-agnostic fields are left, which all fit in MultiBoolOne's R+G bytes,
+-- so they're packed tightly there and MultiBoolTwo is left fully reserved
+-- (rather than each carrying a few scattered bits) as clean room to grow
+-- into for the next class-agnostic field, instead of needing a 3rd pixel.
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
-    local boolR2 = HasBuffNamed("Battle Shout") -- CLASS: Warrior
-    local boolR3 = AreWeLowOnHealthPotions()
-    local boolR4 = AreWeLowOnDynamite()
-    local boolR5 = TargetHasRend() -- CLASS: Warrior
-    local boolR6 = CanShootTarget() -- CLASS: Warrior
-    local boolR7 = AreWeLowOnAmmo()
-    local boolR8 = IsSpellUsable(7384) -- CLASS: Warrior (overpower rank 1, 7384)
+    local boolR2 = AreWeLowOnHealthPotions()
+    local boolR3 = AreWeLowOnDynamite()
+    local boolR4 = AreWeLowOnAmmo()
+    local boolR5 = IsGlobalCooldownCooledDown()
+    local boolR6 = AreBagsFull()
+    local boolR7 = IsInCombat()
+    local boolR8 = IsPlayerPetrified()
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
 
-    local boolG1 = IsGlobalCooldownCooledDown()
-    local boolG2 = CanCastWhirlwind() -- CLASS: Warrior
-    local boolG3 = CanCastSweepingStrikes() -- CLASS: Warrior
-    local boolG4 = WaitingToShoot() -- CLASS: Warrior
-    local boolG5 = CanCastMortalStrikeOrBloodthirst() -- CLASS: Warrior
-    local boolG6 = AreBagsFull()
-    local boolG7 = CanChargeTarget() -- CLASS: Warrior
-    local boolG8 = IsInCombat()
-
-    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
-
-    local boolB1 = IsAnyNextSwingSpellQueued() -- CLASS: Warrior
-    local boolB2 = IsPlayerPetrified()
-    local boolB3 = HasUnseenWhisper()
-    local boolB4 = CanSpellcastPullTarget() -- CLASS: Mage + Shaman
-    local boolB5 = HasBuffNamed("Frost Armor") -- CLASS: Mage
-    local boolB6 = HasBuffNamed("Arcane Intellect") -- CLASS: Mage
-    local boolB7 = ShouldWeSummonWater() -- CLASS: Mage
-    local boolB8 = ShouldWeSummonFood() -- CLASS: Mage
-
-    local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
-
-    return rByte/255.0, gByte/255.0, bByte/255.0
-end
-
-function GetMultiBoolTwo()
-    local boolR1 = IsInMeleeRange()
-    local boolR2 = SpellIsCooledDownIgnoringGCD(2136) -- CLASS: Mage (fireblast rank 1, 2136)
-    local boolR3 = IsPlayerCasting()
-    local boolR4 = AreEnemyNameplatesTurnedOn()
-    local boolR5 = ShouldCastRockbiterWeapon() -- CLASS: Shaman
-    local boolR6 = CanCastEarthShock() -- CLASS: Shaman
-    local boolR7 = ShouldCastLightningShield() -- CLASS: Shaman
-    local boolR8 = ShouldCastFlameShock() -- CLASS: Shaman
-
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
-
-    local boolG1 = false
-    local boolG2 = false
-    local boolG3 = false
-    local boolG4 = false
+    local boolG1 = HasUnseenWhisper()
+    local boolG2 = IsInMeleeRange()
+    local boolG3 = IsPlayerCasting()
+    local boolG4 = AreEnemyNameplatesTurnedOn()
     local boolG5 = false
     local boolG6 = false
     local boolG7 = false
-    local boolG8 = CanCastEarthShock() -- CLASS: Shaman
+    local boolG8 = false
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
-    local boolB1 = false
-    local boolB2 = false
-    local boolB3 = false
-    local boolB4 = false
-    local boolB5 = false
-    local boolB6 = false
-    local boolB7 = false
-    local boolB8 = TargetHasFlameShock() -- CLASS: Shaman
+    -- B byte fully reserved too.
+    return rByte/255.0, gByte/255.0, 0
+end
 
-    local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
-
-    return rByte/255.0, gByte/255.0, bByte/255.0
+-- Fully reserved for future class-agnostic flags -- nothing packed here yet.
+function GetMultiBoolTwo()
+    return 0, 0, 0
 end
 
 function GetMultiIntOne()
@@ -716,11 +675,8 @@ end
 -- class once and delegates to that class's own populate function (see
 -- GetWarriorClassBoolOne/Two, GetMageClassBoolOne/Two, and
 -- GetShamanClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
--- ShamanFunctions.lua). Unsupported/unrecognized classes get all-zero.
---
--- Not read by C# yet -- see the note atop GetMultiBoolOne above for the
--- plan to eventually strip the now-duplicated class-specific fields out of
--- MultiBoolOne/Two once it is.
+-- ShamanFunctions.lua). Unsupported/unrecognized classes get all-zero. C#
+-- reads these via WowPlayer.ClassState (see WowClassState.cs and friends).
 ------------------------------------------------------------
 function GetClassBoolOne()
     local _, classFile = UnitClass("player")
