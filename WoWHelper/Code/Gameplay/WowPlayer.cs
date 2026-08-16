@@ -42,6 +42,14 @@ namespace WoWHelper
 
         public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }
+
+        // Class-specific counterpart to WorldState -- see WowClassState.
+        // Concrete type is picked once (based on FarmingConfig.CombatConfiguration)
+        // and never changes for the lifetime of this WowPlayer; the class-specific
+        // Wow*Tasks.cs methods receive it pre-cast to their own class's type
+        // (see WowPlayerCombatConfig.cs), not read directly off this property.
+        public WowClassState ClassState { get; private set; }
+
         public PlayerState CurrentPlayerState { get; private set; }
         public PathfindingState CurrentPathfindingState { get; private set; }
 
@@ -65,6 +73,18 @@ namespace WoWHelper
 
             PreviousWorldState = new WowWorldState(FarmingConfig.ScreenConfiguration);
             WorldState = new WowWorldState(FarmingConfig.ScreenConfiguration);
+            ClassState = CreateClassState(FarmingConfig.CombatConfiguration);
+        }
+
+        private static WowClassState CreateClassState(WowCombatConfiguration combatConfiguration)
+        {
+            switch (combatConfiguration)
+            {
+                case WowCombatConfiguration.Warrior: return new WowWarriorClassState();
+                case WowCombatConfiguration.Mage: return new WowMageClassState();
+                case WowCombatConfiguration.Shaman: return new WowShamanClassState();
+                default: throw new System.NotImplementedException();
+            }
         }
 
         public async Task UpdateWorldStateAsync()
@@ -78,6 +98,7 @@ namespace WoWHelper
             PreviousWorldState.Bmp?.Dispose();
             PreviousWorldState = WorldState;
             WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
+            ClassState.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
 
             NextUpdateTime = now + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
@@ -89,6 +110,7 @@ namespace WoWHelper
             PreviousWorldState.Bmp?.Dispose();
             PreviousWorldState = WorldState;
             WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
+            ClassState.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
 
             NextUpdateTime = now + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
@@ -97,6 +119,7 @@ namespace WoWHelper
         public void UpdateFromBitmap(Bitmap bmp)
         {
             WorldState.UpdateFromBitmap(bmp);
+            ClassState.UpdateFromBitmap(bmp, FarmingConfig.ScreenConfiguration);
         }
 
         async Task<TState> ChangeStateBasedOnTaskResult<TState>(Task<bool> task, TState successState, TState failureState) where TState : Enum

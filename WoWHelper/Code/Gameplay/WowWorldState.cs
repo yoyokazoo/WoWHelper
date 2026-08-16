@@ -26,38 +26,18 @@ namespace WoWHelper
         public int PlayerLevel { get; private set; }
 
         public bool IsInCombat { get; private set; }
-        public bool CanChargeTarget { get; private set; }
-        public bool HeroicStrikeQueued { get; private set; }
 
         public bool IsAutoAttacking { get; private set; }
-        public bool BattleShoutActive { get; private set; }
         public bool LowOnHealthPotions { get; private set; }
         public bool LowOnDynamite { get; private set; }
         public bool LowOnAmmo { get; private set; }
-        public bool OverpowerUsable { get; private set; }
-        public bool TargetHasRend { get; private set; }
         public bool GCDCooledDown { get; private set; }
-        public bool SweepingStrikesCooledDown { get; private set; }
-        public bool WhirlwindCooledDown { get; private set; }
-        public bool CanShootTarget { get; private set; }
-        public bool WaitingToShoot { get; private set; }
-        public bool MortalStrikeOrBloodThirstCooledDown { get; private set; }
         public bool BagsAreFull { get; private set; }
         public bool IsPlayerPetrified { get; private set; }
         public bool HasUnseenWhisper { get; private set; }
-        public bool CanSpellcastPullTarget { get; private set; }
-        public bool MageArmorActive { get; private set; }
-        public bool ArcaneIntellectActive { get; private set; }
-        public bool ShouldSummonWater { get; private set; }
-        public bool ShouldSummonFood { get; private set; }
         public bool IsInMeleeRange { get; private set; }
-        public bool IsFireblastCooledDown { get; private set; }
         public bool IsCurrentlyCasting { get; private set; }
         public bool EnemyNameplatesAreTurnedOn { get; private set; }
-        public bool ShouldCastRockbiterWeapon { get; private set; }
-        public bool CanCastEarthShock { get; private set; }
-        public bool ShouldCastLightningShield { get; private set; }
-        public bool ShouldCastFlameShock { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -172,6 +152,13 @@ namespace WoWHelper
             FacingDegrees = GetFloatFromColor(color);
         }
 
+        // NOTE: MultiBoolOne/Two still transmit some class-specific bits over
+        // the wire (Lua's GetMultiBoolOne/Two -- see the "-- CLASS: X"
+        // comments there), but nothing on the C# side decodes them anymore
+        // now that class-specific state comes from WowClassState instead
+        // (see WowPlayer.ClassState, WowWarriorClassState, etc.). Those bits
+        // are dead weight ready to be stripped out of the Lua encoder and
+        // reclaimed.
         public void UpdateMultiBoolOne(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolOnePosition.X, ScreenConfig.MultiBoolOnePosition.Y);
@@ -180,48 +167,26 @@ namespace WoWHelper
             DecodeByte(color.B, out var b1, out var b2, out var b3, out var b4, out var b5, out var b6, out var b7, out var b8);
 
             IsAutoAttacking = r1;
-            BattleShoutActive = r2;
             LowOnHealthPotions = r3;
             LowOnDynamite = r4;
-            TargetHasRend = r5;
-            CanShootTarget = r6;
             LowOnAmmo = r7;
-            OverpowerUsable = r8;
 
             GCDCooledDown = g1;
-            WhirlwindCooledDown = g2;
-            SweepingStrikesCooledDown = g3;
-            WaitingToShoot = g4;
-            MortalStrikeOrBloodThirstCooledDown = g5;
             BagsAreFull = g6;
-            CanChargeTarget = g7;
             IsInCombat = g8;
 
-            HeroicStrikeQueued = b1;
             IsPlayerPetrified = b2;
             HasUnseenWhisper = b3;
-            CanSpellcastPullTarget = b4;
-            MageArmorActive = b5;
-            ArcaneIntellectActive = b6;
-            ShouldSummonWater = b7;
-            ShouldSummonFood = b8;
         }
 
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
             DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
-            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
-            DecodeByte(color.B, out var b1, out var b2, out var b3, out var b4, out var b5, out var b6, out var b7, out var b8);
 
             IsInMeleeRange = r1;
-            IsFireblastCooledDown = r2;
             IsCurrentlyCasting = r3;
             EnemyNameplatesAreTurnedOn = r4;
-            ShouldCastRockbiterWeapon = r5;
-            CanCastEarthShock = r6;
-            ShouldCastLightningShield = r7;
-            ShouldCastFlameShock = r8;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

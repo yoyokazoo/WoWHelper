@@ -9,7 +9,7 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        public async Task<bool> ShamanCombatLoopTask()
+        public async Task<bool> ShamanCombatLoopTask(WowShamanClassState classState)
         {
             Console.WriteLine("Kicking off core combat loop");
             bool thrownDynamite = false;
@@ -28,12 +28,12 @@ namespace WoWHelper
                 // Make sure to buff
                 // TODO: this needs to be changed to raw resource
                 // TODO: move these to helpers since they're used in a couple places?
-                if (WorldState.ShouldCastRockbiterWeapon)
+                if (classState.ShouldCastRockbiterWeapon)
                 {
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
                     continue;
                 }
-                else if (WorldState.ShouldCastLightningShield)
+                else if (classState.ShouldCastLightningShield)
                 {
                     Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
                     continue;
@@ -73,12 +73,12 @@ namespace WoWHelper
                 }
 
                 // level handled by lua (Can Cast will return false if unlearned -- maybe we should push other things like this to lua as well?)
-                if (WorldState.ShouldCastFlameShock && WorldState.TargetHpPercent > 75)
+                if (classState.ShouldCastFlameShock && WorldState.TargetHpPercent > 75)
                 {
                     Console.WriteLine($"Trying to Flame Shock!");
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_FLAME_SHOCK);
                 }
-                else if (WorldState.CanCastEarthShock/* && (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20)*/) // don't shock almost dead targets unless we have multiples.  temp turning off so we blast runners
+                else if (classState.CanCastEarthShock/* && (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20)*/) // don't shock almost dead targets unless we have multiples.  temp turning off so we blast runners
                 {
                     Console.WriteLine($"Trying to Earth Shock!");
                     Keyboard.KeyPress(WowInput.SHAMAN_EARTH_SHOCK);
@@ -93,7 +93,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> ShamanStartBattleReadyRecoverTask()
+        public async Task<bool> ShamanStartBattleReadyRecoverTask(WowShamanClassState classState)
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
@@ -112,7 +112,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> ShamanWaitUntilBattleReadyTask()
+        public async Task<bool> ShamanWaitUntilBattleReadyTask(WowShamanClassState classState)
         {
             // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
@@ -125,14 +125,14 @@ namespace WoWHelper
             if (battleReady)
             {
                 bool buffed = false;
-                if (WorldState.ShouldCastRockbiterWeapon)
+                if (classState.ShouldCastRockbiterWeapon)
                 {
                     await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
                     buffed = true;
                 }
-                
-                if (WorldState.ShouldCastLightningShield)
+
+                if (classState.ShouldCastLightningShield)
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
@@ -150,7 +150,7 @@ namespace WoWHelper
             return battleReady;
         }
 
-        public async Task<bool> ShamanKickOffEngageTask()
+        public async Task<bool> ShamanKickOffEngageTask(WowShamanClassState classState)
         {
             EngageAttempts = 1;
 
@@ -159,7 +159,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> ShamanFaceCorrectDirectionToEngageTask()
+        public async Task<bool> ShamanFaceCorrectDirectionToEngageTask(WowShamanClassState classState)
         {
             EngageAttempts++;
 
@@ -173,7 +173,20 @@ namespace WoWHelper
             }
             // TODO; short circuit into  and stop casting so we don't finish our bolt if something aggroes us
 
-            return CanEngageTarget();
+            return ShamanCanEngageTarget(classState);
+        }
+
+        // Replaces the old shared CanEngageTarget() for the Shaman case --
+        // CanSpellcastPullTarget is shared with Mage under the same name but
+        // each class gets its own ClassState type, so each also gets its own
+        // thin CanEngageTarget wrapper.
+        public bool ShamanCanEngageTarget(WowShamanClassState classState)
+        {
+            switch (FarmingConfig.EngageMethod)
+            {
+                case WowLocationConfiguration.EngagementMethod.Spellcast: return classState.CanSpellcastPullTarget;
+                default: throw new System.NotImplementedException();
+            }
         }
 
         public async Task<bool> ShamanEmergencyTask()

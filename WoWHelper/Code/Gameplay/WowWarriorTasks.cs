@@ -9,7 +9,7 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        public async Task<bool> WarriorCombatLoopTask()
+        public async Task<bool> WarriorCombatLoopTask(WowWarriorClassState classState)
         {
             Console.WriteLine("Kicking off core combat loop");
             bool thrownDynamite = false;
@@ -92,11 +92,11 @@ namespace WoWHelper
                 }
 
                 // Finally, if we've made it this far, do standard combat actions
-                if (!WorldState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
+                if (!classState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
                 {
                     Keyboard.KeyPress(WowInput.WARRIOR_BATTLE_SHOUT_KEY);
                 }
-                else if (WorldState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
+                else if (classState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
                 {
                     Keyboard.KeyPress(WowInput.WARRIOR_OVERPOWER_KEY);
                 }
@@ -104,13 +104,13 @@ namespace WoWHelper
                 {
                     Keyboard.KeyPress(WowInput.WARRIOR_EXECUTE_KEY);
                 }
-                else if (FarmingConfig.UseRend && !WorldState.TargetHasRend && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
+                else if (FarmingConfig.UseRend && !classState.TargetHasRend && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
                 {
                     Keyboard.KeyPress(WowInput.WARRIOR_REND_KEY);
                 }
                 else if (WorldState.AttackerCount > 1)
                 {
-                    if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
+                    if (classState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
                     {
                         Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
                     }
@@ -122,7 +122,7 @@ namespace WoWHelper
                 }
                 else if (WorldState.AttackerCount <= 1) // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
                 {
-                    if (WorldState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
+                    if (classState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
                     {
                         Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
                     }
@@ -138,7 +138,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> WarriorStartBattleReadyRecoverTask()
+        public async Task<bool> WarriorStartBattleReadyRecoverTask(WowWarriorClassState classState)
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
@@ -148,7 +148,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> WarriorWaitUntilBattleReadyTask()
+        public async Task<bool> WarriorWaitUntilBattleReadyTask(WowWarriorClassState classState)
         {
             // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
@@ -165,7 +165,7 @@ namespace WoWHelper
             return battleReady;
         }
 
-        public async Task<bool> WarriorKickOffEngageTask()
+        public async Task<bool> WarriorKickOffEngageTask(WowWarriorClassState classState)
         {
             await Task.Delay(0);
             EngageAttempts = 1;
@@ -184,7 +184,7 @@ namespace WoWHelper
             return false;
         }
 
-        public async Task<bool> WarriorFaceCorrectDirectionToEngageTask()
+        public async Task<bool> WarriorFaceCorrectDirectionToEngageTask(WowWarriorClassState classState)
         {
             EngageAttempts++;
 
@@ -195,14 +195,27 @@ namespace WoWHelper
             }
             else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
             {
-                if (!WorldState.WaitingToShoot)
+                if (!classState.WaitingToShoot)
                 {
                     await TurnABitToTheLeftTask();
                     Keyboard.KeyPress(WowInput.WARRIOR_SHOOT_MACRO);
                 }
             }
 
-            return CanEngageTarget();
+            return WarriorCanEngageTarget(classState);
+        }
+
+        // Replaces the old shared CanEngageTarget() for the Warrior case --
+        // both fields it needs (CanChargeTarget, CanShootTarget) live only on
+        // WowWarriorClassState.
+        public bool WarriorCanEngageTarget(WowWarriorClassState classState)
+        {
+            switch (FarmingConfig.EngageMethod)
+            {
+                case WowLocationConfiguration.EngagementMethod.Charge: return classState.CanChargeTarget;
+                case WowLocationConfiguration.EngagementMethod.Shoot: return classState.CanShootTarget;
+                default: throw new System.NotImplementedException();
+            }
         }
 
         public async Task<bool> WarriorTooManyAttackersTask()

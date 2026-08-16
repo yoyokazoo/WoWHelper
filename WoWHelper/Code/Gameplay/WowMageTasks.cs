@@ -10,7 +10,7 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        public async Task<bool> MageCombatLoopTask()
+        public async Task<bool> MageCombatLoopTask(WowMageClassState classState)
         {
             Console.WriteLine("Kicking off core combat loop");
             bool thrownDynamite = false;
@@ -71,11 +71,11 @@ namespace WoWHelper
                 }
 
                 // Finally, if we've made it this far, do standard combat actions
-                if (!WorldState.MageArmorActive)
+                if (!classState.MageArmorActive)
                 {
                     Keyboard.KeyPress(WowInput.MAGE_FROST_ARMOR);
                 }
-                else if (WorldState.IsInMeleeRange && WorldState.IsFireblastCooledDown && WorldState.PlayerLevel >= WowGameplayConstants.FIREBLAST_LEVEL)
+                else if (WorldState.IsInMeleeRange && classState.IsFireblastCooledDown && WorldState.PlayerLevel >= WowGameplayConstants.FIREBLAST_LEVEL)
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.MAGE_FIREBLAST);
@@ -107,7 +107,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> MageStartBattleReadyRecoverTask()
+        public async Task<bool> MageStartBattleReadyRecoverTask(WowMageClassState classState)
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
@@ -122,7 +122,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> MageWaitUntilBattleReadyTask()
+        public async Task<bool> MageWaitUntilBattleReadyTask(WowMageClassState classState)
         {
             // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
@@ -138,7 +138,7 @@ namespace WoWHelper
                 // TODO: make this a bit smarter so we take mana pool into account,
                 // and we don't try to wait to conjure food/water when we could get aggroed
                 bool buffedOrConjured = false;
-                if (!WorldState.ArcaneIntellectActive && WorldState.PlayerLevel >= WowGameplayConstants.ARCANE_INTELLECT_LEVEL)
+                if (!classState.ArcaneIntellectActive && WorldState.PlayerLevel >= WowGameplayConstants.ARCANE_INTELLECT_LEVEL)
                 {
                     await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.MAGE_SHIFT_ARCANE_INTELLECT);
@@ -146,14 +146,14 @@ namespace WoWHelper
                     buffedOrConjured = true;
                 }
 
-                if (!WorldState.MageArmorActive) // frost armor is known at level 1!
+                if (!classState.MageArmorActive) // frost armor is known at level 1!
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.MAGE_FROST_ARMOR);
                     buffedOrConjured = true;
                 }
 
-                if (WorldState.ShouldSummonFood && WorldState.PlayerLevel >= WowGameplayConstants.CONJURE_FOOD_LEVEL)
+                if (classState.ShouldSummonFood && WorldState.PlayerLevel >= WowGameplayConstants.CONJURE_FOOD_LEVEL)
                 {
                     await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.MAGE_SHIFT_CONJURE_FOOD);
@@ -161,7 +161,7 @@ namespace WoWHelper
                     buffedOrConjured = true;
                 }
 
-                if (WorldState.ShouldSummonWater && WorldState.PlayerLevel >= WowGameplayConstants.CONJURE_WATER_LEVEL)
+                if (classState.ShouldSummonWater && WorldState.PlayerLevel >= WowGameplayConstants.CONJURE_WATER_LEVEL)
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.MAGE_CONJURE_WATER);
@@ -180,7 +180,7 @@ namespace WoWHelper
             return battleReady;
         }
 
-        public async Task<bool> MageKickOffEngageTask()
+        public async Task<bool> MageKickOffEngageTask(WowMageClassState classState)
         {
             EngageAttempts = 1;
 
@@ -190,7 +190,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> MageFaceCorrectDirectionToEngageTask()
+        public async Task<bool> MageFaceCorrectDirectionToEngageTask(WowMageClassState classState)
         {
             EngageAttempts++;
 
@@ -202,7 +202,20 @@ namespace WoWHelper
                 await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
             }
 
-            return CanEngageTarget();
+            return MageCanEngageTarget(classState);
+        }
+
+        // Replaces the old shared CanEngageTarget() for the Mage case --
+        // CanSpellcastPullTarget is shared with Shaman under the same name
+        // but each class gets its own ClassState type, so each also gets its
+        // own thin CanEngageTarget wrapper.
+        public bool MageCanEngageTarget(WowMageClassState classState)
+        {
+            switch (FarmingConfig.EngageMethod)
+            {
+                case WowLocationConfiguration.EngagementMethod.Spellcast: return classState.CanSpellcastPullTarget;
+                default: throw new System.NotImplementedException();
+            }
         }
 
         public async Task<bool> MageMakeSureWeAreAttackingEnemyTask()

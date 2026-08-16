@@ -71,8 +71,8 @@ more recent note here before assuming it's fully settled.
 - **Class-specific packed state** (pixels 15, 16, 17 — `ClassBool`/`ClassInt`,
   see the "Class split" note below) — same bit-packing/raw-byte schemes as
   above, but the *meaning* of a given bit depends on which class is
-  currently playing. **Not decoded by C# yet** — drawn by Lua only, staged
-  for a future migration off `MultiBoolOne/Two`.
+  currently playing. Decoded into a `WowClassState` subtype, not
+  `WowWorldState` — see the C# architecture section below.
 - **Text/UI state matched by exact pixel signature** (login screen, trade
   window open/accepted/confirmed, breath bar underwater, red error toast text
   like "facing wrong way" / "too far away" / "invalid target" / "out of
@@ -84,28 +84,36 @@ more recent note here before assuming it's fully settled.
 
 Pixels 0-2 and 6-10 of the row (individual HP%/resource%/target HP%/attacker
 count and the single-bool `InRange`/`InCombat`/`CanChargeTarget`/`HeroicQueued`
-slots), and pixels 15-17 (`ClassBool`/`ClassInt`), are drawn by Lua but **not
-yet read by C#** — the bot still gets that data from the packed pixels 11-14,
-same as before the row existed. They're placeholders for a future move away
-from bit-packing (0-2, 6-10) and away from lumping every class's flags into
-one shared pixel (15-17).
+slots) are drawn by Lua but **not yet read by C#** — placeholders for a
+future move away from bit-packing. Pixels 15-17 (`ClassBool`/`ClassInt`) ARE
+now read (see below).
 
-**Class split (staged, Lua-only so far):** `GetMultiBoolOne/Two` still pack
-every class's flags together — any field marked `-- CLASS: X` in
-`WoWFunctions.lua` is class-specific and has NOT been stripped out yet, kept
-so nothing currently reading those pixels breaks. In parallel,
+**Class split:** `GetMultiBoolOne/Two` in `WoWFunctions.lua` STILL pack
+every class's flags together (any field marked `-- CLASS: X` there is
+class-specific) — this is now genuinely **dead weight on the wire**: Lua
+still computes and transmits those bits, but nothing on the C# side decodes
+them anymore (`WowWorldState.UpdateMultiBoolOne/Two` only decode the
+remaining generic fields). Ready to strip out of the Lua encoder and reclaim
+those bits, just not done yet (ask before assuming it's wanted — it wasn't
+explicitly requested when the C# side was migrated).
 `GetClassBoolOne/Two`/`GetClassIntOne` (also in `WoWFunctions.lua`) check
 `UnitClass("player")` and delegate to that class's own populate function
 (`GetWarriorClassBoolOne` in `WarriorFunctions.lua`, `GetMageClassBoolOne` in
 `MageFunctions.lua`, `GetShamanClassBoolOne` in `ShamanFunctions.lua`) — so
 the *same* pixel/bit position means something different depending on which
-class is playing. Once C# is updated to read `ClassBool`/`ClassInt` (and know
-the current class, to interpret them), the `-- CLASS: X` fields should be
-stripped out of `GetMultiBoolOne/Two` and those bits reclaimed. Note
+class is playing. On the C# side, `WowPlayer.ClassState` (a `WowClassState`
+subtype — see the C# architecture section) decodes the matching bits,
+selected once from `FarmingConfig.CombatConfiguration`. Note
 `CanSpellcastPullTarget()` stays in `WoWFunctions.lua` rather than being
 split into the class files — it's shared between Mage and Shaman under the
 same name, and duplicating that name into both class files would collide
 (last-loaded file wins silently, since addon globals are one flat namespace).
+The C#-side mirror of that same constraint: `CanEngageTarget()` in
+`WowPlayerCombatConfig.cs` is a thin class-dispatching wrapper for
+class-agnostic callers (e.g. `WowMovementTasks.PathfindingLoopTask`), while
+`WarriorCanEngageTarget`/`MageCanEngageTarget`/`ShamanCanEngageTarget` (one
+per `Wow*Tasks.cs`) hold the real per-class logic and take that class's
+typed `ClassState` directly.
 
 Because both sides hardcode pixel coordinates and bit order, **the Lua encoder
 and the C# decoder must be changed together** — a one-sided change silently
@@ -128,16 +136,36 @@ of truth — edits should be made here, not in the WoW install directory.
   engage a target via pathfinding → run the combat loop → loot/skin → repeat.
   Related sub-state-machines: `PathfindingState` (waypoint navigation) and
   `TradeState` (used by the "Cupid" trade-gifting loop).
-- **`Gameplay/WowWorldState.cs`** — decodes one screen capture into all bot
-  inputs (see color contract above); `WowPlayer` keeps a `PreviousWorldState`
-  + `WorldState` pair each tick to detect edge-triggered events (leveled up,
-  logged out unexpectedly, new whisper, etc.).
+- **`Gameplay/WowWorldState.cs`** — decodes one screen capture into all
+  *class-agnostic* bot inputs (see color contract above); `WowPlayer` keeps a
+  `PreviousWorldState` + `WorldState` pair each tick to detect edge-triggered
+  events (leveled up, logged out unexpectedly, new whisper, etc.).
+- **`Gameplay/WowClassState.cs`** (abstract) / **`WowWarriorClassState.cs`** /
+  **`WowMageClassState.cs`** / **`WowShamanClassState.cs`** — the
+  class-specific counterpart to `WowWorldState`. `ClassBool`/`ClassInt` pixels
+  mean something different per class, so rather than one flat object with
+  every class's fields (where nothing would stop e.g. Mage code from reading
+  a Warrior-only field and silently getting stale data), each class gets its
+  own concrete subtype exposing *only* its own fields — a wrong-class field
+  reference is a compile error, not a runtime surprise. `WowPlayer.ClassState`
+  holds the one built for `FarmingConfig.CombatConfiguration` at construction
+  time and updates it (in place, same instance — no `PreviousClassState`
+  exists, nothing has needed one yet) every tick alongside `WorldState`, off
+  the same captured bitmap.
 - **`Gameplay/Wow*Tasks.cs`** — behavior/task implementations grouped by
   concern: `WowMovementTasks` (pathfinding/turning/strafing/jumping),
   `WowCommonCombatTasks` (shared combat logic), `WowWarriorTasks` /
   `WowMageTasks` / `WowShamanTasks` (class-specific rotations, selected via
   `WowCombatConfiguration`), `WowManagementTasks` (logout conditions, low
-  supplies, trade window handling, Slack alerts).
+  supplies, trade window handling, Slack alerts). The class-specific task
+  files' entry points (dispatched from `WowPlayerCombatConfig.cs`) take their
+  own class's `WowClassState` subtype as a **method parameter**, not read off
+  `this` — so a Mage-only field is unreachable from inside a Warrior method's
+  scope, not just absent on some shared type. `WowPlayerCombatConfig.cs`
+  casts `ClassState` to the right concrete type at each dispatch call site;
+  if that cast ever fails, `ClassState` and `CombatConfiguration` have gone
+  out of sync, and throwing immediately there is intentional — silently
+  reading the wrong class's state would be worse.
 - **`Gameplay/WowPathfinding.cs`** — pure-math helpers for waypoint following
   (facing/turn-direction math, angle tolerance that tightens near a waypoint,
   lateral-distance-from-path calc). No side effects, unit-testable.
@@ -186,8 +214,8 @@ of truth — edits should be made here, not in the WoW install directory.
   encodes values/booleans into the colors the C# side decodes
   (`EncodeFloatToColor` and friends). Two rendering paths coexist, both fed
   by the same underlying value/color functions:
-  - `InitializePixelRow()` — **the one the C# bot actually reads** (partially
-    — see "Class split" above for what's drawn but not yet decoded). 18
+  - `InitializePixelRow()` — **the one the C# bot actually reads** (mostly —
+    pixels 0-2/6-10 are drawn but not yet decoded, see above). 18
     `PIXEL_SIZE`-square swatches pinned to the screen's literal top-left
     corner, placed via the self-calibrating `GetPhysicalPixelsPerLocalUnit()`
     helper, matching the center-pixel `Point`s computed on
@@ -210,6 +238,14 @@ same `WowScreenConfiguration` matchers the live bot uses, so the pixel-match
 logic can be verified without WoW running. Also covers `WowPathfinding` math
 directly. When you change screen-position matchers or add new encoded state,
 prefer adding/updating a bitmap-backed test here.
+
+**Known issue:** most of these fixture bitmaps were captured against the old
+calibrated debug-frame pixel layout, before the addon moved to the fixed
+top-left pixel row (see the color-encoding contract above) — they're
+currently expected to fail and aren't a signal about unrelated changes.
+Fixing them for real means recapturing the `Source Images/*.bmp` fixtures
+against the current pixel layout, a distinct task from whatever prompted
+noticing them.
 
 ## Practical notes
 

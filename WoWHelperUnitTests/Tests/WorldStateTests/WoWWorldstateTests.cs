@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using System.IO;
+using WoWHelper;
 
 namespace WoWHelperUnitTests
 {
@@ -72,11 +73,20 @@ namespace WoWHelperUnitTests
         public void VerifyMultiBoolEncoding(bool expectedBoolOne, bool expectedBoolTwo, string fileName)
         {
             string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
+            Bitmap bmp = new Bitmap(filePath);
 
-            Player.UpdateFromBitmap(new Bitmap(filePath));
+            Player.UpdateFromBitmap(bmp);
+
+            // BattleShoutActive is Warrior-only and now lives on WowWarriorClassState,
+            // not WowWorldState -- CURRENT_CONFIG (WowFarmingConfigs.cs) is currently
+            // Shaman, so Player.ClassState wouldn't be a WowWarriorClassState here.
+            // Decode a standalone one directly instead of assuming Player.ClassState's
+            // runtime type.
+            var warriorClassState = new WowWarriorClassState();
+            warriorClassState.UpdateFromBitmap(bmp, Player.WorldState.ScreenConfig);
 
             Assert.AreEqual(expectedBoolOne, Player.WorldState.IsAutoAttacking);
-            Assert.AreEqual(expectedBoolTwo, Player.WorldState.BattleShoutActive);
+            Assert.AreEqual(expectedBoolTwo, warriorClassState.BattleShoutActive);
         }
 
         [TestMethod]

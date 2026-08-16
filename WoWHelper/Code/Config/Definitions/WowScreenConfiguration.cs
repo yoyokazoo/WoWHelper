@@ -96,5 +96,9 @@ namespace WoWHelper
 
         public Point MultiIntOnePosition => PixelRowPoint(13);
         public Point MultiIntTwoPosition => PixelRowPoint(14);
+
+        public Point ClassBoolOnePosition => PixelRowPoint(15);
+        public Point ClassBoolTwoPosition => PixelRowPoint(16);
+        public Point ClassIntOnePosition => PixelRowPoint(17);
     }
 }
