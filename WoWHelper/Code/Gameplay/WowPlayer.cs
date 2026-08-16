@@ -293,7 +293,7 @@ namespace WoWHelper
                         // We likely just cast a spell that hasn't yet hit the target.  Wait a little bit so it does,
                         // so we correctly read that our current target is in combat with us, otherwise we get confused
                         Console.WriteLine($"Waiting for spellcast");
-                        await Task.Delay(800);
+                        await Task.Delay(1200);
                     }
                     Console.WriteLine($"In combat unexpectedly ({CurrentPlayerState}), switching to PlayerState.IN_CORE_COMBAT_LOOP");
                     CurrentPlayerState = PlayerState.IN_CORE_COMBAT_LOOP;

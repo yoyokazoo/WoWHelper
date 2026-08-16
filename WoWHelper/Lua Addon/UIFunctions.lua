@@ -191,12 +191,6 @@ function InitializePixelRow()
 end
 
 function InitializeIndicators()
-    -- Create the "Hello World" text on bottom, can be used for debug
-    local text = YoyokazooUIFrame:CreateFontString("HELLO", "OVERLAY", "GameFontNormalSmall")
-    text:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
-    text:SetText("Hello World")
-    text:SetTextColor(1, 1, 1, 1)  -- white text
-
     local numIndicators = {}
 
     local hpNum      = CreateNumberIndicator(YoyokazooUIFrame, "HP%",      GetPlayerHealthPercent,    0)
