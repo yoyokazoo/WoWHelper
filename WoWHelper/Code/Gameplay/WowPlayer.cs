@@ -286,6 +286,15 @@ namespace WoWHelper
                 // TODO: if on login screen all other values will be messed up
                 if (!WorldState.OnLoginScreen && WorldState.IsInCombat)
                 {
+                    if (CurrentPlayerState == PlayerState.CONTINUE_TO_TRY_TO_ENGAGE && 
+                        FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Spellcast && 
+                        WorldState.ResourcePercent < 100)
+                    {
+                        // We likely just cast a spell that hasn't yet hit the target.  Wait a little bit so it does,
+                        // so we correctly read that our current target is in combat with us, otherwise we get confused
+                        Console.WriteLine($"Waiting for spellcast");
+                        await Task.Delay(800);
+                    }
                     Console.WriteLine($"In combat unexpectedly ({CurrentPlayerState}), switching to PlayerState.IN_CORE_COMBAT_LOOP");
                     CurrentPlayerState = PlayerState.IN_CORE_COMBAT_LOOP;
                     //Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
