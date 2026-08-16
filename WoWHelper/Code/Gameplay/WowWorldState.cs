@@ -38,7 +38,7 @@ namespace WoWHelper
         public bool IsInMeleeRange { get; private set; }
         public bool IsCurrentlyCasting { get; private set; }
         public bool EnemyNameplatesAreTurnedOn { get; private set; }
-        public bool CurrentTargetIsTaggedByUs { get; private set; }
+        public bool CurrentTargetInCombatWithUs { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -176,7 +176,7 @@ namespace WoWHelper
             IsInMeleeRange = g2;
             IsCurrentlyCasting = g3;
             EnemyNameplatesAreTurnedOn = g4;
-            CurrentTargetIsTaggedByUs = g5;
+            CurrentTargetInCombatWithUs = g5;
             // g6-g8 and the whole B byte are reserved/unused.
         }
 

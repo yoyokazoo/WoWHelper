@@ -252,6 +252,11 @@ noticing them.
   focused; it's meant to run against a real game client, not a simulator.
 - Slack integration (`SlackAPI`) is used for out-of-band alerts (leveled up,
   unexpectedly disconnected, low on consumables, near-death "petri alt+F4").
+- **Don't build to confirm every change.** The user builds and tests
+  (including in-game) manually. Write correct code and move on rather than
+  running a build after each edit as a verification step — only build if
+  actually needed for your own work (e.g. checking a specific compile
+  question), not as routine confirmation.
 
 ---
 **Keep this file in sync:** whenever a change alters the color-encoding

@@ -72,6 +72,7 @@ namespace WoWHelper
                 if (WorldState.IsInCombat)
                 {
                     await EndWalkForwardTask();
+                    Console.WriteLine($"Entered combat during pathfinding, clearing target");
                     Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
 
                     return false;

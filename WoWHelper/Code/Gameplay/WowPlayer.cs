@@ -286,8 +286,9 @@ namespace WoWHelper
                 // TODO: if on login screen all other values will be messed up
                 if (!WorldState.OnLoginScreen && WorldState.IsInCombat)
                 {
+                    Console.WriteLine($"In combat unexpectedly ({CurrentPlayerState}), switching to PlayerState.IN_CORE_COMBAT_LOOP");
                     CurrentPlayerState = PlayerState.IN_CORE_COMBAT_LOOP;
-                    Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
+                    //Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
                 }
 
                 await EveryWorldStateUpdateTasks();

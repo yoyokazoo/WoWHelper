@@ -70,7 +70,7 @@ namespace WoWHelper
             bool invalidTarget = WorldState.InvalidTarget;
             bool outOfRange = WorldState.OutOfRange;
 
-            Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}");
+            //Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}");
 
             if (facingWrongWay || targetNeedsToBeInFront)
             {
@@ -78,16 +78,15 @@ namespace WoWHelper
                 await ScootBackwardsTask();
             }
 
-            // TODO: count attackers, add bool to see if our currently targeted mob is tagged by us
-            // so we don't spam clear if we don't have to
+            // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
             if (tooFarAway || invalidTarget || outOfRange)
             {
-                // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
-                // attacker count now updates immediately, so only clear target if mob isn't tagged by us
-                // OR mob is tagged by us and attackerCount >1
-                if (!WorldState.CurrentTargetIsTaggedByUs || (WorldState.CurrentTargetIsTaggedByUs && WorldState.AttackerCount > 1))
+                // attacker count now updates immediately, so only clear target if the mob isn't
+                // actually in combat with us OR it is and there are multiple attackers (worth
+                // re-prioritizing) -- don't spam clear if we don't have to
+                if (!WorldState.CurrentTargetInCombatWithUs || (WorldState.CurrentTargetInCombatWithUs && WorldState.AttackerCount > 1))
                 {
-                    Console.WriteLine($"tooFarAway || invalidTarget || outOfRange and WorldState.AttackerCount > 0 {WorldState.AttackerCount}");
+                    Console.WriteLine($"tooFarAway || invalidTarget || outOfRange, WorldState.CurrentTargetInCombatWithUs {WorldState.CurrentTargetInCombatWithUs}, WorldState.AttackerCount {WorldState.AttackerCount}");
                     Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
 
                     // if it's actually too far away, waiting a bit won't matter

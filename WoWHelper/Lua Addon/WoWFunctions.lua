@@ -457,25 +457,17 @@ function AreEnemyNameplatesTurnedOn()
     return GetCVarBool("nameplateShowEnemies")
 end
 
--- UnitIsTapped/UnitIsTappedByPlayer no longer exist on this client (both nil
--- -- confirmed via /run print(...) after this broke on first deploy, see
--- CLAUDE.md's "debug first" note). Only UnitIsTapDenied is present, and its
--- sense is inverted: true means tap is DENIED to us (someone else has it, or
--- we'd get reduced/no credit). "not UnitIsTapDenied" alone isn't enough --
--- it's also true for a mob nobody has tapped yet, which isn't "tagged by
--- us". Requiring UnitAffectingCombat too (already used elsewhere, e.g.
--- IsInCombat() above) rules that case out: only true once the mob is
--- actually engaged AND tap isn't denied to us.
-function CurrentTargetIsTaggedByUs()
+-- Whether our current target is actively engaged with US specifically (its
+-- target is us), not just "tapped by us" (loot rights) or "in combat with
+-- someone" -- true the instant it aggroes onto the player, even before any
+-- hit lands either way. Same "unittarget" unit-token trick CountAttackers()
+-- already uses for nameplates, applied to our actual target instead.
+function CurrentTargetInCombatWithUs()
     if not UnitExists("target") then
         return false
     end
 
-    if not UnitAffectingCombat("target") then
-        return false
-    end
-
-    return not UnitIsTapDenied("target")
+    return UnitIsUnit("targettarget", "player")
 end
 
 function AreWeLowOnHealthPotions()
@@ -657,7 +649,7 @@ function GetMultiBoolOne()
     local boolG2 = IsInMeleeRange()
     local boolG3 = IsPlayerCasting()
     local boolG4 = AreEnemyNameplatesTurnedOn()
-    local boolG5 = CurrentTargetIsTaggedByUs()
+    local boolG5 = CurrentTargetInCombatWithUs()
     local boolG6 = false
     local boolG7 = false
     local boolG8 = false
