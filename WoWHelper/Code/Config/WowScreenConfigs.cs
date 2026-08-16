@@ -32,6 +32,8 @@ namespace WoWHelper.Code.Config
             LootHeatmapIgnoreWidth = 130,
             LootHeatmapIgnoreHeight = 135,
 
+            SlackScreenshotCropRegion = new Rectangle(0, 1005, 790, 261),
+
             FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
                     new ColorPosition(1529, 217, WowScreenConfiguration.ERROR_TEXT_COLOR),

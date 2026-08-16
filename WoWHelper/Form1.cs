@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
+using WoWHelper.Shared;
 
 namespace WoWHelper
 {
@@ -52,12 +53,20 @@ namespace WoWHelper
             //_ = CoreGameplayLoopTask();
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private async void button2_Click(object sender, EventArgs e)
         {
+            // SlackHelper.SendScreenshotToChannel hits Slack's deprecated files.upload endpoint
+            // (returns "method_deprecated" now) -- using the SlackFileUploadWorkaround hack
+            // instead until that's fixed upstream. See SlackFileUploadWorkaround.cs.
+            bool uploaded = await SlackFileUploadWorkaround.UploadScreenshotToChannelAsync(
+                title: "Ad Hoc Test Screenshot",
+                initialComment: "Sent from the Ad Hoc Test button");
+            Console.WriteLine($"Ad Hoc Test screenshot upload {(uploaded ? "succeeded" : "failed")}");
+
+            //SlackHelper.SendScreenshotToChannel(fileTitle: "Ad Hoc Test Screenshot", fileComment: "Sent from the Ad Hoc Test button");
             //SlackHelper.SendMessageToChannel("Test slack message!", OnPostMessageCompleted);
-            //SlackHelper.SendScreenshotToChannel();
-            WowPlayer player = new WowPlayer();
-            player.AdHocTest();
+            //WowPlayer player = new WowPlayer();
+            //player.AdHocTest();
         }
 
         private void OnPostMessageCompleted(PostMessageResponse response)

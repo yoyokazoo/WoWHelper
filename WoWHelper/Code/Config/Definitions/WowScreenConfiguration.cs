@@ -54,6 +54,12 @@ namespace WoWHelper
         public int LootHeatmapIgnoreWidth { get; set; }
         public int LootHeatmapIgnoreHeight { get; set; }
 
+        // Region to crop Slack alert screenshots (e.g. unseen whisper) down
+        // to, instead of sending the whole screen. Null means "not
+        // configured for this resolution" -- callers should fall back to
+        // the full screen in that case (see SlackFileUploadWorkaround).
+        public Rectangle? SlackScreenshotCropRegion { get; set; }
+
         // Error text detections
         public ImageMatchColorPositions FacingWrongWayPositions { get; set; }
         public ImageMatchColorPositions TooFarAwayPositions { get; set; }

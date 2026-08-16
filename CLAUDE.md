@@ -179,11 +179,25 @@ of truth — edits should be made here, not in the WoW install directory.
   `BitmapDifferenceVisualizer` (loot-heatmap detection by diffing frames to
   find where a loot corpse/sparkle is), `PathSubdivision` (splits long waypoint
   legs into shorter hops), `TessaractSingleton` (shared Tesseract OCR engine,
-  used to read text like trade-partner names).
+  used to read text like trade-partner names), `SlackFileUploadWorkaround`
+  (see below — **temporary hack, not permanent architecture**).
 - Input is sent through the `InputManager` DLL (`DLLs/InputManager.dll`);
   screen capture/image-matching and Slack notifications come from the
-  `WindowsGameAutomationTools` NuGet package (external, not in this repo).
-  OCR uses `Tesseract` (`tessdata/eng.traineddata`).
+  `WindowsGameAutomationTools` NuGet package (external, not in this repo, and
+  actually the user's own package — `github.com/yoyokazoo/WindowsGameAutomationTools`,
+  matching the addon name). OCR uses `Tesseract` (`tessdata/eng.traineddata`).
+- **`Shared/SlackFileUploadWorkaround.cs` is a temporary hack, meant to be
+  deleted.** Slack deprecated the `files.upload` endpoint (now returns
+  `"method_deprecated"`); `SlackHelper.UploadFile`/`SendScreenshotToChannel`
+  and the `SlackAPI` package they wrap both still call it — confirmed via
+  reflection, neither has been updated to Slack's replacement 3-step flow
+  (`files.getUploadURLExternal` → upload bytes → `files.completeUploadExternal`).
+  This file reimplements just that flow directly against Slack's HTTP API, as
+  a stopgap until it's fixed upstream in `WindowsGameAutomationTools` and this
+  project bumps to that package version — at which point delete this file and
+  point call sites back at `SlackHelper`. Don't build on top of this as if
+  it's permanent, and don't be surprised two file-upload paths exist side by
+  side for now.
 
 ## Lua addon (`WoWHelper/Lua Addon/`, `YoyokazooUI`)
 

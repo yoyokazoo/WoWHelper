@@ -164,6 +164,7 @@
     <Compile Include="Code\Gameplay\WowShamanClassState.cs" />
     <Compile Include="Code\Shared\PathSubdivision.cs" />
     <Compile Include="Code\Shared\TessaractSingleton.cs" />
+    <Compile Include="Code\Shared\SlackFileUploadWorkaround.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

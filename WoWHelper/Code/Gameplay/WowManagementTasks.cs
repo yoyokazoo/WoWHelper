@@ -37,7 +37,9 @@ namespace WoWHelper
             // ping if unseen message
             if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState.Initialized && !PreviousWorldState.HasUnseenWhisper && WorldState.HasUnseenWhisper)
             {
-                SlackHelper.SendMessageToChannel($"Unseen Whisper!");
+                _ = SlackFileUploadWorkaround.UploadScreenshotToChannelAsync(
+                    title: "Unseen Whisper!",
+                    cropRegion: FarmingConfig.ScreenConfiguration.SlackScreenshotCropRegion);
             }
 
             // ping if logged out (still needs testing.  they changed login screen??)
