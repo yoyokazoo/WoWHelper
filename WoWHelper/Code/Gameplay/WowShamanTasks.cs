@@ -72,14 +72,15 @@ namespace WoWHelper
                     startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
-                // level handled by lua (Can Cast will return false if unlearned -- maybe we should push other things like this to lua as well?)
-                if (classState.ShouldCastFlameShock && WorldState.TargetHpPercent > 75)
+                if (classState.ShouldCastFlameShock && (FarmingConfig.LocationConfiguration.HasRunners || WorldState.TargetHpPercent > 75))
                 {
                     Console.WriteLine($"Trying to Flame Shock!");
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_FLAME_SHOCK);
                 }
-                else if (classState.CanCastEarthShock/* && (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20)*/) // don't shock almost dead targets unless we have multiples.  temp turning off so we blast runners
+                else if (classState.CanCastEarthShock && 
+                    (FarmingConfig.LocationConfiguration.HasRunners || (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20))) 
                 {
+                    // don't shock almost dead targets unless there are runners or we have multiples.
                     Console.WriteLine($"Trying to Earth Shock!");
                     Keyboard.KeyPress(WowInput.SHAMAN_EARTH_SHOCK);
                 }

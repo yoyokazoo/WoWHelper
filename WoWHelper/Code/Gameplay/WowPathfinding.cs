@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace WoWHelper.Code
@@ -130,6 +131,24 @@ namespace WoWHelper.Code
             Vector2 toWaypoint = waypoint - playerPos;
 
             return Cross2D(forward, toWaypoint);
+        }
+
+        // Nearest-waypoint distance, used to validate the player actually started near the
+        // route (see WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT) rather than to guide
+        // in-progress pathing.
+        public static float GetDistanceToClosestWaypoint(Vector2 playerPos, IReadOnlyList<Vector2> waypoints)
+        {
+            float closestDistance = float.MaxValue;
+            foreach (var waypoint in waypoints)
+            {
+                float distance = Vector2.Distance(playerPos, waypoint);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                }
+            }
+
+            return closestDistance;
         }
     }
 }

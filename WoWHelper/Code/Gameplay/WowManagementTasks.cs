@@ -72,9 +72,11 @@ namespace WoWHelper
 
         public async Task<bool> SetLogoutVariablesTask()
         {
-            // Checked first so a wrong-zone/under-level start gives the clearest possible
-            // reason, rather than getting masked behind some other logout condition that also
-            // happens to be true on the very first tick.
+            float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, FarmingConfig.LocationConfiguration.Waypoints);
+
+            // Checked first so a wrong-zone/under-level/too-far-away start gives the clearest
+            // possible reason, rather than getting masked behind some other logout condition
+            // that also happens to be true on the very first tick.
             if (FarmingConfig.LocationConfiguration.MinimumLevel > 0 && WorldState.PlayerLevel < FarmingConfig.LocationConfiguration.MinimumLevel)
             {
                 LogoutTriggered = true;
@@ -86,6 +88,11 @@ namespace WoWHelper
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Wrong zone for this route (currently {WorldState.CurrentZone}, expected {FarmingConfig.LocationConfiguration.Zone})";
+            }
+            else if (closestWaypointDistance > WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT)
+            {
+                LogoutTriggered = true;
+                LogoutReason = $"Too far from this route's waypoints (closest is {closestWaypointDistance:0.00}, allowed {WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT:0.00})";
             }
             else if (FarmingConfig.LogoutOnLowDynamite && WorldState.LowOnDynamite)
             {

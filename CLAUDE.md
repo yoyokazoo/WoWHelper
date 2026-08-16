@@ -92,7 +92,13 @@ same class of coupling as everything else in this contract. Each
 `WowLocationConfiguration` in `WowLocationConfigs.cs` also carries a `Zone`
 (plus `Title` and `MinimumLevel`), for validating the character is in the
 right place/level before a farming route starts — `CurrentZone` is the
-runtime half of that check; the validation logic itself isn't wired up yet.
+runtime half of that check. That validation (plus a third check: is the
+player near *any* of the route's own waypoints, via
+`WowPathfinding.GetDistanceToClosestWaypoint` against the single global
+`WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT` threshold — deliberately
+one constant sized off the loosest route's own largest adjacent-waypoint gap,
+not a per-config value) is wired into `WowManagementTasks.SetLogoutVariablesTask()`,
+checked first so a bad start gives the clearest possible logout reason.
 
 **Reserved-but-not-in-the-row:** `MultiBoolOne`'s B byte and all of `MultiBoolTwo`
 are reserved for the next class-agnostic bool (see `GetMultiBoolOne/Two` in
