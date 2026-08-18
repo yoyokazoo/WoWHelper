@@ -76,6 +76,21 @@ namespace WoWHelper
             ClassState = CreateClassState(FarmingConfig.CombatConfiguration);
         }
 
+        public WowPlayer(WowScreenConfiguration screenConfiguration)
+        {
+            CurrentPlayerState = PlayerState.WAITING_TO_FOCUS_ON_WINDOW;
+            CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
+            CurrentWaypointIndex = -1;
+            WaypointTraversalDirection = 1;
+
+            FarmingConfig = WowFarmingConfigs.CURRENT_CONFIG;
+            FarmingConfig.ScreenConfiguration = screenConfiguration;
+
+            PreviousWorldState = new WowWorldState(screenConfiguration);
+            WorldState = new WowWorldState(screenConfiguration);
+            ClassState = CreateClassState(FarmingConfig.CombatConfiguration);
+        }
+
         private static WowClassState CreateClassState(WowCombatConfiguration combatConfiguration)
         {
             switch (combatConfiguration)

@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using System.IO;
 using WoWHelper;
+using WoWHelper.Code.Config;
 
 namespace WoWHelperUnitTests
 {
@@ -32,11 +33,10 @@ namespace WoWHelperUnitTests
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\numbersAsColors3.bmp")]
         [DataRow(true, "..\\..\\Source Images\\FacingWrongWay.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\2560facing.bmp")]
         public void VerifyFacingWrongWay(bool expected, string fileName)
         {
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-
-            Player.UpdateFromBitmap(new Bitmap(filePath));
+            LoadPlayer(fileName);
 
             Assert.AreEqual(expected, Player.WorldState.FacingWrongWay);
         }
@@ -46,9 +46,7 @@ namespace WoWHelperUnitTests
         [DataRow(true, "..\\..\\Source Images\\toofaraway.bmp")]
         public void VerifyTooFarAway(bool expected, string fileName)
         {
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-
-            Player.UpdateFromBitmap(new Bitmap(filePath));
+            LoadPlayer(fileName);
 
             Assert.AreEqual(expected, Player.WorldState.TooFarAway);
         }
@@ -72,9 +70,8 @@ namespace WoWHelperUnitTests
         [DataRow(true, true, "..\\..\\Source Images\\BattleShout.bmp")]
         public void VerifyMultiBoolEncoding(bool expectedBoolOne, bool expectedBoolTwo, string fileName)
         {
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-            Bitmap bmp = new Bitmap(filePath);
-
+            var bmp = LoadBitmap(fileName);
+            Player = new WowPlayer(WowScreenConfigs.GetForBitmap(bmp));
             Player.UpdateFromBitmap(bmp);
 
             // BattleShoutActive is Warrior-only and now lives on WowWarriorClassState,
@@ -95,22 +92,18 @@ namespace WoWHelperUnitTests
         [DataRow(true, "..\\..\\Source Images\\new login screen.bmp")]
         public void VerifyOnLoginScreen(bool expected, string fileName)
         {
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-
-            Player.UpdateFromBitmap(new Bitmap(filePath));
+            LoadPlayer(fileName);
 
             Assert.AreEqual(expected, Player.WorldState.OnLoginScreen);
         }
 
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\NoBattleshout.bmp")]
-        [DataRow(false, "..\\..\\Source Images\\breathbar.bmp")] // til resolution fixed
+        [DataRow(true, "..\\..\\Source Images\\breathbar.bmp")]
         [DataRow(true, "..\\..\\Source Images\\breath1920.bmp")]
         public void VerifyUnderwater(bool expected, string fileName)
         {
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-
-            Player.UpdateFromBitmap(new Bitmap(filePath));
+            LoadPlayer(fileName);
 
             Assert.AreEqual(expected, Player.WorldState.Underwater);
         }
@@ -121,9 +114,7 @@ namespace WoWHelperUnitTests
         [DataRow(true, "..\\..\\Source Images\\lighttargetneedstobeinfront.bmp")]
         public void VerifyTargetNeedsToBeInFront(bool expected, string fileName)
         {
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-
-            Player.UpdateFromBitmap(new Bitmap(filePath));
+            LoadPlayer(fileName);
 
             Assert.AreEqual(expected, Player.WorldState.TargetNeedsToBeInFront);
         }
@@ -133,9 +124,7 @@ namespace WoWHelperUnitTests
         [DataRow(true, "..\\..\\Source Images\\invalidtarget.bmp")]
         public void VerifyInvalidTarget(bool expected, string fileName)
         {
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-
-            Player.UpdateFromBitmap(new Bitmap(filePath));
+            LoadPlayer(fileName);
 
             Assert.AreEqual(expected, Player.WorldState.InvalidTarget);
         }
@@ -145,9 +134,7 @@ namespace WoWHelperUnitTests
         [DataRow(true, "..\\..\\Source Images\\outofrange.bmp")]
         public void VerifyOutOfRange(bool expected, string fileName)
         {
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), fileName);
-
-            Player.UpdateFromBitmap(new Bitmap(filePath));
+            LoadPlayer(fileName);
 
             Assert.AreEqual(expected, Player.WorldState.OutOfRange);
         }

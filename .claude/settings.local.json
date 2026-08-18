@@ -1,7 +1,30 @@
 {
   "permissions": {
     "allow": [
-      "Bash(powershell -command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds\")"
+      "Bash(powershell -command \"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds\")",
+      "Bash(msbuild:*)",
+      "Bash(where msbuild:*)",
+      "Read(//c/Program Files/Microsoft Visual Studio//**)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft Visual Studio//**)",
+      "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelper.sln\" /p:Configuration=Debug 2>&1)",
+      "Bash(powershell.exe -Command \"& 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\build_and_test.bat' 2>&1 | Tee-Object -FilePath 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\build_output.txt'; Get-Content 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\build_output.txt'\")",
+      "Bash(powershell.exe -Command \"Set-Location 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper'; & 'C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe' 'WoWHelper.sln' '/p:Configuration=Debug' 2>&1\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"\n\\\\$msbuild = 'C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe'\n\\\\$sln = 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelper.sln'\n\\\\$args_list = @\\(\\\\$sln, '/p:Configuration=Debug'\\)\n& \\\\$msbuild @args_list 2>&1\n\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Test-Path 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelper.sln'\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-ChildItem 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\' -Filter '*.sln'\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-ChildItem 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\' | Select-Object Name\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-ChildItem 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelper\\\\' -Filter '*.sln' | Select-Object FullName\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-ChildItem 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\' -Recurse -Filter 'WoWHelperUnitTests.dll' | Select-Object FullName\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-Content 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\build_output2.txt' | Where-Object { \\\\$_ -match 'error|warning|FAILED|PASSED|BUILD_EXIT|TEST_EXIT|Skipped' } | Select-Object -First 80\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-ChildItem 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelper\\\\Code\\\\Config\\\\' | Select-Object Name\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Select-String -Path 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelper\\\\Code\\\\Config\\\\WowScreenConfigs.cs' -Pattern 'class WowScreenConfigs|GetForBitmap|public static'\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Select-String -Path 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelperUnitTests\\\\Tests\\\\WorldStateTests\\\\WoWWorldstateTests.cs' -Pattern '^using'\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-ChildItem 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelperUnitTests\\\\' -Recurse | Select-Object FullName\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-ChildItem 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelperUnitTests\\\\Tests\\\\' -Recurse -Filter '*.cs' | Select-Object Name\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-ChildItem 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelperUnitTests\\\\Tests\\\\' -Recurse | Select-Object FullName\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-Content 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelperUnitTests\\\\Tests\\\\Shared\\\\UnitTestBase.cs'\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Select-String -Path 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelperUnitTests\\\\Tests\\\\WorldStateTests\\\\WowTradeTests.cs' -Pattern '^using'\" 2>&1)",
+      "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelper.sln\" /p:Configuration=Debug /verbosity:minimal)"
     ]
   }
 }

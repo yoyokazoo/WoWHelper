@@ -10,6 +10,27 @@ namespace WoWHelper.Code.Config
 {
     public class WowScreenConfigs
     {
+        private const int RESOLUTION_MATCH_TOLERANCE = 5;
+
+        public static WowScreenConfiguration GetForBitmap(Bitmap bitmap)
+        {
+            var candidates = new[]
+            {
+                RESOLUTION_3440_X_1440,
+                RESOLUTION_2560_X_1600,
+                RESOLUTION_1920_X_1080,
+            };
+
+            foreach (var config in candidates)
+            {
+                if (Math.Abs(bitmap.Width - config.Resolution.Width) <= RESOLUTION_MATCH_TOLERANCE &&
+                    Math.Abs(bitmap.Height - config.Resolution.Height) <= RESOLUTION_MATCH_TOLERANCE)
+                    return config;
+            }
+
+            throw new Exception($"No screen config for bitmap resolution {bitmap.Width}x{bitmap.Height}");
+        }
+
         public static readonly WowScreenConfiguration RESOLUTION_3440_X_1440 = new WowScreenConfiguration
         {
             Name = "3440x1440",
