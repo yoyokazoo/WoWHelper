@@ -127,30 +127,30 @@ namespace WoWHelper.Code.Config
 
             TooFarAwayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
-                    new ColorPosition(863, 165, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(875, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(887, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1137, 245, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1161, 245, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1172, 252, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
             TargetNeedsToBeInFrontPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
-                    new ColorPosition(802, 157, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(812, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(820, 163, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1048, 243, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1060, 250, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1093, 259, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
             InvalidTargetPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
-                    new ColorPosition(897, 162, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(908, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(919, 169, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1187, 235, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1205, 240, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1231, 248, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
             OutOfRangePositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
-                    new ColorPosition(904, 157, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(919, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(929, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1200, 233, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1225, 246, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1234, 246, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>

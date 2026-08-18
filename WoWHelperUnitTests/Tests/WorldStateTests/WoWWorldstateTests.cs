@@ -43,6 +43,7 @@ namespace WoWHelperUnitTests
 
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\FacingWrongWay.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\2560toofar.bmp")]
         [DataRow(true, "..\\..\\Source Images\\toofaraway.bmp")]
         public void VerifyTooFarAway(bool expected, string fileName)
         {
@@ -87,6 +88,7 @@ namespace WoWHelperUnitTests
 
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\NoBattleshout.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\2560front.bmp")]
         [DataRow(true, "..\\..\\Source Images\\targetneedstobeinfront.bmp")]
         [DataRow(true, "..\\..\\Source Images\\lighttargetneedstobeinfront.bmp")]
         public void VerifyTargetNeedsToBeInFront(bool expected, string fileName)
@@ -98,6 +100,7 @@ namespace WoWHelperUnitTests
 
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\targetneedstobeinfront.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\2560invalid.bmp")]
         [DataRow(true, "..\\..\\Source Images\\invalidtarget.bmp")]
         public void VerifyInvalidTarget(bool expected, string fileName)
         {
@@ -108,6 +111,7 @@ namespace WoWHelperUnitTests
 
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\targetneedstobeinfront.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\2560oor.bmp")]
         [DataRow(true, "..\\..\\Source Images\\outofrange.bmp")]
         public void VerifyOutOfRange(bool expected, string fileName)
         {
