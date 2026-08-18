@@ -26,6 +26,29 @@ namespace WoWHelper
             return true;
         }
 
+        // Waits up to totalMillis, but polls WorldState at the normal
+        // UpdateWorldStateAsync/TIME_BETWEEN_WORLDSTATE_UPDATES cadence instead of blocking
+        // blind through Task.Delay, so a fight starting mid-wait is noticed instead of missed.
+        // Returns true if the full wait elapsed without ever being in combat; returns false
+        // (immediately, no waiting at all) if already in combat, or as soon as combat starts
+        // during the wait.
+        public async Task<bool> WaitUnlessInCombatTask(long totalMillis, bool ensureValidState = true)
+        {
+            if (ensureValidState)
+            {
+                await UpdateWorldStateAsync();
+            }
+
+            long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + totalMillis;
+
+            while (!WorldState.IsInCombat && DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
+            {
+                await UpdateWorldStateAsync();
+            }
+
+            return !WorldState.IsInCombat;
+        }
+
         public async Task<bool> ThrowDynamiteTask()
         {
             bool shouldThrowDynamite = WorldState.AttackerCount > 1 && WorldState.PlayerLevel >= WowGameplayConstants.DYNAMITE_LEVEL;

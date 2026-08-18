@@ -118,6 +118,7 @@ namespace WoWHelper
                     //stationaryAlertSent = true;
                     LogoutTriggered = true;
                     LogoutReason = "Stuck for a long time, couldn't wiggle out";
+                    await EndWalkForwardTask();
                     return true;
                 }
 
@@ -213,6 +214,7 @@ namespace WoWHelper
             Console.WriteLine("Exited Pathfinding loop.  Too many loops without a successful target find.");
             LogoutTriggered = true;
             LogoutReason = "4 minutes without finding a target";
+            await EndWalkForwardTask();
 
             return true;
         }

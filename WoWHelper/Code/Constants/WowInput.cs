@@ -119,8 +119,10 @@ namespace WoWHelper.Code
         // Common Input
         // For the sake of sharing tasks, forcing these common keys to be shared
 
+        // stopcasting so shamans who are pulling and interrupted by a wandering mob don't pull an extra
         /*
          * 1 Atk
+/stopcasting
 /startattack
         */
         public const Keys START_ATTACK = Keys.D1;

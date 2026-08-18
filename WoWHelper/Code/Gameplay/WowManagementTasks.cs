@@ -100,11 +100,11 @@ namespace WoWHelper
                 LogoutReason = $"Low on Dynamite";
             }
             // TODO: Config this somehow??
-            //else if (WorldState.LowOnHealthPotions)
-            //{
-            //    LogoutTriggered = true;
-            //    LogoutReason = $"Low on Health Potions";
-            //}
+            else if (WorldState.LowOnHealthPotions)
+            {
+                LogoutTriggered = true;
+                LogoutReason = $"Low on Health Potions";
+            }
             else if (WorldState.LowOnAmmo && FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
             {
                 LogoutTriggered = true;
@@ -161,7 +161,7 @@ namespace WoWHelper
         {
             Mouse.Move(LootX, LootY);
             Mouse.PressButton(Mouse.MouseKeys.Right);
-            await Task.Delay(1500);
+            await WaitUnlessInCombatTask(1500);
             return true;
         }
 
@@ -169,7 +169,7 @@ namespace WoWHelper
         {
             Mouse.Move(LootX, LootY);
             Mouse.PressButton(Mouse.MouseKeys.Right);
-            await Task.Delay(3000);
+            await WaitUnlessInCombatTask(3000);
             return true;
         }
 

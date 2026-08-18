@@ -537,6 +537,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             LogoffLevel = 21,
+            HasRunners = true
         };
 
         public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS = new WowLocationConfiguration
@@ -563,6 +564,7 @@ namespace WoWHelper.Code.WorldState
             },
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             LogoffLevel = 18,
+            HasRunners = true,
         };
 
         public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration

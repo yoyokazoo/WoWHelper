@@ -8,6 +8,16 @@ xpTracker.startTime   = 0
 local UNSEEN_WINDOW_SECONDS = 60
 local lastWhisperTime = nil
 
+-- PLAYER_ENTERING_WORLD fires on every loading screen, not just the initial login --
+-- zoning, taxis, death+release, and hearthing all re-fire it. InitializeIndicators()/
+-- InitializePixelRow() build a fresh set of frames/textures every time they're called
+-- with no cleanup of the old set, so without this guard each re-fire stacked a whole
+-- new copy of the debug frame's text directly on top of the previous one. Neither
+-- function needs to re-run after the first login -- both already poll live values
+-- (and, for the pixel row, re-calibrate screen scale) every tick via their own
+-- OnUpdate handlers, so nothing about them goes stale across a zone change.
+local uiInitialized = false
+
 -- Create a frame to be our black box
 local frame = CreateFrame("Frame", "YoyokazooUIFrame", UIParent, "BackdropTemplate")
 -- Size and position
@@ -49,8 +59,12 @@ frame:SetScript("OnEvent", function(self, event, ...)
         
 
         print("XP session started. Level:", xpTracker.startLevel, "XP:", xpTracker.startXP)
-        InitializeIndicators()
-        InitializePixelRow()
+
+        if not uiInitialized then
+            InitializeIndicators()
+            InitializePixelRow()
+            uiInitialized = true
+        end
     end
 
     if event == "PLAYER_XP_UPDATE" then

@@ -32,8 +32,16 @@ function ShouldWeAttackTarget()
         return false
     end
 
-    -- don't kill greys
-    if UnitLevel("player") - UnitLevel(unit) >= 8 then
+    -- Don't kill greys. Blizzard's real grey-mob cutoff isn't a flat level gap --
+    -- it's a table that changes bracket by the player's own level (see Wowpedia's
+    -- "creature difficulty color" table) -- so a hardcoded gap constant drifts wrong
+    -- at some level ranges. Confirmed live: a level 18 character attacked a level 11
+    -- target (a 7-level gap) that conned grey in-game, but the old ">= 8" gap check
+    -- let it through. Ask the client's own difficulty-color function instead of
+    -- reimplementing Blizzard's table by hand, so this tracks whatever the real
+    -- current-patch table is instead of a number that can silently go stale again.
+    local difficultyColor = GetCreatureDifficultyColor(UnitLevel(unit))
+    if difficultyColor and difficultyColor.r == 0.5 and difficultyColor.g == 0.5 and difficultyColor.b == 0.5 then
         return false
     end
 
