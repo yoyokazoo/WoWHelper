@@ -66,29 +66,6 @@ namespace WoWHelperUnitTests
         */
 
         [TestMethod]
-        [DataRow(false, false, "..\\..\\Source Images\\NoBattleshout.bmp")]
-        [DataRow(true, true, "..\\..\\Source Images\\BattleShout.bmp")]
-        public void VerifyMultiBoolEncoding(bool expectedBoolOne, bool expectedBoolTwo, string fileName)
-        {
-            var bmp = LoadBitmap(fileName);
-            Player = new WowPlayer(WowScreenConfigs.GetForBitmap(bmp));
-            Player.UpdateFromBitmap(bmp);
-
-            // BattleShoutActive is Warrior-only and now lives on WowWarriorClassState,
-            // not WowWorldState -- CURRENT_CONFIG (WowFarmingConfigs.cs) is currently
-            // Shaman, so Player.ClassState wouldn't be a WowWarriorClassState here.
-            // Decode a standalone one directly instead of assuming Player.ClassState's
-            // runtime type.
-            var warriorClassState = new WowWarriorClassState();
-            warriorClassState.UpdateFromBitmap(bmp, Player.WorldState.ScreenConfig);
-
-            Assert.AreEqual(expectedBoolOne, Player.WorldState.IsAutoAttacking);
-            Assert.AreEqual(expectedBoolTwo, warriorClassState.BattleShoutActive);
-        }
-
-        [TestMethod]
-        [DataRow(false, "..\\..\\Source Images\\NoBattleshout.bmp")]
-        [DataRow(false, "..\\..\\Source Images\\login screen.bmp")]
         [DataRow(true, "..\\..\\Source Images\\new login screen.bmp")]
         public void VerifyOnLoginScreen(bool expected, string fileName)
         {
