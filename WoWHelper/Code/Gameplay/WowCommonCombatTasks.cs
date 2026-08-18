@@ -93,7 +93,7 @@ namespace WoWHelper
             bool invalidTarget = WorldState.InvalidTarget;
             bool outOfRange = WorldState.OutOfRange;
 
-            //Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}");
+            Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}");
 
             if (facingWrongWay || targetNeedsToBeInFront)
             {

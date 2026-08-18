@@ -467,7 +467,7 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_21_ZORAMGAR_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Zoram'gar, Ashenvale (Level 21+)",
-            MinimumLevel = 21,
+            MinimumLevel = 20,
             Zone = WowZone.Ashenvale,
 
             /*
@@ -506,6 +506,7 @@ namespace WoWHelper.Code.WorldState
             },
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             LogoffLevel = 24,
+            HasRunners = true
         };
 
         public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WowLocationConfiguration

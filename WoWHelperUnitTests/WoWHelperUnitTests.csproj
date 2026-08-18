@@ -271,6 +271,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Source Images\2560facing.bmp" />
     <Content Include="Source Images\2560trade.bmp" />
     <Content Include="Source Images\2560tradeaccepted.bmp" />
     <Content Include="Source Images\BagCursor.bmp" />
