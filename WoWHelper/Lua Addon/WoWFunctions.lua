@@ -511,25 +511,47 @@ end
 
 function AreWeLowOnHealthPotions()
     local level = UnitLevel("player")
-    -- who cares before 5
-    if level < 10 then -- temp
+    -- who cares before 10
+    if level < 10 then
         return false
     end
 
-    local healthPotId = 13446 -- major healing potion, level 45
+    -- Tier table: each entry is { minLevel, itemId, name (comment only) }.
+    -- Order from lowest to highest tier so index math is straightforward.
+    local tiers = {
+        { 3,  858,   "lesser healing potion" },
+        { 12, 929,   "healing potion" },
+        { 21, 1710,  "greater healing potion" },
+        { 35, 3928,  "superior healing potion" },
+        { 45, 13446, "major healing potion" },
+    }
 
-    if level < 12 then
-        healthPotId = 858 -- lesser healing potion, level 3
-    elseif level < 21 then
-        healthPotId = 929 -- healing potion, level 12
-    elseif level < 35 then
-        healthPotId = 1710 -- greater healing potion, level 21
-    elseif level < 45 then
-        healthPotId = 3928 -- superior healing potion, level 35
+    -- Find which tier the player should be using (highest tier whose
+    -- minLevel <= player level).
+    local currentTierIndex = 1
+    for i, tier in ipairs(tiers) do
+        if level >= tier[1] then
+            currentTierIndex = i
+        end
     end
 
-    local healthPotCount = GetItemCount(healthPotId, false)
-    return healthPotCount < 2
+    -- Accept either the current tier OR one tier lower (fallback stock).
+    local currentId = tiers[currentTierIndex][2]
+    local fallbackId = currentTierIndex > 1 and tiers[currentTierIndex - 1][2] or nil
+
+    local count = GetItemCount(currentId, false)
+    if count >= 2 then
+        return false
+    end
+
+    if fallbackId then
+        local fallbackCount = GetItemCount(fallbackId, false)
+        if fallbackCount >= 2 then
+            return false
+        end
+    end
+
+    return true
 end
 
 -- heavy dynamite, 4378

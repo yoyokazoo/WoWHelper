@@ -12,7 +12,7 @@
 
         public const int EAT_FOOD_HP_THRESHOLD = 90;
         public const int DRINK_WATER_MP_THRESHOLD = 95;
-        
+
         public const int OH_SHIT_RETAL_HP_THRESHOLD = 35;
         public const int PETRI_ALTF4_HP_THRESHOLD = 20;
 

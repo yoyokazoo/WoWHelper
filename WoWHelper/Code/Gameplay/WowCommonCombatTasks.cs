@@ -49,9 +49,9 @@ namespace WoWHelper
             return !WorldState.IsInCombat;
         }
 
-        public async Task<bool> ThrowDynamiteTask()
+        public async Task<bool> ThrowDynamiteTask(bool forceThrow = false)
         {
-            bool shouldThrowDynamite = WorldState.AttackerCount > 1 && WorldState.PlayerLevel >= WowGameplayConstants.DYNAMITE_LEVEL;
+            bool shouldThrowDynamite = forceThrow || (WorldState.AttackerCount > 1 && WorldState.PlayerLevel >= WowGameplayConstants.DYNAMITE_LEVEL);
 
             if (shouldThrowDynamite)
             {
