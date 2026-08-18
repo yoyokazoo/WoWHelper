@@ -120,9 +120,9 @@ namespace WoWHelper.Code.Config
 
             FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
-                    new ColorPosition(818, 163, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(830, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(842, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1071, 242, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1102, 244, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1127, 249, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
             TooFarAwayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
