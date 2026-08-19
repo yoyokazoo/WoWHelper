@@ -505,7 +505,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(16.72f, 29.32f),
             },
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
-            LogoffLevel = 24,
+            LogoffLevel = 25,
             HasRunners = true
         };
 
