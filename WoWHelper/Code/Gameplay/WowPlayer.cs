@@ -62,18 +62,8 @@ namespace WoWHelper
 
         public WowFarmingConfiguration FarmingConfig { get; private set; }
 
-        public WowPlayer()
+        public WowPlayer() : this(WowFarmingConfigs.CURRENT_CONFIG.ScreenConfiguration)
         {
-            CurrentPlayerState = PlayerState.WAITING_TO_FOCUS_ON_WINDOW;
-            CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
-            CurrentWaypointIndex = -1;
-            WaypointTraversalDirection = 1;
-
-            FarmingConfig = WowFarmingConfigs.CURRENT_CONFIG;
-
-            PreviousWorldState = new WowWorldState(FarmingConfig.ScreenConfiguration);
-            WorldState = new WowWorldState(FarmingConfig.ScreenConfiguration);
-            ClassState = CreateClassState(FarmingConfig.CombatConfiguration);
         }
 
         public WowPlayer(WowScreenConfiguration screenConfiguration)
@@ -323,7 +313,7 @@ namespace WoWHelper
                         Console.WriteLine("Focusing on window");
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
                             PlayerState.CHECK_FOR_LOGOUT,
-                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                            PlayerState.WAITING_TO_FOCUS_ON_WINDOW);
                         break;
                     case PlayerState.CHECK_FOR_LOGOUT:
                         Console.WriteLine("Checking if we should log out");

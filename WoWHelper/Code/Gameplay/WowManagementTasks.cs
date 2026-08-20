@@ -23,7 +23,7 @@ namespace WoWHelper
             ScreenCapture.SetForegroundWindow(h);
 
             await Task.Delay(1750);
-            return true;
+            return !WorldState.OnLoginScreen;
         }
 
         public async Task<bool> EveryWorldStateUpdateTasks()
