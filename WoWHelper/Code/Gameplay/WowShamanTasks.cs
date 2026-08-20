@@ -80,7 +80,7 @@ namespace WoWHelper
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_FLAME_SHOCK);
                 }
                 else if (classState.CanCastEarthShock && 
-                    (FarmingConfig.LocationConfiguration.HasRunners || (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20))) 
+                    (FarmingConfig.LocationConfiguration.HasRunners || WorldState.PlayerHpPercent < 50 || (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20))) 
                 {
                     // don't shock almost dead targets unless there are runners or we have multiples.
                     Console.WriteLine($"Trying to Earth Shock!");

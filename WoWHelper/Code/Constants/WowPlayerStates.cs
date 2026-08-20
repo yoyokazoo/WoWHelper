@@ -14,6 +14,7 @@
             TARGET_DEFEATED,
             LOOT_ATTEMPT_TWO,
             SKIN_ATTEMPT,
+            SKIN_ATTEMPT_TWO,
 
             WALK_WAYPOINTS,
 

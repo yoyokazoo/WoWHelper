@@ -392,19 +392,27 @@ namespace WoWHelper
                     case PlayerState.TARGET_DEFEATED:
                         Console.WriteLine("Target defeated, trying to loot");
                         // TODO: /canceltarget and /stopcasting and /stopattack here so we don't accidentally attack something
-                        await WaitUnlessInCombatTask(6000);
-                        await CreateHeatmapForLooting();
+                        LootX = FarmingConfig.ScreenConfiguration.LootDefaultX;
+                        LootY = FarmingConfig.ScreenConfiguration.LootDefaultY;
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
-                            PlayerState.LOOT_ATTEMPT_TWO,
-                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
-                        break;
-                    case PlayerState.LOOT_ATTEMPT_TWO:
-                        Console.WriteLine("Trying to loot a second time, in case the dying anim is slow");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
                             PlayerState.SKIN_ATTEMPT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.SKIN_ATTEMPT:
+                        Console.WriteLine("Trying to skin");
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
+                            PlayerState.LOOT_ATTEMPT_TWO,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        await ScootForwardsTask();
+                        break;
+                    case PlayerState.LOOT_ATTEMPT_TWO:
+                        Console.WriteLine("Trying to loot a second time, in case the dying anim is slow");
+                        await CreateHeatmapForLooting();
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
+                            PlayerState.SKIN_ATTEMPT_TWO,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        break;
+                    case PlayerState.SKIN_ATTEMPT_TWO:
                         Console.WriteLine("Trying to skin");
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
                             PlayerState.CHECK_FOR_LOGOUT,
