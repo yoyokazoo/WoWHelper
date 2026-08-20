@@ -201,7 +201,7 @@ namespace WoWHelper
             await FocusOnWindowTask();
             await FocusOnWindowTask();
             await UpdateWorldStateAsync();
-            await WaitUntilBattleReadyTask();
+            await CreateHeatmapForLooting(saveBitmaps: true);
             return true;
             /*
             await FocusOnWindowTask();
@@ -238,7 +238,7 @@ namespace WoWHelper
             */
         }
 
-        public async Task<bool> CreateHeatmapForLooting()
+        public async Task<bool> CreateHeatmapForLooting(bool saveBitmaps = false)
         {
             List<Bitmap> screenChunks = new List<Bitmap>();
 
@@ -272,10 +272,20 @@ namespace WoWHelper
             LootX = FarmingConfig.ScreenConfiguration.LootHeatmapX + bestSquareOffset.offsetX + halfSquareSize;
             LootY = FarmingConfig.ScreenConfiguration.LootHeatmapY + bestSquareOffset.offsetY + halfSquareSize;
 
-            ScreenCapture.SaveBitmapToFile(asdf, "Heatmap.bmp");
-
             Bitmap example = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(lootHeatmapRectangle);
-            ScreenCapture.SaveBitmapToFile(example, "Example.bmp");
+
+            if (saveBitmaps)
+            {
+                ScreenCapture.SaveBitmapToFile(asdf, "Heatmap.bmp");
+                ScreenCapture.SaveBitmapToFile(example, "Example.bmp");
+
+                using (Bitmap exampleWithIgnore = new Bitmap(example))
+                using (Graphics graphics = Graphics.FromImage(exampleWithIgnore))
+                {
+                    graphics.FillRectangle(Brushes.Black, ignoreXMin, ignoreYMin, ignoreXMax - ignoreXMin, ignoreYMax - ignoreYMin);
+                    ScreenCapture.SaveBitmapToFile(exampleWithIgnore, "ExampleWithIgnore.bmp");
+                }
+            }
 
             foreach (Bitmap bmp in screenChunks)
             {

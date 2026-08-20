@@ -45,10 +45,10 @@ namespace WoWHelper.Code.Config
             LootHeatmapHeight = 341,
 
             // Does this account for /console cameraDistanceMaxZoomFactor 3.5 ??
-            LootHeatmapIgnoreX = 1655,
+            LootHeatmapIgnoreX = 1635,
             LootHeatmapIgnoreY = 655,
-            LootHeatmapIgnoreWidth = 130,
-            LootHeatmapIgnoreHeight = 135,
+            LootHeatmapIgnoreWidth = 150,
+            LootHeatmapIgnoreHeight = 145,
 
             SlackScreenshotCropRegion = new Rectangle(0, 1005, 790, 261),
 
