@@ -2,7 +2,7 @@
 {
     public static class WowPlayerConstants
     {
-        public const long TIME_BETWEEN_WORLDSTATE_UPDATES = 250; // 250ms
+        public const long TIME_BETWEEN_WORLDSTATE_UPDATES = 200; // 200ms
         public const long TIME_BETWEEN_FIND_TARGET_MILLIS = 500; // 0.5 seconds
         public const long TIME_BETWEEN_JUMPS_MILLIS = 8 * 1000; // 8 seconds
         public const long FARM_TIME_LIMIT_MILLIS = 10 * 60 * 60 * 1000; // 10 hours

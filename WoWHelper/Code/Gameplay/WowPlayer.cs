@@ -105,7 +105,7 @@ namespace WoWHelper
             WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
             ClassState.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
 
-            NextUpdateTime = now + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
+            NextUpdateTime = NextUpdateTime + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
 
         public void UpdateWorldState()
