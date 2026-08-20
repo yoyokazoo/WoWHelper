@@ -107,19 +107,17 @@ namespace WoWHelper
             WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
             ClassState.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
 
-            NextUpdateTime = NextUpdateTime + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
+            NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
 
         public void UpdateWorldState()
         {
-            var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-
             PreviousWorldState.Bmp?.Dispose();
             PreviousWorldState = WorldState;
             WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
             ClassState.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
 
-            NextUpdateTime = now + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
+            NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
 
         // For Testing only, otherwise use UpdateWorldState

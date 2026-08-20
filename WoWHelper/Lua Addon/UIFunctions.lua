@@ -182,7 +182,7 @@ function InitializePixelRow()
     AddSwatch(6, GetMultiIntTwo)
     AddSwatch(7, GetClassBoolOne)
 
-    local checkInterval = 0.1
+    local checkInterval = 0.05
     local elapsedTime = 0
 
     local updaterFrame = CreateFrame("Frame")
