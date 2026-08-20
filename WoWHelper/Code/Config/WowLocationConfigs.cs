@@ -428,6 +428,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(36.36f, 53.21f),
                 new Vector2(35.28f, 54.04f),
                 new Vector2(35.47f, 51.74f),
+                new Vector2(36.22f, 50.04f),
                 new Vector2(36.07f, 49.98f),
                 new Vector2(35.79f, 47.97f),
             },
