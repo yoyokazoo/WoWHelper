@@ -72,7 +72,9 @@ namespace WoWHelper
                     startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
-                if (classState.ShouldCastFlameShock && (FarmingConfig.LocationConfiguration.HasRunners || WorldState.TargetHpPercent > 75))
+                if (classState.ShouldCastFlameShock && 
+                    !WorldState.IsTargetFireImmune && 
+                    (FarmingConfig.LocationConfiguration.HasRunners || WorldState.TargetHpPercent > 75))
                 {
                     Console.WriteLine($"Trying to Flame Shock!");
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_FLAME_SHOCK);

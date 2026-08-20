@@ -179,6 +179,8 @@ namespace WoWHelper
 
         public void AdHocTest()
         {
+            _ = AdHocTestTask();
+            /*
             //_ = AdHocTestTask();
             KeyPoller.EscPressed += async () => {
                 Console.WriteLine("ESC detected! Performing cleanup then quitting");
@@ -200,10 +202,13 @@ namespace WoWHelper
             KeyPoller.Start();
 
             _ = CupidTradeLoopTask();
+            */
         }
 
         public async Task<bool> AdHocTestTask()
         {
+            SlackHelper.SendMessageToChannel($"Slack Test");
+            return true;
             /*
             await FocusOnWindowTask();
             await PetriAltF4Task();
@@ -224,7 +229,7 @@ namespace WoWHelper
             await Task.Delay(2000);
             await CreateHeatmapForLooting();
             */
-
+            /*
             await FocusOnWindowTask();
             await Task.Delay(10000);
             await PutMoneyInTradeTask();
@@ -236,6 +241,7 @@ namespace WoWHelper
             //SlackHelper.SendMessageToChannel($"Testing notification!");
             await Task.Delay(0);
             return true;
+            */
         }
 
         public async Task<bool> CreateHeatmapForLooting()

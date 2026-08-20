@@ -41,6 +41,9 @@ namespace WoWHelper
         public bool IsCurrentlyCasting { get; private set; }
         public bool EnemyNameplatesAreTurnedOn { get; private set; }
         public bool CurrentTargetInCombatWithUs { get; private set; }
+        public bool IsTargetCasterMob { get; private set; }
+        public bool IsTargetRunnerMob { get; private set; }
+        public bool IsTargetFireImmune { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -183,7 +186,10 @@ namespace WoWHelper
             IsCurrentlyCasting = g3;
             EnemyNameplatesAreTurnedOn = g4;
             CurrentTargetInCombatWithUs = g5;
-            // g6-g8 and the whole B byte are reserved/unused.
+            IsTargetCasterMob = g6;
+            IsTargetRunnerMob = g7;
+            IsTargetFireImmune = g8;
+            // The whole B byte is reserved/unused.
         }
 
         // MultiBoolTwo currently carries no decoded fields -- reserved for the

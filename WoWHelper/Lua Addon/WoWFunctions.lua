@@ -610,6 +610,70 @@ end
 -- TargetHasRend() moved to WarriorFunctions.lua.
 -- TargetHasFlameShock() moved to ShamanFunctions.lua.
 
+-- Mobs whose spells are worth interrupting. Name-based (Classic has no
+-- reliable creature-ID API exposed to addons); add to this list as more
+-- interruptible casters are identified.
+local CASTER_MOB_NAMES = {
+    ["Withered Ancient"] = true,
+}
+
+-- True if the current target is a caster mob with interruptible spells (per
+-- CASTER_MOB_NAMES above), regardless of whether it's currently casting.
+function IsTargetCasterMob()
+    if not UnitExists("target") then
+        return false
+    end
+
+    local name = UnitName("target")
+    if not name then
+        return false
+    end
+
+    return CASTER_MOB_NAMES[name] == true
+end
+
+-- Mobs that flee/run at low health (or otherwise need special handling to
+-- stop them running off), by name -- same caveat as CASTER_MOB_NAMES above
+-- about Classic having no reliable creature-ID API for addons.
+local RUNNER_MOB_NAMES = {
+    ["Bloodfury Harpy"] = true,
+}
+
+-- True if the current target is a runner mob (per RUNNER_MOB_NAMES above).
+function IsTargetRunnerMob()
+    if not UnitExists("target") then
+        return false
+    end
+
+    local name = UnitName("target")
+    if not name then
+        return false
+    end
+
+    return RUNNER_MOB_NAMES[name] == true
+end
+
+-- Mobs immune (or effectively immune) to fire damage/effects, by name -- same
+-- caveat as CASTER_MOB_NAMES above about Classic having no reliable
+-- creature-ID API for addons.
+local FIRE_IMMUNE_MOB_NAMES = {
+    ["Rogue Flame Spirit"] = true,
+}
+
+-- True if the current target is fire-immune (per FIRE_IMMUNE_MOB_NAMES above).
+function IsTargetFireImmune()
+    if not UnitExists("target") then
+        return false
+    end
+
+    local name = UnitName("target")
+    if not name then
+        return false
+    end
+
+    return FIRE_IMMUNE_MOB_NAMES[name] == true
+end
+
 -- Was checking Lightning Shield's (324) cooldown as a stand-in for the GCD --
 -- broken for any non-Shaman character (and low-level Shamans without it
 -- yet), since it depends on the character actually knowing a specific
@@ -691,9 +755,10 @@ end
 -- moved to GetClassBoolOne/Two (see the dispatchers further down and
 -- GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
 -- ShamanFunctions.lua) -- C# now reads those instead of these. All
--- class-agnostic fields fit in MultiBoolOne's R+G bytes, packed tightly
--- there (G6-G8 and the whole B byte still free) so MultiBoolTwo is left
+-- class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G are now both
+-- fully packed (the whole B byte is still free) so MultiBoolTwo is left
 -- fully reserved as clean room to grow into, instead of needing a 3rd pixel.
+-- The next class-agnostic bool goes in MultiBoolOne's B byte or MultiBoolTwo.
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = AreWeLowOnHealthPotions()
@@ -711,9 +776,9 @@ function GetMultiBoolOne()
     local boolG3 = IsPlayerCasting()
     local boolG4 = AreEnemyNameplatesTurnedOn()
     local boolG5 = CurrentTargetInCombatWithUs()
-    local boolG6 = false
-    local boolG7 = false
-    local boolG8 = false
+    local boolG6 = IsTargetCasterMob()
+    local boolG7 = IsTargetRunnerMob()
+    local boolG8 = IsTargetFireImmune()
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 

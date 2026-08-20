@@ -408,6 +408,35 @@ namespace WoWHelper.Code.WorldState
             TooManyAttackersThreshold = 3,
         };
 
+        public static readonly WowLocationConfiguration LEVEL_27_STONETALON_CHARRED_FOREST_WAYPOINTS = new WowLocationConfiguration
+        {
+            Title = "North Stonetalon (Level 27+)",
+            MinimumLevel = 26,
+            Zone = WowZone.StonetalonMountains,
+
+            /*
+/target Rogue
+/target Blackened
+/target Bloodfury
+            */
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(37.13f, 46.76f),
+                new Vector2(37.82f, 48.43f),
+                new Vector2(37.62f, 50.48f),
+                new Vector2(37.58f, 51.35f),
+                new Vector2(36.36f, 53.21f),
+                new Vector2(35.28f, 54.04f),
+                new Vector2(35.47f, 51.74f),
+                new Vector2(36.07f, 49.98f),
+                new Vector2(35.79f, 47.97f),
+            },
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            EngageMethod = EngagementMethod.Spellcast,
+            TooManyAttackersThreshold = 3,
+            HasRunners = true,
+        };
+
         public static readonly WowLocationConfiguration LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Hillsbrad River (Level 29+)",
