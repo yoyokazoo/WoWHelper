@@ -276,11 +276,20 @@ function PrintXpPerHour(prefix, startTime, totalGained)
     local hours = elapsed / 3600
     local xpPerHour = totalGained / hours
 
+    local xpRemaining = UnitXPMax("player") - UnitXP("player")
+    local hoursToLevel
+    if xpPerHour <= 0 then
+        hoursToLevel = math.huge -- avoid div-by-zero when no XP gained yet
+    else
+        hoursToLevel = xpRemaining / xpPerHour
+    end
+
     print(string.format(
-        "%s Session XP: %d | XP/hr: %.0f",
+        "%s Session XP: %d | XP/hr: %.0f | Hours to level: %.1f",
         prefix or "",
         totalGained,
-        xpPerHour
+        xpPerHour,
+        hoursToLevel
     ))
 end
 
