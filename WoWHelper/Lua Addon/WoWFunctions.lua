@@ -681,7 +681,31 @@ end
 -- technique SpellIsCooledDownIgnoringGCD already uses above -- class-
 -- agnostic, no GetSpellInfo() lookup needed.
 function IsGlobalCooldownCooledDown()
-    local start, duration = GetSpellCooldown(GCD_SPELL_ID)
+    local _, classFile = UnitClass("player")
+
+    -- GCD_SPELL_ID never showed a cooldown for ANY cast in testing (Rockbiter Weapon or
+    -- otherwise) on this client -- confirmed via debug logging, start/duration stayed 0
+    -- throughout. Probing a real, always-known low-level spell's own cooldown works instead,
+    -- since the GCD blocks it too while active -- as long as the probe spell has no cooldown of
+    -- its own beyond the GCD (a spell with a real independent cooldown, e.g. Charge, would read
+    -- as "on cooldown" long after the GCD itself clears, so it's not a safe pick here).
+    --
+    -- Confirmed via testing: Shaman (Lightning Bolt Rank 1, same spell ID CanSpellcastPullTarget()
+    -- already uses above). NOT yet confirmed via testing: Mage (Fireball Rank 1, known from
+    -- level 1 per CanSpellcastPullTarget()'s own comment, no cooldown beyond GCD) and Warrior
+    -- (Heroic Strike, known from level 1, rage-gated with no cooldown beyond GCD -- already
+    -- referenced by name in WarriorFunctions.lua). Verify these the same way Shaman was (debug
+    -- log around a cast, watch GCDCooledDown flip false->true) before trusting them.
+    local probeSpell = GCD_SPELL_ID
+    if classFile == "SHAMAN" then
+        probeSpell = 403 -- Lightning Bolt (Rank 1)
+    elseif classFile == "MAGE" then
+        probeSpell = 133 -- Fireball (Rank 1)
+    elseif classFile == "WARRIOR" then
+        probeSpell = "Heroic Strike" -- UNTESTED
+    end
+
+    local start, duration = GetSpellCooldown(probeSpell)
 
     if not start or duration == 0 then
         return true
