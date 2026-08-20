@@ -218,11 +218,6 @@ namespace WoWHelper
             await Task.Delay(0);
             return true;
             */
-
-            /*
-            await Task.Delay(2000);
-            await CreateHeatmapForLooting();
-            */
             /*
             await FocusOnWindowTask();
             await Task.Delay(10000);
@@ -397,7 +392,7 @@ namespace WoWHelper
                     case PlayerState.TARGET_DEFEATED:
                         Console.WriteLine("Target defeated, trying to loot");
                         // TODO: /canceltarget and /stopcasting and /stopattack here so we don't accidentally attack something
-                        await Task.Delay(4000);
+                        await WaitUnlessInCombatTask(6000);
                         await CreateHeatmapForLooting();
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
                             PlayerState.LOOT_ATTEMPT_TWO,
