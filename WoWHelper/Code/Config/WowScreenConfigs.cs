@@ -36,9 +36,6 @@ namespace WoWHelper.Code.Config
             Name = "3440x1440",
             Resolution = new Size(3440, 1440),
 
-            WidthOfScreenToSlice = 1700,
-            HeightOfScreenToSlice = 800,
-
             DynamiteAndDummyX = 1720,
             DynamiteAndDummyY = 690,
 
@@ -101,9 +98,6 @@ namespace WoWHelper.Code.Config
         {
             Name = "2560x1600",
             Resolution = new Size(2560, 1600),
-
-            WidthOfScreenToSlice = 1400,
-            HeightOfScreenToSlice = 1000,
 
             DynamiteAndDummyX = 1273,
             DynamiteAndDummyY = 739,
@@ -186,9 +180,6 @@ namespace WoWHelper.Code.Config
         {
             Name = "1920x1080",
             Resolution = new Size(1920, 1080),
-
-            WidthOfScreenToSlice = 950,
-            HeightOfScreenToSlice = 200,
 
             DynamiteAndDummyX = 960,
             DynamiteAndDummyY = 500,

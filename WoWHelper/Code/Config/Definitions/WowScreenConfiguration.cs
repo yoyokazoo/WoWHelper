@@ -40,11 +40,6 @@ namespace WoWHelper
         public string Name { get; set; }
         public Size Resolution { get; set; }
 
-        // TODO: instead of grabbing a giant chunk, modify addon to be smaller, only grab that chunk and the text notification space chunk
-        // Note: we don't need to include the heatmap in this slice, it's handled on its own
-        public int WidthOfScreenToSlice { get; set; }
-        public int HeightOfScreenToSlice { get; set; }
-
         public int DynamiteAndDummyX { get; set; }
         public int DynamiteAndDummyY { get; set; }
 
@@ -113,5 +108,80 @@ namespace WoWHelper
         public Point MultiIntTwoPosition => PixelRowPoint(6);
 
         public Point ClassBoolOnePosition => PixelRowPoint(7);
+
+        // Bounding rectangle covering every pixel anything in this codebase reads off a
+        // captured screen bitmap: the pixel row (top-left corner), the red-error-text/
+        // breath-bar cluster, and the trade-window matchers/OCR area (used by
+        // CupidTradeLoopTask, WowManagementTasks.cs). Computed once from the fields below and
+        // cached (this instance is a static readonly singleton per resolution, so the cache
+        // lives for the process). Not every resolution defines every field (e.g. trade window
+        // positions are only configured for 2560x1600 today) -- null entries are skipped rather
+        // than expanding the rectangle.
+        //
+        // Add any new Point, ImageMatchColorPositions, or ImageMatchTextArea field read off a
+        // captured bitmap to the lists in ComputeCaptureRectangle() below, or the capture will
+        // silently clip it -- same class of one-sided-change trap as the pixel row itself.
+        private const int CaptureRectangleMargin = 5;
+        private Rectangle? _captureRectangle;
+
+        public Rectangle CaptureRectangle =>
+            (_captureRectangle ?? (_captureRectangle = ComputeCaptureRectangle())).Value;
+
+        private Rectangle ComputeCaptureRectangle()
+        {
+            var points = new[]
+            {
+                AddonLoadedPosition, MapXPosition, MapYPosition, FacingDegreesPosition,
+                MultiBoolOnePosition, MultiIntOnePosition, MultiIntTwoPosition, ClassBoolOnePosition,
+            };
+
+            var clusters = new[]
+            {
+                FacingWrongWayPositions, TooFarAwayPositions, TargetNeedsToBeInFrontPositions,
+                InvalidTargetPositions, OutOfRangePositions, BreathBarScreenPositions,
+                TradeWindowScreenPositions, TradeWindowAcceptedScreenPositions, TradeWindowConfirmationScreenPositions,
+            };
+
+            int maxX = 0;
+            int maxY = 0;
+
+            foreach (var point in points)
+            {
+                maxX = Math.Max(maxX, point.X);
+                maxY = Math.Max(maxY, point.Y);
+            }
+
+            foreach (var cluster in clusters)
+            {
+                if (cluster == null)
+                {
+                    continue; // not configured for this resolution -- skip rather than blow up
+                }
+
+                foreach (var position in cluster.ColorPositions)
+                {
+                    maxX = Math.Max(maxX, position.X);
+                    maxY = Math.Max(maxY, position.Y);
+                }
+            }
+
+            var textAreas = new[]
+            {
+                TradeWindowRecipientTextArea,
+            };
+
+            foreach (var textArea in textAreas)
+            {
+                if (textArea == null)
+                {
+                    continue; // not configured for this resolution -- skip rather than blow up
+                }
+
+                maxX = Math.Max(maxX, textArea.X + textArea.Width);
+                maxY = Math.Max(maxY, textArea.Y + textArea.Height);
+            }
+
+            return new Rectangle(0, 0, maxX + CaptureRectangleMargin, maxY + CaptureRectangleMargin);
+        }
     }
 }

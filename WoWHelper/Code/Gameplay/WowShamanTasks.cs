@@ -132,6 +132,7 @@ namespace WoWHelper
                 {
                     await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
+                    await Task.Delay(500); // give the addon time to update since right now it thinks we're off GCD
                     buffed = true;
                 }
 

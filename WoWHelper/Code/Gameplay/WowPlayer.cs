@@ -197,7 +197,11 @@ namespace WoWHelper
 
         public async Task<bool> AdHocTestTask()
         {
-            SlackHelper.SendMessageToChannel($"Slack Test");
+            //SlackHelper.SendMessageToChannel($"Slack Test");
+            await FocusOnWindowTask();
+            await FocusOnWindowTask();
+            await UpdateWorldStateAsync();
+            await WaitUntilBattleReadyTask();
             return true;
             /*
             await FocusOnWindowTask();

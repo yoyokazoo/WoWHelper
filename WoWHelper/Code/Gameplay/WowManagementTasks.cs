@@ -43,7 +43,10 @@ namespace WoWHelper
             }
 
             // ping if logged out (still needs testing.  they changed login screen??)
-            if (!PreviousWorldState.OnLoginScreen && WorldState.OnLoginScreen && !LogoutTriggered)
+            if (!PreviousWorldState.OnLoginScreen && 
+                WorldState.OnLoginScreen && 
+                !LogoutTriggered && 
+                CurrentPlayerState != PlayerState.WAITING_TO_FOCUS_ON_WINDOW)
             {
                 SlackHelper.SendMessageToChannel($"DISCONNECT?? Unexpectedly found self on logout screen");
             }
@@ -280,7 +283,7 @@ namespace WoWHelper
             {
                 loopIterations++;
 
-                Bitmap bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, WorldState.ScreenConfig.WidthOfScreenToSlice, WorldState.ScreenConfig.WidthOfScreenToSlice));
+                Bitmap bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(WorldState.ScreenConfig.CaptureRectangle);
                 bool tradeWindowUp = WorldState.ScreenConfig.TradeWindowScreenPositions.MatchesSourceImage(bmp);
                 bool tradeWindowAccepted = WorldState.ScreenConfig.TradeWindowAcceptedScreenPositions.MatchesSourceImage(bmp);
                 bool tradeWindowConfirmationUp = WorldState.ScreenConfig.TradeWindowConfirmationScreenPositions.MatchesSourceImage(bmp);

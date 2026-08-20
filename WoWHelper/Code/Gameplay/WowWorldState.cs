@@ -78,8 +78,7 @@ namespace WoWHelper
         {
             WowWorldState currentState = new WowWorldState(screenConfig);
 
-            currentState.Bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(
-                new Rectangle(0, 0, screenConfig.WidthOfScreenToSlice, screenConfig.WidthOfScreenToSlice));
+            currentState.Bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(screenConfig.CaptureRectangle);
             currentState.UpdateFromBitmap(currentState.Bmp);
             //wowBitmap.Dispose(); // TODO: Implement IDisposable
 
