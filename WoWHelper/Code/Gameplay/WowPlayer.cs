@@ -79,6 +79,8 @@ namespace WoWHelper
             PreviousWorldState = new WowWorldState(screenConfiguration);
             WorldState = new WowWorldState(screenConfiguration);
             ClassState = CreateClassState(FarmingConfig.CombatConfiguration);
+
+            NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
 
         private static WowClassState CreateClassState(WowCombatConfiguration combatConfiguration)
