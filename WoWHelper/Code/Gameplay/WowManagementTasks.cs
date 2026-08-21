@@ -51,8 +51,11 @@ namespace WoWHelper
                 SlackHelper.SendMessageToChannel($"DISCONNECT?? Unexpectedly found self on logout screen");
             }
 
-            // ping on level up
-            if (PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
+            // ping on level up. Guarded on LocationConfiguration being resolved -- this task
+            // runs every tick, including the handful before RESOLVE_FARMING_CONFIGURATION has
+            // picked one (see WowPlayer.ResolveFarmingConfigurationTask), during which
+            // FarmingConfig.LogoffLevel (a LocationConfiguration passthrough) isn't safe to read.
+            if (FarmingConfig.LocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
             {
                 if (FarmingConfig.AlertOnUnreadWhisper)
                 {

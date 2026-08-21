@@ -13,6 +13,7 @@ namespace WoWHelper
 
         public static readonly Color BREATH_BAR_COLOR_ONE = Color.FromArgb(0, 77, 155);
         public static readonly Color BREATH_BAR_COLOR_TWO = Color.FromArgb(0, 31, 62);
+        public static readonly Color BREATH_BAR_COLOR_THREE = Color.FromArgb(0, 34, 69);
 
         // Pixel-row index 0 (see AddonLoadedPosition below): fixed sentinel painted by
         // the addon, exact match. Present (this exact color) means the addon is loaded
@@ -47,6 +48,9 @@ namespace WoWHelper
         public int LootHeatmapY { get; set; }
         public int LootHeatmapWidth { get; set; }
         public int LootHeatmapHeight { get; set; }
+
+        public int LootDefaultX => Resolution.Width / 2;
+        public int LootDefaultY => Resolution.Height / 2;
 
         public int LootHeatmapIgnoreX { get; set; }
         public int LootHeatmapIgnoreY { get; set; }

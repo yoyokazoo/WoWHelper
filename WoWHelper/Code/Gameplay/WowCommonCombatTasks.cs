@@ -90,12 +90,13 @@ namespace WoWHelper
             bool tooFarAway = WorldState.TooFarAway;
             bool facingWrongWay = WorldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
             bool targetNeedsToBeInFront = WorldState.TargetNeedsToBeInFront;
+            bool targetIsEvading = WorldState.TargetRecentlyEvaded;
             bool invalidTarget = WorldState.InvalidTarget;
             bool outOfRange = WorldState.OutOfRange;
 
-            Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}");
+            Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}, targetIsEvading {targetIsEvading}");
 
-            if (facingWrongWay || targetNeedsToBeInFront)
+            if (facingWrongWay || targetNeedsToBeInFront || targetIsEvading)
             {
                 // scoot back to make sure the mob is in front of you
                 await ScootBackwardsTask();
@@ -125,7 +126,7 @@ namespace WoWHelper
                 Keyboard.KeyPress(WowInput.START_ATTACK);
             }
 
-            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || invalidTarget || outOfRange;
+            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || targetIsEvading || invalidTarget || outOfRange;
         }
 
         public async Task<bool> StartAttackTask()

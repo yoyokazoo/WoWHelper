@@ -109,12 +109,68 @@ one constant sized off the loosest route's own largest adjacent-waypoint gap,
 not a per-config value) is wired into `WowManagementTasks.SetLogoutVariablesTask()`,
 checked first so a bad start gives the clearest possible logout reason.
 
-**Reserved-but-not-in-the-row:** `MultiBoolOne`'s B byte and all of `MultiBoolTwo`
-are reserved for the next class-agnostic bool (see `GetMultiBoolOne/Two` in
-`WoWFunctions.lua`); `ClassBoolTwo`/`ClassIntOne` are reserved for the next
-class-specific field. None of these have a pixel in the row or a `Point` on
-`WowScreenConfiguration` right now, **on purpose** — the row only grows when
-a field actually needs to go in it.
+**Automatic farming-config resolution:** `WowFarmingConfigs.CURRENT_CONFIG`
+only sets `ManagementConfiguration` now — `LocationConfiguration` and
+`CombatConfiguration` are no longer hardcoded there. Instead,
+`WowPlayer.ResolveFarmingConfigurationTask()` (`WowConfigResolutionTasks.cs`)
+runs once at startup, in a new `PlayerState.RESOLVE_FARMING_CONFIGURATION`
+state right after the window is focused and before anything else touches
+`ClassState` or `FarmingConfig.LocationConfiguration`/`CombatConfiguration`
+(both start `null`/`WowCombatConfiguration.Unknown` — see
+`WowFarmingConfiguration`'s constructor):
+- `CombatConfiguration` is set straight from `WowWorldState.PlayerClass` (see
+  the `MultiBoolOne` B-byte bits 2-4 note below). If it's `null` (unsupported
+  class, or the addon isn't rendering a real row yet), resolution fails.
+- `LocationConfiguration` is picked from `WowLocationConfigs.ALL_LOCATIONS` —
+  an explicit list (deliberately not reflection over the class's static
+  fields, so a route can be pulled out of auto-selection without deleting
+  it) — by filtering to configs the player currently satisfies: the same
+  three checks `SetLogoutVariablesTask()` uses to keep validating an
+  already-running route (level, zone, waypoint proximity via
+  `WowPathfinding.GetDistanceToClosestWaypoint`/
+  `WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT`), just run once
+  up front instead of every tick. Exactly one match wins; zero or more than
+  one means there's no safe automatic choice.
+
+On either failure, `ResolveFarmingConfigurationTask()` sends a Slack alert via
+`SlackHelper.SendMessageToChannel()` explaining why, returns `false`, and
+`CoreGameplayLoopTask` sends the state machine straight to
+`EXITING_CORE_GAMEPLAY_LOOP` (which exits the process) rather than guessing.
+Because resolution now happens after construction, `WowPlayer.ClassState`
+starts `null` (`UpdateWorldStateAsync`/`UpdateWorldState`/`UpdateFromBitmap`
+all null-guard the per-tick `ClassState.UpdateFromBitmap` call) until
+`ResolveFarmingConfigurationTask()` builds the concrete subtype; nothing
+reads `ClassState` before that state runs. `WowManagementTasks.
+EveryWorldStateUpdateTasks()` runs every tick including the handful before
+resolution completes, so its level-up-alert block is guarded on
+`FarmingConfig.LocationConfiguration != null` for the same reason.
+
+**`MultiBoolOne`'s B byte:** bit 1 carries `TargetRecentlyEvaded` — true for a
+few seconds after the player's own attack drew an `EVADE` combat-log miss
+against the current target (i.e. the target is stuck evading, e.g. leashed on
+the far side of terrain it can't path across). Detected via
+`COMBAT_LOG_EVENT_UNFILTERED` in `YoyokazooUI.lua` (`HasRecentTargetEvade()`,
+same sticky-timestamp pattern as `HasUnseenWhisper()`), latched for
+`EVADE_WINDOW_SECONDS` (3s) rather than requiring the bot's poll to land on
+the exact tick the miss fired. Not yet consumed by any C# task logic — only
+decoded onto `WowWorldState` so far.
+
+Bits 2-4 carry which of the three bot-supported classes the player is playing
+— exactly one of `PlayerIsWarrior`/`PlayerIsMage`/`PlayerIsShaman` is true,
+from a plain `UnitClass("player")` check in `GetMultiBoolOne()`
+(`WoWFunctions.lua`). C# decodes these into `WowWorldState.PlayerClass`
+(nullable `WowCombatConfiguration` — null if none of the three bits are set,
+i.e. an unsupported class or the addon isn't rendering a real row yet), which
+`WowPlayer.ResolveFarmingConfigurationTask` uses to set
+`FarmingConfig.CombatConfiguration` automatically at startup — see "Automatic
+farming-config resolution" below.
+
+**Reserved-but-not-in-the-row:** `MultiBoolOne`'s B byte still has bits 5-8
+free, and all of `MultiBoolTwo` is reserved for the next class-agnostic bool
+(see `GetMultiBoolOne/Two` in `WoWFunctions.lua`); `ClassBoolTwo`/`ClassIntOne`
+are reserved for the next class-specific field. None of these have a pixel in
+the row or a `Point` on `WowScreenConfiguration` right now, **on purpose** —
+the row only grows when a field actually needs to go in it.
 
 **Adding a new pixel:** append a new `AddSwatch(N, ...)` call in
 `InitializePixelRow()` (Lua) AND a new `PixelRowPoint(N)`-based property on
@@ -131,7 +187,9 @@ Rockbiter, etc.) live only in `ClassBoolOne`, never in `MultiBoolOne/Two`.
 the *same* pixel/bit position means something different depending on which
 class is playing. On the C# side, `WowPlayer.ClassState` (a `WowClassState`
 subtype — see the C# architecture section) decodes the matching bits,
-selected once from `FarmingConfig.CombatConfiguration`. Note
+selected once from `FarmingConfig.CombatConfiguration` — itself auto-set at
+startup from the player's detected class (see "Automatic farming-config
+resolution" below), not hardcoded. Note
 `CanSpellcastPullTarget()` stays in `WoWFunctions.lua` rather than being
 split into the class files — it's shared between Mage and Shaman under the
 same name, and duplicating that name into both class files would collide
@@ -157,7 +215,9 @@ of truth — edits should be made here, not in the WoW install directory.
 
 - **`Gameplay/WowPlayer.cs`** — the core async state-machine loop
   (`CoreGameplayLoopTask`), driven by `PlayerState` enum (`WowPlayerStates.cs`):
-  focus window → check logout conditions → recover to "battle ready" → find/
+  focus window → auto-resolve combat/location config (`Gameplay/
+  WowConfigResolutionTasks.cs`, see "Automatic farming-config resolution"
+  above) → check logout conditions → recover to "battle ready" → find/
   engage a target via pathfinding → run the combat loop → loot/skin → repeat.
   Related sub-state-machines: `PathfindingState` (waypoint navigation) and
   `TradeState` (used by the "Cupid" trade-gifting loop).
@@ -173,10 +233,12 @@ of truth — edits should be made here, not in the WoW install directory.
   a Warrior-only field and silently getting stale data), each class gets its
   own concrete subtype exposing *only* its own fields — a wrong-class field
   reference is a compile error, not a runtime surprise. `WowPlayer.ClassState`
-  holds the one built for `FarmingConfig.CombatConfiguration` at construction
-  time and updates it (in place, same instance — no `PreviousClassState`
-  exists, nothing has needed one yet) every tick alongside `WorldState`, off
-  the same captured bitmap.
+  holds the one built for `FarmingConfig.CombatConfiguration` — `null` until
+  `ResolveFarmingConfigurationTask()` sets that from the player's detected
+  class and builds the matching subtype (see "Automatic farming-config
+  resolution" above) — and updates it (in place, same instance — no
+  `PreviousClassState` exists, nothing has needed one yet) every tick
+  alongside `WorldState`, off the same captured bitmap.
 - **`Gameplay/Wow*Tasks.cs`** — behavior/task implementations grouped by
   concern: `WowMovementTasks` (pathfinding/turning/strafing/jumping),
   `WowCommonCombatTasks` (shared combat logic), `WowWarriorTasks` /
@@ -195,13 +257,17 @@ of truth — edits should be made here, not in the WoW install directory.
   (facing/turn-direction math, angle tolerance that tightens near a waypoint,
   lateral-distance-from-path calc). No side effects, unit-testable.
 - **`Config/`** — per-location farming routes/waypoints
-  (`WowLocationConfigs.cs`), per-resolution screen pixel maps
+  (`WowLocationConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
+  `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
+  farming-config resolution" above), per-resolution screen pixel maps
   (`WowScreenConfigs.cs`), management/alert toggles
-  (`WowManagementConfigs.cs`), farming profile selection
-  (`WowFarmingConfigs.cs`). `Config/Definitions/` holds the POCOs these
-  configs are instances of. Each `WowLocationConfiguration` carries a
-  `Title` (human-readable, includes the minimum level), `MinimumLevel`, and
-  `Zone` (`WowZone` enum, `WowLocationConfiguration.cs`) — see the zone ID
+  (`WowManagementConfigs.cs`), the farming profile
+  (`WowFarmingConfigs.cs` — now only `ManagementConfiguration`;
+  `LocationConfiguration`/`CombatConfiguration` are resolved at runtime, not
+  set here). `Config/Definitions/` holds the POCOs these configs are
+  instances of. Each `WowLocationConfiguration` carries a `Title`
+  (human-readable, includes the minimum level), `MinimumLevel`, and `Zone`
+  (`WowZone` enum, `WowLocationConfiguration.cs`) — see the zone ID
   note in the color-encoding contract above for how `Zone` ties to
   `WowWorldState.CurrentZone`.
 - **`Constants/`** — `WowInput.cs` maps logical actions to keybinds/macros the
