@@ -779,10 +779,10 @@ end
 -- moved to GetClassBoolOne/Two (see the dispatchers further down and
 -- GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
 -- ShamanFunctions.lua) -- C# now reads those instead of these. All
--- class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G are now both
--- fully packed (the whole B byte is still free) so MultiBoolTwo is left
--- fully reserved as clean room to grow into, instead of needing a 3rd pixel.
--- The next class-agnostic bool goes in MultiBoolOne's B byte or MultiBoolTwo.
+-- class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G are both fully
+-- packed, and the B byte now carries its first field (7 bits still free)
+-- so MultiBoolTwo is left fully reserved as clean room to grow into, instead
+-- of needing a 3rd pixel.
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = AreWeLowOnHealthPotions()
@@ -806,8 +806,10 @@ function GetMultiBoolOne()
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
-    -- B byte fully reserved too.
-    return rByte/255.0, gByte/255.0, 0
+    local boolB1 = HasRecentTargetEvade()
+    local bByte = EncodeBooleansToByte(boolB1, false, false, false, false, false, false, false)
+
+    return rByte/255.0, gByte/255.0, bByte/255.0
 end
 
 -- Fully reserved for future class-agnostic flags -- nothing packed here yet.

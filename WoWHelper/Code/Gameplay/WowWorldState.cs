@@ -44,6 +44,7 @@ namespace WoWHelper
         public bool IsTargetCasterMob { get; private set; }
         public bool IsTargetRunnerMob { get; private set; }
         public bool IsTargetFireImmune { get; private set; }
+        public bool TargetRecentlyEvaded { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -170,6 +171,7 @@ namespace WoWHelper
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolOnePosition.X, ScreenConfig.MultiBoolOnePosition.Y);
             DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
             DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
+            DecodeByte(color.B, out var b1, out var b2, out var b3, out var b4, out var b5, out var b6, out var b7, out var b8);
 
             IsAutoAttacking = r1;
             LowOnHealthPotions = r2;
@@ -188,7 +190,12 @@ namespace WoWHelper
             IsTargetCasterMob = g6;
             IsTargetRunnerMob = g7;
             IsTargetFireImmune = g8;
-            // The whole B byte is reserved/unused.
+
+            // True for a few seconds after the player's own attack drew an EVADE
+            // miss against the current target (see HasRecentTargetEvade() in
+            // YoyokazooUI.lua) -- i.e. the target is stuck evading, e.g. leashed on
+            // the far side of terrain it can't path across. b2-b8 still reserved.
+            TargetRecentlyEvaded = b1;
         }
 
         // MultiBoolTwo currently carries no decoded fields -- reserved for the

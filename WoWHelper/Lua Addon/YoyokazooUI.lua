@@ -8,6 +8,14 @@ xpTracker.startTime   = 0
 local UNSEEN_WINDOW_SECONDS = 60
 local lastWhisperTime = nil
 
+-- Same "sticky flag via timestamp" pattern as HasUnseenWhisper() below --
+-- an EVADE combat-log miss is a single instantaneous event, but the bot only
+-- polls world state once per tick, so latch it true for a few seconds after
+-- the fact instead of requiring the poll to land on the exact same frame the
+-- event fired.
+local EVADE_WINDOW_SECONDS = 3
+local lastEvadeTime = nil
+
 -- PLAYER_ENTERING_WORLD fires on every loading screen, not just the initial login --
 -- zoning, taxis, death+release, and hearthing all re-fire it. InitializeIndicators()/
 -- InitializePixelRow() build a fresh set of frames/textures every time they're called
@@ -38,10 +46,28 @@ frame:RegisterEvent("CHAT_MSG_WHISPER")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("PLAYER_XP_UPDATE")
 frame:RegisterEvent("PLAYER_LEVEL_UP")
+frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
 frame:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_WHISPER" then
         lastWhisperTime = GetTime()
+    end
+
+    if event == "COMBAT_LOG_EVENT_UNFILTERED" then
+        local _, subevent, _, sourceGUID, _, _, _, _, _, _, _, missType = CombatLogGetCurrentEventInfo()
+
+        -- SWING_MISSED's missType is the 12th return value (grabbed directly above).
+        -- SPELL_MISSED/RANGE_MISSED/SPELL_PERIODIC_MISSED have spellId/spellName/
+        -- spellSchool ahead of it in the documented combat-log arg layout, so their
+        -- missType lands 3 slots later (index 15) -- re-fetch for those instead of
+        -- trusting the SWING_MISSED-shaped unpack above.
+        if subevent == "SPELL_MISSED" or subevent == "RANGE_MISSED" or subevent == "SPELL_PERIODIC_MISSED" then
+            missType = select(15, CombatLogGetCurrentEventInfo())
+        end
+
+        if missType == "EVADE" and sourceGUID == UnitGUID("player") then
+            lastEvadeTime = GetTime()
+        end
     end
 
     if event == "PLAYER_ENTERING_WORLD" then
@@ -106,4 +132,16 @@ function HasUnseenWhisper()
     end
 
     return (GetTime() - lastWhisperTime) <= UNSEEN_WINDOW_SECONDS
+end
+
+-- True for EVADE_WINDOW_SECONDS after the player's own attack last drew an
+-- EVADE miss against the current target -- i.e. the target is (or very
+-- recently was) stuck evading, e.g. leashed on the other side of terrain it
+-- can't path across. See COMBAT_LOG_EVENT_UNFILTERED handling above.
+function HasRecentTargetEvade()
+    if not lastEvadeTime then
+        return false
+    end
+
+    return (GetTime() - lastEvadeTime) <= EVADE_WINDOW_SECONDS
 end

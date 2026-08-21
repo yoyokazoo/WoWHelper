@@ -109,12 +109,22 @@ one constant sized off the loosest route's own largest adjacent-waypoint gap,
 not a per-config value) is wired into `WowManagementTasks.SetLogoutVariablesTask()`,
 checked first so a bad start gives the clearest possible logout reason.
 
-**Reserved-but-not-in-the-row:** `MultiBoolOne`'s B byte and all of `MultiBoolTwo`
-are reserved for the next class-agnostic bool (see `GetMultiBoolOne/Two` in
-`WoWFunctions.lua`); `ClassBoolTwo`/`ClassIntOne` are reserved for the next
-class-specific field. None of these have a pixel in the row or a `Point` on
-`WowScreenConfiguration` right now, **on purpose** — the row only grows when
-a field actually needs to go in it.
+**`MultiBoolOne`'s B byte:** bit 1 carries `TargetRecentlyEvaded` — true for a
+few seconds after the player's own attack drew an `EVADE` combat-log miss
+against the current target (i.e. the target is stuck evading, e.g. leashed on
+the far side of terrain it can't path across). Detected via
+`COMBAT_LOG_EVENT_UNFILTERED` in `YoyokazooUI.lua` (`HasRecentTargetEvade()`,
+same sticky-timestamp pattern as `HasUnseenWhisper()`), latched for
+`EVADE_WINDOW_SECONDS` (3s) rather than requiring the bot's poll to land on
+the exact tick the miss fired. Not yet consumed by any C# task logic — only
+decoded onto `WowWorldState` so far.
+
+**Reserved-but-not-in-the-row:** `MultiBoolOne`'s B byte still has bits 2-8
+free, and all of `MultiBoolTwo` is reserved for the next class-agnostic bool
+(see `GetMultiBoolOne/Two` in `WoWFunctions.lua`); `ClassBoolTwo`/`ClassIntOne`
+are reserved for the next class-specific field. None of these have a pixel in
+the row or a `Point` on `WowScreenConfiguration` right now, **on purpose** —
+the row only grows when a field actually needs to go in it.
 
 **Adding a new pixel:** append a new `AddSwatch(N, ...)` call in
 `InitializePixelRow()` (Lua) AND a new `PixelRowPoint(N)`-based property on
