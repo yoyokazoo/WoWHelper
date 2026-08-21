@@ -43,11 +43,12 @@ namespace WoWHelper
         public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }
 
-        // Class-specific counterpart to WorldState -- see WowClassState.
-        // Concrete type is picked once (based on FarmingConfig.CombatConfiguration)
-        // and never changes for the lifetime of this WowPlayer; the class-specific
-        // Wow*Tasks.cs methods receive it pre-cast to their own class's type
-        // (see WowPlayerCombatConfig.cs), not read directly off this property.
+        // Class-specific counterpart to WorldState -- see WowClassState. Null until
+        // ResolveFarmingConfigurationTask picks FarmingConfig.CombatConfiguration from the
+        // player's live-detected class (WowWorldState.PlayerClass) and builds the matching
+        // concrete type; never changes again afterward. The class-specific Wow*Tasks.cs
+        // methods receive it pre-cast to their own class's type (see
+        // WowPlayerCombatConfig.cs), not read directly off this property.
         public WowClassState ClassState { get; private set; }
 
         public PlayerState CurrentPlayerState { get; private set; }
@@ -78,7 +79,8 @@ namespace WoWHelper
 
             PreviousWorldState = new WowWorldState(screenConfiguration);
             WorldState = new WowWorldState(screenConfiguration);
-            ClassState = CreateClassState(FarmingConfig.CombatConfiguration);
+            // ClassState stays null until ResolveFarmingConfigurationTask can detect the
+            // player's actual class -- nothing reads it before that state runs.
 
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
@@ -105,7 +107,9 @@ namespace WoWHelper
             PreviousWorldState.Bmp?.Dispose();
             PreviousWorldState = WorldState;
             WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
-            ClassState.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
+            // ClassState is still null before ResolveFarmingConfigurationTask has run (its
+            // concrete type isn't known yet -- nothing reads it before then).
+            ClassState?.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
 
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
@@ -115,7 +119,7 @@ namespace WoWHelper
             PreviousWorldState.Bmp?.Dispose();
             PreviousWorldState = WorldState;
             WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
-            ClassState.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
+            ClassState?.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
 
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
@@ -124,7 +128,7 @@ namespace WoWHelper
         public void UpdateFromBitmap(Bitmap bmp)
         {
             WorldState.UpdateFromBitmap(bmp);
-            ClassState.UpdateFromBitmap(bmp, FarmingConfig.ScreenConfiguration);
+            ClassState?.UpdateFromBitmap(bmp, FarmingConfig.ScreenConfiguration);
         }
 
         async Task<TState> ChangeStateBasedOnTaskResult<TState>(Task<bool> task, TState successState, TState failureState) where TState : Enum
@@ -327,8 +331,14 @@ namespace WoWHelper
                     case PlayerState.WAITING_TO_FOCUS_ON_WINDOW:
                         Console.WriteLine("Focusing on window");
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
-                            PlayerState.CHECK_FOR_LOGOUT,
+                            PlayerState.RESOLVE_FARMING_CONFIGURATION,
                             PlayerState.WAITING_TO_FOCUS_ON_WINDOW);
+                        break;
+                    case PlayerState.RESOLVE_FARMING_CONFIGURATION:
+                        Console.WriteLine("Auto-detecting combat/location config from live game state");
+                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(ResolveFarmingConfigurationTask(),
+                            PlayerState.CHECK_FOR_LOGOUT,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.CHECK_FOR_LOGOUT:
                         Console.WriteLine("Checking if we should log out");

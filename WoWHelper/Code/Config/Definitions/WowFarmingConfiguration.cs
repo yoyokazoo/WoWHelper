@@ -8,6 +8,12 @@ namespace WoWHelper.Code.Gameplay
 {
     public enum WowCombatConfiguration
     {
+        // Not yet resolved -- see WowPlayer.ResolveFarmingConfigurationTask, which sets
+        // this from the player's class (WowWorldState.PlayerClass) at startup instead of
+        // it being hardcoded. Default so an un-resolved config fails loudly (every
+        // Wow*CombatConfig.cs dispatcher's switch has a "default: throw" case) rather than
+        // silently behaving like Warrior.
+        Unknown = -1,
         Warrior = 0,
         Mage = 1,
         Shaman = 2,
@@ -15,10 +21,13 @@ namespace WoWHelper.Code.Gameplay
 
     public class WowFarmingConfiguration
     {
+        // Both resolved at startup from live game state -- see
+        // WowPlayer.ResolveFarmingConfigurationTask -- rather than being hardcoded here.
         public WowLocationConfiguration LocationConfiguration { get; set; }
+        public WowCombatConfiguration CombatConfiguration { get; set; }
+
         public WowManagementConfiguration ManagementConfiguration { get; set; }
         public WowScreenConfiguration ScreenConfiguration { get; set; }
-        public WowCombatConfiguration CombatConfiguration { get; set; }
 
         public bool AlertOnPotionUsed => ManagementConfiguration.AlertOnPotionUsed;
         public bool AlertOnFullBags => ManagementConfiguration.AlertOnFullBags;
@@ -34,6 +43,10 @@ namespace WoWHelper.Code.Gameplay
 
         public WowFarmingConfiguration()
         {
+            // LocationConfiguration stays null and CombatConfiguration stays Unknown until
+            // ResolveFarmingConfigurationTask sets them from live game state.
+            CombatConfiguration = WowCombatConfiguration.Unknown;
+
             int width = Screen.PrimaryScreen.Bounds.Width;
             int height = Screen.PrimaryScreen.Bounds.Height;
 

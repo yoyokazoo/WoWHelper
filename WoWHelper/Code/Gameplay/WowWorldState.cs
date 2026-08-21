@@ -4,6 +4,7 @@ using System.Numerics;
 using WindowsGameAutomationTools.ImageDetection;
 using WindowsGameAutomationTools.Images;
 using WoWHelper.Code.Config;
+using WoWHelper.Code.Gameplay;
 using WoWHelper.Code.WorldState;
 
 namespace WoWHelper
@@ -45,6 +46,16 @@ namespace WoWHelper
         public bool IsTargetRunnerMob { get; private set; }
         public bool IsTargetFireImmune { get; private set; }
         public bool TargetRecentlyEvaded { get; private set; }
+
+        // Which of the three bot-supported classes the player is playing, decoded from
+        // MultiBoolOne's B byte (b2/b3/b4 -- see GetMultiBoolOne() in WoWFunctions.lua).
+        // Null if none of those bits are set -- an unsupported class, or the addon hasn't
+        // rendered a real row yet (e.g. still on the login screen). Reuses
+        // WowCombatConfiguration rather than a separate "player class" enum since the two
+        // are currently exactly 1:1 (each supported class has exactly one rotation).
+        // Used by WowPlayer.ResolveFarmingConfigurationTask to auto-pick
+        // FarmingConfig.CombatConfiguration at startup instead of it being hardcoded.
+        public WowCombatConfiguration? PlayerClass { get; private set; }
 
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
@@ -194,8 +205,28 @@ namespace WoWHelper
             // True for a few seconds after the player's own attack drew an EVADE
             // miss against the current target (see HasRecentTargetEvade() in
             // YoyokazooUI.lua) -- i.e. the target is stuck evading, e.g. leashed on
-            // the far side of terrain it can't path across. b2-b8 still reserved.
+            // the far side of terrain it can't path across.
             TargetRecentlyEvaded = b1;
+
+            // Exactly one of these should be true once the addon is loaded and the
+            // player is one of the three bot-supported classes -- see comment on
+            // PlayerClass. b5-b8 still reserved.
+            if (b2)
+            {
+                PlayerClass = WowCombatConfiguration.Warrior;
+            }
+            else if (b3)
+            {
+                PlayerClass = WowCombatConfiguration.Mage;
+            }
+            else if (b4)
+            {
+                PlayerClass = WowCombatConfiguration.Shaman;
+            }
+            else
+            {
+                PlayerClass = null;
+            }
         }
 
         // MultiBoolTwo currently carries no decoded fields -- reserved for the

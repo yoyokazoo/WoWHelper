@@ -5,6 +5,7 @@
         public enum PlayerState
         {
             WAITING_TO_FOCUS_ON_WINDOW,
+            RESOLVE_FARMING_CONFIGURATION,
             START_BATTLE_READY_RECOVERY,
             WAIT_UNTIL_BATTLE_READY,
             CHECK_FOR_VALID_TARGET,

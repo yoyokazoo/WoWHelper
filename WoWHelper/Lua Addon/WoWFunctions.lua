@@ -780,9 +780,13 @@ end
 -- GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
 -- ShamanFunctions.lua) -- C# now reads those instead of these. All
 -- class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G are both fully
--- packed, and the B byte now carries its first field (7 bits still free)
--- so MultiBoolTwo is left fully reserved as clean room to grow into, instead
--- of needing a 3rd pixel.
+-- packed, and the B byte now carries HasRecentTargetEvade() (b1) plus which
+-- of the three bot-supported classes the player is playing (b2 Warrior, b3
+-- Mage, b4 Shaman -- exactly one true, used by C# to auto-pick
+-- WowCombatConfiguration at startup instead of it being hardcoded; see
+-- WowWorldState.PlayerClass and WowPlayer.ResolveFarmingConfigurationTask).
+-- b5-b8 still free. MultiBoolTwo is left fully reserved as clean room to
+-- grow into, instead of needing a 3rd pixel.
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = AreWeLowOnHealthPotions()
@@ -807,7 +811,13 @@ function GetMultiBoolOne()
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
     local boolB1 = HasRecentTargetEvade()
-    local bByte = EncodeBooleansToByte(boolB1, false, false, false, false, false, false, false)
+
+    local _, classFile = UnitClass("player")
+    local boolB2 = (classFile == "WARRIOR")
+    local boolB3 = (classFile == "MAGE")
+    local boolB4 = (classFile == "SHAMAN")
+
+    local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, false, false, false, false)
 
     return rByte/255.0, gByte/255.0, bByte/255.0
 end

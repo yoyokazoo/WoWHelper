@@ -862,5 +862,48 @@ namespace WoWHelper.Code.WorldState
             TooManyAttackersThreshold = 2,
             LogoffLevel = 4,
         };
+
+        // Every location config eligible for WowPlayer.ResolveFarmingConfigurationTask's
+        // automatic startup selection (matched by player level/zone/waypoint-proximity --
+        // see that method). Deliberately an explicit list rather than reflecting over all
+        // static fields on this class, so a route can be pulled out of auto-selection
+        // (still being tuned, temporarily unsafe, etc.) without deleting its definition
+        // above -- add new routes here once they're ready to be auto-picked. Declared last
+        // in the class, after every field it references -- C# runs static field
+        // initializers in declaration order, so this list would silently collect nulls if
+        // it were declared before them.
+        //
+        // Intentionally excluded: TANARIS_TEST_PATHFINDING -- not a real farming route (its
+        // own comment says so), MinimumLevel 0 with no waypoint-adjacent mobs to fight.
+        public static readonly List<WowLocationConfiguration> ALL_LOCATIONS = new List<WowLocationConfiguration>
+        {
+            LEVEL_58_SILITHUS_RUMBLERS,
+            LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL,
+            LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
+            LEVEL_53_NORTH_FELWOOD,
+            LEVEL_51_FELWOOD_SOUTH,
+            LEVEL_48_FERALAS_HIPPOGRYPHS,
+            LEVEL_42_TANARIS_TURTLES,
+            LEVEL_37_KODO_GRAVEYARD,
+            LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE,
+            LEVEL_34_SHIMMERING_FLATS_WAYPOINTS,
+            LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS,
+            LEVEL_27_NORTH_ASHENVALE_WAYPOINTS,
+            LEVEL_27_STONETALON_CHARRED_FOREST_WAYPOINTS,
+            LEVEL_24_STONETALON_WAYPOINTS,
+            LEVEL_21_ZORAMGAR_WAYPOINTS,
+            LEVEL_17_NORTHERN_BARRENS_WAYPOINTS,
+            LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS,
+            LEVEL_11_DUROTAR_COAST_WAYPOINTS,
+            LEVEL_9_DUROTAR_SKULL_ROCK_COAST_WAYPOINTS,
+            LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
+            LEVEL_4_DUROTAR_IMPS,
+            LEVEL_10_MULGORE_MIXED_BEASTS,
+            LEVEL_8_MULGORE_MIXED_BEASTS,
+            LEVEL_6_MULGORE_BATTLEBOARS,
+            LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
+            LEVEL_1_MULGORE_PLAINSTRIDERS,
+            LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
+        };
     }
 }
