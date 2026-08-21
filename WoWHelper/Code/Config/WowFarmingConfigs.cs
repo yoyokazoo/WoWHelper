@@ -8,7 +8,7 @@ namespace WoWHelper.Code.Constants
     {
         public static readonly WowFarmingConfiguration CURRENT_CONFIG = new WowFarmingConfiguration
         {
-            LocationConfiguration = WowLocationConfigs.LEVEL_27_STONETALON_CHARRED_FOREST_WAYPOINTS,
+            LocationConfiguration = WowLocationConfigs.LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS,
             ManagementConfiguration = WowManagementConfigs.FULL_BABYSIT,
             CombatConfiguration = WowCombatConfiguration.Shaman
         };

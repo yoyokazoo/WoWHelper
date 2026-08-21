@@ -461,7 +461,8 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
-            DistanceTolerance = 0.3f
+            DistanceTolerance = 0.3f,
+            EngageMethod = EngagementMethod.Spellcast,
         };
 
         public static readonly WowLocationConfiguration LEVEL_24_STONETALON_WAYPOINTS = new WowLocationConfiguration
