@@ -451,9 +451,10 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(68.84f, 13.74f),
                 new Vector2(67.82f, 17.99f),
                 new Vector2(67.78f, 21.78f),
+                new Vector2(67.94f, 22.98f),
                 new Vector2(67.97f, 25.64f),
                 new Vector2(67.35f, 30.65f),
-                new Vector2(67.29f, 35.17f),
+                new Vector2(67.71f, 35.17f),
                 new Vector2(65.68f, 38.19f),
                 new Vector2(64.12f, 40.35f),
                 // under bridge, get stuck too often to be worth it

@@ -94,6 +94,7 @@ namespace WoWHelper
 
                 if (!stationaryJumpAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
                 {
+                    //Console.WriteLine($"Haven't moved in a while, stuck at {PreviousWorldState.MapX},{PreviousWorldState.MapY} headed to {FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex].X},{FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex].Y}");
                     await AvoidObstacleByJumping();
                     stationaryJumpAttemptedOnce = true;
                 }
