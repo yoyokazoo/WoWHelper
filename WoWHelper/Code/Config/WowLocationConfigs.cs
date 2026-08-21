@@ -412,6 +412,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "North Stonetalon (Level 27+)",
             MinimumLevel = 26,
+            LogoffLevel = 30,
             Zone = WowZone.StonetalonMountains,
 
             /*
@@ -468,6 +469,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Stonetalon Mountains (Level 24+)",
             MinimumLevel = 24,
+            LogoffLevel = 28,
             Zone = WowZone.StonetalonMountains,
 
             /*
