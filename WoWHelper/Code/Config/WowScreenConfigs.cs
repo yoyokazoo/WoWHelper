@@ -149,8 +149,8 @@ namespace WoWHelper.Code.Config
 
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
-                    new ColorPosition(846, 130, WowScreenConfiguration.BREATH_BAR_COLOR_ONE),
-                    new ColorPosition(845, 134, WowScreenConfiguration.BREATH_BAR_COLOR_TWO),
+                    new ColorPosition(1141, 190, WowScreenConfiguration.BREATH_BAR_COLOR_ONE),
+                    new ColorPosition(1149, 186, WowScreenConfiguration.BREATH_BAR_COLOR_THREE),
                 }),
 
             TradeWindowScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>

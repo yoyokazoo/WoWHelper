@@ -13,6 +13,7 @@ namespace WoWHelper
 
         public static readonly Color BREATH_BAR_COLOR_ONE = Color.FromArgb(0, 77, 155);
         public static readonly Color BREATH_BAR_COLOR_TWO = Color.FromArgb(0, 31, 62);
+        public static readonly Color BREATH_BAR_COLOR_THREE = Color.FromArgb(0, 34, 69);
 
         // Pixel-row index 0 (see AddonLoadedPosition below): fixed sentinel painted by
         // the addon, exact match. Present (this exact color) means the addon is loaded
