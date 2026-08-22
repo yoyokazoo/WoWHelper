@@ -443,7 +443,6 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             EngageMethod = EngagementMethod.Spellcast,
             TooManyAttackersThreshold = 3,
-            HasRunners = true,
         };
 
         public static readonly WowLocationConfiguration LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS = new WowLocationConfiguration
@@ -548,7 +547,6 @@ namespace WoWHelper.Code.WorldState
             },
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             LogoffLevel = 25,
-            HasRunners = true
         };
 
         public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WowLocationConfiguration
@@ -580,7 +578,6 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             LogoffLevel = 21,
-            HasRunners = true
         };
 
         public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS = new WowLocationConfiguration
@@ -607,7 +604,6 @@ namespace WoWHelper.Code.WorldState
             },
             EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
             LogoffLevel = 18,
-            HasRunners = true,
         };
 
         public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration
