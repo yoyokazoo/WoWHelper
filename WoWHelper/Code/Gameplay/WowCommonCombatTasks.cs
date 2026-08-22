@@ -93,8 +93,9 @@ namespace WoWHelper
             bool targetIsEvading = WorldState.TargetRecentlyEvaded;
             bool invalidTarget = WorldState.InvalidTarget;
             bool outOfRange = WorldState.OutOfRange;
+            bool notInLineOfSight = WorldState.NotInLineOfSight;
 
-            Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}, targetIsEvading {targetIsEvading}");
+            Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}, notInLineOfSight {notInLineOfSight}, targetIsEvading {targetIsEvading}");
 
             if (facingWrongWay || targetNeedsToBeInFront || targetIsEvading)
             {
@@ -103,14 +104,14 @@ namespace WoWHelper
             }
 
             // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
-            if (tooFarAway || invalidTarget || outOfRange)
+            if (tooFarAway || invalidTarget || outOfRange || notInLineOfSight)
             {
                 // attacker count now updates immediately, so only clear target if the mob isn't
                 // actually in combat with us OR it is and there are multiple attackers (worth
                 // re-prioritizing) -- don't spam clear if we don't have to
                 if (!WorldState.CurrentTargetInCombatWithUs || (WorldState.CurrentTargetInCombatWithUs && WorldState.AttackerCount > 1))
                 {
-                    Console.WriteLine($"tooFarAway || invalidTarget || outOfRange, WorldState.CurrentTargetInCombatWithUs {WorldState.CurrentTargetInCombatWithUs}, WorldState.AttackerCount {WorldState.AttackerCount}");
+                    Console.WriteLine($"tooFarAway || invalidTarget || outOfRange || notInLineOfSight, WorldState.CurrentTargetInCombatWithUs {WorldState.CurrentTargetInCombatWithUs}, WorldState.AttackerCount {WorldState.AttackerCount}");
                     Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
 
                     // if it's actually too far away, waiting a bit won't matter
@@ -126,7 +127,7 @@ namespace WoWHelper
                 Keyboard.KeyPress(WowInput.START_ATTACK);
             }
 
-            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || targetIsEvading || invalidTarget || outOfRange;
+            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || targetIsEvading || invalidTarget || outOfRange || notInLineOfSight;
         }
 
         public async Task<bool> StartAttackTask()

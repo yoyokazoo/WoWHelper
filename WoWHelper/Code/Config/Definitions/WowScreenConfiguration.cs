@@ -69,6 +69,7 @@ namespace WoWHelper
         public ImageMatchColorPositions TargetNeedsToBeInFrontPositions { get; set; }
         public ImageMatchColorPositions InvalidTargetPositions { get; set; }
         public ImageMatchColorPositions OutOfRangePositions { get; set; }
+        public ImageMatchColorPositions NotInLineOfSightPositions { get; set; }
 
         // Breath bar detections
         public ImageMatchColorPositions BreathBarScreenPositions { get; set; }
@@ -142,7 +143,7 @@ namespace WoWHelper
             var clusters = new[]
             {
                 FacingWrongWayPositions, TooFarAwayPositions, TargetNeedsToBeInFrontPositions,
-                InvalidTargetPositions, OutOfRangePositions, BreathBarScreenPositions,
+                InvalidTargetPositions, OutOfRangePositions, NotInLineOfSightPositions, BreathBarScreenPositions,
                 TradeWindowScreenPositions, TradeWindowAcceptedScreenPositions, TradeWindowConfirmationScreenPositions,
             };
 

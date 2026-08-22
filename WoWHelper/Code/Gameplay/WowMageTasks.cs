@@ -226,8 +226,9 @@ namespace WoWHelper
             bool targetNeedsToBeInFront = WorldState.TargetNeedsToBeInFront;
             bool invalidTarget = WorldState.InvalidTarget;
             bool outOfRange = WorldState.OutOfRange;
+            bool notInLineOfSight = WorldState.NotInLineOfSight;
 
-            Console.WriteLine($"MageMakeSureWeAreAttackingEnemyTask: {attackerJustDied} {tooFarAway} {facingWrongWay} {targetNeedsToBeInFront} {invalidTarget} {outOfRange}");
+            Console.WriteLine($"MageMakeSureWeAreAttackingEnemyTask: {attackerJustDied} {tooFarAway} {facingWrongWay} {targetNeedsToBeInFront} {invalidTarget} {outOfRange} {notInLineOfSight}");
             /*
              * new ColorPosition(1506, 216, ERROR_TEXT_COLOR),
             new ColorPosition(1524, 218, ERROR_TEXT_COLOR),
@@ -252,13 +253,13 @@ namespace WoWHelper
                 await ScootBackwardsTask();
             }
 
-            if (tooFarAway || invalidTarget || outOfRange)
+            if (tooFarAway || invalidTarget || outOfRange || notInLineOfSight)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
                 Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
             }
 
-            return attackerJustDied || tooFarAway || facingWrongWay || targetNeedsToBeInFront || invalidTarget || outOfRange;
+            return attackerJustDied || tooFarAway || facingWrongWay || targetNeedsToBeInFront || invalidTarget || outOfRange || notInLineOfSight;
         }
 
         // Eventually we want to nova, blink, run, but until then just send a slack message and keep blasting

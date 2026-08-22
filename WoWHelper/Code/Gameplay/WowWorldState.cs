@@ -62,6 +62,10 @@ namespace WoWHelper
         public bool TargetNeedsToBeInFront { get; private set; }
         public bool InvalidTarget { get; private set; }
         public bool OutOfRange { get; private set; }
+        // "Target not in line of sight" red toast. Only wired up for 3440x1440 so far
+        // (see NotInLineOfSightPositions on WowScreenConfiguration) -- always false on
+        // resolutions that haven't had their positions captured yet.
+        public bool NotInLineOfSight { get; private set; }
         public bool OnLoginScreen { get; private set; }
         public bool Underwater { get; private set; }
 
@@ -260,6 +264,7 @@ namespace WoWHelper
             TargetNeedsToBeInFront = MatchesErrorTextColor(bmp, ScreenConfig.TargetNeedsToBeInFrontPositions);
             InvalidTarget = MatchesErrorTextColor(bmp, ScreenConfig.InvalidTargetPositions);
             OutOfRange = MatchesErrorTextColor(bmp, ScreenConfig.OutOfRangePositions);
+            NotInLineOfSight = MatchesErrorTextColor(bmp, ScreenConfig.NotInLineOfSightPositions);
         }
 
         // Index 0 of the pixel row is a fixed sentinel the addon paints, exactly
