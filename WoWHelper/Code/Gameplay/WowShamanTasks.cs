@@ -125,6 +125,18 @@ namespace WoWHelper
             bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
 
+            if (WorldState.PlayerIsPoisoned)
+            {
+                await WaitForGlobalCooldownTask();
+                Keyboard.KeyPress(WowInput.SHAMAN_CURE_POISON);
+            }
+
+            if (WorldState.PlayerIsDiseased)
+            {
+                await WaitForGlobalCooldownTask();
+                await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_CURE_DISEASE);
+            }
+
             if (battleReady)
             {
                 bool buffed = false;
