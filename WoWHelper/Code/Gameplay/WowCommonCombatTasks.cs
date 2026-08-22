@@ -104,7 +104,7 @@ namespace WoWHelper
             }
 
             // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
-            if (tooFarAway || invalidTarget || outOfRange || notInLineOfSight)
+            if (tooFarAway || invalidTarget || outOfRange)
             {
                 // attacker count now updates immediately, so only clear target if the mob isn't
                 // actually in combat with us OR it is and there are multiple attackers (worth
@@ -119,6 +119,11 @@ namespace WoWHelper
                     // otherwise /startattack auto targets in front of us, sometimes not the right mob and we get stuck in a loop
                     await Task.Delay(300);
                 }
+            }
+
+            if (notInLineOfSight)
+            {
+                Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
             }
 
             if (attackerJustDied || inCombatButNotAutoAttacking || tooFarAway)
