@@ -45,6 +45,10 @@ namespace WoWHelper
         public bool IsTargetCasterMob { get; private set; }
         public bool IsTargetRunnerMob { get; private set; }
         public bool IsTargetFireImmune { get; private set; }
+        public bool IsTargetNatureImmune { get; private set; }
+        public bool IsTargetCasting { get; private set; }
+        public bool PlayerIsPoisoned { get; private set; }
+        public bool PlayerIsDiseased { get; private set; }
         public bool TargetRecentlyEvaded { get; private set; }
 
         // Which of the three bot-supported classes the player is playing, decoded from
@@ -214,7 +218,7 @@ namespace WoWHelper
 
             // Exactly one of these should be true once the addon is loaded and the
             // player is one of the three bot-supported classes -- see comment on
-            // PlayerClass. b5-b8 still reserved.
+            // PlayerClass.
             if (b2)
             {
                 PlayerClass = WowCombatConfiguration.Warrior;
@@ -231,6 +235,12 @@ namespace WoWHelper
             {
                 PlayerClass = null;
             }
+
+            // b5-b8 -- fully packs the byte (see GetMultiBoolOne() in WoWFunctions.lua).
+            PlayerIsPoisoned = b5;
+            PlayerIsDiseased = b6;
+            IsTargetNatureImmune = b7;
+            IsTargetCasting = b8;
         }
 
         // MultiBoolTwo currently carries no decoded fields -- reserved for the

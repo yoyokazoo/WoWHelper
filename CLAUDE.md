@@ -152,8 +152,9 @@ the far side of terrain it can't path across). Detected via
 `COMBAT_LOG_EVENT_UNFILTERED` in `YoyokazooUI.lua` (`HasRecentTargetEvade()`,
 same sticky-timestamp pattern as `HasUnseenWhisper()`), latched for
 `EVADE_WINDOW_SECONDS` (3s) rather than requiring the bot's poll to land on
-the exact tick the miss fired. Not yet consumed by any C# task logic — only
-decoded onto `WowWorldState` so far.
+the exact tick the miss fired. Consumed by `MeleeMakeSureWeAreAttackingEnemyTask`
+(`WowCommonCombatTasks.cs`) as part of its "this target is stuck, back off/clear
+it" checks.
 
 Bits 2-4 carry which of the three bot-supported classes the player is playing
 — exactly one of `PlayerIsWarrior`/`PlayerIsMage`/`PlayerIsShaman` is true,
@@ -165,12 +166,21 @@ i.e. an unsupported class or the addon isn't rendering a real row yet), which
 `FarmingConfig.CombatConfiguration` automatically at startup — see "Automatic
 farming-config resolution" below.
 
-**Reserved-but-not-in-the-row:** `MultiBoolOne`'s B byte still has bits 5-8
-free, and all of `MultiBoolTwo` is reserved for the next class-agnostic bool
-(see `GetMultiBoolOne/Two` in `WoWFunctions.lua`); `ClassBoolTwo`/`ClassIntOne`
-are reserved for the next class-specific field. None of these have a pixel in
-the row or a `Point` on `WowScreenConfiguration` right now, **on purpose** —
-the row only grows when a field actually needs to go in it.
+Bits 5-8 carry `IsPlayerPoisoned`/`IsPlayerDiseased` (from `PlayerHasDebuffType()`
+in `WoWFunctions.lua`, keyed off `UnitDebuff("player", i)`'s dispel-type return
+value) and `IsTargetNatureImmune` (name-based, per `NATURE_IMMUNE_MOB_NAMES` in
+`CreatureConfig.lua` — same pattern as `IsTargetFireImmune`)/`IsTargetCasting`
+(`UnitCastingInfo`/`UnitChannelInfo` against `"target"`, the target-side
+counterpart to the already-existing `IsPlayerCasting`, which packs into
+`MultiBoolOne`'s G byte as `WowWorldState.IsCurrentlyCasting`) — this fully
+packs the byte.
+
+**Reserved-but-not-in-the-row:** all of `MultiBoolTwo` is reserved for the
+next class-agnostic bool (see `GetMultiBoolOne/Two` in `WoWFunctions.lua`);
+`ClassBoolTwo`/`ClassIntOne` are reserved for the next class-specific field.
+Neither has a pixel in the row or a `Point` on `WowScreenConfiguration` right
+now, **on purpose** — the row only grows when a field actually needs to go
+in it.
 
 **Adding a new pixel:** append a new `AddSwatch(N, ...)` call in
 `InitializePixelRow()` (Lua) AND a new `PixelRowPoint(N)`-based property on
