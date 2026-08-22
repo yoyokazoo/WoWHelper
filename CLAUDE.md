@@ -300,18 +300,29 @@ of truth — edits should be made here, not in the WoW install directory.
 ## Lua addon (`WoWHelper/Lua Addon/`, `YoyokazooUI`)
 
 - **`YoyokazooUI.toc`** — addon manifest/load order. Loads
-  `MathFunctions.lua` → `WoWFunctions.lua` → `WarriorFunctions.lua` →
-  `MageFunctions.lua` → `ShamanFunctions.lua` → `UIFunctions.lua` →
-  `YoyokazooUI.lua`. Load order doesn't actually matter for correctness here
-  (everything is a plain global function, resolved at call time, and nothing
-  calls any of these before `PLAYER_ENTERING_WORLD`, well after every file
-  has finished loading) — this ordering is just for readability.
+  `MathFunctions.lua` → `CreatureConfig.lua` → `WoWFunctions.lua` →
+  `WarriorFunctions.lua` → `MageFunctions.lua` → `ShamanFunctions.lua` →
+  `UIFunctions.lua` → `YoyokazooUI.lua`. Load order doesn't actually matter
+  for correctness here (everything is a plain global function/table,
+  resolved at call time, and nothing calls any of these before
+  `PLAYER_ENTERING_WORLD`, well after every file has finished loading) —
+  this ordering is just for readability.
+- **`CreatureConfig.lua`** — every name-based special-case creature list
+  (`CASTER_MOB_NAMES`, `RUNNER_MOB_NAMES`, `FIRE_IMMUNE_MOB_NAMES`, and
+  wherever the next one like it gets added — e.g. a nature-immune list) in
+  one file, so there's a single place to go update them. Classic has no
+  reliable creature-ID API exposed to addons, so these all key off
+  `UnitName("target")`. Plain global tables (not `local`) so
+  `WoWFunctions.lua`'s `IsTargetXxx()` checks can read them — addon globals
+  are one flat namespace, same as everything else here.
 - **`WoWFunctions.lua`** — class-agnostic game-state queries (in melee range,
   in combat, should-attack-target checks, spell cooldown/range checks incl.
   GCD-aware cooldown detection, attacker counting, etc.) — the "is X true"
   logic layer, plus `GetMultiBoolOne/Two`/`GetMultiIntOne/Two` (shared-state
   pixel populate functions) and `GetClassBoolOne/Two`/`GetClassIntOne`
-  (class-specific dispatchers — see "Class split" above).
+  (class-specific dispatchers — see "Class split" above). The
+  `IsTargetCasterMob`/`IsTargetRunnerMob`/`IsTargetFireImmune` checks here
+  read their name lists from `CreatureConfig.lua`.
 - **`WarriorFunctions.lua`** / **`MageFunctions.lua`** / **`ShamanFunctions.lua`**
   — that class's specific checks (e.g. `TargetHasRend`, `CanCastWhirlwind` for
   Warrior; `ShouldWeSummonWater`, `IsFireblastCooledDown` for Mage;

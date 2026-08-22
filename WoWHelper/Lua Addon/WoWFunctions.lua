@@ -610,15 +610,12 @@ end
 -- TargetHasRend() moved to WarriorFunctions.lua.
 -- TargetHasFlameShock() moved to ShamanFunctions.lua.
 
--- Mobs whose spells are worth interrupting. Name-based (Classic has no
--- reliable creature-ID API exposed to addons); add to this list as more
--- interruptible casters are identified.
-local CASTER_MOB_NAMES = {
-    ["Withered Ancient"] = true,
-}
+-- CASTER_MOB_NAMES/RUNNER_MOB_NAMES/FIRE_IMMUNE_MOB_NAMES now live in
+-- CreatureConfig.lua -- one place to update every name-based creature list.
 
 -- True if the current target is a caster mob with interruptible spells (per
--- CASTER_MOB_NAMES above), regardless of whether it's currently casting.
+-- CASTER_MOB_NAMES in CreatureConfig.lua), regardless of whether it's
+-- currently casting.
 function IsTargetCasterMob()
     if not UnitExists("target") then
         return false
@@ -632,14 +629,8 @@ function IsTargetCasterMob()
     return CASTER_MOB_NAMES[name] == true
 end
 
--- Mobs that flee/run at low health (or otherwise need special handling to
--- stop them running off), by name -- same caveat as CASTER_MOB_NAMES above
--- about Classic having no reliable creature-ID API for addons.
-local RUNNER_MOB_NAMES = {
-    ["Bloodfury Harpy"] = true,
-}
-
--- True if the current target is a runner mob (per RUNNER_MOB_NAMES above).
+-- True if the current target is a runner mob (per RUNNER_MOB_NAMES in
+-- CreatureConfig.lua).
 function IsTargetRunnerMob()
     if not UnitExists("target") then
         return false
@@ -653,14 +644,8 @@ function IsTargetRunnerMob()
     return RUNNER_MOB_NAMES[name] == true
 end
 
--- Mobs immune (or effectively immune) to fire damage/effects, by name -- same
--- caveat as CASTER_MOB_NAMES above about Classic having no reliable
--- creature-ID API for addons.
-local FIRE_IMMUNE_MOB_NAMES = {
-    ["Rogue Flame Spirit"] = true,
-}
-
--- True if the current target is fire-immune (per FIRE_IMMUNE_MOB_NAMES above).
+-- True if the current target is fire-immune (per FIRE_IMMUNE_MOB_NAMES in
+-- CreatureConfig.lua).
 function IsTargetFireImmune()
     if not UnitExists("target") then
         return false
