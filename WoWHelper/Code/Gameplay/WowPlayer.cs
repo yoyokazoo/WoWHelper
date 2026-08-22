@@ -50,7 +50,8 @@ namespace WoWHelper
         public WowWorldState WorldState { get; private set; }
 
         // Class-specific counterpart to WorldState -- see WowClassState. Null until
-        // ResolveFarmingConfigurationTask picks FarmingConfig.CombatConfiguration from the
+        // ResolveCombatConfiguration (WowConfigResolutionTasks.cs, called every tick from
+        // EveryWorldStateUpdateTasks) picks FarmingConfig.CombatConfiguration from the
         // player's live-detected class (WowWorldState.PlayerClass) and builds the matching
         // concrete type; never changes again afterward. The class-specific Wow*Tasks.cs
         // methods receive it pre-cast to their own class's type (see
@@ -85,8 +86,8 @@ namespace WoWHelper
 
             PreviousWorldState = new WowWorldState(screenConfiguration);
             WorldState = new WowWorldState(screenConfiguration);
-            // ClassState stays null until ResolveFarmingConfigurationTask can detect the
-            // player's actual class -- nothing reads it before that state runs.
+            // ClassState stays null until ResolveCombatConfiguration can detect the
+            // player's actual class -- see the property comment above.
 
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
@@ -115,7 +116,7 @@ namespace WoWHelper
             PreviousWorldState.Bmp?.Dispose();
             PreviousWorldState = WorldState;
             WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
-            // ClassState is still null before ResolveFarmingConfigurationTask has run (its
+            // ClassState is still null before ResolveCombatConfiguration has run (its
             // concrete type isn't known yet -- nothing reads it before then).
             ClassState?.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
 

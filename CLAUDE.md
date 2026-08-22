@@ -111,39 +111,59 @@ checked first so a bad start gives the clearest possible logout reason.
 
 **Automatic farming-config resolution:** `WowFarmingConfigs.CURRENT_CONFIG`
 only sets `ManagementConfiguration` now — `LocationConfiguration` and
-`CombatConfiguration` are no longer hardcoded there. Instead,
-`WowPlayer.ResolveFarmingConfigurationTask()` (`WowConfigResolutionTasks.cs`)
-runs once at startup, in a new `PlayerState.RESOLVE_FARMING_CONFIGURATION`
-state right after the window is focused and before anything else touches
-`ClassState` or `FarmingConfig.LocationConfiguration`/`CombatConfiguration`
-(both start `null`/`WowCombatConfiguration.Unknown` — see
-`WowFarmingConfiguration`'s constructor):
-- `CombatConfiguration` is set straight from `WowWorldState.PlayerClass` (see
-  the `MultiBoolOne` B-byte bits 2-4 note below). If it's `null` (unsupported
-  class, or the addon isn't rendering a real row yet), resolution fails.
-- `LocationConfiguration` is picked from `WowLocationConfigs.ALL_LOCATIONS` —
-  an explicit list (deliberately not reflection over the class's static
-  fields, so a route can be pulled out of auto-selection without deleting
-  it) — by filtering to configs the player currently satisfies: the same
-  three checks `SetLogoutVariablesTask()` uses to keep validating an
-  already-running route (level, zone, waypoint proximity via
-  `WowPathfinding.GetDistanceToClosestWaypoint`/
-  `WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT`), just run once
-  up front instead of every tick. Exactly one match wins; zero or more than
-  one means there's no safe automatic choice.
+`CombatConfiguration` are no longer hardcoded there. Both start out
+`null`/`WowCombatConfiguration.Unknown` (see `WowFarmingConfiguration`'s
+constructor) and get resolved by two independent mechanisms in
+`WowConfigResolutionTasks.cs`, deliberately split apart (they used to be one
+method run only from `PlayerState.RESOLVE_FARMING_CONFIGURATION`) because
+that state can be skipped entirely — see below:
+- `WowPlayer.ResolveCombatConfiguration()` sets `CombatConfiguration` straight
+  from `WowWorldState.PlayerClass` (see the `MultiBoolOne` B-byte bits 2-4
+  note below) and builds the matching `ClassState` subtype. It's called every
+  tick from `WowManagementTasks.EveryWorldStateUpdateTasks()` — **not** tied
+  to `PlayerState.RESOLVE_FARMING_CONFIGURATION` — and early-outs quietly
+  (no logging) once `ClassState` is already set, or for as many ticks as
+  `WorldState.PlayerClass` is still `null` (addon not rendering a real row
+  yet, e.g. still on the login screen). It needed to be tick-driven rather
+  than a one-time startup step because `CoreGameplayLoopTask`'s own "already
+  in combat" short-circuit (top of its `while` loop) can jump straight to
+  `PlayerState.IN_CORE_COMBAT_LOOP` on literally the first tick — e.g. the
+  bot was (re)started while the character was already mid-fight — bypassing
+  `RESOLVE_FARMING_CONFIGURATION` for the rest of the run. Before this split,
+  that meant the combat loop could try to dispatch on a still-`Unknown`
+  `CombatConfiguration` with a still-null `ClassState`.
+- `WowPlayer.ResolveFarmingConfigurationTask()` picks `LocationConfiguration`
+  from `WowLocationConfigs.ALL_LOCATIONS` — an explicit list (deliberately
+  not reflection over the class's static fields, so a route can be pulled
+  out of auto-selection without deleting it) — by filtering to configs the
+  player currently satisfies: the same three checks `SetLogoutVariablesTask()`
+  uses to keep validating an already-running route (level, zone, waypoint
+  proximity via `WowPathfinding.GetDistanceToClosestWaypoint`/
+  `WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT`), just run once up
+  front instead of every tick. Exactly one match wins; zero or more than one
+  means there's no safe automatic choice. This one *is* still tied to
+  `PlayerState.RESOLVE_FARMING_CONFIGURATION`, right after the window is
+  focused — meaning it's one of the states the "already in combat"
+  short-circuit above can skip, so `LocationConfiguration` can end up staying
+  `null` for an entire run that started mid-combat. Nothing currently
+  re-resolves it if that happens; code that reads `LocationConfiguration`
+  either runs somewhere that short-circuit can't reach mid-combat, or (like
+  the level-up-alert block in `EveryWorldStateUpdateTasks()`) guards on
+  `FarmingConfig.LocationConfiguration != null` first. `SetLogoutVariablesTask()`
+  does not guard, so it would throw if reached in that state — a known gap,
+  not yet fixed.
 
-On either failure, `ResolveFarmingConfigurationTask()` sends a Slack alert via
-`SlackHelper.SendMessageToChannel()` explaining why, returns `false`, and
-`CoreGameplayLoopTask` sends the state machine straight to
-`EXITING_CORE_GAMEPLAY_LOOP` (which exits the process) rather than guessing.
-Because resolution now happens after construction, `WowPlayer.ClassState`
-starts `null` (`UpdateWorldStateAsync`/`UpdateWorldState`/`UpdateFromBitmap`
-all null-guard the per-tick `ClassState.UpdateFromBitmap` call) until
-`ResolveFarmingConfigurationTask()` builds the concrete subtype; nothing
-reads `ClassState` before that state runs. `WowManagementTasks.
-EveryWorldStateUpdateTasks()` runs every tick including the handful before
-resolution completes, so its level-up-alert block is guarded on
-`FarmingConfig.LocationConfiguration != null` for the same reason.
+On failure, `ResolveFarmingConfigurationTask()` checks `ClassState == null`
+first (i.e. `ResolveCombatConfiguration()` never managed to resolve it) before
+doing its own location matching — since the two are independent now, this is
+the one place that still needs to fail the whole startup if combat config
+truly never resolved. Either failure sends a Slack alert via
+`SlackHelper.SendMessageToChannel()`, returns `false`, and `CoreGameplayLoopTask`
+sends the state machine straight to `EXITING_CORE_GAMEPLAY_LOOP` (which exits
+the process) rather than guessing. `WowPlayer.ClassState` starts `null`
+(`UpdateWorldStateAsync`/`UpdateWorldState`/`UpdateFromBitmap` all null-guard
+the per-tick `ClassState.UpdateFromBitmap` call) until `ResolveCombatConfiguration()`
+builds the concrete subtype; nothing reads `ClassState` before that.
 
 **`MultiBoolOne`'s B byte:** bit 1 carries `TargetRecentlyEvaded` — true for a
 few seconds after the player's own attack drew an `EVADE` combat-log miss
@@ -244,11 +264,11 @@ of truth — edits should be made here, not in the WoW install directory.
   own concrete subtype exposing *only* its own fields — a wrong-class field
   reference is a compile error, not a runtime surprise. `WowPlayer.ClassState`
   holds the one built for `FarmingConfig.CombatConfiguration` — `null` until
-  `ResolveFarmingConfigurationTask()` sets that from the player's detected
-  class and builds the matching subtype (see "Automatic farming-config
-  resolution" above) — and updates it (in place, same instance — no
-  `PreviousClassState` exists, nothing has needed one yet) every tick
-  alongside `WorldState`, off the same captured bitmap.
+  `ResolveCombatConfiguration()` sets that from the player's detected class
+  and builds the matching subtype (see "Automatic farming-config resolution"
+  above) — and updates it (in place, same instance — no `PreviousClassState`
+  exists, nothing has needed one yet) every tick alongside `WorldState`, off
+  the same captured bitmap.
 - **`Gameplay/Wow*Tasks.cs`** — behavior/task implementations grouped by
   concern: `WowMovementTasks` (pathfinding/turning/strafing/jumping),
   `WowCommonCombatTasks` (shared combat logic), `WowWarriorTasks` /

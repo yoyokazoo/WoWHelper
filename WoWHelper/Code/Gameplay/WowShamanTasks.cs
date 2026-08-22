@@ -113,6 +113,8 @@ namespace WoWHelper
             bool skipFlameShock = WorldState.IsTargetFireImmune;
             // Always shock runners, nature immune, and high hp mobs
             skipFlameShock |= !WorldState.IsTargetRunnerMob && !WorldState.IsTargetNatureImmune && WorldState.TargetHpPercent < 75;
+            // Open question if we should flame shock casters at the start of fights. Probably worth waiting?
+            skipFlameShock |= WorldState.IsTargetCasterMob && !WorldState.IsTargetNatureImmune;
 
             if (skipFlameShock)
             {
@@ -127,9 +129,8 @@ namespace WoWHelper
             // Skip if nature immune
             bool skipEarthShock = WorldState.IsTargetNatureImmune;
             // Always shock runners, if we're low hp, if there are multiple mobs, or if the mob is high hp
-            skipEarthShock |= !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20;
+            skipEarthShock |= !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20 && !WorldState.IsTargetCasterMob;
             // Don't earth shock casters that aren't currently casting
-            // Open question if we should flame shock casters at the start of fights. Probably worth waiting?
             skipEarthShock |= WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
 
             if (skipEarthShock)
