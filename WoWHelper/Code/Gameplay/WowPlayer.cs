@@ -26,6 +26,12 @@ namespace WoWHelper
         // then use the cached value until they get dirtied again?
         public long FarmStartTime { get; private set; }
         public long LastFindTargetTime { get; private set; }
+        // Set whenever an engage attempt bails because WorldState.NotInLineOfSight was true
+        // (see AbandonUnreachableEngageTarget in WowCommonCombatTasks.cs). Defaults to 0, so
+        // CurrentTimeInsideDuration is false and nothing is suppressed until the first
+        // bailout. PathfindingLoopTask checks this to avoid immediately re-acquiring the
+        // same unreachable target -- see LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS.
+        public long LastLineOfSightBailoutTime { get; private set; }
         public long LastJumpTime { get; private set; }
         public long DynamiteTime { get; private set; }
         public long HealthPotionTime { get; private set; }

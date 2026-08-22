@@ -166,6 +166,11 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
+            if (AbandonUnreachableEngageTarget())
+            {
+                return false;
+            }
+
             Console.WriteLine($"ShamanFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}, WorldState.IsInCombat? {WorldState.IsInCombat}");
             if (!WorldState.IsCurrentlyCasting && !WorldState.IsInCombat)
             {

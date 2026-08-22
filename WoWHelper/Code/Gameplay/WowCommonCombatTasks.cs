@@ -135,6 +135,31 @@ namespace WoWHelper
             return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || targetIsEvading || invalidTarget || outOfRange || notInLineOfSight;
         }
 
+        // Called from each class's *FaceCorrectDirectionToEngageTask (the CONTINUE_TO_TRY_TO_ENGAGE
+        // loop body, i.e. before we've ever landed a hit) right before attempting to pull. If the
+        // target we tab/macro-picked isn't actually reachable (WorldState.NotInLineOfSight -- e.g.
+        // it's leashed on the far side of terrain), that flag alone can stay true indefinitely, so
+        // the class-specific CanEngageTarget() readiness check (which only reflects cooldown/GCD,
+        // not reachability) would otherwise keep returning true forever and the engage loop would
+        // never fall through to CHECK_FOR_LOGOUT to re-evaluate anything (see EngageAttempts /
+        // ENGAGE_ROTATION_ATTEMPTS in WowManagementTasks.cs, which never gets checked while that
+        // loop keeps "succeeding"). Clears the target so PathfindingLoopTask picks a fresh one, and
+        // stamps LastLineOfSightBailoutTime so that pathfinding loop doesn't just immediately
+        // re-press find-target and pick the same unreachable mob right back up -- see
+        // LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS.
+        public bool AbandonUnreachableEngageTarget()
+        {
+            if (!WorldState.NotInLineOfSight)
+            {
+                return false;
+            }
+
+            Console.WriteLine("Target not in line of sight while trying to engage -- clearing target and suppressing retarget for a bit");
+            Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
+            LastLineOfSightBailoutTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            return true;
+        }
+
         public async Task<bool> StartAttackTask()
         {
             await Task.Delay(0);

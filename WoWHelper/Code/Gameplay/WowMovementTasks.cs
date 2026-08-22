@@ -36,7 +36,15 @@ namespace WoWHelper
 
                 await EveryWorldStateUpdateTasks();
 
-                if (!CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
+                // Suppressed for a bit after an engage attempt bailed out due to
+                // WorldState.NotInLineOfSight (see AbandonUnreachableEngageTarget in
+                // WowCommonCombatTasks.cs) -- otherwise we'd immediately TAB/macro right back
+                // onto the same unreachable target we just cleared. Keep walking the route
+                // during the suppression window instead of standing still trying to retarget.
+                bool suppressedAfterLineOfSightBailout = CurrentTimeInsideDuration(
+                    LastLineOfSightBailoutTime, WowPlayerConstants.LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS);
+
+                if (!suppressedAfterLineOfSightBailout && !CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 

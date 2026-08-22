@@ -188,6 +188,11 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
+            if (AbandonUnreachableEngageTarget())
+            {
+                return false;
+            }
+
             if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
                 await TurnABitToTheLeftTask();
