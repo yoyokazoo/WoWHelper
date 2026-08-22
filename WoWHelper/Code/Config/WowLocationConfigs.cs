@@ -318,6 +318,12 @@ namespace WoWHelper.Code.WorldState
             DistanceTolerance = 0.2f
         };
 
+        /*
+/target Scorpid
+/target Swirling
+/target Saltstone
+/target Sparkleshell
+            */
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE = new WowLocationConfiguration
         {
             Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
@@ -340,7 +346,8 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
-            DistanceTolerance = 0.2f
+            DistanceTolerance = 0.2f,
+            EngageMethod = EngagementMethod.Spellcast
         };
 
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
@@ -443,6 +450,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Hillsbrad River (Level 29+)",
             MinimumLevel = 29,
+            LogoffLevel = 35,
             Zone = WowZone.HillsbradFoothills,
 
             Waypoints = new List<Vector2>
@@ -889,7 +897,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_42_TANARIS_TURTLES,
             LEVEL_37_KODO_GRAVEYARD,
             LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE,
-            LEVEL_34_SHIMMERING_FLATS_WAYPOINTS,
+            //LEVEL_34_SHIMMERING_FLATS_WAYPOINTS,
             LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS,
             LEVEL_27_NORTH_ASHENVALE_WAYPOINTS,
             LEVEL_27_STONETALON_CHARRED_FOREST_WAYPOINTS,

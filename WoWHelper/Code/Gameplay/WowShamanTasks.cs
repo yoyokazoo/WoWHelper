@@ -205,7 +205,8 @@ namespace WoWHelper
                 // Figure out what to do here.  War stomp? Magma Totem? War stomp -> ghost wolf -> run to safety?
                 // Stoneskin totem for now
                 //Keyboard.KeyPress(WowInput.THROW_DYNAMITE);
-                await ThrowDynamiteTask(forceThrow: true);
+                //await ThrowDynamiteTask(forceThrow: true);
+                Keyboard.KeyPress(WowInput.SHAMAN_6);
 
                 LogoutReason = $"Got into an emergency situation ({warningMessage}), logging off for safety";
                 LogoutTriggered = true;
