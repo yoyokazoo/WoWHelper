@@ -128,6 +128,9 @@ namespace WoWHelper
             bool skipEarthShock = WorldState.IsTargetNatureImmune;
             // Always shock runners, if we're low hp, if there are multiple mobs, or if the mob is high hp
             skipEarthShock |= !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20;
+            // Don't earth shock casters that aren't currently casting
+            // Open question if we should flame shock casters at the start of fights. Probably worth waiting?
+            skipEarthShock |= WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
 
             if (skipEarthShock)
             {
@@ -245,7 +248,11 @@ namespace WoWHelper
             switch (FarmingConfig.EngageMethod)
             {
                 case WowLocationConfiguration.EngagementMethod.Spellcast: return classState.CanSpellcastPullTarget;
-                default: throw new System.NotImplementedException();
+                default: throw new System.NotImplementedException(
+                    $"{nameof(ShamanCanEngageTarget)}: EngageMethod \"{FarmingConfig.EngageMethod}\" (from location " +
+                    $"\"{FarmingConfig.LocationConfiguration?.Title}\") isn't supported for Shaman -- only Spellcast is. " +
+                    $"This route's EngageMethod likely wasn't set up for this class -- see " +
+                    $"WowConfigResolutionTasks.ResolveFarmingConfigurationTask.");
             }
         }
 

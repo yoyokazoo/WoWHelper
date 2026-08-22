@@ -219,7 +219,11 @@ namespace WoWHelper
             {
                 case WowLocationConfiguration.EngagementMethod.Charge: return classState.CanChargeTarget;
                 case WowLocationConfiguration.EngagementMethod.Shoot: return classState.CanShootTarget;
-                default: throw new System.NotImplementedException();
+                default: throw new System.NotImplementedException(
+                    $"{nameof(WarriorCanEngageTarget)}: EngageMethod \"{FarmingConfig.EngageMethod}\" (from location " +
+                    $"\"{FarmingConfig.LocationConfiguration?.Title}\") isn't supported for Warrior -- only Charge/Shoot " +
+                    $"are. This route's EngageMethod likely wasn't set up for this class -- see " +
+                    $"WowConfigResolutionTasks.ResolveFarmingConfigurationTask.");
             }
         }
 

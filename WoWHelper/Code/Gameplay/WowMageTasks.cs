@@ -219,7 +219,11 @@ namespace WoWHelper
             switch (FarmingConfig.EngageMethod)
             {
                 case WowLocationConfiguration.EngagementMethod.Spellcast: return classState.CanSpellcastPullTarget;
-                default: throw new System.NotImplementedException();
+                default: throw new System.NotImplementedException(
+                    $"{nameof(MageCanEngageTarget)}: EngageMethod \"{FarmingConfig.EngageMethod}\" (from location " +
+                    $"\"{FarmingConfig.LocationConfiguration?.Title}\") isn't supported for Mage -- only Spellcast is. " +
+                    $"This route's EngageMethod likely wasn't set up for this class -- see " +
+                    $"WowConfigResolutionTasks.ResolveFarmingConfigurationTask.");
             }
         }
 

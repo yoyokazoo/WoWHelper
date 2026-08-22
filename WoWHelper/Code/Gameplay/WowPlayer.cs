@@ -98,7 +98,9 @@ namespace WoWHelper
                 case WowCombatConfiguration.Warrior: return new WowWarriorClassState();
                 case WowCombatConfiguration.Mage: return new WowMageClassState();
                 case WowCombatConfiguration.Shaman: return new WowShamanClassState();
-                default: throw new System.NotImplementedException();
+                default: throw new System.NotImplementedException(
+                    $"{nameof(CreateClassState)}: no ClassState implemented for CombatConfiguration \"{combatConfiguration}\" -- " +
+                    $"this should only be called with a resolved (non-Unknown) CombatConfiguration.");
             }
         }
 
@@ -174,7 +176,19 @@ namespace WoWHelper
             };
             KeyPoller.Start();
 
-            _ = CoreGameplayLoopTask();
+            // Fire-and-forget -- nothing else awaits this Task, so without observing its
+            // exception here, any unhandled exception anywhere in the state machine (a bug
+            // in this codebase, not just a deliberate NotImplementedException) would raise
+            // a first-chance exception notification with no further trace, then silently
+            // kill the whole gameplay loop -- the character just stops being piloted, with
+            // nothing logged and no Slack alert to say why. Logging the full exception
+            // (with stack trace) and alerting on Slack turns that into something
+            // diagnosable and noticeable instead.
+            _ = CoreGameplayLoopTask().ContinueWith(t =>
+            {
+                Console.WriteLine($"CoreGameplayLoopTask crashed: {t.Exception}");
+                SlackHelper.SendMessageToChannel($"WoWHelper crashed: {t.Exception?.GetBaseException().Message}");
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         public void AdHocTest()
