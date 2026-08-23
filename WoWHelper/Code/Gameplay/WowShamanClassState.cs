@@ -12,6 +12,8 @@ namespace WoWHelper
         public bool ShouldCastFlameShock { get; private set; }
         public bool TargetHasFlameShock { get; private set; }
         public bool CanSpellcastPullTarget { get; private set; }
+        public bool CanCurePoison { get; private set; }
+        public bool CanCureDisease { get; private set; }
 
         public override void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig)
         {
@@ -26,7 +28,9 @@ namespace WoWHelper
             ShouldCastFlameShock = r4;
             TargetHasFlameShock = r5;
             CanSpellcastPullTarget = r6;
-            // r7, r8, ClassBoolTwo, and ClassIntOne currently reserved/unused for Shaman.
+            CanCurePoison = r7;
+            CanCureDisease = r8;
+            // ClassBoolTwo and ClassIntOne currently reserved/unused for Shaman.
         }
     }
 }
