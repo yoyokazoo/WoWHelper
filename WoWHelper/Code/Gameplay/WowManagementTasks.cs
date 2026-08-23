@@ -197,17 +197,10 @@ namespace WoWHelper
 
         public async Task<bool> ThrowTargetDummyTask()
         {
-            Mouse.ButtonDown(Mouse.MouseKeys.Left);
-            await Task.Delay(30);
-            // TODO: ?? switch to like dynamite??
-            Mouse.MoveRelative(0, 200);
-            await Task.Delay(30);
-            Mouse.ButtonUp(Mouse.MouseKeys.Left);
-
-            await Task.Delay(250);
-
+            Mouse.Move(FarmingConfig.ScreenConfiguration.DynamiteAndDummyX, FarmingConfig.ScreenConfiguration.DynamiteAndDummyY);
+            await Task.Delay(50);
             await WowInput.PressKeyWithShift(WowInput.SHIFT_TARGET_DUMMY);
-            await Task.Delay(250);
+            await Task.Delay(1000);
             return true;
         }
 

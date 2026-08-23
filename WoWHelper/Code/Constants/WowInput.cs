@@ -158,8 +158,8 @@ namespace WoWHelper.Code
         /*
          * - Dyn
 #showtooltip [mod:shift] Target Dummy; Rough Dynamite
-/use [nomod] Rough Dynamite
-/use [mod:shift] Target Dummy
+/use [nomod, @cursor] Rough Dynamite
+/use [mod:shift, @cursor] Target Dummy
         */
         public const Keys THROW_DYNAMITE = Keys.OemMinus;
         public const Keys SHIFT_TARGET_DUMMY = Keys.OemMinus;

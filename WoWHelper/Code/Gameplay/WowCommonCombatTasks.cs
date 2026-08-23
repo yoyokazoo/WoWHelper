@@ -58,8 +58,6 @@ namespace WoWHelper
                 Mouse.Move(FarmingConfig.ScreenConfiguration.DynamiteAndDummyX, FarmingConfig.ScreenConfiguration.DynamiteAndDummyY);
                 await Task.Delay(50);
                 Keyboard.KeyPress(WowInput.THROW_DYNAMITE);
-                await Task.Delay(50);
-                Mouse.PressButton(Mouse.MouseKeys.Left);
                 await Task.Delay(1000);
             }
 
