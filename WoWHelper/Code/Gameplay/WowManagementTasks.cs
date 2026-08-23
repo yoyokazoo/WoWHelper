@@ -137,7 +137,13 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Health Potions";
             }
-            else if (WorldState.LowOnAmmo && FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
+            // EngageMethod.Pull now covers both Warrior's ranged bow/gun pull (which needs
+            // ammo) and Mage/Shaman's spell pull (which never does -- and would otherwise
+            // always read as "low on ammo", since a caster's ammo slot is just empty, not
+            // merely low). Only Warrior can actually run out of ammo, so gate on class too.
+            else if (WorldState.LowOnAmmo &&
+                FarmingConfig.CombatConfiguration == Code.Gameplay.WowCombatConfiguration.Warrior &&
+                FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Ammo";

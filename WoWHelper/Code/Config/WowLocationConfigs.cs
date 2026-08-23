@@ -57,7 +57,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.05f,
-            EngageMethod = EngagementMethod.Shoot,
+            EngageMethod = EngagementMethod.Pull,
             UseRend = true,
             TooManyAttackersThreshold = 4
         };
@@ -86,7 +86,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f,
-            EngageMethod = EngagementMethod.Shoot,
+            EngageMethod = EngagementMethod.Pull,
             UseRend = false,
             TooManyAttackersThreshold = 4
         };
@@ -290,10 +290,17 @@ namespace WoWHelper.Code.WorldState
             DistanceTolerance = 0.2f
         };
 
+        /*
+/target Aged
+/target Dying
+/target Ancient
+/target Carrion
+            */
         public static readonly WowLocationConfiguration LEVEL_37_KODO_GRAVEYARD = new WowLocationConfiguration
         {
             Title = "Kodo Graveyard, Desolace (Level 37+)", // zone inferred from name/coords, please confirm
-            MinimumLevel = 37,
+            MinimumLevel = 36,
+            LogoffLevel = 42, // ??
             Zone = WowZone.Desolace,
 
             Waypoints = new List<Vector2>
@@ -315,7 +322,8 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f
+            DistanceTolerance = 0.2f,
+            EngageMethod = EngagementMethod.Pull
         };
 
         /*
@@ -347,7 +355,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.2f,
-            EngageMethod = EngagementMethod.Spellcast
+            EngageMethod = EngagementMethod.Pull
         };
 
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
@@ -411,7 +419,7 @@ namespace WoWHelper.Code.WorldState
                 */
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Spellcast,
+            EngageMethod = EngagementMethod.Pull,
             TooManyAttackersThreshold = 3,
         };
 
@@ -441,7 +449,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(35.79f, 47.97f),
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            EngageMethod = EngagementMethod.Spellcast,
+            EngageMethod = EngagementMethod.Pull,
             TooManyAttackersThreshold = 3,
         };
 
@@ -471,7 +479,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.3f,
-            EngageMethod = EngagementMethod.Spellcast,
+            EngageMethod = EngagementMethod.Pull,
         };
 
         public static readonly WowLocationConfiguration LEVEL_24_STONETALON_WAYPOINTS = new WowLocationConfiguration
@@ -501,7 +509,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.19f, 22.95f),
                 new Vector2(44.71f, 20.78f),
             },
-            EngageMethod = EngagementMethod.Spellcast,
+            EngageMethod = EngagementMethod.Pull,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
         };
 
@@ -545,7 +553,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(17.68f, 30.43f),
                 new Vector2(16.72f, 29.32f),
             },
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             LogoffLevel = 25,
         };
 
@@ -576,7 +584,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(42.24f, 20.87f)
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             LogoffLevel = 21,
         };
 
@@ -602,7 +610,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(56.29f, 22.47f),
                 new Vector2(56.60f, 22.00f)
             },
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             LogoffLevel = 18,
         };
 
@@ -634,7 +642,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(36.30f, 53.50f)
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             LogoffLevel = 14
         };
 
@@ -672,7 +680,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(54.90f, 18.83f),
                 new Vector2(53.57f, 17.68f)
             },
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             LogoffLevel = 12
         };
 
@@ -711,7 +719,7 @@ namespace WoWHelper.Code.WorldState
                 //new Vector2(52.09f, 65.87f),
                 new Vector2(52.44f, 64.81f),
             },
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             LogoffLevel = 10,
         };
 
@@ -732,7 +740,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(43.88f, 56.90f),
                 new Vector2(45.27f, 57.40f),
             },
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             TooManyAttackersThreshold = 3,
             LogoffLevel = 7,
         };
@@ -756,7 +764,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(51.60f, 39.78f),
             },
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             TooManyAttackersThreshold = 4,
             LogoffLevel = 13,
         };
@@ -779,7 +787,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(41.77f, 65.69f),
             },
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             LogoffLevel = 10,
         };
 
@@ -801,7 +809,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(59.84f, 88.61f),
             },
             TraversalMethod = WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             LogoffLevel = 8,
         };
 
@@ -822,7 +830,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(42.75f, 86.92f),
                 new Vector2(43.54f, 88.74f),
             },
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             TooManyAttackersThreshold = 2,
             LogoffLevel = 6,
         };
@@ -842,7 +850,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(49.42f, 80.53f),
                 new Vector2(46.44f, 78.21f),
             },
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             TooManyAttackersThreshold = 2,
             LogoffLevel = 4,
         };
@@ -865,7 +873,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.29f, 62.22f),
                 new Vector2(45.49f, 64.54f),
             },
-            EngageMethod = EngagementMethod.Spellcast, // TODO how to define this in combat config when location specific?
+            EngageMethod = EngagementMethod.Pull,
             TooManyAttackersThreshold = 2,
             LogoffLevel = 4,
         };

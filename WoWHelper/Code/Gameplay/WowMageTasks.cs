@@ -213,18 +213,13 @@ namespace WoWHelper
         // Replaces the old shared CanEngageTarget() for the Mage case --
         // CanSpellcastPullTarget is shared with Shaman under the same name
         // but each class gets its own ClassState type, so each also gets its
-        // own thin CanEngageTarget wrapper.
+        // own thin CanEngageTarget wrapper. Mage always pulls with a spell
+        // regardless of FarmingConfig.EngageMethod (Charge/Pull only matters for
+        // Warrior -- see the enum's own comment on WowLocationConfiguration.cs),
+        // so unlike WarriorCanEngageTarget this doesn't need to dispatch on it at all.
         public bool MageCanEngageTarget(WowMageClassState classState)
         {
-            switch (FarmingConfig.EngageMethod)
-            {
-                case WowLocationConfiguration.EngagementMethod.Spellcast: return classState.CanSpellcastPullTarget;
-                default: throw new System.NotImplementedException(
-                    $"{nameof(MageCanEngageTarget)}: EngageMethod \"{FarmingConfig.EngageMethod}\" (from location " +
-                    $"\"{FarmingConfig.LocationConfiguration?.Title}\") isn't supported for Mage -- only Spellcast is. " +
-                    $"This route's EngageMethod likely wasn't set up for this class -- see " +
-                    $"WowConfigResolutionTasks.ResolveFarmingConfigurationTask.");
-            }
+            return classState.CanSpellcastPullTarget;
         }
 
         public async Task<bool> MageMakeSureWeAreAttackingEnemyTask()

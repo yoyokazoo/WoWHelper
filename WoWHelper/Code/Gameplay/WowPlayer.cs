@@ -331,8 +331,14 @@ namespace WoWHelper
                 // TODO: if on login screen all other values will be messed up
                 if (!WorldState.OnLoginScreen && WorldState.IsInCombat)
                 {
-                    if (CurrentPlayerState == PlayerState.CONTINUE_TO_TRY_TO_ENGAGE && 
-                        FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Spellcast && 
+                    // Mage/Shaman always pull with a spell regardless of FarmingConfig.EngageMethod
+                    // (Charge/Pull only distinguishes Warrior's two options -- see the enum's own
+                    // comment on WowLocationConfiguration.cs), so checking CombatConfiguration here
+                    // instead of EngageMethod covers both classes without needing to know which
+                    // location we're on.
+                    if (CurrentPlayerState == PlayerState.CONTINUE_TO_TRY_TO_ENGAGE &&
+                        (FarmingConfig.CombatConfiguration == WowCombatConfiguration.Mage ||
+                         FarmingConfig.CombatConfiguration == WowCombatConfiguration.Shaman) &&
                         WorldState.ResourcePercent < 100)
                     {
                         // We likely just cast a spell that hasn't yet hit the target.  Wait a little bit so it does,
