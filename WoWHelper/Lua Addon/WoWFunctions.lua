@@ -610,15 +610,12 @@ end
 -- TargetHasRend() moved to WarriorFunctions.lua.
 -- TargetHasFlameShock() moved to ShamanFunctions.lua.
 
--- Mobs whose spells are worth interrupting. Name-based (Classic has no
--- reliable creature-ID API exposed to addons); add to this list as more
--- interruptible casters are identified.
-local CASTER_MOB_NAMES = {
-    ["Withered Ancient"] = true,
-}
+-- CASTER_MOB_NAMES/RUNNER_MOB_NAMES/FIRE_IMMUNE_MOB_NAMES now live in
+-- CreatureConfig.lua -- one place to update every name-based creature list.
 
 -- True if the current target is a caster mob with interruptible spells (per
--- CASTER_MOB_NAMES above), regardless of whether it's currently casting.
+-- CASTER_MOB_NAMES in CreatureConfig.lua), regardless of whether it's
+-- currently casting.
 function IsTargetCasterMob()
     if not UnitExists("target") then
         return false
@@ -632,14 +629,8 @@ function IsTargetCasterMob()
     return CASTER_MOB_NAMES[name] == true
 end
 
--- Mobs that flee/run at low health (or otherwise need special handling to
--- stop them running off), by name -- same caveat as CASTER_MOB_NAMES above
--- about Classic having no reliable creature-ID API for addons.
-local RUNNER_MOB_NAMES = {
-    ["Bloodfury Harpy"] = true,
-}
-
--- True if the current target is a runner mob (per RUNNER_MOB_NAMES above).
+-- True if the current target is a runner mob (per RUNNER_MOB_NAMES in
+-- CreatureConfig.lua).
 function IsTargetRunnerMob()
     if not UnitExists("target") then
         return false
@@ -653,14 +644,8 @@ function IsTargetRunnerMob()
     return RUNNER_MOB_NAMES[name] == true
 end
 
--- Mobs immune (or effectively immune) to fire damage/effects, by name -- same
--- caveat as CASTER_MOB_NAMES above about Classic having no reliable
--- creature-ID API for addons.
-local FIRE_IMMUNE_MOB_NAMES = {
-    ["Rogue Flame Spirit"] = true,
-}
-
--- True if the current target is fire-immune (per FIRE_IMMUNE_MOB_NAMES above).
+-- True if the current target is fire-immune (per FIRE_IMMUNE_MOB_NAMES in
+-- CreatureConfig.lua).
 function IsTargetFireImmune()
     if not UnitExists("target") then
         return false
@@ -672,6 +657,27 @@ function IsTargetFireImmune()
     end
 
     return FIRE_IMMUNE_MOB_NAMES[name] == true
+end
+
+-- True if the current target is nature-immune (per NATURE_IMMUNE_MOB_NAMES in
+-- CreatureConfig.lua).
+function IsTargetNatureImmune()
+    if not UnitExists("target") then
+        return false
+    end
+
+    local name = UnitName("target")
+    if not name then
+        return false
+    end
+
+    return NATURE_IMMUNE_MOB_NAMES[name] == true
+end
+
+-- True if the target is currently casting or channeling a spell.
+function IsTargetCasting()
+    return UnitCastingInfo("target") ~= nil
+        or UnitChannelInfo("target") ~= nil
 end
 
 -- Was checking Lightning Shield's (324) cooldown as a stand-in for the GCD --
@@ -771,6 +777,30 @@ function IsPlayerCasting()
         or UnitChannelInfo("player") ~= nil
 end
 
+-- True if the player has a debuff of the given dispel type (e.g. "Poison",
+-- "Disease", "Magic", "Curse") -- same UnitDebuff() return-value positions
+-- as TargetHasDebuffSpellId/Name above (debuffType is the 4th value).
+function PlayerHasDebuffType(debuffType)
+  for i = 1, 40 do
+    local name, _, _, thisDebuffType = UnitDebuff("player", i)
+    if not name then break end
+
+    if thisDebuffType == debuffType then
+      return true
+    end
+  end
+
+  return false
+end
+
+function IsPlayerPoisoned()
+    return PlayerHasDebuffType("Poison")
+end
+
+function IsPlayerDiseased()
+    return PlayerHasDebuffType("Disease")
+end
+
 -- HasRockbiterWeaponMainHand(), ShouldCastRockbiterWeapon(),
 -- ShouldCastLightningShield(), and ShouldCastFlameShock() moved to
 -- ShamanFunctions.lua.
@@ -780,13 +810,14 @@ end
 -- GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
 -- ShamanFunctions.lua) -- C# now reads those instead of these. All
 -- class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G are both fully
--- packed, and the B byte now carries HasRecentTargetEvade() (b1) plus which
--- of the three bot-supported classes the player is playing (b2 Warrior, b3
--- Mage, b4 Shaman -- exactly one true, used by C# to auto-pick
+-- packed, and the B byte carries HasRecentTargetEvade() (b1), which of the
+-- three bot-supported classes the player is playing (b2 Warrior, b3 Mage,
+-- b4 Shaman -- exactly one true, used by C# to auto-pick
 -- WowCombatConfiguration at startup instead of it being hardcoded; see
--- WowWorldState.PlayerClass and WowPlayer.ResolveFarmingConfigurationTask).
--- b5-b8 still free. MultiBoolTwo is left fully reserved as clean room to
--- grow into, instead of needing a 3rd pixel.
+-- WowWorldState.PlayerClass and WowPlayer.ResolveFarmingConfigurationTask),
+-- and IsPlayerPoisoned/IsPlayerDiseased/IsTargetNatureImmune/IsTargetCasting
+-- (b5-b8), which fully packs the byte. MultiBoolTwo is left fully reserved
+-- as clean room to grow into, instead of needing a 3rd pixel.
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = AreWeLowOnHealthPotions()
@@ -817,7 +848,12 @@ function GetMultiBoolOne()
     local boolB3 = (classFile == "MAGE")
     local boolB4 = (classFile == "SHAMAN")
 
-    local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, false, false, false, false)
+    local boolB5 = IsPlayerPoisoned()
+    local boolB6 = IsPlayerDiseased()
+    local boolB7 = IsTargetNatureImmune()
+    local boolB8 = IsTargetCasting()
+
+    local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
 
     return rByte/255.0, gByte/255.0, bByte/255.0
 end

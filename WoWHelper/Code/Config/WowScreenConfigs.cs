@@ -87,6 +87,13 @@ namespace WoWHelper.Code.Config
                     new ColorPosition(1677, 214, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
+            NotInLineOfSightPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(1563, 216, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1601, 225, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1631, 220, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                }),
+
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
                     new ColorPosition(1568, 173, WowScreenConfiguration.BREATH_BAR_COLOR_ONE),
@@ -145,6 +152,13 @@ namespace WoWHelper.Code.Config
                     new ColorPosition(1200, 233, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(1225, 246, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(1234, 246, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                }),
+
+            NotInLineOfSightPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
@@ -227,6 +241,13 @@ namespace WoWHelper.Code.Config
                     new ColorPosition(904, 157, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(919, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(929, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                }),
+
+            NotInLineOfSightPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>

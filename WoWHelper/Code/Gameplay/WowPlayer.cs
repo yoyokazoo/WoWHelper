@@ -26,6 +26,12 @@ namespace WoWHelper
         // then use the cached value until they get dirtied again?
         public long FarmStartTime { get; private set; }
         public long LastFindTargetTime { get; private set; }
+        // Set whenever an engage attempt bails because WorldState.NotInLineOfSight was true
+        // (see AbandonUnreachableEngageTarget in WowCommonCombatTasks.cs). Defaults to 0, so
+        // CurrentTimeInsideDuration is false and nothing is suppressed until the first
+        // bailout. PathfindingLoopTask checks this to avoid immediately re-acquiring the
+        // same unreachable target -- see LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS.
+        public long LastLineOfSightBailoutTime { get; private set; }
         public long LastJumpTime { get; private set; }
         public long DynamiteTime { get; private set; }
         public long HealthPotionTime { get; private set; }
@@ -44,7 +50,8 @@ namespace WoWHelper
         public WowWorldState WorldState { get; private set; }
 
         // Class-specific counterpart to WorldState -- see WowClassState. Null until
-        // ResolveFarmingConfigurationTask picks FarmingConfig.CombatConfiguration from the
+        // ResolveCombatConfiguration (WowConfigResolutionTasks.cs, called every tick from
+        // EveryWorldStateUpdateTasks) picks FarmingConfig.CombatConfiguration from the
         // player's live-detected class (WowWorldState.PlayerClass) and builds the matching
         // concrete type; never changes again afterward. The class-specific Wow*Tasks.cs
         // methods receive it pre-cast to their own class's type (see
@@ -79,8 +86,8 @@ namespace WoWHelper
 
             PreviousWorldState = new WowWorldState(screenConfiguration);
             WorldState = new WowWorldState(screenConfiguration);
-            // ClassState stays null until ResolveFarmingConfigurationTask can detect the
-            // player's actual class -- nothing reads it before that state runs.
+            // ClassState stays null until ResolveCombatConfiguration can detect the
+            // player's actual class -- see the property comment above.
 
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
@@ -92,7 +99,9 @@ namespace WoWHelper
                 case WowCombatConfiguration.Warrior: return new WowWarriorClassState();
                 case WowCombatConfiguration.Mage: return new WowMageClassState();
                 case WowCombatConfiguration.Shaman: return new WowShamanClassState();
-                default: throw new System.NotImplementedException();
+                default: throw new System.NotImplementedException(
+                    $"{nameof(CreateClassState)}: no ClassState implemented for CombatConfiguration \"{combatConfiguration}\" -- " +
+                    $"this should only be called with a resolved (non-Unknown) CombatConfiguration.");
             }
         }
 
@@ -107,7 +116,7 @@ namespace WoWHelper
             PreviousWorldState.Bmp?.Dispose();
             PreviousWorldState = WorldState;
             WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
-            // ClassState is still null before ResolveFarmingConfigurationTask has run (its
+            // ClassState is still null before ResolveCombatConfiguration has run (its
             // concrete type isn't known yet -- nothing reads it before then).
             ClassState?.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
 
@@ -168,7 +177,19 @@ namespace WoWHelper
             };
             KeyPoller.Start();
 
-            _ = CoreGameplayLoopTask();
+            // Fire-and-forget -- nothing else awaits this Task, so without observing its
+            // exception here, any unhandled exception anywhere in the state machine (a bug
+            // in this codebase, not just a deliberate NotImplementedException) would raise
+            // a first-chance exception notification with no further trace, then silently
+            // kill the whole gameplay loop -- the character just stops being piloted, with
+            // nothing logged and no Slack alert to say why. Logging the full exception
+            // (with stack trace) and alerting on Slack turns that into something
+            // diagnosable and noticeable instead.
+            _ = CoreGameplayLoopTask().ContinueWith(t =>
+            {
+                Console.WriteLine($"CoreGameplayLoopTask crashed: {t.Exception}");
+                SlackHelper.SendMessageToChannel($"WoWHelper crashed: {t.Exception?.GetBaseException().Message}");
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         public void AdHocTest()
@@ -310,8 +331,14 @@ namespace WoWHelper
                 // TODO: if on login screen all other values will be messed up
                 if (!WorldState.OnLoginScreen && WorldState.IsInCombat)
                 {
-                    if (CurrentPlayerState == PlayerState.CONTINUE_TO_TRY_TO_ENGAGE && 
-                        FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Spellcast && 
+                    // Mage/Shaman always pull with a spell regardless of FarmingConfig.EngageMethod
+                    // (Charge/Pull only distinguishes Warrior's two options -- see the enum's own
+                    // comment on WowLocationConfiguration.cs), so checking CombatConfiguration here
+                    // instead of EngageMethod covers both classes without needing to know which
+                    // location we're on.
+                    if (CurrentPlayerState == PlayerState.CONTINUE_TO_TRY_TO_ENGAGE &&
+                        (FarmingConfig.CombatConfiguration == WowCombatConfiguration.Mage ||
+                         FarmingConfig.CombatConfiguration == WowCombatConfiguration.Shaman) &&
                         WorldState.ResourcePercent < 100)
                     {
                         // We likely just cast a spell that hasn't yet hit the target.  Wait a little bit so it does,
@@ -413,7 +440,6 @@ namespace WoWHelper
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
                             PlayerState.LOOT_ATTEMPT_TWO,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
-                        await ScootForwardsTask();
                         break;
                     case PlayerState.LOOT_ATTEMPT_TWO:
                         Console.WriteLine("Trying to loot a second time, in case the dying anim is slow");

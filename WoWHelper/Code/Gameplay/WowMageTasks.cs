@@ -194,6 +194,11 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
+            if (AbandonUnreachableEngageTarget())
+            {
+                return false;
+            }
+
             Console.WriteLine($"MageFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}");
             if (!WorldState.IsCurrentlyCasting)
             {
@@ -208,14 +213,13 @@ namespace WoWHelper
         // Replaces the old shared CanEngageTarget() for the Mage case --
         // CanSpellcastPullTarget is shared with Shaman under the same name
         // but each class gets its own ClassState type, so each also gets its
-        // own thin CanEngageTarget wrapper.
+        // own thin CanEngageTarget wrapper. Mage always pulls with a spell
+        // regardless of FarmingConfig.EngageMethod (Charge/Pull only matters for
+        // Warrior -- see the enum's own comment on WowLocationConfiguration.cs),
+        // so unlike WarriorCanEngageTarget this doesn't need to dispatch on it at all.
         public bool MageCanEngageTarget(WowMageClassState classState)
         {
-            switch (FarmingConfig.EngageMethod)
-            {
-                case WowLocationConfiguration.EngagementMethod.Spellcast: return classState.CanSpellcastPullTarget;
-                default: throw new System.NotImplementedException();
-            }
+            return classState.CanSpellcastPullTarget;
         }
 
         public async Task<bool> MageMakeSureWeAreAttackingEnemyTask()
@@ -226,8 +230,9 @@ namespace WoWHelper
             bool targetNeedsToBeInFront = WorldState.TargetNeedsToBeInFront;
             bool invalidTarget = WorldState.InvalidTarget;
             bool outOfRange = WorldState.OutOfRange;
+            bool notInLineOfSight = WorldState.NotInLineOfSight;
 
-            Console.WriteLine($"MageMakeSureWeAreAttackingEnemyTask: {attackerJustDied} {tooFarAway} {facingWrongWay} {targetNeedsToBeInFront} {invalidTarget} {outOfRange}");
+            Console.WriteLine($"MageMakeSureWeAreAttackingEnemyTask: {attackerJustDied} {tooFarAway} {facingWrongWay} {targetNeedsToBeInFront} {invalidTarget} {outOfRange} {notInLineOfSight}");
             /*
              * new ColorPosition(1506, 216, ERROR_TEXT_COLOR),
             new ColorPosition(1524, 218, ERROR_TEXT_COLOR),
@@ -252,13 +257,13 @@ namespace WoWHelper
                 await ScootBackwardsTask();
             }
 
-            if (tooFarAway || invalidTarget || outOfRange)
+            if (tooFarAway || invalidTarget || outOfRange || notInLineOfSight)
             {
                 // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
                 Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
             }
 
-            return attackerJustDied || tooFarAway || facingWrongWay || targetNeedsToBeInFront || invalidTarget || outOfRange;
+            return attackerJustDied || tooFarAway || facingWrongWay || targetNeedsToBeInFront || invalidTarget || outOfRange || notInLineOfSight;
         }
 
         // Eventually we want to nova, blink, run, but until then just send a slack message and keep blasting

@@ -20,6 +20,16 @@
 
         public const int ENGAGE_ROTATION_ATTEMPTS = 60;
 
+        // After bailing out of an engage attempt because the target was not in line of
+        // sight (WorldState.NotInLineOfSight), suppress re-acquiring any target for this
+        // long. Without this, PathfindingLoopTask's TAB_TARGET/FIND_TARGET_MACRO press
+        // would immediately re-select the same unreachable mob (it's still the nearest/
+        // next-in-tab-order target) and the bot would spin in the same stuck loop one
+        // level up. We keep walking the waypoint route during the suppression window
+        // instead, so by the time targeting resumes the player has usually physically
+        // moved away from whatever was blocking line of sight.
+        public const long LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS = 10 * 1000;
+
         // How far (in the same 0-100 map-percent units as Waypoints/MapX/MapY) the player is
         // allowed to be from the closest waypoint in the current route when starting, before
         // we conclude they started in the wrong spot and log out. Set to the single largest

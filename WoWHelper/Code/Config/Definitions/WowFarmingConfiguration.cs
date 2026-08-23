@@ -8,7 +8,7 @@ namespace WoWHelper.Code.Gameplay
 {
     public enum WowCombatConfiguration
     {
-        // Not yet resolved -- see WowPlayer.ResolveFarmingConfigurationTask, which sets
+        // Not yet resolved -- see WowPlayer.ResolveCombatConfiguration, which sets
         // this from the player's class (WowWorldState.PlayerClass) at startup instead of
         // it being hardcoded. Default so an un-resolved config fails loudly (every
         // Wow*CombatConfig.cs dispatcher's switch has a "default: throw" case) rather than
@@ -36,9 +36,18 @@ namespace WoWHelper.Code.Gameplay
         public bool LogoutOnLowDynamite => ManagementConfiguration.LogoutOnLowDynamite;
 
         public EngagementMethod EngageMethod => LocationConfiguration.EngageMethod;
+        // Warrior-only, read from inside WarriorCombatLoopTask's rotation. Still NREs if
+        // LocationConfiguration is null (e.g. bot started mid-combat, before
+        // RESOLVE_FARMING_CONFIGURATION got a chance to run -- see
+        // WowConfigResolutionTasks.cs) -- not worth a fallback for now like
+        // TooManyAttackersThreshold below, since there's no obviously-safe default for a
+        // route-specific tactical choice.
         public bool UseRend => LocationConfiguration.UseRend;
         public bool PreemptFear => LocationConfiguration.PreemptFear;
-        public int TooManyAttackersThreshold => LocationConfiguration.TooManyAttackersThreshold;
+        // Falls back to 3 (the same default WowLocationConfiguration's own constructor
+        // uses) when LocationConfiguration is null, rather than NRE-ing mid-combat -- see
+        // UseRend/PreemptFear above for the same scenario, left unguarded for now.
+        public int TooManyAttackersThreshold => LocationConfiguration?.TooManyAttackersThreshold ?? 3;
         public int LogoffLevel => LocationConfiguration.LogoffLevel;
 
         public WowFarmingConfiguration()

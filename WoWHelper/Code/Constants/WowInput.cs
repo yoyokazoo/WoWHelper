@@ -104,8 +104,14 @@ namespace WoWHelper.Code
         public const Keys SHAMAN_LIGHTNING_SHIELD = Keys.D4;
         public const Keys SHAMAN_SHIFT_ROCKBITER_WEAPON = Keys.D4;
 
-        public const Keys SHAMAN_5 = Keys.D5;
-        public const Keys SHAMAN_SHIFT_5 = Keys.D5;
+        /*
+         * 5 Cure
+#showtooltip [mod:shift] Cure Disease; Cure Poison
+/use [nomod] Cure Poison
+/use [mod:shift] Cure Disease
+         */
+        public const Keys SHAMAN_CURE_POISON = Keys.D5;
+        public const Keys SHAMAN_SHIFT_CURE_DISEASE = Keys.D5;
 
         public const Keys SHAMAN_6 = Keys.D6;
         public const Keys SHAMAN_SHIFT_6 = Keys.D6;

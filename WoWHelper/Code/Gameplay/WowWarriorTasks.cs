@@ -175,7 +175,7 @@ namespace WoWHelper
                 Keyboard.KeyPress(WowInput.WARRIOR_CHARGE_KEY);
                 return true;
             }
-            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
+            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
                 Keyboard.KeyPress(WowInput.WARRIOR_SHOOT_MACRO);
                 return true;
@@ -188,12 +188,17 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
+            if (AbandonUnreachableEngageTarget())
+            {
+                return false;
+            }
+
             if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
                 await TurnABitToTheLeftTask();
                 Keyboard.KeyPress(WowInput.WARRIOR_CHARGE_KEY);
             }
-            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
+            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
                 if (!classState.WaitingToShoot)
                 {
@@ -213,8 +218,12 @@ namespace WoWHelper
             switch (FarmingConfig.EngageMethod)
             {
                 case WowLocationConfiguration.EngagementMethod.Charge: return classState.CanChargeTarget;
-                case WowLocationConfiguration.EngagementMethod.Shoot: return classState.CanShootTarget;
-                default: throw new System.NotImplementedException();
+                case WowLocationConfiguration.EngagementMethod.Pull: return classState.CanShootTarget;
+                default: throw new System.NotImplementedException(
+                    $"{nameof(WarriorCanEngageTarget)}: EngageMethod \"{FarmingConfig.EngageMethod}\" (from location " +
+                    $"\"{FarmingConfig.LocationConfiguration?.Title}\") isn't supported for Warrior -- only Charge/Pull " +
+                    $"are. This route's EngageMethod likely wasn't set up for this class -- see " +
+                    $"WowConfigResolutionTasks.ResolveFarmingConfigurationTask.");
             }
         }
 

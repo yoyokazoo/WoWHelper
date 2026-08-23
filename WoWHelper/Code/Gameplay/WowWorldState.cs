@@ -45,6 +45,10 @@ namespace WoWHelper
         public bool IsTargetCasterMob { get; private set; }
         public bool IsTargetRunnerMob { get; private set; }
         public bool IsTargetFireImmune { get; private set; }
+        public bool IsTargetNatureImmune { get; private set; }
+        public bool IsTargetCasting { get; private set; }
+        public bool PlayerIsPoisoned { get; private set; }
+        public bool PlayerIsDiseased { get; private set; }
         public bool TargetRecentlyEvaded { get; private set; }
 
         // Which of the three bot-supported classes the player is playing, decoded from
@@ -62,6 +66,10 @@ namespace WoWHelper
         public bool TargetNeedsToBeInFront { get; private set; }
         public bool InvalidTarget { get; private set; }
         public bool OutOfRange { get; private set; }
+        // "Target not in line of sight" red toast. Only wired up for 3440x1440 so far
+        // (see NotInLineOfSightPositions on WowScreenConfiguration) -- always false on
+        // resolutions that haven't had their positions captured yet.
+        public bool NotInLineOfSight { get; private set; }
         public bool OnLoginScreen { get; private set; }
         public bool Underwater { get; private set; }
 
@@ -210,7 +218,7 @@ namespace WoWHelper
 
             // Exactly one of these should be true once the addon is loaded and the
             // player is one of the three bot-supported classes -- see comment on
-            // PlayerClass. b5-b8 still reserved.
+            // PlayerClass.
             if (b2)
             {
                 PlayerClass = WowCombatConfiguration.Warrior;
@@ -227,6 +235,12 @@ namespace WoWHelper
             {
                 PlayerClass = null;
             }
+
+            // b5-b8 -- fully packs the byte (see GetMultiBoolOne() in WoWFunctions.lua).
+            PlayerIsPoisoned = b5;
+            PlayerIsDiseased = b6;
+            IsTargetNatureImmune = b7;
+            IsTargetCasting = b8;
         }
 
         // MultiBoolTwo currently carries no decoded fields -- reserved for the
@@ -260,6 +274,7 @@ namespace WoWHelper
             TargetNeedsToBeInFront = MatchesErrorTextColor(bmp, ScreenConfig.TargetNeedsToBeInFrontPositions);
             InvalidTarget = MatchesErrorTextColor(bmp, ScreenConfig.InvalidTargetPositions);
             OutOfRange = MatchesErrorTextColor(bmp, ScreenConfig.OutOfRangePositions);
+            NotInLineOfSight = MatchesErrorTextColor(bmp, ScreenConfig.NotInLineOfSightPositions);
         }
 
         // Index 0 of the pixel row is a fixed sentinel the addon paints, exactly

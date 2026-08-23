@@ -13,6 +13,8 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
+        private const float MEANINGFUL_LOCATION_CHANGE_AMOUNT = 0.15f;
+
         public async Task<bool> PathfindingLoopTask()
         {
             Console.WriteLine("Kicking off core pathfinding loop");
@@ -23,6 +25,11 @@ namespace WoWHelper
             bool stationaryAlertSent = false;
             long lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+            // Anchor point for stuck detection -- see the MEANINGFUL_LOCATION_CHANGE_AMOUNT
+            // check below.
+            float stuckX = WorldState.MapX;
+            float stuckY = WorldState.MapY;
 
             await FocusOnWindowTask();
 
@@ -36,7 +43,15 @@ namespace WoWHelper
 
                 await EveryWorldStateUpdateTasks();
 
-                if (!CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
+                // Suppressed for a bit after an engage attempt bailed out due to
+                // WorldState.NotInLineOfSight (see AbandonUnreachableEngageTarget in
+                // WowCommonCombatTasks.cs) -- otherwise we'd immediately TAB/macro right back
+                // onto the same unreachable target we just cleared. Keep walking the route
+                // during the suppression window instead of standing still trying to retarget.
+                bool suppressedAfterLineOfSightBailout = CurrentTimeInsideDuration(
+                    LastLineOfSightBailoutTime, WowPlayerConstants.LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS);
+
+                if (!suppressedAfterLineOfSightBailout && !CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -84,13 +99,33 @@ namespace WoWHelper
                     return true;
                 }
 
-                // If we haven't moved in a long time, alert
-                if (PreviousWorldState.MapX != WorldState.MapX || PreviousWorldState.MapY != WorldState.MapY)
+                // If we haven't moved a MEANINGFUL amount away from where we last confirmed
+                // progress, keep treating ourselves as stationary. Comparing MapX/MapY
+                // tick-to-tick for ANY change (the old behavior) reset the stuck clock on
+                // every trivial jitter -- a jump or wiggle nudging us by a fraction of a unit
+                // was enough to make us think we'd recovered, so the escalation below
+                // (jump -> wiggle -> wiggle -> give up) kept getting reset before it ever had
+                // enough uninterrupted stationary time to reach its next step. Requiring a
+                // real MEANINGFUL_LOCATION_CHANGE_AMOUNT of total distance from the anchor
+                // point means small back-and-forth wiggling while stuck doesn't count as
+                // having escaped.
+                float distanceFromStuckAnchor = Vector2.Distance(new Vector2(WorldState.MapX, WorldState.MapY), new Vector2(stuckX, stuckY));
+                if (distanceFromStuckAnchor >= MEANINGFUL_LOCATION_CHANGE_AMOUNT)
                 {
+                    stuckX = WorldState.MapX;
+                    stuckY = WorldState.MapY;
                     lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+                    // We made real progress -- if we get stuck again later in this same
+                    // PathfindingLoopTask call (a different obstacle further along the
+                    // route), give it the full jump -> wiggle -> wiggle -> alert escalation
+                    // again instead of leaving every step permanently "already attempted"
+                    // from this episode.
+                    stationaryJumpAttemptedOnce = false;
+                    stationaryWiggleAttemptedOnce = false;
+                    stationaryWiggleAttemptedTwice = false;
+                    stationaryAlertSent = false;
                 }
-
-
 
                 if (!stationaryJumpAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
                 {
@@ -394,7 +429,7 @@ namespace WoWHelper
             // strafe
             var strafeKey = left ? WowInput.STRAFE_LEFT : WowInput.STRAFE_RIGHT;
             Keyboard.KeyDown(strafeKey);
-            await Task.Delay(2000);
+            await WaitUnlessInCombatTask(3000);
             Keyboard.KeyUp(strafeKey);
 
             return true;

@@ -28,6 +28,14 @@ namespace WoWHelper
 
         public async Task<bool> EveryWorldStateUpdateTasks()
         {
+            // Resolve CombatConfiguration/ClassState as soon as the addon gives us a real
+            // class read, independent of the RESOLVE_FARMING_CONFIGURATION player state --
+            // see WowConfigResolutionTasks.ResolveCombatConfiguration for why (short version:
+            // this task runs every tick, including ones before that state ever gets a chance
+            // to run, e.g. the bot started while already mid-combat). No-ops quietly once
+            // resolved or while the addon isn't rendering a real row yet.
+            ResolveCombatConfiguration();
+
             // don't drown
             if (WorldState.Underwater)
             {
@@ -81,6 +89,21 @@ namespace WoWHelper
 
         public async Task<bool> SetLogoutVariablesTask()
         {
+            // LocationConfiguration can still be null here -- e.g. the bot was started while
+            // the character was already in combat, so CoreGameplayLoopTask's "already in
+            // combat" short-circuit jumped straight to IN_CORE_COMBAT_LOOP and
+            // RESOLVE_FARMING_CONFIGURATION (the only place LocationConfiguration gets set --
+            // see WowConfigResolutionTasks.cs) never got a chance to run. Every check below
+            // reads LocationConfiguration unconditionally, so log out now rather than NRE
+            // trying to validate a route we were never told.
+            if (FarmingConfig.LocationConfiguration == null)
+            {
+                LogoutTriggered = true;
+                LogoutReason = "LocationConfiguration was never resolved (bot likely started mid-combat, before RESOLVE_FARMING_CONFIGURATION got a chance to run) -- logging out rather than guessing a route";
+                await Task.Delay(0);
+                return LogoutTriggered;
+            }
+
             float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, FarmingConfig.LocationConfiguration.Waypoints);
 
             // Checked first so a wrong-zone/under-level/too-far-away start gives the clearest
@@ -114,7 +137,13 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Health Potions";
             }
-            else if (WorldState.LowOnAmmo && FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Shoot)
+            // EngageMethod.Pull now covers both Warrior's ranged bow/gun pull (which needs
+            // ammo) and Mage/Shaman's spell pull (which never does -- and would otherwise
+            // always read as "low on ammo", since a caster's ammo slot is just empty, not
+            // merely low). Only Warrior can actually run out of ammo, so gate on class too.
+            else if (WorldState.LowOnAmmo &&
+                FarmingConfig.CombatConfiguration == Code.Gameplay.WowCombatConfiguration.Warrior &&
+                FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Ammo";

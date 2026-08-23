@@ -275,6 +275,7 @@
     <Content Include="Source Images\2560facing.bmp" />
     <Content Include="Source Images\2560trade.bmp" />
     <Content Include="Source Images\2560tradeaccepted.bmp" />
+    <Content Include="Source Images\3440los.bmp" />
     <Content Include="Source Images\BattleShout.bmp" />
     <Content Include="Source Images\breath1920.bmp" />
     <Content Include="Source Images\breathbar.bmp" />

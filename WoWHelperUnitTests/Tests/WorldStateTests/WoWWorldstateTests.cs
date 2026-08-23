@@ -120,5 +120,15 @@ namespace WoWHelperUnitTests
 
             Assert.AreEqual(expected, Player.WorldState.OutOfRange);
         }
+
+        [TestMethod]
+        [DataRow(false, "..\\..\\Source Images\\2560toofar.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\3440los.bmp")]
+        public void VerifyNotInLineOfSight(bool expected, string fileName)
+        {
+            LoadPlayer(fileName);
+
+            Assert.AreEqual(expected, Player.WorldState.NotInLineOfSight);
+        }
     }
 }

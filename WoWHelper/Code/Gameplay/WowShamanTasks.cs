@@ -27,13 +27,14 @@ namespace WoWHelper
 
                 // Make sure to buff
                 // TODO: this needs to be changed to raw resource
-                // TODO: move these to helpers since they're used in a couple places?
+                // TODO: move this to a helper too since it's used in a couple places (see
+                // ShamanShouldCastLightningShield/EarthShock/FlameShock below)?
                 if (classState.ShouldCastRockbiterWeapon)
                 {
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
                     continue;
                 }
-                else if (classState.ShouldCastLightningShield)
+                else if (ShamanShouldCastLightningShield(classState))
                 {
                     Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
                     continue;
@@ -72,17 +73,13 @@ namespace WoWHelper
                     startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
-                if (classState.ShouldCastFlameShock && 
-                    !WorldState.IsTargetFireImmune && 
-                    (FarmingConfig.LocationConfiguration.HasRunners || WorldState.TargetHpPercent > 75))
+                if (ShamanShouldCastFlameShock(classState))
                 {
                     Console.WriteLine($"Trying to Flame Shock!");
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_FLAME_SHOCK);
                 }
-                else if (classState.CanCastEarthShock && 
-                    (FarmingConfig.LocationConfiguration.HasRunners || WorldState.PlayerHpPercent < 50 || (WorldState.AttackerCount > 1 || WorldState.TargetHpPercent > 20))) 
+                else if (ShamanShouldCastEarthShock(classState))
                 {
-                    // don't shock almost dead targets unless there are runners or we have multiples.
                     Console.WriteLine($"Trying to Earth Shock!");
                     Keyboard.KeyPress(WowInput.SHAMAN_EARTH_SHOCK);
                 }
@@ -94,6 +91,54 @@ namespace WoWHelper
             } while (WorldState.IsInCombat);
 
             return true;
+        }
+
+        public bool ShamanShouldCastLightningShield(WowShamanClassState classState)
+        {
+            // Skip if the only mob we're fighting is nature immune
+            // We still waste charges in the multi-attacker scenario, but we just want to dump mana to kill ASAP in those cases
+            bool skipLightningShield = WorldState.IsTargetNatureImmune && WorldState.AttackerCount <= 1;
+
+            if (skipLightningShield)
+            {
+                return false;
+            }
+
+            return classState.ShouldCastLightningShield;
+        }
+
+        public bool ShamanShouldCastFlameShock(WowShamanClassState classState)
+        {
+            // Skip if fire immune
+            bool skipFlameShock = WorldState.IsTargetFireImmune;
+            // Always shock runners, nature immune, and high hp mobs
+            skipFlameShock |= !WorldState.IsTargetRunnerMob && !WorldState.IsTargetNatureImmune && WorldState.TargetHpPercent < 75;
+            // Open question if we should flame shock casters at the start of fights. Probably worth waiting?
+            skipFlameShock |= WorldState.IsTargetCasterMob && !WorldState.IsTargetNatureImmune;
+
+            if (skipFlameShock)
+            {
+                return false;
+            }
+
+            return classState.ShouldCastFlameShock;
+        }
+
+        public bool ShamanShouldCastEarthShock(WowShamanClassState classState)
+        {
+            // Skip if nature immune
+            bool skipEarthShock = WorldState.IsTargetNatureImmune;
+            // Always shock runners, if we're low hp, if there are multiple mobs, or if the mob is high hp
+            skipEarthShock |= !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20 && !WorldState.IsTargetCasterMob;
+            // Don't earth shock casters that aren't currently casting
+            skipEarthShock |= WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
+
+            if (skipEarthShock)
+            {
+                return false;
+            }
+
+            return classState.CanCastEarthShock;
         }
 
         public async Task<bool> ShamanStartBattleReadyRecoverTask(WowShamanClassState classState)
@@ -125,6 +170,18 @@ namespace WoWHelper
             bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
 
+            if (WorldState.PlayerIsPoisoned)
+            {
+                await WaitForGlobalCooldownTask();
+                Keyboard.KeyPress(WowInput.SHAMAN_CURE_POISON);
+            }
+
+            if (WorldState.PlayerIsDiseased)
+            {
+                await WaitForGlobalCooldownTask();
+                await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_CURE_DISEASE);
+            }
+
             if (battleReady)
             {
                 bool buffed = false;
@@ -135,7 +192,7 @@ namespace WoWHelper
                     buffed = true;
                 }
 
-                if (classState.ShouldCastLightningShield)
+                if (ShamanShouldCastLightningShield(classState))
                 {
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
@@ -166,6 +223,11 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
+            if (AbandonUnreachableEngageTarget())
+            {
+                return false;
+            }
+
             Console.WriteLine($"ShamanFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}, WorldState.IsInCombat? {WorldState.IsInCombat}");
             if (!WorldState.IsCurrentlyCasting && !WorldState.IsInCombat)
             {
@@ -181,14 +243,13 @@ namespace WoWHelper
         // Replaces the old shared CanEngageTarget() for the Shaman case --
         // CanSpellcastPullTarget is shared with Mage under the same name but
         // each class gets its own ClassState type, so each also gets its own
-        // thin CanEngageTarget wrapper.
+        // thin CanEngageTarget wrapper. Shaman always pulls with a spell
+        // regardless of FarmingConfig.EngageMethod (Charge/Pull only matters for
+        // Warrior -- see the enum's own comment on WowLocationConfiguration.cs),
+        // so unlike WarriorCanEngageTarget this doesn't need to dispatch on it at all.
         public bool ShamanCanEngageTarget(WowShamanClassState classState)
         {
-            switch (FarmingConfig.EngageMethod)
-            {
-                case WowLocationConfiguration.EngagementMethod.Spellcast: return classState.CanSpellcastPullTarget;
-                default: throw new System.NotImplementedException();
-            }
+            return classState.CanSpellcastPullTarget;
         }
 
         public async Task<bool> ShamanEmergencyTask()
