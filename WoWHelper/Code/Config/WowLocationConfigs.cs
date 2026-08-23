@@ -313,12 +313,24 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(51.40f, 58.10f),
                 new Vector2(51.08f, 57.06f),
                 new Vector2(50.60f, 56.78f),
-                new Vector2(50.17f, 57.92f),
-                new Vector2(49.45f, 58.84f),
-                new Vector2(49.31f, 59.66f),
-                new Vector2(48.09f, 60.46f),
-                new Vector2(47.00f, 60.92f),
-                new Vector2(47.64f, 58.37f),
+
+                new Vector2(50.06f, 57.92f),
+                new Vector2(50.13f, 59.83f),
+                new Vector2(50.13f, 59.83f),
+                new Vector2(48.63f, 59.99f),
+                new Vector2(47.36f, 60.77f),
+                new Vector2(46.70f, 59.10f),
+                new Vector2(47.12f, 57.79f),
+
+                /*
+                 * frequent double packs this way
+                 * new Vector2(50.17f, 57.92f),
+                    new Vector2(49.45f, 58.84f),
+                    new Vector2(49.31f, 59.66f),
+                    new Vector2(48.09f, 60.46f),
+                    new Vector2(47.00f, 60.92f),
+                    new Vector2(47.64f, 58.37f),
+                 * */
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,

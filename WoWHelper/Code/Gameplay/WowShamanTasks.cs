@@ -76,12 +76,26 @@ namespace WoWHelper
                 if (ShamanShouldCastFlameShock(classState))
                 {
                     Console.WriteLine($"Trying to Flame Shock!");
+                    await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_FLAME_SHOCK);
                 }
                 else if (ShamanShouldCastEarthShock(classState))
                 {
                     Console.WriteLine($"Trying to Earth Shock!");
+                    await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.SHAMAN_EARTH_SHOCK);
+                }
+                else if (WorldState.PlayerIsDiseased)
+                {
+                    Console.WriteLine($"Trying to Cure Disease!");
+                    await WaitForGlobalCooldownTask();
+                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_CURE_DISEASE);
+                }
+                else if (WorldState.PlayerIsPoisoned)
+                {
+                    Console.WriteLine($"Trying to Cure Poison!");
+                    await WaitForGlobalCooldownTask();
+                    Keyboard.KeyPress(WowInput.SHAMAN_CURE_POISON);
                 }
                 else// if (WorldState.AttackerCount <= 1)
                 {
