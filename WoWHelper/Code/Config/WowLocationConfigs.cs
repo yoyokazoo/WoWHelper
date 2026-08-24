@@ -350,6 +350,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
             MinimumLevel = 34,
+            LogoffLevel = 38,
             Zone = WowZone.ThousandNeedles,
 
             Waypoints = new List<Vector2>
