@@ -50,12 +50,24 @@ function TargetHasFlameShock()
   return TargetHasDebuffSpellName("Flame Shock")
 end
 
+-- Name-matched rather than a hardcoded spell ID (see IsSpellKnownByName() in
+-- WoWFunctions.lua) -- the macro bound to SHAMAN_CURE_POISON/
+-- SHAMAN_SHIFT_CURE_DISEASE (WowInput.cs) already casts these by the same
+-- literal names ("Cure Poison"/"Cure Disease").
+function CanCurePoison()
+    return IsSpellKnownByName("Cure Poison")
+end
+
+function CanCureDisease()
+    return IsSpellKnownByName("Cure Disease")
+end
+
 ------------------------------------------------------------
 -- Packs Shaman-specific state into the ClassBool/ClassInt pixels. Called via
 -- the GetClassBoolOne/Two/GetClassIntOne dispatchers in WoWFunctions.lua
--- once UnitClass("player") resolves to SHAMAN. NOT wired into C# yet, and
--- NOT yet removed from GetMultiBoolOne/Two -- see the "duplicated in
--- ClassBool" comments there for what should eventually be stripped out.
+-- once UnitClass("player") resolves to SHAMAN. Decoded on the C# side by
+-- WowShamanClassState.UpdateFromBitmap -- bit order here MUST match there.
+-- R7/R8 (CanCurePoison/CanCureDisease) fully pack the byte.
 ------------------------------------------------------------
 function GetShamanClassBoolOne()
     local boolR1 = ShouldCastRockbiterWeapon()
@@ -64,8 +76,8 @@ function GetShamanClassBoolOne()
     local boolR4 = ShouldCastFlameShock()
     local boolR5 = TargetHasFlameShock()
     local boolR6 = CanSpellcastPullTarget()
-    local boolR7 = false
-    local boolR8 = false
+    local boolR7 = CanCurePoison()
+    local boolR8 = CanCureDisease()
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
 

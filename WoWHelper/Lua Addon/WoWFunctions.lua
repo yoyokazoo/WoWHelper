@@ -487,9 +487,29 @@ end
 
 -- overpower rank 1, 7384
 -- fireblast rank 1, 2136
--- cone of cold rank 1, 
+-- cone of cold rank 1,
 function IsSpellUsable(spellId)
     return IsUsableSpell(spellId)
+end
+
+-- Whether the player knows a spell, matched by exact name instead of a
+-- hardcoded spell ID -- scans the real spellbook (GetNumSpellTabs/
+-- GetSpellTabInfo/GetSpellBookItemName) rather than guessing an ID, so it
+-- doesn't go stale across ranks the way the hardcoded rank-1 IDs elsewhere
+-- in this file can (see the Flame Shock rank TODO above GetMultiBoolOne's
+-- Shaman dispatch). Used for spells where the possible spell ID(s) aren't
+-- confidently known, e.g. CanCurePoison/CanCureDisease in ShamanFunctions.lua.
+function IsSpellKnownByName(name)
+    for tab = 1, GetNumSpellTabs() do
+        local _, _, offset, numSpells = GetSpellTabInfo(tab)
+        for i = offset + 1, offset + numSpells do
+            if GetSpellBookItemName(i, BOOKTYPE_SPELL) == name then
+                return true
+            end
+        end
+    end
+
+    return false
 end
 
 function AreEnemyNameplatesTurnedOn()

@@ -76,12 +76,26 @@ namespace WoWHelper
                 if (ShamanShouldCastFlameShock(classState))
                 {
                     Console.WriteLine($"Trying to Flame Shock!");
+                    await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_FLAME_SHOCK);
                 }
                 else if (ShamanShouldCastEarthShock(classState))
                 {
                     Console.WriteLine($"Trying to Earth Shock!");
+                    await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.SHAMAN_EARTH_SHOCK);
+                }
+                else if (ShamanShouldCastCureDisease(classState))
+                {
+                    Console.WriteLine($"Trying to Cure Disease!");
+                    await WaitForGlobalCooldownTask();
+                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_CURE_DISEASE);
+                }
+                else if (ShamanShouldCastCurePoison(classState))
+                {
+                    Console.WriteLine($"Trying to Cure Poison!");
+                    await WaitForGlobalCooldownTask();
+                    Keyboard.KeyPress(WowInput.SHAMAN_CURE_POISON);
                 }
                 else// if (WorldState.AttackerCount <= 1)
                 {
@@ -141,6 +155,16 @@ namespace WoWHelper
             return classState.CanCastEarthShock;
         }
 
+        public bool ShamanShouldCastCurePoison(WowShamanClassState classState)
+        {
+            return WorldState.PlayerIsPoisoned && classState.CanCurePoison;
+        }
+
+        public bool ShamanShouldCastCureDisease(WowShamanClassState classState)
+        {
+            return WorldState.PlayerIsDiseased && classState.CanCureDisease;
+        }
+
         public async Task<bool> ShamanStartBattleReadyRecoverTask(WowShamanClassState classState)
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
@@ -170,13 +194,13 @@ namespace WoWHelper
             bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
 
-            if (WorldState.PlayerIsPoisoned)
+            if (ShamanShouldCastCurePoison(classState))
             {
                 await WaitForGlobalCooldownTask();
                 Keyboard.KeyPress(WowInput.SHAMAN_CURE_POISON);
             }
 
-            if (WorldState.PlayerIsDiseased)
+            if (ShamanShouldCastCureDisease(classState))
             {
                 await WaitForGlobalCooldownTask();
                 await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_CURE_DISEASE);
