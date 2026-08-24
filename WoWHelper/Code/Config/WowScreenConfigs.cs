@@ -245,9 +245,9 @@ namespace WoWHelper.Code.Config
 
             NotInLineOfSightPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
-                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(843, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(857, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(872, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>

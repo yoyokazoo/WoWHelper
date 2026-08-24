@@ -124,6 +124,7 @@ namespace WoWHelperUnitTests
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\2560toofar.bmp")]
         [DataRow(true, "..\\..\\Source Images\\3440los.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\1920los.bmp")]
         public void VerifyNotInLineOfSight(bool expected, string fileName)
         {
             LoadPlayer(fileName);
