@@ -139,6 +139,7 @@ namespace WoWHelper.Code
 #showtooltip [mod:shift] Conjured Fresh Water; Conjured Bread
 /use [nomod] Conjured Bread
 /use [mod:shift] Conjured Fresh Water
+/use Big-mouth Clam
         */
         public const Keys EAT_FOOD = Keys.D8;
         public const Keys SHIFT_DRINK_WATER = Keys.D8;

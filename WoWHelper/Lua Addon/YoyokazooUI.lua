@@ -26,6 +26,16 @@ local lastEvadeTime = nil
 -- OnUpdate handlers, so nothing about them goes stale across a zone change.
 local uiInitialized = false
 
+-- YoyokazooUIDB is a SavedVariablesPerCharacter table (see YoyokazooUI.toc).
+-- The .toc also sets "## LoadSavedVariablesFirst 1", which guarantees this
+-- global is already populated from disk (if it exists) before this file
+-- executes -- so it's safe to default-initialize it directly here at load
+-- time instead of waiting for ADDON_LOADED.
+YoyokazooUIDB = YoyokazooUIDB or {}
+if YoyokazooUIDB.debugFrameEnabled == nil then
+    YoyokazooUIDB.debugFrameEnabled = true -- default on, matches the old always-on behavior
+end
+
 -- Create a frame to be our black box
 local frame = CreateFrame("Frame", "YoyokazooUIFrame", UIParent, "BackdropTemplate")
 -- Size and position
@@ -41,6 +51,19 @@ frame:SetBackdrop({
     insets = { left = 0, right = 0, top = 0, bottom = 0 }
 })
 frame:SetBackdropColor(0, 0, 0, 1)  -- RGBA, 0.8 alpha for slight transparency
+
+-- Shows/hides the whole debug frame per the saved /yydebug toggle. Hiding it
+-- is not just cosmetic -- OnUpdate scripts don't fire on a hidden frame, so
+-- this also stops InitializeIndicators()'s own OnUpdate loop (UIFunctions.lua)
+-- from polling and allocating while debug is off. Declared before OnEvent/
+-- the slash command below so both can call it as an upvalue.
+local function ApplyDebugFrameVisibility()
+    if YoyokazooUIDB.debugFrameEnabled then
+        frame:Show()
+    else
+        frame:Hide()
+    end
+end
 
 frame:RegisterEvent("CHAT_MSG_WHISPER")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -89,6 +112,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         if not uiInitialized then
             InitializeIndicators()
             InitializePixelRow()
+            ApplyDebugFrameVisibility()
             uiInitialized = true
         end
     end
@@ -144,4 +168,15 @@ function HasRecentTargetEvade()
     end
 
     return (GetTime() - lastEvadeTime) <= EVADE_WINDOW_SECONDS
+end
+
+-- /yydebug toggles the debug frame (InitializeIndicators()'s YoyokazooUIFrame,
+-- not the pixel row the bot reads -- that one always runs). The choice is
+-- saved into YoyokazooUIDB.debugFrameEnabled, so it persists across logout/
+-- reload instead of resetting to on every session.
+SLASH_YYDEBUG1 = "/yydebug"
+SlashCmdList["YYDEBUG"] = function()
+    YoyokazooUIDB.debugFrameEnabled = not YoyokazooUIDB.debugFrameEnabled
+    ApplyDebugFrameVisibility()
+    print("YoyokazooUI: debug frame " .. (YoyokazooUIDB.debugFrameEnabled and "ON" or "OFF") .. " (saved).")
 end

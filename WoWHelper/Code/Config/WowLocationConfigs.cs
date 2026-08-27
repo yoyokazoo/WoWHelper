@@ -271,7 +271,7 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_42_TANARIS_TURTLES = new WowLocationConfiguration
         {
             Title = "Tanaris Turtles (Level 42+)",
-            MinimumLevel = 42,
+            MinimumLevel = 41,
             Zone = WowZone.Tanaris,
 
             Waypoints = new List<Vector2>
@@ -350,6 +350,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
             MinimumLevel = 34,
+            LogoffLevel = 38,
             Zone = WowZone.ThousandNeedles,
 
             Waypoints = new List<Vector2>

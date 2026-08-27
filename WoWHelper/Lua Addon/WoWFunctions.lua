@@ -773,8 +773,26 @@ function GetTotalFreeBagSlots()
     return free
 end
 
+-- GetTotalFreeBagSlots() calls C_Container.GetContainerItemInfo() per bag slot,
+-- which allocates a fresh table for every occupied slot -- the single biggest
+-- source of the addon's GC churn (confirmed while investigating the ~1MB/sec
+-- addon-memory growth shown in the game's addon-memory tooltip). Bag contents
+-- don't change on the ~50-100ms cadence AreBagsFull() gets polled at (it's one
+-- of the flags packed into GetMultiBoolOne, read by both the pixel-row and
+-- debug OnUpdate loops in UIFunctions.lua), so cache the real check and only
+-- recompute it periodically instead of every tick.
+local BAGS_FULL_CHECK_INTERVAL_SECONDS = 30
+local lastBagsFullCheckTime = nil
+local cachedBagsFull = false
+
 function AreBagsFull()
-    return GetTotalFreeBagSlots() == 0
+    local now = GetTime()
+    if not lastBagsFullCheckTime or (now - lastBagsFullCheckTime) >= BAGS_FULL_CHECK_INTERVAL_SECONDS then
+        cachedBagsFull = GetTotalFreeBagSlots() == 0
+        lastBagsFullCheckTime = now
+    end
+
+    return cachedBagsFull
 end
 
 function IsPlayerPetrified()
