@@ -28,6 +28,21 @@ namespace WoWHelper
 
         public async Task<bool> EveryWorldStateUpdateTasks()
         {
+            // ping + refocus if something stole foreground focus from WoW -- every task
+            // this method (and its callers) run afterward assumes WoW is the window
+            // actually receiving our keyboard/mouse input.  Excluded during
+            // WAITING_TO_FOCUS_ON_WINDOW, the startup state before WoW has ever been
+            // focused in the first place -- same exclusion the disconnect check below uses.
+            if (CurrentPlayerState != PlayerState.WAITING_TO_FOCUS_ON_WINDOW)
+            {
+                IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
+                if (wowHandle != IntPtr.Zero && ScreenCapture.GetForegroundWindow() != wowHandle)
+                {
+                    SlackHelper.SendMessageToChannel("Lost focus on WoWClassic window! Refocusing...");
+                    await FocusOnWindowTask();
+                }
+            }
+
             // Resolve CombatConfiguration/ClassState as soon as the addon gives us a real
             // class read, independent of the RESOLVE_FARMING_CONFIGURATION player state --
             // see WowConfigResolutionTasks.ResolveCombatConfiguration for why (short version:
