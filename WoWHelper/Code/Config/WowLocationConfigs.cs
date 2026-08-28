@@ -306,7 +306,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Kodo Graveyard, Desolace (Level 37+)", // zone inferred from name/coords, please confirm
             MinimumLevel = 36,
-            LogoffLevel = 42, // ??
+            LogoffLevel = 43,
             Zone = WowZone.Desolace,
 
             Waypoints = new List<Vector2>

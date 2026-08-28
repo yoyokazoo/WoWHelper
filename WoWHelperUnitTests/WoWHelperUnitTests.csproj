@@ -244,7 +244,7 @@
       <HintPath>..\WoWHelper\packages\Tesseract.5.2.0\lib\net47\Tesseract.dll</HintPath>
     </Reference>
     <Reference Include="WindowsGameAutomationTools, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\WoWHelper\packages\WindowsGameAutomationTools.1.0.9\lib\net472\WindowsGameAutomationTools.dll</HintPath>
+      <HintPath>..\WoWHelper\packages\WindowsGameAutomationTools.1.0.10\lib\net472\WindowsGameAutomationTools.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
