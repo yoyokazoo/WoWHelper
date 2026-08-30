@@ -143,8 +143,9 @@ namespace WoWHelper
             // Skip if nature immune
             bool skipEarthShock = WorldState.IsTargetNatureImmune;
             // Always shock runners, if we're low hp, if there are multiple mobs, or if the mob is high hp
-            skipEarthShock |= !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20 && !WorldState.IsTargetCasterMob;
+            skipEarthShock |= !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20 && !WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
             // Don't earth shock casters that aren't currently casting
+            // TODO: Rename IsTargetCasterMob to something like "ShouldWaitToCounterspell" or something
             skipEarthShock |= WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
 
             if (skipEarthShock)

@@ -219,10 +219,16 @@ namespace WoWHelper.Code.WorldState
             DistanceTolerance = 0.06f
         };
 
+        /*
+/target Ironfur
+/target Cursed
+/target Wandering
+/target Frayfeather
+            */
         public static readonly WowLocationConfiguration LEVEL_48_FERALAS_HIPPOGRYPHS = new WowLocationConfiguration
         {
             Title = "Feralas Hippogryphs (Level 48+)",
-            MinimumLevel = 48,
+            MinimumLevel = 46,
             Zone = WowZone.Feralas,
 
             Waypoints = new List<Vector2>
