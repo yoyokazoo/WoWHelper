@@ -272,6 +272,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Tanaris Turtles (Level 42+)",
             MinimumLevel = 41,
+            LogoffLevel = 48,
             Zone = WowZone.Tanaris,
 
             Waypoints = new List<Vector2>
