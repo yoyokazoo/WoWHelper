@@ -177,10 +177,15 @@ namespace WoWHelper.Code.WorldState
         };
         */
 
+        /*
+/target Ironbeak
+/target Angerclaw
+/target Felpaw
+            */
         public static readonly WowLocationConfiguration LEVEL_51_FELWOOD_SOUTH = new WowLocationConfiguration
         {
             Title = "South Felwood (Level 51+)",
-            MinimumLevel = 51,
+            MinimumLevel = 50,
             Zone = WowZone.Felwood,
 
             Waypoints = new List<Vector2>
