@@ -228,11 +228,7 @@ namespace WoWHelper
 
         public async Task<bool> PetriAltF4Task()
         {
-            while (!WorldState.GCDCooledDown)
-            {
-                await UpdateWorldStateAsync();
-            }
-
+            await WaitForGlobalCooldownTask();
             await WowInput.PressKeyWithShift(WowInput.SHIFT_PETRIFICATION_FLASK);
             await Task.Delay(750);
             await WowInput.PressKeyWithAlt(WowInput.ALT_FORCE_QUIT_KEY);
