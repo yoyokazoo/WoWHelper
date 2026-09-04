@@ -846,14 +846,13 @@ end
 -- Class-specific fields (Battle Shout, Rend, Frost Armor, Rockbiter, etc.)
 -- moved to GetClassBoolOne/Two (see the dispatchers further down and
 -- GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
--- ShamanFunctions.lua) -- C# now reads those instead of these. All
+-- ShamanFunctions.lua) -- those are used instead of these now. All
 -- class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G are both fully
 -- packed, and the B byte carries HasRecentTargetEvade() (b1), which of the
--- three bot-supported classes the player is playing (b2 Warrior, b3 Mage,
--- b4 Shaman -- exactly one true, used by C# to auto-pick
--- WowCombatConfiguration at startup instead of it being hardcoded; see
--- WowWorldState.PlayerClass and WowPlayer.ResolveFarmingConfigurationTask),
--- and IsPlayerPoisoned/IsPlayerDiseased/IsTargetNatureImmune/IsTargetCasting
+-- three supported classes the player is playing (b2 Warrior, b3 Mage,
+-- b4 Shaman -- exactly one true, used to auto-detect the player's class
+-- instead of it being hardcoded), and
+-- IsPlayerPoisoned/IsPlayerDiseased/IsTargetNatureImmune/IsTargetCasting
 -- (b5-b8), which fully packs the byte. MultiBoolTwo is left fully reserved
 -- as clean room to grow into, instead of needing a 3rd pixel.
 function GetMultiBoolOne()
@@ -923,8 +922,7 @@ end
 -- class once and delegates to that class's own populate function (see
 -- GetWarriorClassBoolOne/Two, GetMageClassBoolOne/Two, and
 -- GetShamanClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
--- ShamanFunctions.lua). Unsupported/unrecognized classes get all-zero. C#
--- reads these via WowPlayer.ClassState (see WowClassState.cs and friends).
+-- ShamanFunctions.lua). Unsupported/unrecognized classes get all-zero.
 ------------------------------------------------------------
 function GetClassBoolOne()
     local _, classFile = UnitClass("player")

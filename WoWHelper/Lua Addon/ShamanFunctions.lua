@@ -65,9 +65,9 @@ end
 ------------------------------------------------------------
 -- Packs Shaman-specific state into the ClassBool/ClassInt pixels. Called via
 -- the GetClassBoolOne/Two/GetClassIntOne dispatchers in WoWFunctions.lua
--- once UnitClass("player") resolves to SHAMAN. Decoded on the C# side by
--- WowShamanClassState.UpdateFromBitmap -- bit order here MUST match there.
--- R7/R8 (CanCurePoison/CanCureDisease) fully pack the byte.
+-- once UnitClass("player") resolves to SHAMAN. Decoded on the other end in
+-- the same bit order -- keep both sides in sync. R7/R8
+-- (CanCurePoison/CanCureDisease) fully pack the byte.
 ------------------------------------------------------------
 function GetShamanClassBoolOne()
     local boolR1 = ShouldCastRockbiterWeapon()

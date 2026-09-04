@@ -143,22 +143,20 @@ function CreatePixelSwatch(parent, x, y, size, colorFunc)
 end
 
 -- Section 1 of the redesigned addon UI: a row of exact pixels pinned to the
--- screen's top-left corner at PIXEL_SIZE spacing -- one swatch per field the
--- C# bot actually reads, in a fixed, resolution-independent spot, in the
--- same order it reads them in. Debug-only values (individual HP%/attacker
--- count/etc, single-bool indicators) live only in the InitializeIndicators()
--- debug frame below, not here -- this row is intentionally condensed to
--- exactly what's consumed. MultiBoolTwo/ClassBoolTwo/ClassIntOne aren't
--- here either since nothing on the C# side reads them yet (see
--- WowScreenConfiguration.cs) -- add a swatch back here (and a matching
--- Point there) if/when a field actually needs one of them.
+-- screen's top-left corner at PIXEL_SIZE spacing -- one swatch per field
+-- actually consumed elsewhere, in a fixed, resolution-independent spot, in
+-- the same order it's consumed in. Debug-only values (individual HP%/
+-- attacker count/etc, single-bool indicators) live only in the
+-- InitializeIndicators() debug frame below, not here -- this row is
+-- intentionally condensed to exactly what's used. MultiBoolTwo/ClassBoolTwo/
+-- ClassIntOne aren't here either since nothing decodes them yet -- add a
+-- swatch back here if/when a field actually needs one of them.
 function InitializePixelRow()
     -- Size of each swatch, in real screen pixels; also its spacing, so
-    -- swatches never overlap. C# reads the CENTER pixel of each PIXEL_SIZE x
+    -- swatches never overlap. The center pixel of each PIXEL_SIZE x
     -- PIXEL_SIZE block (offset PIXEL_SIZE//2 from this swatch's top-left
-    -- corner) for margin against any residual edge blur. Must match
-    -- WowScreenConfiguration's pixel-row Points on the C# side if this
-    -- changes.
+    -- corner) is what gets read, for margin against any residual edge blur.
+    -- Must match the pixel-row layout on the decoding side if this changes.
     local PIXEL_SIZE = 3
 
     local swatches = {}
@@ -168,11 +166,11 @@ function InitializePixelRow()
     end
 
     -- Fixed sentinel color, exactly (96, 255, 117) -- never produced by any of the
-    -- encoded/computed swatches below, so C# can tell "addon is loaded and this pixel
-    -- row is real" (exact match) apart from "on the login screen, or otherwise not
-    -- rendering" (anything else, including whatever's actually at this screen position
-    -- when the addon isn't loaded) via a single exact-color check, instead of the old
-    -- login-screen-specific text/UI pixel signature match.
+    -- encoded/computed swatches below, so it's possible to tell "addon is loaded and
+    -- this pixel row is real" (exact match) apart from "on the login screen, or
+    -- otherwise not rendering" (anything else, including whatever's actually at this
+    -- screen position when the addon isn't loaded) via a single exact-color check,
+    -- instead of the old login-screen-specific text/UI pixel signature match.
     AddSwatch(0, function() return 96/255, 255/255, 117/255 end)
     AddSwatch(1, function() return EncodeFloatToColor(GetPlayerMapX()) end)
     AddSwatch(2, function() return EncodeFloatToColor(GetPlayerMapY()) end)
@@ -561,3 +559,115 @@ YoyokazooUIDB = YoyokazooUIDB or {}
         local picker = CreateHoverItemPickerButton(YoyokazooUIDB, "healingPotionItemID", healingOptions, UIParent, 50, -50, 36)
 
 ]=]
+
+--------------------------------------------------
+-- Target bearing marker: a single sentinel-colored square anchored to the
+-- CENTER of the current target's nameplate, meant to be found via an
+-- ordinary screen-capture pixel search rather than any in-game API.
+--
+-- Background: reading a target's position/bearing is otherwise impossible
+-- from Lua in this client -- UnitPosition("target"),
+-- C_Map.GetPlayerMapPosition(mapID, "target"), and even
+-- GetNamePlateForUnit("target"):GetCenter() (root AND child frames) are all
+-- confirmed blocked by testing (the last one with a hard, pcall-proof
+-- "Can't measure restricted regions" security error, not just a nil). That
+-- restriction is specifically about MEASURING a secure frame's geometry
+-- from Lua -- it says nothing about DRAWING onto one (a completely
+-- different, unrestricted action; this is how every nameplate-customization
+-- addon already recolors health bars/adds icons).
+--
+-- A single CENTER marker (not 4 corners, an earlier prototype) is
+-- sufficient: bounding-box/apparent-size-based distance was tested and
+-- found too subtle to use reliably, and isn't needed anyway -- Earth
+-- Shock's own native range check (SpellIsInRangeAndCooledDown) already
+-- answers "close enough". Only bearing is missing, and one point gives
+-- that when the camera is pitched straight down: the marker's on-screen X
+-- relative to the player's own screen position tells left/right of facing,
+-- and its Y tells in-front-of/behind -- confirmed by testing (the marker
+-- visibly tracks correctly as the player turns via keyboard, confirming the
+-- camera stays locked to character facing, which this whole scheme depends
+-- on).
+--
+-- Marked only on the CURRENT target (PLAYER_TARGET_CHANGED, plus
+-- NAME_PLATE_UNIT_ADDED for a target whose plate wasn't already visible at
+-- the moment it became the target) -- not every nameplate, unlike an
+-- earlier prototype -- to keep the search unambiguous. Old markers on a
+-- previous target are left in place (harmless clutter, the color only
+-- matters while actively searching for the CURRENT target).
+--------------------------------------------------
+local NAMEPLATE_MARKER_SIZE = 12
+local NAMEPLATE_MARKER_COLOR = { 1, 0, 1 } -- magenta -- keep in sync with
+-- the corresponding sentinel color on the decoding side
+
+-- Only one of these should ever be shown at a time (the current target's).
+-- Tracked separately from plate.wowHelperTargetMarker (which still exists
+-- per-plate, so a recycled plate doesn't get a duplicate marker built) so
+-- retargeting can hide the PREVIOUS target's marker -- otherwise a stale
+-- marker left visible from an old target could be found by the search
+-- instead of the actual current target's.
+local currentlyShownMarker = nil
+
+local function AddTargetMarker(plate)
+    if not plate.wowHelperTargetMarker then
+        -- A texture parented directly to the nameplate rendered BEHIND its
+        -- health bar/name in testing -- nameplates apparently give those a
+        -- higher effective draw priority than a plain child texture on the
+        -- outer frame gets. Use an entirely separate, high-FrameStrata frame
+        -- instead, anchored to the nameplate via SetPoint (a pure visual
+        -- binding that doesn't require reading the nameplate's position at
+        -- all -- WoW's anchor system resolves it internally every frame) so
+        -- it reliably draws on top regardless of the nameplate's own
+        -- internal layering.
+        local marker = CreateFrame("Frame", nil, UIParent)
+        marker:SetFrameStrata("TOOLTIP")
+        marker:SetSize(NAMEPLATE_MARKER_SIZE, NAMEPLATE_MARKER_SIZE)
+        marker:SetPoint("CENTER", plate, "CENTER", 0, 0)
+
+        local tex = marker:CreateTexture(nil, "OVERLAY")
+        tex:SetAllPoints(marker)
+        tex:SetColorTexture(NAMEPLATE_MARKER_COLOR[1], NAMEPLATE_MARKER_COLOR[2], NAMEPLATE_MARKER_COLOR[3])
+
+        plate.wowHelperTargetMarker = marker
+    end
+
+    if currentlyShownMarker and currentlyShownMarker ~= plate.wowHelperTargetMarker then
+        currentlyShownMarker:Hide()
+    end
+
+    plate.wowHelperTargetMarker:Show()
+    currentlyShownMarker = plate.wowHelperTargetMarker
+end
+
+local function MarkCurrentTargetPlate()
+    if not UnitExists("target") then
+        if currentlyShownMarker then
+            currentlyShownMarker:Hide()
+            currentlyShownMarker = nil
+        end
+        return
+    end
+    local plate = C_NamePlate and C_NamePlate.GetNamePlateForUnit and C_NamePlate.GetNamePlateForUnit("target")
+    if plate then
+        AddTargetMarker(plate)
+    elseif currentlyShownMarker then
+        -- The new target exists but doesn't have a nameplate yet (e.g. too
+        -- far away) -- hide the PREVIOUS target's marker immediately rather
+        -- than leaving it lingering on the wrong unit until this target's
+        -- plate eventually appears via NAME_PLATE_UNIT_ADDED, which also
+        -- calls this function and will show the right marker once that
+        -- happens.
+        currentlyShownMarker:Hide()
+        currentlyShownMarker = nil
+    end
+end
+
+local targetMarkerFrame = CreateFrame("Frame")
+targetMarkerFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+targetMarkerFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+targetMarkerFrame:SetScript("OnEvent", function(self, event, unit)
+    if event == "PLAYER_TARGET_CHANGED" then
+        MarkCurrentTargetPlate()
+    elseif event == "NAME_PLATE_UNIT_ADDED" and UnitIsUnit(unit, "target") then
+        MarkCurrentTargetPlate()
+    end
+end)

@@ -227,7 +227,8 @@ namespace WoWHelper
             await FocusOnWindowTask();
             await UpdateWorldStateAsync();
             //await PetriAltF4Task();
-            await CreateHeatmapForLooting(saveBitmaps: true);
+            //await CreateHeatmapForLooting(saveBitmaps: true);
+            await TargetMarkerDebugTask();
             return true;
             /*
             await FocusOnWindowTask();
@@ -257,6 +258,45 @@ namespace WoWHelper
             await Task.Delay(0);
             return true;
             */
+        }
+
+        // TEMP diagnostic (see the "Approach ranged/caster mobs" plan): verify the
+        // sentinel-colored target marker UIFunctions.lua paints onto the current target's
+        // nameplate is actually findable via screen-capture pixel search, and that its
+        // position relative to screen center matches expectations (this bot is run with the
+        // camera pitched straight down, so X < center should mean the target is to the
+        // player's left, Y < center should mean in front). Loops once a second until the
+        // process is stopped -- wired up to the AdHocTest button so it can be exercised in
+        // isolation, without running the full combat loop. Remove once confirmed.
+        public async Task<bool> TargetMarkerDebugTask()
+        {
+            while (true)
+            {
+                await UpdateWorldStateAsync();
+
+                var resolution = FarmingConfig.ScreenConfiguration.Resolution;
+                var fullScreenRect = new Rectangle(0, 0, resolution.Width, resolution.Height);
+
+                using (Bitmap fullBmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(fullScreenRect))
+                {
+                    var marker = BitmapDifferenceVisualizer.FindColorCentroid(fullBmp, WowScreenConfiguration.TARGET_MARKER_COLOR);
+                    int centerX = resolution.Width / 2;
+                    int centerY = resolution.Height / 2;
+
+                    if (marker == null)
+                    {
+                        Console.WriteLine("WoWHelper DEBUG: target marker NOT FOUND on screen");
+                    }
+                    else
+                    {
+                        string leftRight = marker.Value.X < centerX ? "LEFT" : "RIGHT";
+                        string frontBack = marker.Value.Y < centerY ? "FRONT" : "BEHIND";
+                        Console.WriteLine($"WoWHelper DEBUG: target marker at {marker.Value} (screen center {centerX},{centerY}) -> {leftRight}/{frontBack}");
+                    }
+                }
+
+                await Task.Delay(1000);
+            }
         }
 
         public async Task<bool> CreateHeatmapForLooting(bool saveBitmaps = false)

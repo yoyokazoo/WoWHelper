@@ -9,8 +9,8 @@ local UNSEEN_WINDOW_SECONDS = 60
 local lastWhisperTime = nil
 
 -- Same "sticky flag via timestamp" pattern as HasUnseenWhisper() below --
--- an EVADE combat-log miss is a single instantaneous event, but the bot only
--- polls world state once per tick, so latch it true for a few seconds after
+-- an EVADE combat-log miss is a single instantaneous event, but this only
+-- gets polled once per tick, so latch it true for a few seconds after
 -- the fact instead of requiring the poll to land on the exact same frame the
 -- event fired.
 local EVADE_WINDOW_SECONDS = 3
@@ -83,7 +83,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- immediately -- Blizzard's default UI intercepts this event and
         -- throws up a Yes/No StaticPopup ("LOOT_BIND") asking the player to
         -- confirm, which blocks the loot until something clicks it. There's
-        -- no CVar to suppress that dialog; the bot always wants "Yes", so
+        -- no CVar to suppress that dialog, and we always want "Yes" here, so
         -- auto-confirm every time instead.
         --
         -- ConfirmLootSlot(lootSlot) is exactly what StaticPopupDialogs
@@ -207,7 +207,7 @@ function HasRecentTargetEvade()
 end
 
 -- /yydebug toggles the debug frame (InitializeIndicators()'s YoyokazooUIFrame,
--- not the pixel row the bot reads -- that one always runs). The choice is
+-- not the pixel row -- that one always runs). The choice is
 -- saved into YoyokazooUIDB.debugFrameEnabled, so it persists across logout/
 -- reload instead of resetting to on every session.
 SLASH_YYDEBUG1 = "/yydebug"

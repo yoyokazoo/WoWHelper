@@ -34,6 +34,14 @@ namespace WoWHelper
         public static readonly Color TRADE_SCREEN_CONFIRMATION_COLOR_TWO = Color.FromArgb(233, 181, 43);
         public static readonly Color TRADE_SCREEN_CONFIRMATION_COLOR_THREE = Color.FromArgb(87, 0, 0);
 
+        // Sentinel color painted onto the current target's nameplate (a single CENTER-anchored
+        // texture -- see UIFunctions.lua's target-marker section) so it can be found via an
+        // ordinary screen-capture pixel search instead of a restricted frame-measurement API
+        // (UnitPosition/C_Map.GetPlayerMapPosition/nameplate :GetCenter() are all confirmed
+        // blocked for an arbitrary target in this client). Keep in sync with
+        // UIFunctions.lua's NAMEPLATE_MARKER_COLOR.
+        public static readonly Color TARGET_MARKER_COLOR = Color.FromArgb(255, 0, 255);
+
         #endregion
 
         // /console cameraDistanceMaxZoomFactor 2.6
