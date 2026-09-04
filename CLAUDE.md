@@ -378,7 +378,17 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`MathFunctions.lua`** — small numeric helpers shared by the above.
 - **`YoyokazooUI.lua`** — addon entry point/event wiring (login, XP/level-up
   tracking, whisper tracking for "unseen whisper" alerts) and indicator
-  initialization.
+  initialization. Also auto-confirms the bind-on-pickup loot popup: on
+  `LOOT_BIND_CONFIRM` it hides Blizzard's `"LOOT_BIND"` StaticPopup (if
+  already shown — our frame registers after the default UI's own handler)
+  and calls `ConfirmLootSlot(lootSlot)` — the same action that popup's own
+  `OnAccept` performs — deferred by one frame via `RunNextFrame`. The defer
+  is required, not stylistic: calling `ConfirmLootSlot` synchronously inside
+  the same `LOOT_BIND_CONFIRM` dispatch silently failed to confirm the loot
+  in testing. The bot has no way to click a popup, and always wants "Yes"
+  here, so there's no toggle/config for it — unlike the
+  reference addon this was modeled on (KyrosKrane Sylvanblade's "Annoying
+  Pop-up Remover"), which exposes it as a user-toggleable option.
 
 ## Tests (`WoWHelperUnitTests/`)
 

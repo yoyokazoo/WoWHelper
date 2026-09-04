@@ -70,10 +70,46 @@ frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("PLAYER_XP_UPDATE")
 frame:RegisterEvent("PLAYER_LEVEL_UP")
 frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+frame:RegisterEvent("LOOT_BIND_CONFIRM")
 
 frame:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_WHISPER" then
         lastWhisperTime = GetTime()
+    end
+
+    if event == "LOOT_BIND_CONFIRM" then
+        -- Looting an item that's about to bind to the player (or, if
+        -- already bound, still tradeable to the group) doesn't loot it
+        -- immediately -- Blizzard's default UI intercepts this event and
+        -- throws up a Yes/No StaticPopup ("LOOT_BIND") asking the player to
+        -- confirm, which blocks the loot until something clicks it. There's
+        -- no CVar to suppress that dialog; the bot always wants "Yes", so
+        -- auto-confirm every time instead.
+        --
+        -- ConfirmLootSlot(lootSlot) is exactly what StaticPopupDialogs
+        -- ["LOOT_BIND"].OnAccept does -- we just call it directly rather
+        -- than finding and clicking the dialog. (Reference: KyrosKrane
+        -- Sylvanblade's "Annoying Pop-up Remover" addon, module_loot.lua,
+        -- which hides the StaticPopup and invokes its OnAccept; same net
+        -- effect, fewer moving parts since we don't need its
+        -- show/hide-state bookkeeping -- this always says yes.)
+        local lootSlot = ...
+        if lootSlot then
+            -- Our frame registers for this event after Blizzard's default UI
+            -- does (addons load after the built-in UI), so by the time we see
+            -- it the popup has typically already been shown. Hide it too, or
+            -- it lingers on screen as a stray dialog even though the loot
+            -- itself already completed.
+            StaticPopup_Hide("LOOT_BIND")
+
+            -- Must be deferred to the next frame -- calling ConfirmLootSlot
+            -- synchronously, still inside this same LOOT_BIND_CONFIRM
+            -- dispatch, silently did not confirm the loot (confirmed by
+            -- testing in-game). Matches what the reference addon
+            -- (AnnoyingPopupRemover's module_loot.lua) actually does via
+            -- RunNextFrame rather than calling it inline.
+            RunNextFrame(function() ConfirmLootSlot(lootSlot) end)
+        end
     end
 
     if event == "COMBAT_LOG_EVENT_UNFILTERED" then
