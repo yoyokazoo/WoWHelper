@@ -226,6 +226,7 @@ namespace WoWHelper
             await FocusOnWindowTask();
             await FocusOnWindowTask();
             await UpdateWorldStateAsync();
+            //await PetriAltF4Task();
             await CreateHeatmapForLooting(saveBitmaps: true);
             return true;
             /*
