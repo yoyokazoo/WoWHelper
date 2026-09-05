@@ -51,9 +51,8 @@ function TargetHasFlameShock()
 end
 
 -- Name-matched rather than a hardcoded spell ID (see IsSpellKnownByName() in
--- WoWFunctions.lua) -- the macro bound to SHAMAN_CURE_POISON/
--- SHAMAN_SHIFT_CURE_DISEASE (WowInput.cs) already casts these by the same
--- literal names ("Cure Poison"/"Cure Disease").
+-- WoWFunctions.lua) -- the macro these get bound to already casts by the
+-- same literal names ("Cure Poison"/"Cure Disease").
 function CanCurePoison()
     return IsSpellKnownByName("Cure Poison")
 end

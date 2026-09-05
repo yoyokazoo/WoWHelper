@@ -310,9 +310,9 @@ function GetPlayerMapY()
 end
 
 --------------------------------------------------
--- Current zone, as a WowHelper-defined numeric ID (fits in a single byte
--- channel) -- NOT Blizzard's internal map ID, which doesn't fit in one.
--- MUST stay in sync with the WowZone enum in WowLocationConfiguration.cs.
+-- Current zone, as a numeric ID (fits in a single byte channel) -- NOT
+-- Blizzard's internal map ID, which doesn't fit in one. MUST stay in sync
+-- with the numbering used on the decoding side.
 --------------------------------------------------
 local ZONE_NAME_TO_ID = {
     ["Durotar"] = 0,
@@ -328,10 +328,11 @@ local ZONE_NAME_TO_ID = {
     ["Felwood"] = 10,
     ["Western Plaguelands"] = 11,
     ["Silithus"] = 12,
+    ["Azshara"] = 13,
 }
 
--- 255 = current zone isn't one of WowHelper's known farming zones (matches
--- WowZone.Unknown in WowLocationConfiguration.cs).
+-- 255 = current zone isn't one of the known farming zones on the decoding
+-- side.
 function GetCurrentZoneId()
     -- GetRealZoneText(), not GetZoneText(), so subzone/instance overlap
     -- doesn't change the result -- location configs are zone-level, not
@@ -694,6 +695,21 @@ function IsTargetNatureImmune()
     return NATURE_IMMUNE_MOB_NAMES[name] == true
 end
 
+-- True if the current target has a ranged attack whose range exceeds Earth
+-- Shock's (per LONG_RANGE_CASTER_MOB_NAMES in CreatureConfig.lua).
+function IsTargetLongRangeCaster()
+    if not UnitExists("target") then
+        return false
+    end
+
+    local name = UnitName("target")
+    if not name then
+        return false
+    end
+
+    return LONG_RANGE_CASTER_MOB_NAMES[name] == true
+end
+
 -- True if the target is currently casting or channeling a spell.
 function IsTargetCasting()
     return UnitCastingInfo("target") ~= nil
@@ -895,9 +911,14 @@ function GetMultiBoolOne()
     return rByte/255.0, gByte/255.0, bByte/255.0
 end
 
--- Fully reserved for future class-agnostic flags -- nothing packed here yet.
+-- R1 (IsTargetLongRangeCaster) is the first flag packed in here -- R2-R8 and
+-- the G/B bytes are still fully reserved for future class-agnostic flags.
 function GetMultiBoolTwo()
-    return 0, 0, 0
+    local boolR1 = IsTargetLongRangeCaster()
+
+    local rByte = EncodeBooleansToByte(boolR1, false, false, false, false, false, false, false)
+
+    return rByte/255.0, 0, 0
 end
 
 function GetMultiIntOne()

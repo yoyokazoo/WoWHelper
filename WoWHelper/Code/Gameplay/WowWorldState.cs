@@ -51,6 +51,9 @@ namespace WoWHelper
         public bool PlayerIsDiseased { get; private set; }
         public bool TargetRecentlyEvaded { get; private set; }
 
+        // Decoded from MultiBoolTwo's R byte, b1 (see GetMultiBoolTwo() in WoWFunctions.lua).
+        public bool IsTargetLongRangeCaster { get; private set; }
+
         // Which of the three bot-supported classes the player is playing, decoded from
         // MultiBoolOne's B byte (b2/b3/b4 -- see GetMultiBoolOne() in WoWFunctions.lua).
         // Null if none of those bits are set -- an unsupported class, or the addon hasn't
@@ -243,10 +246,15 @@ namespace WoWHelper
             IsTargetCasting = b8;
         }
 
-        // MultiBoolTwo currently carries no decoded fields -- reserved for the
-        // next class-agnostic flag (see GetMultiBoolTwo() in WoWFunctions.lua).
+        // R1 (IsTargetLongRangeCaster) is the only field packed here so far -- R2-R8 and the
+        // G/B bytes are still reserved for future class-agnostic flags (see GetMultiBoolTwo()
+        // in WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
+            Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
+            DecodeByte(color.R, out var r1, out _, out _, out _, out _, out _, out _, out _);
+
+            IsTargetLongRangeCaster = r1;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

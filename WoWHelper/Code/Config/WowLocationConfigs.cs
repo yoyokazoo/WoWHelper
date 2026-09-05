@@ -120,6 +120,26 @@ namespace WoWHelper.Code.WorldState
         };
         */
 
+        /*
+/target Mosshoof
+/target Legashi
+        */
+        public static readonly WowLocationConfiguration LEVEL_53_ASZHARA_SATYR_CIRCLE = new WowLocationConfiguration
+        {
+            Title = "Azshara (Level 53+)",
+            MinimumLevel = 53,
+            Zone = WowZone.Azshara,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(20.47f, 49.44f),
+                new Vector2(20.15f, 51.75f),
+            },
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.06f
+        };
+
         public static readonly WowLocationConfiguration LEVEL_53_NORTH_FELWOOD = new WowLocationConfiguration
         {
             Title = "North Felwood (Level 53+)",
@@ -922,6 +942,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_58_SILITHUS_RUMBLERS,
             LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL,
             LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
+            LEVEL_53_ASZHARA_SATYR_CIRCLE,
             LEVEL_53_NORTH_FELWOOD,
             LEVEL_51_FELWOOD_SOUTH,
             LEVEL_48_FERALAS_HIPPOGRYPHS,

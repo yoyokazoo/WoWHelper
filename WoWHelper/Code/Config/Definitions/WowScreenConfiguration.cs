@@ -98,9 +98,10 @@ namespace WoWHelper
         // PixelRowPoint() must match the AddSwatch(index, ...) calls there.
         //
         // The row is condensed to exactly the pixels actually read below --
-        // no MultiBoolTwo/ClassBoolTwo/ClassIntOne Points exist because
-        // nothing currently decodes them. Add one back here (and a matching
-        // swatch in InitializePixelRow()) if/when a field needs it.
+        // no ClassBoolTwo/ClassIntOne Points exist because nothing currently
+        // decodes them (MultiBoolTwo got its Point once IsTargetLongRangeCaster
+        // needed one). Add one back here (and a matching swatch in
+        // InitializePixelRow()) if/when a field needs it.
         private const int PixelSize = 3;
         private const int PixelCenterOffset = PixelSize / 2;
 
@@ -121,6 +122,8 @@ namespace WoWHelper
         public Point MultiIntTwoPosition => PixelRowPoint(6);
 
         public Point ClassBoolOnePosition => PixelRowPoint(7);
+
+        public Point MultiBoolTwoPosition => PixelRowPoint(8);
 
         // Bounding rectangle covering every pixel anything in this codebase reads off a
         // captured screen bitmap: the pixel row (top-left corner), the red-error-text/
@@ -146,6 +149,7 @@ namespace WoWHelper
             {
                 AddonLoadedPosition, MapXPosition, MapYPosition, FacingDegreesPosition,
                 MultiBoolOnePosition, MultiIntOnePosition, MultiIntTwoPosition, ClassBoolOnePosition,
+                MultiBoolTwoPosition,
             };
 
             var clusters = new[]

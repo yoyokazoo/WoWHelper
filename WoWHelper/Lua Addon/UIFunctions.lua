@@ -179,6 +179,7 @@ function InitializePixelRow()
     AddSwatch(5, GetMultiIntOne)
     AddSwatch(6, GetMultiIntTwo)
     AddSwatch(7, GetClassBoolOne)
+    AddSwatch(8, GetMultiBoolTwo)
 
     local checkInterval = 0.05
     local elapsedTime = 0

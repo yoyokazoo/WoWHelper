@@ -30,3 +30,11 @@ FIRE_IMMUNE_MOB_NAMES = {
 NATURE_IMMUNE_MOB_NAMES = {
     ["Swirling Vortex"] = true,
 }
+
+-- Mobs with a ranged attack whose range exceeds Earth Shock's -- worth
+-- closing distance on before trying to interrupt, rather than just standing
+-- still and hoping they wander into range.
+LONG_RANGE_CASTER_MOB_NAMES = {
+    ["Mosshoof Runner"] = true,
+    ["Legashi Hellcaller"] = true,
+}

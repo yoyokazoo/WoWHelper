@@ -23,6 +23,7 @@ namespace WoWHelper.Code.WorldState
         Felwood = 10,
         WesternPlaguelands = 11,
         Silithus = 12,
+        Azshara = 13,
 
         Unknown = 255, // current zone doesn't match any known entry
     }
