@@ -235,12 +235,15 @@ namespace WoWHelper
             return battleReady;
         }
 
+        // Simplified while the engage flow is being reworked around the new target-marker
+        // bearing detection (see WowMovementTasks.TurnToFaceTargetMarkerTask) -- no longer
+        // presses the pull cast here at all; that's moving into
+        // ShamanFaceCorrectDirectionToEngageTask below, after facing is actually corrected.
+        // Not yet complete.
         public async Task<bool> ShamanKickOffEngageTask(WowShamanClassState classState)
         {
+            await Task.Delay(0);
             EngageAttempts = 1;
-
-            Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
-            await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
             return true;
         }
 
@@ -256,7 +259,10 @@ namespace WoWHelper
             Console.WriteLine($"ShamanFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}, WorldState.IsInCombat? {WorldState.IsInCombat}");
             if (!WorldState.IsCurrentlyCasting && !WorldState.IsInCombat)
             {
-                await TurnABitToTheLeftTask();
+                // Replaces the old blind TurnABitToTheLeftTask() -- see
+                // WowMovementTasks.TurnToFaceTargetMarkerTask for the target-marker-based
+                // bearing detection this now uses instead.
+                await TurnToFaceTargetMarkerTask();
                 Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
                 await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
                 await UpdateWorldStateAsync();

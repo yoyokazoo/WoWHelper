@@ -350,6 +350,75 @@ namespace WoWHelper
             return true;
         }
 
+        // Measured empirically: how long holding a single turn key takes to spin the
+        // character a full 360 degrees. TurnToFaceTargetMarkerTask below uses this to convert
+        // a computed bearing directly into a turn-key hold duration.
+        private const float FULL_ROTATION_MILLIS = 2000f;
+
+        // How wide a facing cone counts as "roughly facing the target" -- matches the
+        // frontal-cone requirement Classic already enforces for a targeted spell cast (see
+        // the "You are facing the wrong way!"/TargetNeedsToBeInFront red-error-text handling
+        // elsewhere in this codebase). TurnToFaceTargetMarkerTask's final verification passes
+        // once within half this, i.e. +/-15 degrees of dead-ahead.
+        private const float TARGET_FACING_CONE_DEGREES = 30f;
+
+        // Signed bearing in degrees from the player's own screen position to the target
+        // marker (see WowPlayer.FindTargetMarkerOnScreen / UIFunctions.lua's target-marker
+        // section): 0 = dead ahead, positive = turn right by that many degrees, negative =
+        // turn left. There is no addon-legal way to read a target's actual position/bearing
+        // in this client (UnitPosition, C_Map.GetPlayerMapPosition, and even nameplate frame
+        // measurement are all blocked), so this is derived purely from the marker's on-screen
+        // position relative to screen center: since the player is run with the camera pitched
+        // straight down, screen "up" (Y above center) is forward, and the vector from screen
+        // center to the marker IS the bearing, via atan2 -- X left/right of center becomes
+        // left/right of facing, Y above/below center becomes in-front-of/behind. Returns null
+        // if the marker isn't currently visible on screen.
+        private float? GetTargetMarkerBearingDegrees()
+        {
+            var marker = FindTargetMarkerOnScreen();
+            if (marker == null)
+            {
+                return null;
+            }
+
+            var resolution = FarmingConfig.ScreenConfiguration.Resolution;
+            float dx = marker.Value.X - (resolution.Width / 2f);
+            float dy = marker.Value.Y - (resolution.Height / 2f);
+
+            // atan2(dx, -dy): 0 degrees when dx=0 and the marker is above center (straight
+            // ahead); increases toward +90 as the marker moves right of center, toward +/-180
+            // as it approaches directly behind, and toward -90 as it moves left of center.
+            return (float)(Math.Atan2(dx, -dy) * 180.0 / Math.PI);
+        }
+
+        // Turns to (roughly) face the current target: scans once for the target marker,
+        // calculates the bearing and the turn-key hold duration that bearing corresponds to
+        // (via FULL_ROTATION_MILLIS), does that one turn, then a final verification scan.
+        // Returns true only if that verification lands within TARGET_FACING_CONE_DEGREES/2 of
+        // dead-ahead -- false otherwise (marker not visible at all, or still outside the cone
+        // after the turn, e.g. the target moved during it), leaving retries to the caller
+        // (ShamanFaceCorrectDirectionToEngageTask's own retry loop).
+        //
+        // Not yet tuned against live testing -- see the "Approach ranged/caster mobs" plan.
+        public async Task<bool> TurnToFaceTargetMarkerTask()
+        {
+            float? bearing = GetTargetMarkerBearingDegrees();
+            if (bearing == null)
+            {
+                return false;
+            }
+
+            int turnMillis = (int)((Math.Abs(bearing.Value) / 360f) * FULL_ROTATION_MILLIS);
+            Keys turnKey = bearing.Value > 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
+
+            Keyboard.KeyDown(turnKey);
+            await Task.Delay(turnMillis);
+            Keyboard.KeyUp(turnKey);
+
+            float? verifyBearing = GetTargetMarkerBearingDegrees();
+            return verifyBearing != null && Math.Abs(verifyBearing.Value) <= TARGET_FACING_CONE_DEGREES / 2f;
+        }
+
         public async Task<bool> StartWalkForwardTask()
         {
             await Task.Delay(0);

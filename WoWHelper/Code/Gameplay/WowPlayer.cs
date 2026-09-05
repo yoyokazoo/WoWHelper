@@ -228,7 +228,47 @@ namespace WoWHelper
             await UpdateWorldStateAsync();
             //await PetriAltF4Task();
             //await CreateHeatmapForLooting(saveBitmaps: true);
-            await TargetMarkerDebugTask();
+            //await TargetMarkerDebugTask();
+
+            // Testing ShamanFaceCorrectDirectionToEngageTask/TurnToFaceTargetMarkerTask (see
+            // the "Approach ranged/caster mobs" plan) in isolation, without the full engage
+            // state machine around it. ClassState needs resolving once before the loop so the
+            // WowShamanClassState cast below has something real to work with.
+            //
+            // ESC ends the loop early (KeyPoller is the same global ESC-detection mechanism
+            // used elsewhere in this codebase) -- useful since this loop otherwise only exits
+            // once ShamanFaceCorrectDirectionToEngageTask succeeds, which might never happen
+            // mid-test. Scoped to just this task: subscribed/started right before the loop,
+            // unsubscribed/stopped right after, so repeat AdHocTest runs don't stack handlers
+            // on KeyPoller's static event.
+            bool escPressed = false;
+            Action onEsc = () => escPressed = true;
+            KeyPoller.EscPressed += onEsc;
+            KeyPoller.Start();
+
+            try
+            {
+                ResolveCombatConfiguration();
+                while (true)
+                {
+                    if (escPressed)
+                    {
+                        Console.WriteLine("ESC pressed, ending ad hoc test loop");
+                        break;
+                    }
+
+                    await UpdateWorldStateAsync();
+                    bool canEngage = await ShamanFaceCorrectDirectionToEngageTask((WowShamanClassState)ClassState);
+                    break;
+                }
+            }
+            finally
+            {
+                KeyPoller.EscPressed -= onEsc;
+                KeyPoller.Stop();
+            }
+
+            await AvoidObstacleByJumping();
             return true;
             /*
             await FocusOnWindowTask();
@@ -260,6 +300,24 @@ namespace WoWHelper
             */
         }
 
+        // Captures a full-screen screenshot and searches it for the sentinel-colored target
+        // marker UIFunctions.lua paints onto the current target's nameplate (see
+        // WowScreenConfiguration.TARGET_MARKER_COLOR) -- a full-resolution capture, not the
+        // tiny fixed pixel-row crop WorldState normally reads, since the marker can be
+        // anywhere on screen. Returns its screen position, or null if not found (marker not
+        // created yet, target occluded, or no target at all). Shared by TargetMarkerDebugTask
+        // and WowMovementTasks.TurnToFaceTargetMarkerTask.
+        public Point? FindTargetMarkerOnScreen()
+        {
+            var resolution = FarmingConfig.ScreenConfiguration.Resolution;
+            var fullScreenRect = new Rectangle(0, 0, resolution.Width, resolution.Height);
+
+            using (Bitmap fullBmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(fullScreenRect))
+            {
+                return BitmapDifferenceVisualizer.FindColorCentroid(fullBmp, WowScreenConfiguration.TARGET_MARKER_COLOR);
+            }
+        }
+
         // TEMP diagnostic (see the "Approach ranged/caster mobs" plan): verify the
         // sentinel-colored target marker UIFunctions.lua paints onto the current target's
         // nameplate is actually findable via screen-capture pixel search, and that its
@@ -275,24 +333,19 @@ namespace WoWHelper
                 await UpdateWorldStateAsync();
 
                 var resolution = FarmingConfig.ScreenConfiguration.Resolution;
-                var fullScreenRect = new Rectangle(0, 0, resolution.Width, resolution.Height);
+                var marker = FindTargetMarkerOnScreen();
+                int centerX = resolution.Width / 2;
+                int centerY = resolution.Height / 2;
 
-                using (Bitmap fullBmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(fullScreenRect))
+                if (marker == null)
                 {
-                    var marker = BitmapDifferenceVisualizer.FindColorCentroid(fullBmp, WowScreenConfiguration.TARGET_MARKER_COLOR);
-                    int centerX = resolution.Width / 2;
-                    int centerY = resolution.Height / 2;
-
-                    if (marker == null)
-                    {
-                        Console.WriteLine("WoWHelper DEBUG: target marker NOT FOUND on screen");
-                    }
-                    else
-                    {
-                        string leftRight = marker.Value.X < centerX ? "LEFT" : "RIGHT";
-                        string frontBack = marker.Value.Y < centerY ? "FRONT" : "BEHIND";
-                        Console.WriteLine($"WoWHelper DEBUG: target marker at {marker.Value} (screen center {centerX},{centerY}) -> {leftRight}/{frontBack}");
-                    }
+                    Console.WriteLine("WoWHelper DEBUG: target marker NOT FOUND on screen");
+                }
+                else
+                {
+                    string leftRight = marker.Value.X < centerX ? "LEFT" : "RIGHT";
+                    string frontBack = marker.Value.Y < centerY ? "FRONT" : "BEHIND";
+                    Console.WriteLine($"WoWHelper DEBUG: target marker at {marker.Value} (screen center {centerX},{centerY}) -> {leftRight}/{frontBack}");
                 }
 
                 await Task.Delay(1000);
