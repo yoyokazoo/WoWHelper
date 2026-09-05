@@ -46,6 +46,11 @@ namespace WoWHelper
                     continue;
                 }
 
+                if (WorldState.IsTargetLongRangeCaster && !classState.IsInEarthShockRange)
+                {
+                    await ShamanRunIntoEarthShockRange(classState);
+                }
+
                 // Next, check if we need to pop any big cooldowns
                 if (!emergencyActionTaken && await ShamanEmergencyTask())
                 {
@@ -107,6 +112,23 @@ namespace WoWHelper
             return true;
         }
 
+        public async Task<bool> ShamanRunIntoEarthShockRange(WowShamanClassState classState)
+        {
+            await TurnToFaceTargetMarkerTask();
+            await StartWalkForwardTask();
+            for(int i = 0; i < 5; i++)
+            {
+                await Task.Delay(1000);
+                UpdateWorldState();
+                if (classState.IsInEarthShockRange)
+                {
+                    break;
+                }
+            }
+            await EndWalkForwardTask();
+            return classState.IsInEarthShockRange;
+        }
+
         public bool ShamanShouldCastLightningShield(WowShamanClassState classState)
         {
             // Skip if the only mob we're fighting is nature immune
@@ -128,7 +150,7 @@ namespace WoWHelper
             // Always shock runners, nature immune, and high hp mobs
             skipFlameShock |= !WorldState.IsTargetRunnerMob && !WorldState.IsTargetNatureImmune && WorldState.TargetHpPercent < 75;
             // Open question if we should flame shock casters at the start of fights. Probably worth waiting?
-            skipFlameShock |= WorldState.IsTargetCasterMob && !WorldState.IsTargetNatureImmune;
+            skipFlameShock |= (WorldState.IsTargetCasterMob || WorldState.IsTargetLongRangeCaster) && !WorldState.IsTargetNatureImmune;
 
             if (skipFlameShock)
             {
@@ -146,7 +168,7 @@ namespace WoWHelper
             skipEarthShock |= !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20 && !WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
             // Don't earth shock casters that aren't currently casting
             // TODO: Rename IsTargetCasterMob to something like "ShouldWaitToCounterspell" or something
-            skipEarthShock |= WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
+            skipEarthShock |= (WorldState.IsTargetCasterMob || WorldState.IsTargetLongRangeCaster) && !WorldState.IsTargetCasting;
 
             if (skipEarthShock)
             {
@@ -254,6 +276,11 @@ namespace WoWHelper
             if (AbandonUnreachableEngageTarget())
             {
                 return false;
+            }
+
+            if (WorldState.IsTargetLongRangeCaster && !classState.IsInEarthShockRange)
+            {
+                await ShamanRunIntoEarthShockRange(classState);
             }
 
             Console.WriteLine($"ShamanFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}, WorldState.IsInCombat? {WorldState.IsInCombat}");

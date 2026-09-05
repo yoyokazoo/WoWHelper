@@ -15,6 +15,11 @@ namespace WoWHelper
         public bool CanCurePoison { get; private set; }
         public bool CanCureDisease { get; private set; }
 
+        // Decoded from ClassBoolTwo's R byte, b1 (see GetShamanClassBoolTwo() in
+        // ShamanFunctions.lua) -- a pure range check for Earth Shock, independent of
+        // CanCastEarthShock's cooldown/usability check above.
+        public bool IsInEarthShockRange { get; private set; }
+
         public override void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig)
         {
             Initialized = true;
@@ -30,7 +35,12 @@ namespace WoWHelper
             CanSpellcastPullTarget = r6;
             CanCurePoison = r7;
             CanCureDisease = r8;
-            // ClassBoolTwo and ClassIntOne currently reserved/unused for Shaman.
+
+            Color classBoolTwoColor = bmp.GetPixel(screenConfig.ClassBoolTwoPosition.X, screenConfig.ClassBoolTwoPosition.Y);
+            WowWorldState.DecodeByte(classBoolTwoColor.R, out var classBoolTwoR1, out _, out _, out _, out _, out _, out _, out _);
+
+            IsInEarthShockRange = classBoolTwoR1;
+            // ClassIntOne currently reserved/unused for Shaman.
         }
     }
 }

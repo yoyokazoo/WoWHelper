@@ -35,6 +35,12 @@ function CanCastEarthShock()
     return SpellIsCooledDown(8042) and IsSpellUsable(8042)
 end
 
+-- Pure range check, independent of cooldown -- see SpellIsInRange() in
+-- WoWFunctions.lua.
+function IsInEarthShockRange()
+    return SpellIsInRange(8042)
+end
+
 -- TODO: set dynamically on startup and on levelup
 -- rank 1, 8050
 -- rank 2, 8052
@@ -83,10 +89,14 @@ function GetShamanClassBoolOne()
     return rByte/255.0, 0, 0
 end
 
+-- R1 (IsInEarthShockRange) is the first flag packed here -- R2-R8 and the
+-- G/B bytes are still reserved for future Shaman-specific flags.
 function GetShamanClassBoolTwo()
-    -- Reserved for future Shaman-specific flags; everything currently
-    -- tracked fits in ClassBoolOne above.
-    return 0, 0, 0
+    local boolR1 = IsInEarthShockRange()
+
+    local rByte = EncodeBooleansToByte(boolR1, false, false, false, false, false, false, false)
+
+    return rByte/255.0, 0, 0
 end
 
 function GetShamanClassIntOne()

@@ -72,6 +72,7 @@ see "Adding a new pixel" below):
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
 | 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1 used so far) | `WowWorldState.IsTargetLongRangeCaster` |
+| 9 | `ClassBoolTwo` (packed bools, class-specific — only R1 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
 matching Lua's `EncodeFloatToColor`); packed bools bit-pack 8 flags per
@@ -196,14 +197,18 @@ counterpart to the already-existing `IsPlayerCasting`, which packs into
 `MultiBoolOne`'s G byte as `WowWorldState.IsCurrentlyCasting`) — this fully
 packs the byte.
 
-**Reserved-but-not-in-the-row:** `ClassBoolTwo`/`ClassIntOne` are reserved
-for the next class-specific field, and don't have a pixel in the row or a
+**Reserved-but-not-in-the-row:** `ClassIntOne` is reserved for the next
+class-specific numeric value, and doesn't have a pixel in the row or a
 `Point` on `WowScreenConfiguration` yet — **on purpose**, the row only grows
-when a field actually needs to go in it. `MultiBoolTwo` (index 8) *did* grow
-a pixel this way already: `IsTargetLongRangeCaster` (per-mob, from
+when a field actually needs to go in it. `MultiBoolTwo` (index 8) and
+`ClassBoolTwo` (index 9) *did* each grow a pixel this way already:
+`MultiBoolTwo`'s R-byte bit 1 is `IsTargetLongRangeCaster` (per-mob, from
 `LONG_RANGE_CASTER_MOB_NAMES` in `CreatureConfig.lua` — mobs whose ranged
-attack outranges Earth Shock) is its R-byte bit 1; R2-8 and the G/B bytes are
-still reserved for the next class-agnostic bool.
+attack outranges Earth Shock; R2-8 and the G/B bytes are still reserved for
+the next class-agnostic bool), and `ClassBoolTwo`'s R-byte bit 1 is Shaman's
+`IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
+independent of `CanCastEarthShock`'s cooldown/usability check; R2-8 and the
+G/B bytes are still reserved for the next Shaman-specific flag).
 
 **Adding a new pixel:** append a new `AddSwatch(N, ...)` call in
 `InitializePixelRow()` (Lua) AND a new `PixelRowPoint(N)`-based property on
