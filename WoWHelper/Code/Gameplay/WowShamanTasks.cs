@@ -17,6 +17,9 @@ namespace WoWHelper
             bool emergencyActionTaken = false;
             bool startOfCombatWiggled = false;
 
+            bool isFacingLongRangeCaster = false;
+            bool hasWalkedTowardsLongRangeCaster = false;
+
             await StartAttackTask();
 
             do
@@ -41,8 +44,16 @@ namespace WoWHelper
                 }
 
                 // First do our "Make sure we're not standing around doing nothing" checks
-                if (await MeleeMakeSureWeAreAttackingEnemyTask())
+                if (!WorldState.IsTargetLongRangeCaster && await MeleeMakeSureWeAreAttackingEnemyTask())
                 {
+                    continue;
+                }
+
+                if ((WorldState.IsTargetLongRangeCaster && !isFacingLongRangeCaster) || 
+                    (WorldState.TargetNeedsToBeInFront && WorldState.IsTargetLongRangeCaster))
+                {
+                    await TurnToFaceTargetMarkerTask();
+                    isFacingLongRangeCaster = true;
                     continue;
                 }
 
@@ -107,6 +118,16 @@ namespace WoWHelper
                     // we should already be attacking
                     //Keyboard.KeyPress(WowInput.SHAMAN_ATTACK);
                 }
+
+                if (WorldState.IsTargetLongRangeCaster && WorldState.TooFarAway && !hasWalkedTowardsLongRangeCaster)
+                {
+                    await StartWalkForwardTask();
+                    await Task.Delay(500);
+                    await EndWalkForwardTask();
+                    hasWalkedTowardsLongRangeCaster = true;
+                    continue;
+                }
+
             } while (WorldState.IsInCombat);
 
             return true;
@@ -266,6 +287,10 @@ namespace WoWHelper
         {
             await Task.Delay(0);
             EngageAttempts = 1;
+            await TurnToFaceTargetMarkerTask();
+            await StartWalkForwardTask();
+            await Task.Delay(1000);
+            await EndWalkForwardTask();
             return true;
         }
 

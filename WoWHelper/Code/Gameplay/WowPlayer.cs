@@ -314,7 +314,13 @@ namespace WoWHelper
 
             using (Bitmap fullBmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(fullScreenRect))
             {
-                return BitmapDifferenceVisualizer.FindColorCentroid(fullBmp, WowScreenConfiguration.TARGET_MARKER_COLOR);
+                Point? centroid = BitmapDifferenceVisualizer.FindColorCentroid(fullBmp, WowScreenConfiguration.TARGET_MARKER_COLOR);
+                if (centroid != null)
+                {
+                    //LootX = centroid.Value.X;
+                    //LootY = centroid.Value.Y;
+                }
+                return centroid;
             }
         }
 
@@ -523,6 +529,7 @@ namespace WoWHelper
                     case PlayerState.TARGET_DEFEATED:
                         Console.WriteLine("Target defeated, trying to loot");
                         // TODO: /canceltarget and /stopcasting and /stopattack here so we don't accidentally attack something
+                        await Task.Delay(1000); // give the dying anim a sec
                         LootX = FarmingConfig.ScreenConfiguration.LootDefaultX;
                         LootY = FarmingConfig.ScreenConfiguration.LootDefaultY;
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),

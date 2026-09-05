@@ -98,7 +98,8 @@ namespace WoWHelper
             if (facingWrongWay || targetNeedsToBeInFront || targetIsEvading)
             {
                 // scoot back to make sure the mob is in front of you
-                await ScootBackwardsTask();
+                //await ScootBackwardsTask();
+                await TurnToFaceTargetMarkerTask();
             }
 
             // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up

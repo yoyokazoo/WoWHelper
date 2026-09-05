@@ -132,8 +132,17 @@ namespace WoWHelper.Code.WorldState
 
             Waypoints = new List<Vector2>
             {
-                new Vector2(20.47f, 49.44f),
-                new Vector2(20.15f, 51.75f),
+                new Vector2(51.20f, 21.02f),
+                new Vector2(50.66f, 21.21f),
+                new Vector2(49.95f, 20.04f),
+                new Vector2(49.53f, 19.12f),
+                new Vector2(49.58f, 17.95f),
+                new Vector2(50.30f, 17.77f),
+                new Vector2(50.30f, 17.77f),
+                new Vector2(50.87f, 17.79f),
+                new Vector2(51.57f, 18.13f),
+                new Vector2(52.22f, 18.27f),
+                new Vector2(51.39f, 19.74f),
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
