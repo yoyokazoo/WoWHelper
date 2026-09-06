@@ -35,6 +35,38 @@ namespace WoWHelper.Code.WorldState
             TooManyAttackersThreshold = 3
         };
 
+        /*
+/target Ice Thistle
+        */
+        // Water elementals spawn here during invasion, bot will log off if they are seen.
+        // Supposedly they only show up once every 48 hours or so
+        public static readonly WowLocationConfiguration LEVEL_57_WINTERSPRING_YETIS = new WowLocationConfiguration
+        {
+            Title = "Winterspring Yetis (Level 57+)",
+            MinimumLevel = 57,
+            Zone = WowZone.Winterspring,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(64.33f, 40.78f),
+                new Vector2(64.84f, 41.54f), // 59?
+                new Vector2(65.39f, 42.88f),
+                new Vector2(65.73f, 43.53f),
+                new Vector2(65.96f, 44.94f),
+                new Vector2(66.28f, 45.71f),
+                new Vector2(66.88f, 45.57f),
+                new Vector2(66.92f, 45.41f),
+                new Vector2(67.09f, 44.50f),
+                new Vector2(66.06f, 43.82f),
+                new Vector2(66.43f, 38.86f),
+                new Vector2(65.87f, 41.89f),
+                new Vector2(65.09f, 40.48f),
+            },
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.1f
+        };
+
         public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL = new WowLocationConfiguration
         {
             Title = "Dalton's Tears Backside, Western Plaguelands (Level 56+)",
@@ -190,37 +222,10 @@ namespace WoWHelper.Code.WorldState
         };
 
         /*
-        // Level 55 pats through this area
-        public static readonly WowWaypointConfiguration LEVEL_53_FELWOOD_IRONTREE_STOMPERS = new WowWaypointConfiguration
-        {
-            Waypoints = new List<Vector2>
-            {
-                new Vector2(51.68f, 26.10f),
-                new Vector2(51.15f, 25.17f),
-                new Vector2(51.70f, 24.43f),
-                new Vector2(52.49f, 24.58f),
-                new Vector2(53.23f, 23.66f),
-                new Vector2(53.23f, 22.23f),
-                new Vector2(52.72f, 21.38f),
-                new Vector2(51.73f, 21.43f),
-                new Vector2(50.62f, 20.74f),
-                new Vector2(50.17f, 19.39f),
-                new Vector2(50.29f, 18.11f),
-                new Vector2(49.50f, 17.45f),
-                new Vector2(49.13f, 19.06f),
-                new Vector2(48.72f, 19.83f),
-                new Vector2(48.81f, 21.12f),
-            },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f
-        };
-        */
-
-        /*
 /target Ironbeak
 /target Angerclaw
 /target Felpaw
+/target Warpwood
             */
         public static readonly WowLocationConfiguration LEVEL_51_FELWOOD_SOUTH = new WowLocationConfiguration
         {

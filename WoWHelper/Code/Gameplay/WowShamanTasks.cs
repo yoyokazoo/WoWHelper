@@ -279,9 +279,10 @@ namespace WoWHelper
             await Task.Delay(0);
             EngageAttempts = 1;
             await TurnToFaceTargetMarkerTask();
-            await StartWalkForwardTask();
-            await Task.Delay(1000);
-            await EndWalkForwardTask();
+            // TODO: figure out distance to walk forward
+            //await StartWalkForwardTask();
+            //await Task.Delay(1000);
+            //await EndWalkForwardTask();
             return true;
         }
 
