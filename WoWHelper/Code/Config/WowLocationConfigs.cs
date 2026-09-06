@@ -120,6 +120,12 @@ namespace WoWHelper.Code.WorldState
         };
         */
 
+        /*
+/target Ironbeak
+/target Angerclaw
+/target Warpwood
+/target Felpaw
+            */
         public static readonly WowLocationConfiguration LEVEL_53_NORTH_FELWOOD = new WowLocationConfiguration
         {
             Title = "North Felwood (Level 53+)",
@@ -180,6 +186,7 @@ namespace WoWHelper.Code.WorldState
         /*
 /target Ironbeak
 /target Angerclaw
+/target Warpwood
 /target Felpaw
             */
         public static readonly WowLocationConfiguration LEVEL_51_FELWOOD_SOUTH = new WowLocationConfiguration
