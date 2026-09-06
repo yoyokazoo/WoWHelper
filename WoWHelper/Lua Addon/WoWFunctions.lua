@@ -833,14 +833,21 @@ end
 
 -- True if the player has a debuff of the given dispel type (e.g. "Poison",
 -- "Disease", "Magic", "Curse") -- same UnitDebuff() return-value positions
--- as TargetHasDebuffSpellId/Name above (debuffType is the 4th value).
+-- as TargetHasDebuffSpellId/Name above (debuffType is the 4th value) --
+-- with duration/expirationTime as the 5th/6th values. Only counts if the
+-- debuff has more than DEBUFF_TYPE_MIN_REMAINING_SECONDS left (a duration
+-- of 0 means no duration/permanent, which always counts).
+local DEBUFF_TYPE_MIN_REMAINING_SECONDS = 5
+
 function PlayerHasDebuffType(debuffType)
   for i = 1, 40 do
-    local name, _, _, thisDebuffType = UnitDebuff("player", i)
+    local name, _, _, thisDebuffType, duration, expirationTime = UnitDebuff("player", i)
     if not name then break end
 
     if thisDebuffType == debuffType then
-      return true
+      if duration == 0 or (expirationTime - GetTime()) > DEBUFF_TYPE_MIN_REMAINING_SECONDS then
+        return true
+      end
     end
   end
 

@@ -24,11 +24,13 @@ RUNNER_MOB_NAMES = {
 -- Mobs immune (or effectively immune) to fire damage/effects.
 FIRE_IMMUNE_MOB_NAMES = {
     ["Rogue Flame Spirit"] = true,
+    ["Rotting Worm"] = true,
 }
 
 -- Mobs immune (or effectively immune) to nature damage/effects.
 NATURE_IMMUNE_MOB_NAMES = {
     ["Swirling Vortex"] = true,
+    ["Rotting Worm"] = true,
 }
 
 -- Mobs with a ranged attack whose range exceeds Earth Shock's -- worth

@@ -62,6 +62,10 @@ namespace WoWHelper.Code.WorldState
             TooManyAttackersThreshold = 4
         };
 
+        /*
+/target Blighted
+/target Rotting
+        */
         public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL = new WowLocationConfiguration
         {
             Title = "Dalton's Tears Frontside, Western Plaguelands (Level 56+)",
@@ -121,7 +125,6 @@ namespace WoWHelper.Code.WorldState
         */
 
         /*
-/target Mosshoof
 /target Legashi
         */
         public static readonly WowLocationConfiguration LEVEL_53_ASZHARA_SATYR_CIRCLE = new WowLocationConfiguration
@@ -949,7 +952,7 @@ namespace WoWHelper.Code.WorldState
         public static readonly List<WowLocationConfiguration> ALL_LOCATIONS = new List<WowLocationConfiguration>
         {
             LEVEL_58_SILITHUS_RUMBLERS,
-            LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL,
+            //LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL,
             LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
             LEVEL_53_ASZHARA_SATYR_CIRCLE,
             LEVEL_53_NORTH_FELWOOD,
