@@ -158,7 +158,7 @@ namespace WoWHelper
                     return true;
                 }
 
-                if (CanEngageTarget() || WorldState.IsInCombat)
+                if (CanEngageTarget() || WorldState.IsInCombat || LogoutTriggered)
                 {
                     await EndWalkForwardTask();
                     // return true if we can charge/shoot, false if we're already in combat

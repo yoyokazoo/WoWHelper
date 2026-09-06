@@ -329,6 +329,7 @@ local ZONE_NAME_TO_ID = {
     ["Western Plaguelands"] = 11,
     ["Silithus"] = 12,
     ["Azshara"] = 13,
+    ["Winterspring"] = 14,
 }
 
 -- 255 = current zone isn't one of the known farming zones on the decoding
@@ -710,6 +711,33 @@ function IsTargetLongRangeCaster()
     return LONG_RANGE_CASTER_MOB_NAMES[name] == true
 end
 
+-- True if any mob from LOGOFF_IF_SEEN_MOB_NAMES (CreatureConfig.lua) is
+-- currently visible on a nameplate, OR is our current target -- unlike
+-- IsTargetXxx above, neither of these requires the mob be our current
+-- target specifically, just present nearby, since the whole point is to
+-- bail before we ever engage it. The target check is needed alongside the
+-- nameplate scan since we can have something targeted (e.g. via TAB/macro,
+-- or a stale target from before it wandered off) beyond nameplate range.
+-- Same "nameplateN" unit-token iteration CountAttackers() above uses.
+function IsLogoffMobSeen()
+    local targetName = UnitExists("target") and UnitName("target")
+    if targetName and LOGOFF_IF_SEEN_MOB_NAMES[targetName] then
+        return true
+    end
+
+    for i = 1, MAX_NAMEPLATE_INDEX do
+        local unit = "nameplate" .. i
+        if UnitExists(unit) then
+            local name = UnitName(unit)
+            if name and LOGOFF_IF_SEEN_MOB_NAMES[name] then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
 -- True if the target is currently casting or channeling a spell.
 function IsTargetCasting()
     return UnitCastingInfo("target") ~= nil
@@ -918,12 +946,14 @@ function GetMultiBoolOne()
     return rByte/255.0, gByte/255.0, bByte/255.0
 end
 
--- R1 (IsTargetLongRangeCaster) is the first flag packed in here -- R2-R8 and
--- the G/B bytes are still fully reserved for future class-agnostic flags.
+-- R1 (IsTargetLongRangeCaster) and R2 (IsLogoffMobSeen) are the flags packed
+-- in here so far -- R3-R8 and the G/B bytes are still fully reserved for
+-- future class-agnostic flags.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
+    local boolR2 = IsLogoffMobSeen()
 
-    local rByte = EncodeBooleansToByte(boolR1, false, false, false, false, false, false, false)
+    local rByte = EncodeBooleansToByte(boolR1, boolR2, false, false, false, false, false, false)
 
     return rByte/255.0, 0, 0
 end

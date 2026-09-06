@@ -24,6 +24,7 @@ namespace WoWHelper.Code.WorldState
         WesternPlaguelands = 11,
         Silithus = 12,
         Azshara = 13,
+        Winterspring = 14,
 
         Unknown = 255, // current zone doesn't match any known entry
     }

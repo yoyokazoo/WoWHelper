@@ -71,7 +71,7 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1 used so far) | `WowWorldState.IsTargetLongRangeCaster` |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1-R2 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -204,8 +204,20 @@ when a field actually needs to go in it. `MultiBoolTwo` (index 8) and
 `ClassBoolTwo` (index 9) *did* each grow a pixel this way already:
 `MultiBoolTwo`'s R-byte bit 1 is `IsTargetLongRangeCaster` (per-mob, from
 `LONG_RANGE_CASTER_MOB_NAMES` in `CreatureConfig.lua` — mobs whose ranged
-attack outranges Earth Shock; R2-8 and the G/B bytes are still reserved for
-the next class-agnostic bool), and `ClassBoolTwo`'s R-byte bit 1 is Shaman's
+attack outranges Earth Shock), bit 2 is `WowWorldState.LogoffMobSeen` (from
+`LOGOFF_IF_SEEN_MOB_NAMES` in `CreatureConfig.lua` — mobs dangerous/
+undesirable enough that just spotting one anywhere nearby, not necessarily
+targeted, should trigger an immediate logout; unlike the other name-based
+lists' `IsTargetXxx()` checks, `IsLogoffMobSeen()` in `WoWFunctions.lua`
+checks both the current target AND scans all `nameplateN` unit tokens (same
+iteration `CountAttackers()` uses) rather than just `"target"` alone — the
+target check catches a mob targeted beyond nameplate range, which the
+nameplate scan alone would miss — since the whole point is to bail before
+ever engaging it — wired into
+`WowManagementTasks.EveryWorldStateUpdateTasks()`, checked every tick
+regardless of player state, same as the level-up check there); R3-8 and the
+G/B bytes are still reserved for the next class-agnostic bool. `ClassBoolTwo`'s
+R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
 independent of `CanCastEarthShock`'s cooldown/usability check; R2-8 and the
 G/B bytes are still reserved for the next Shaman-specific flag).

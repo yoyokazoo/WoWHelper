@@ -15,7 +15,6 @@ namespace WoWHelper
             bool thrownDynamite = false;
             bool potionUsed = false;
             bool emergencyActionTaken = false;
-            bool startOfCombatWiggled = false;
 
             bool isFacingLongRangeCaster = false;
             bool hasWalkedTowardsLongRangeCaster = false;
@@ -81,12 +80,6 @@ namespace WoWHelper
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     potionUsed = true;
                     continue;
-                }
-
-                if (!startOfCombatWiggled && PreviousWorldState.TargetHpPercent == 100 && WorldState.TargetHpPercent < 100)
-                {
-                    await StartOfCombatWiggle();
-                    startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
                 if (ShamanShouldCastFlameShock(classState))
@@ -218,12 +211,10 @@ namespace WoWHelper
 
             // water??
             await Task.Delay(0);
-            /*
             if (WorldState.PlayerHpPercent < WowPlayerConstants.DRINK_WATER_MP_THRESHOLD)
             {
                 await WowInput.PressKeyWithShift(WowInput.SHIFT_DRINK_WATER);
             }
-            */
 
             return true;
         }

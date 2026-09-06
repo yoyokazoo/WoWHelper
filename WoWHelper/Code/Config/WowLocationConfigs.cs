@@ -96,9 +96,18 @@ namespace WoWHelper.Code.WorldState
         };
 
         /*
-        // Water elementals spawn here during invasion, not really safe
-        public static readonly WowWaypointConfiguration LEVEL_55_WINTERSPRING_LAKE = new WowWaypointConfiguration
+/target Suffering
+/target Anguished
+/target Watery
+        */
+        // Water elementals spawn here during invasion, bot will log off if they are seen.
+        // Supposedly they only show up once every 48 hours or so
+        public static readonly WowLocationConfiguration LEVEL_55_WINTERSPRING_LAKE = new WowLocationConfiguration
         {
+            Title = "Winterspring Lake (Level 56+)",
+            MinimumLevel = 56,
+            Zone = WowZone.Winterspring,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(53.60f, 39.54f),
@@ -118,11 +127,10 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(54.28f, 42.10f),
                 new Vector2(53.96f, 40.54f),
             },
-            TraversalMethod = WowWaypointConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowWaypointConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.06f
         };
-        */
 
         /*
 /target Legashi
@@ -954,6 +962,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_58_SILITHUS_RUMBLERS,
             //LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL,
             LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
+            LEVEL_55_WINTERSPRING_LAKE,
             LEVEL_53_ASZHARA_SATYR_CIRCLE,
             LEVEL_53_NORTH_FELWOOD,
             LEVEL_51_FELWOOD_SOUTH,

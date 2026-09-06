@@ -40,3 +40,12 @@ LONG_RANGE_CASTER_MOB_NAMES = {
     ["Mosshoof Runner"] = true,
     ["Legashi Hellcaller"] = true,
 }
+
+-- Mobs dangerous/undesirable enough that just seeing one nearby (not
+-- necessarily targeted) should trigger an immediate logout, rather than
+-- risk engaging or aggroing it.
+LOGOFF_IF_SEEN_MOB_NAMES = {
+    ["Watery Invader"] = true,
+    ["Suffering Highborne"] = true,
+    ["Anguished Highborne"] = true,
+}
