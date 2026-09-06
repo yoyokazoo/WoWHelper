@@ -71,8 +71,8 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1-R2 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen` |
-| 9 | `ClassBoolTwo` (packed bools, class-specific — only R1 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`) |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1-R3 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning` |
+| 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R2 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
 matching Lua's `EncodeFloatToColor`); packed bools bit-pack 8 flags per
@@ -215,12 +215,19 @@ target check catches a mob targeted beyond nameplate range, which the
 nameplate scan alone would miss — since the whole point is to bail before
 ever engaging it — wired into
 `WowManagementTasks.EveryWorldStateUpdateTasks()`, checked every tick
-regardless of player state, same as the level-up check there); R3-8 and the
-G/B bytes are still reserved for the next class-agnostic bool. `ClassBoolTwo`'s
+regardless of player state, same as the level-up check there), and bit 3 is
+`WowWorldState.IsCurrentlySkinning` (name-matched against the player's
+current cast, `UnitCastingInfo("player") == "Skinning"` — Skinning is a
+regular cast-bar action, not a channel, and isn't cast via a normal
+spellbook ID the way e.g. `CanCurePoison`'s `IsSpellKnownByName()` match is);
+R4-8 and the G/B bytes are still reserved for the next class-agnostic bool.
+`ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
-independent of `CanCastEarthShock`'s cooldown/usability check; R2-8 and the
-G/B bytes are still reserved for the next Shaman-specific flag).
+independent of `CanCastEarthShock`'s cooldown/usability check), bit 2 is
+Shaman's `HasClearcasting` (Elemental Focus's proc buff, name-matched via
+`HasBuffNamed("Clearcasting")`); R3-8 and the G/B bytes are still reserved
+for the next Shaman-specific flag).
 
 **Adding a new pixel:** append a new `AddSwatch(N, ...)` call in
 `InitializePixelRow()` (Lua) AND a new `PixelRowPoint(N)`-based property on

@@ -51,9 +51,10 @@ namespace WoWHelper
         public bool PlayerIsDiseased { get; private set; }
         public bool TargetRecentlyEvaded { get; private set; }
 
-        // Decoded from MultiBoolTwo's R byte, b1/b2 (see GetMultiBoolTwo() in WoWFunctions.lua).
+        // Decoded from MultiBoolTwo's R byte, b1/b2/b3 (see GetMultiBoolTwo() in WoWFunctions.lua).
         public bool IsTargetLongRangeCaster { get; private set; }
         public bool LogoffMobSeen { get; private set; }
+        public bool IsCurrentlySkinning { get; private set; }
 
         // Which of the three bot-supported classes the player is playing, decoded from
         // MultiBoolOne's B byte (b2/b3/b4 -- see GetMultiBoolOne() in WoWFunctions.lua).
@@ -247,16 +248,17 @@ namespace WoWHelper
             IsTargetCasting = b8;
         }
 
-        // R1 (IsTargetLongRangeCaster) and R2 (LogoffMobSeen) are the only fields packed here
-        // so far -- R3-R8 and the G/B bytes are still reserved for future class-agnostic flags
-        // (see GetMultiBoolTwo() in WoWFunctions.lua).
+        // R1 (IsTargetLongRangeCaster), R2 (LogoffMobSeen), and R3 (IsCurrentlySkinning) are
+        // the only fields packed here so far -- R4-R8 and the G/B bytes are still reserved for
+        // future class-agnostic flags (see GetMultiBoolTwo() in WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
-            DecodeByte(color.R, out var r1, out var r2, out _, out _, out _, out _, out _, out _);
+            DecodeByte(color.R, out var r1, out var r2, out var r3, out _, out _, out _, out _, out _);
 
             IsTargetLongRangeCaster = r1;
             LogoffMobSeen = r2;
+            IsCurrentlySkinning = r3;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

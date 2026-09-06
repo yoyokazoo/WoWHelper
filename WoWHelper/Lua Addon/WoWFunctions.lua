@@ -859,6 +859,15 @@ function IsPlayerCasting()
         or UnitChannelInfo("player") ~= nil
 end
 
+-- True while the player's Skinning cast (the right-click-on-corpse action,
+-- shown as a regular cast bar, not a channel) is in progress -- name-matched
+-- rather than a spell ID since Skinning isn't cast via a normal spellbook
+-- entry/ID the way e.g. CanCurePoison's IsSpellKnownByName() match is.
+function IsCurrentlySkinning()
+    local name = UnitCastingInfo("player")
+    return name == "Skinning"
+end
+
 -- True if the player has a debuff of the given dispel type (e.g. "Poison",
 -- "Disease", "Magic", "Curse") -- same UnitDebuff() return-value positions
 -- as TargetHasDebuffSpellId/Name above (debuffType is the 4th value) --
@@ -946,14 +955,15 @@ function GetMultiBoolOne()
     return rByte/255.0, gByte/255.0, bByte/255.0
 end
 
--- R1 (IsTargetLongRangeCaster) and R2 (IsLogoffMobSeen) are the flags packed
--- in here so far -- R3-R8 and the G/B bytes are still fully reserved for
--- future class-agnostic flags.
+-- R1 (IsTargetLongRangeCaster), R2 (IsLogoffMobSeen), and R3
+-- (IsCurrentlySkinning) are the flags packed in here so far -- R4-R8 and the
+-- G/B bytes are still fully reserved for future class-agnostic flags.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()
+    local boolR3 = IsCurrentlySkinning()
 
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, false, false, false, false, false, false)
+    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, false, false, false, false, false)
 
     return rByte/255.0, 0, 0
 end

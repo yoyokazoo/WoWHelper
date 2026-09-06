@@ -210,8 +210,8 @@ namespace WoWHelper
             }
 
             // water??
-            await Task.Delay(0);
-            if (WorldState.PlayerHpPercent < WowPlayerConstants.DRINK_WATER_MP_THRESHOLD)
+            await Task.Delay(500);
+            if (WorldState.ResourcePercent < WowPlayerConstants.DRINK_WATER_MP_THRESHOLD)
             {
                 await WowInput.PressKeyWithShift(WowInput.SHIFT_DRINK_WATER);
             }

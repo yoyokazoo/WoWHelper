@@ -41,6 +41,13 @@ function IsInEarthShockRange()
     return SpellIsInRange(8042)
 end
 
+-- Elemental Focus's proc buff -- next two spells cost less mana. Name-matched
+-- via HasBuffNamed() (WoWFunctions.lua) rather than a spell ID, same as
+-- CanCurePoison/CanCureDisease above.
+function HasClearcasting()
+    return HasBuffNamed("Clearcasting")
+end
+
 -- TODO: set dynamically on startup and on levelup
 -- rank 1, 8050
 -- rank 2, 8052
@@ -89,12 +96,14 @@ function GetShamanClassBoolOne()
     return rByte/255.0, 0, 0
 end
 
--- R1 (IsInEarthShockRange) is the first flag packed here -- R2-R8 and the
--- G/B bytes are still reserved for future Shaman-specific flags.
+-- R1 (IsInEarthShockRange) and R2 (HasClearcasting) are the flags packed
+-- here so far -- R3-R8 and the G/B bytes are still reserved for future
+-- Shaman-specific flags.
 function GetShamanClassBoolTwo()
     local boolR1 = IsInEarthShockRange()
+    local boolR2 = HasClearcasting()
 
-    local rByte = EncodeBooleansToByte(boolR1, false, false, false, false, false, false, false)
+    local rByte = EncodeBooleansToByte(boolR1, boolR2, false, false, false, false, false, false)
 
     return rByte/255.0, 0, 0
 end
