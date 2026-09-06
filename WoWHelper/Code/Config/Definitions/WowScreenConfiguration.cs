@@ -34,6 +34,14 @@ namespace WoWHelper
         public static readonly Color TRADE_SCREEN_CONFIRMATION_COLOR_TWO = Color.FromArgb(233, 181, 43);
         public static readonly Color TRADE_SCREEN_CONFIRMATION_COLOR_THREE = Color.FromArgb(87, 0, 0);
 
+        // Sentinel color painted onto the current target's nameplate (a single CENTER-anchored
+        // texture -- see UIFunctions.lua's target-marker section) so it can be found via an
+        // ordinary screen-capture pixel search instead of a restricted frame-measurement API
+        // (UnitPosition/C_Map.GetPlayerMapPosition/nameplate :GetCenter() are all confirmed
+        // blocked for an arbitrary target in this client). Keep in sync with
+        // UIFunctions.lua's NAMEPLATE_MARKER_COLOR.
+        public static readonly Color TARGET_MARKER_COLOR = Color.FromArgb(255, 0, 255);
+
         #endregion
 
         // /console cameraDistanceMaxZoomFactor 2.6
@@ -49,8 +57,8 @@ namespace WoWHelper
         public int LootHeatmapWidth { get; set; }
         public int LootHeatmapHeight { get; set; }
 
-        public int LootDefaultX => Resolution.Width / 2;
-        public int LootDefaultY => Resolution.Height / 2;
+        public int LootDefaultX => (Resolution.Width / 2);
+        public int LootDefaultY => (Resolution.Height / 2) - 100;
 
         public int LootHeatmapIgnoreX { get; set; }
         public int LootHeatmapIgnoreY { get; set; }
@@ -90,9 +98,11 @@ namespace WoWHelper
         // PixelRowPoint() must match the AddSwatch(index, ...) calls there.
         //
         // The row is condensed to exactly the pixels actually read below --
-        // no MultiBoolTwo/ClassBoolTwo/ClassIntOne Points exist because
-        // nothing currently decodes them. Add one back here (and a matching
-        // swatch in InitializePixelRow()) if/when a field needs it.
+        // no ClassIntOne Point exists because nothing currently decodes it
+        // (MultiBoolTwo/ClassBoolTwo each got a Point once a field needed
+        // one -- IsTargetLongRangeCaster and IsInEarthShockRange
+        // respectively). Add one back here (and a matching swatch in
+        // InitializePixelRow()) if/when a field needs it.
         private const int PixelSize = 3;
         private const int PixelCenterOffset = PixelSize / 2;
 
@@ -113,6 +123,10 @@ namespace WoWHelper
         public Point MultiIntTwoPosition => PixelRowPoint(6);
 
         public Point ClassBoolOnePosition => PixelRowPoint(7);
+
+        public Point MultiBoolTwoPosition => PixelRowPoint(8);
+
+        public Point ClassBoolTwoPosition => PixelRowPoint(9);
 
         // Bounding rectangle covering every pixel anything in this codebase reads off a
         // captured screen bitmap: the pixel row (top-left corner), the red-error-text/
@@ -138,6 +152,7 @@ namespace WoWHelper
             {
                 AddonLoadedPosition, MapXPosition, MapYPosition, FacingDegreesPosition,
                 MultiBoolOnePosition, MultiIntOnePosition, MultiIntTwoPosition, ClassBoolOnePosition,
+                MultiBoolTwoPosition, ClassBoolTwoPosition,
             };
 
             var clusters = new[]

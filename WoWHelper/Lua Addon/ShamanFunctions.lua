@@ -35,6 +35,19 @@ function CanCastEarthShock()
     return SpellIsCooledDown(8042) and IsSpellUsable(8042)
 end
 
+-- Pure range check, independent of cooldown -- see SpellIsInRange() in
+-- WoWFunctions.lua.
+function IsInEarthShockRange()
+    return SpellIsInRange(8042)
+end
+
+-- Elemental Focus's proc buff -- next two spells cost less mana. Name-matched
+-- via HasBuffNamed() (WoWFunctions.lua) rather than a spell ID, same as
+-- CanCurePoison/CanCureDisease above.
+function HasClearcasting()
+    return HasBuffNamed("Clearcasting")
+end
+
 -- TODO: set dynamically on startup and on levelup
 -- rank 1, 8050
 -- rank 2, 8052
@@ -51,9 +64,8 @@ function TargetHasFlameShock()
 end
 
 -- Name-matched rather than a hardcoded spell ID (see IsSpellKnownByName() in
--- WoWFunctions.lua) -- the macro bound to SHAMAN_CURE_POISON/
--- SHAMAN_SHIFT_CURE_DISEASE (WowInput.cs) already casts these by the same
--- literal names ("Cure Poison"/"Cure Disease").
+-- WoWFunctions.lua) -- the macro these get bound to already casts by the
+-- same literal names ("Cure Poison"/"Cure Disease").
 function CanCurePoison()
     return IsSpellKnownByName("Cure Poison")
 end
@@ -65,9 +77,9 @@ end
 ------------------------------------------------------------
 -- Packs Shaman-specific state into the ClassBool/ClassInt pixels. Called via
 -- the GetClassBoolOne/Two/GetClassIntOne dispatchers in WoWFunctions.lua
--- once UnitClass("player") resolves to SHAMAN. Decoded on the C# side by
--- WowShamanClassState.UpdateFromBitmap -- bit order here MUST match there.
--- R7/R8 (CanCurePoison/CanCureDisease) fully pack the byte.
+-- once UnitClass("player") resolves to SHAMAN. Decoded on the other end in
+-- the same bit order -- keep both sides in sync. R7/R8
+-- (CanCurePoison/CanCureDisease) fully pack the byte.
 ------------------------------------------------------------
 function GetShamanClassBoolOne()
     local boolR1 = ShouldCastRockbiterWeapon()
@@ -84,10 +96,16 @@ function GetShamanClassBoolOne()
     return rByte/255.0, 0, 0
 end
 
+-- R1 (IsInEarthShockRange) and R2 (HasClearcasting) are the flags packed
+-- here so far -- R3-R8 and the G/B bytes are still reserved for future
+-- Shaman-specific flags.
 function GetShamanClassBoolTwo()
-    -- Reserved for future Shaman-specific flags; everything currently
-    -- tracked fits in ClassBoolOne above.
-    return 0, 0, 0
+    local boolR1 = IsInEarthShockRange()
+    local boolR2 = HasClearcasting()
+
+    local rByte = EncodeBooleansToByte(boolR1, boolR2, false, false, false, false, false, false)
+
+    return rByte/255.0, 0, 0
 end
 
 function GetShamanClassIntOne()

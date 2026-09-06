@@ -71,6 +71,8 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1-R3 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning` |
+| 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R2 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
 matching Lua's `EncodeFloatToColor`); packed bools bit-pack 8 flags per
@@ -195,12 +197,37 @@ counterpart to the already-existing `IsPlayerCasting`, which packs into
 `MultiBoolOne`'s G byte as `WowWorldState.IsCurrentlyCasting`) — this fully
 packs the byte.
 
-**Reserved-but-not-in-the-row:** all of `MultiBoolTwo` is reserved for the
-next class-agnostic bool (see `GetMultiBoolOne/Two` in `WoWFunctions.lua`);
-`ClassBoolTwo`/`ClassIntOne` are reserved for the next class-specific field.
-Neither has a pixel in the row or a `Point` on `WowScreenConfiguration` right
-now, **on purpose** — the row only grows when a field actually needs to go
-in it.
+**Reserved-but-not-in-the-row:** `ClassIntOne` is reserved for the next
+class-specific numeric value, and doesn't have a pixel in the row or a
+`Point` on `WowScreenConfiguration` yet — **on purpose**, the row only grows
+when a field actually needs to go in it. `MultiBoolTwo` (index 8) and
+`ClassBoolTwo` (index 9) *did* each grow a pixel this way already:
+`MultiBoolTwo`'s R-byte bit 1 is `IsTargetLongRangeCaster` (per-mob, from
+`LONG_RANGE_CASTER_MOB_NAMES` in `CreatureConfig.lua` — mobs whose ranged
+attack outranges Earth Shock), bit 2 is `WowWorldState.LogoffMobSeen` (from
+`LOGOFF_IF_SEEN_MOB_NAMES` in `CreatureConfig.lua` — mobs dangerous/
+undesirable enough that just spotting one anywhere nearby, not necessarily
+targeted, should trigger an immediate logout; unlike the other name-based
+lists' `IsTargetXxx()` checks, `IsLogoffMobSeen()` in `WoWFunctions.lua`
+checks both the current target AND scans all `nameplateN` unit tokens (same
+iteration `CountAttackers()` uses) rather than just `"target"` alone — the
+target check catches a mob targeted beyond nameplate range, which the
+nameplate scan alone would miss — since the whole point is to bail before
+ever engaging it — wired into
+`WowManagementTasks.EveryWorldStateUpdateTasks()`, checked every tick
+regardless of player state, same as the level-up check there), and bit 3 is
+`WowWorldState.IsCurrentlySkinning` (name-matched against the player's
+current cast, `UnitCastingInfo("player") == "Skinning"` — Skinning is a
+regular cast-bar action, not a channel, and isn't cast via a normal
+spellbook ID the way e.g. `CanCurePoison`'s `IsSpellKnownByName()` match is);
+R4-8 and the G/B bytes are still reserved for the next class-agnostic bool.
+`ClassBoolTwo`'s
+R-byte bit 1 is Shaman's
+`IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
+independent of `CanCastEarthShock`'s cooldown/usability check), bit 2 is
+Shaman's `HasClearcasting` (Elemental Focus's proc buff, name-matched via
+`HasBuffNamed("Clearcasting")`); R3-8 and the G/B bytes are still reserved
+for the next Shaman-specific flag).
 
 **Adding a new pixel:** append a new `AddSwatch(N, ...)` call in
 `InitializePixelRow()` (Lua) AND a new `PixelRowPoint(N)`-based property on
@@ -378,7 +405,17 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`MathFunctions.lua`** — small numeric helpers shared by the above.
 - **`YoyokazooUI.lua`** — addon entry point/event wiring (login, XP/level-up
   tracking, whisper tracking for "unseen whisper" alerts) and indicator
-  initialization.
+  initialization. Also auto-confirms the bind-on-pickup loot popup: on
+  `LOOT_BIND_CONFIRM` it hides Blizzard's `"LOOT_BIND"` StaticPopup (if
+  already shown — our frame registers after the default UI's own handler)
+  and calls `ConfirmLootSlot(lootSlot)` — the same action that popup's own
+  `OnAccept` performs — deferred by one frame via `RunNextFrame`. The defer
+  is required, not stylistic: calling `ConfirmLootSlot` synchronously inside
+  the same `LOOT_BIND_CONFIRM` dispatch silently failed to confirm the loot
+  in testing. The bot has no way to click a popup, and always wants "Yes"
+  here, so there's no toggle/config for it — unlike the
+  reference addon this was modeled on (KyrosKrane Sylvanblade's "Annoying
+  Pop-up Remover"), which exposes it as a user-toggleable option.
 
 ## Tests (`WoWHelperUnitTests/`)
 

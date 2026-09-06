@@ -83,9 +83,9 @@ end
 ------------------------------------------------------------
 -- Packs Warrior-specific state into the ClassBool/ClassInt pixels. Called
 -- via the GetClassBoolOne/Two/GetClassIntOne dispatchers in WoWFunctions.lua
--- once UnitClass("player") resolves to WARRIOR. NOT wired into C# yet, and
--- NOT yet removed from GetMultiBoolOne/Two -- see the "duplicated in
--- ClassBool" comments there for what should eventually be stripped out.
+-- once UnitClass("player") resolves to WARRIOR. NOT read yet on the other
+-- end, and NOT yet removed from GetMultiBoolOne/Two -- see the "duplicated
+-- in ClassBool" comments there for what should eventually be stripped out.
 ------------------------------------------------------------
 function GetWarriorClassBoolOne()
     local boolR1 = HasBuffNamed("Battle Shout")

@@ -24,9 +24,28 @@ RUNNER_MOB_NAMES = {
 -- Mobs immune (or effectively immune) to fire damage/effects.
 FIRE_IMMUNE_MOB_NAMES = {
     ["Rogue Flame Spirit"] = true,
+    ["Rotting Worm"] = true,
 }
 
 -- Mobs immune (or effectively immune) to nature damage/effects.
 NATURE_IMMUNE_MOB_NAMES = {
     ["Swirling Vortex"] = true,
+    ["Rotting Worm"] = true,
+}
+
+-- Mobs with a ranged attack whose range exceeds Earth Shock's -- worth
+-- closing distance on before trying to interrupt, rather than just standing
+-- still and hoping they wander into range.
+LONG_RANGE_CASTER_MOB_NAMES = {
+    ["Mosshoof Runner"] = true,
+    ["Legashi Hellcaller"] = true,
+}
+
+-- Mobs dangerous/undesirable enough that just seeing one nearby (not
+-- necessarily targeted) should trigger an immediate logout, rather than
+-- risk engaging or aggroing it.
+LOGOFF_IF_SEEN_MOB_NAMES = {
+    ["Watery Invader"] = true,
+    ["Suffering Highborne"] = true,
+    ["Anguished Highborne"] = true,
 }

@@ -310,9 +310,9 @@ function GetPlayerMapY()
 end
 
 --------------------------------------------------
--- Current zone, as a WowHelper-defined numeric ID (fits in a single byte
--- channel) -- NOT Blizzard's internal map ID, which doesn't fit in one.
--- MUST stay in sync with the WowZone enum in WowLocationConfiguration.cs.
+-- Current zone, as a numeric ID (fits in a single byte channel) -- NOT
+-- Blizzard's internal map ID, which doesn't fit in one. MUST stay in sync
+-- with the numbering used on the decoding side.
 --------------------------------------------------
 local ZONE_NAME_TO_ID = {
     ["Durotar"] = 0,
@@ -328,10 +328,12 @@ local ZONE_NAME_TO_ID = {
     ["Felwood"] = 10,
     ["Western Plaguelands"] = 11,
     ["Silithus"] = 12,
+    ["Azshara"] = 13,
+    ["Winterspring"] = 14,
 }
 
--- 255 = current zone isn't one of WowHelper's known farming zones (matches
--- WowZone.Unknown in WowLocationConfiguration.cs).
+-- 255 = current zone isn't one of the known farming zones on the decoding
+-- side.
 function GetCurrentZoneId()
     -- GetRealZoneText(), not GetZoneText(), so subzone/instance overlap
     -- doesn't change the result -- location configs are zone-level, not
@@ -694,6 +696,48 @@ function IsTargetNatureImmune()
     return NATURE_IMMUNE_MOB_NAMES[name] == true
 end
 
+-- True if the current target has a ranged attack whose range exceeds Earth
+-- Shock's (per LONG_RANGE_CASTER_MOB_NAMES in CreatureConfig.lua).
+function IsTargetLongRangeCaster()
+    if not UnitExists("target") then
+        return false
+    end
+
+    local name = UnitName("target")
+    if not name then
+        return false
+    end
+
+    return LONG_RANGE_CASTER_MOB_NAMES[name] == true
+end
+
+-- True if any mob from LOGOFF_IF_SEEN_MOB_NAMES (CreatureConfig.lua) is
+-- currently visible on a nameplate, OR is our current target -- unlike
+-- IsTargetXxx above, neither of these requires the mob be our current
+-- target specifically, just present nearby, since the whole point is to
+-- bail before we ever engage it. The target check is needed alongside the
+-- nameplate scan since we can have something targeted (e.g. via TAB/macro,
+-- or a stale target from before it wandered off) beyond nameplate range.
+-- Same "nameplateN" unit-token iteration CountAttackers() above uses.
+function IsLogoffMobSeen()
+    local targetName = UnitExists("target") and UnitName("target")
+    if targetName and LOGOFF_IF_SEEN_MOB_NAMES[targetName] then
+        return true
+    end
+
+    for i = 1, MAX_NAMEPLATE_INDEX do
+        local unit = "nameplate" .. i
+        if UnitExists(unit) then
+            local name = UnitName(unit)
+            if name and LOGOFF_IF_SEEN_MOB_NAMES[name] then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
 -- True if the target is currently casting or channeling a spell.
 function IsTargetCasting()
     return UnitCastingInfo("target") ~= nil
@@ -815,16 +859,32 @@ function IsPlayerCasting()
         or UnitChannelInfo("player") ~= nil
 end
 
+-- True while the player's Skinning cast (the right-click-on-corpse action,
+-- shown as a regular cast bar, not a channel) is in progress -- name-matched
+-- rather than a spell ID since Skinning isn't cast via a normal spellbook
+-- entry/ID the way e.g. CanCurePoison's IsSpellKnownByName() match is.
+function IsCurrentlySkinning()
+    local name = UnitCastingInfo("player")
+    return name == "Skinning"
+end
+
 -- True if the player has a debuff of the given dispel type (e.g. "Poison",
 -- "Disease", "Magic", "Curse") -- same UnitDebuff() return-value positions
--- as TargetHasDebuffSpellId/Name above (debuffType is the 4th value).
+-- as TargetHasDebuffSpellId/Name above (debuffType is the 4th value) --
+-- with duration/expirationTime as the 5th/6th values. Only counts if the
+-- debuff has more than DEBUFF_TYPE_MIN_REMAINING_SECONDS left (a duration
+-- of 0 means no duration/permanent, which always counts).
+local DEBUFF_TYPE_MIN_REMAINING_SECONDS = 5
+
 function PlayerHasDebuffType(debuffType)
   for i = 1, 40 do
-    local name, _, _, thisDebuffType = UnitDebuff("player", i)
+    local name, _, _, thisDebuffType, duration, expirationTime = UnitDebuff("player", i)
     if not name then break end
 
     if thisDebuffType == debuffType then
-      return true
+      if duration == 0 or (expirationTime - GetTime()) > DEBUFF_TYPE_MIN_REMAINING_SECONDS then
+        return true
+      end
     end
   end
 
@@ -846,14 +906,13 @@ end
 -- Class-specific fields (Battle Shout, Rend, Frost Armor, Rockbiter, etc.)
 -- moved to GetClassBoolOne/Two (see the dispatchers further down and
 -- GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
--- ShamanFunctions.lua) -- C# now reads those instead of these. All
+-- ShamanFunctions.lua) -- those are used instead of these now. All
 -- class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G are both fully
 -- packed, and the B byte carries HasRecentTargetEvade() (b1), which of the
--- three bot-supported classes the player is playing (b2 Warrior, b3 Mage,
--- b4 Shaman -- exactly one true, used by C# to auto-pick
--- WowCombatConfiguration at startup instead of it being hardcoded; see
--- WowWorldState.PlayerClass and WowPlayer.ResolveFarmingConfigurationTask),
--- and IsPlayerPoisoned/IsPlayerDiseased/IsTargetNatureImmune/IsTargetCasting
+-- three supported classes the player is playing (b2 Warrior, b3 Mage,
+-- b4 Shaman -- exactly one true, used to auto-detect the player's class
+-- instead of it being hardcoded), and
+-- IsPlayerPoisoned/IsPlayerDiseased/IsTargetNatureImmune/IsTargetCasting
 -- (b5-b8), which fully packs the byte. MultiBoolTwo is left fully reserved
 -- as clean room to grow into, instead of needing a 3rd pixel.
 function GetMultiBoolOne()
@@ -896,9 +955,17 @@ function GetMultiBoolOne()
     return rByte/255.0, gByte/255.0, bByte/255.0
 end
 
--- Fully reserved for future class-agnostic flags -- nothing packed here yet.
+-- R1 (IsTargetLongRangeCaster), R2 (IsLogoffMobSeen), and R3
+-- (IsCurrentlySkinning) are the flags packed in here so far -- R4-R8 and the
+-- G/B bytes are still fully reserved for future class-agnostic flags.
 function GetMultiBoolTwo()
-    return 0, 0, 0
+    local boolR1 = IsTargetLongRangeCaster()
+    local boolR2 = IsLogoffMobSeen()
+    local boolR3 = IsCurrentlySkinning()
+
+    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, false, false, false, false, false)
+
+    return rByte/255.0, 0, 0
 end
 
 function GetMultiIntOne()
@@ -923,8 +990,7 @@ end
 -- class once and delegates to that class's own populate function (see
 -- GetWarriorClassBoolOne/Two, GetMageClassBoolOne/Two, and
 -- GetShamanClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
--- ShamanFunctions.lua). Unsupported/unrecognized classes get all-zero. C#
--- reads these via WowPlayer.ClassState (see WowClassState.cs and friends).
+-- ShamanFunctions.lua). Unsupported/unrecognized classes get all-zero.
 ------------------------------------------------------------
 function GetClassBoolOne()
     local _, classFile = UnitClass("player")

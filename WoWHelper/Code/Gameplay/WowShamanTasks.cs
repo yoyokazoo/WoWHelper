@@ -15,7 +15,9 @@ namespace WoWHelper
             bool thrownDynamite = false;
             bool potionUsed = false;
             bool emergencyActionTaken = false;
-            bool startOfCombatWiggled = false;
+
+            bool isFacingLongRangeCaster = false;
+            bool hasWalkedTowardsLongRangeCaster = false;
 
             await StartAttackTask();
 
@@ -41,9 +43,22 @@ namespace WoWHelper
                 }
 
                 // First do our "Make sure we're not standing around doing nothing" checks
-                if (await MeleeMakeSureWeAreAttackingEnemyTask())
+                if (!WorldState.IsTargetLongRangeCaster && await MeleeMakeSureWeAreAttackingEnemyTask())
                 {
                     continue;
+                }
+
+                if ((WorldState.IsTargetLongRangeCaster && !isFacingLongRangeCaster) || 
+                    (WorldState.TargetNeedsToBeInFront && WorldState.IsTargetLongRangeCaster))
+                {
+                    await TurnToFaceTargetMarkerTask();
+                    isFacingLongRangeCaster = true;
+                    continue;
+                }
+
+                if (WorldState.IsTargetLongRangeCaster && !classState.IsInEarthShockRange)
+                {
+                    await ShamanRunIntoEarthShockRange(classState);
                 }
 
                 // Next, check if we need to pop any big cooldowns
@@ -65,12 +80,6 @@ namespace WoWHelper
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     potionUsed = true;
                     continue;
-                }
-
-                if (!startOfCombatWiggled && PreviousWorldState.TargetHpPercent == 100 && WorldState.TargetHpPercent < 100)
-                {
-                    await StartOfCombatWiggle();
-                    startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
                 if (ShamanShouldCastFlameShock(classState))
@@ -102,9 +111,36 @@ namespace WoWHelper
                     // we should already be attacking
                     //Keyboard.KeyPress(WowInput.SHAMAN_ATTACK);
                 }
+
+                if (WorldState.IsTargetLongRangeCaster && WorldState.TooFarAway && !hasWalkedTowardsLongRangeCaster)
+                {
+                    await StartWalkForwardTask();
+                    await Task.Delay(500);
+                    await EndWalkForwardTask();
+                    hasWalkedTowardsLongRangeCaster = true;
+                    continue;
+                }
+
             } while (WorldState.IsInCombat);
 
             return true;
+        }
+
+        public async Task<bool> ShamanRunIntoEarthShockRange(WowShamanClassState classState)
+        {
+            await TurnToFaceTargetMarkerTask();
+            await StartWalkForwardTask();
+            for(int i = 0; i < 5; i++)
+            {
+                await Task.Delay(1000);
+                UpdateWorldState();
+                if (classState.IsInEarthShockRange)
+                {
+                    break;
+                }
+            }
+            await EndWalkForwardTask();
+            return classState.IsInEarthShockRange;
         }
 
         public bool ShamanShouldCastLightningShield(WowShamanClassState classState)
@@ -128,7 +164,7 @@ namespace WoWHelper
             // Always shock runners, nature immune, and high hp mobs
             skipFlameShock |= !WorldState.IsTargetRunnerMob && !WorldState.IsTargetNatureImmune && WorldState.TargetHpPercent < 75;
             // Open question if we should flame shock casters at the start of fights. Probably worth waiting?
-            skipFlameShock |= WorldState.IsTargetCasterMob && !WorldState.IsTargetNatureImmune;
+            skipFlameShock |= (WorldState.IsTargetCasterMob || WorldState.IsTargetLongRangeCaster) && !WorldState.IsTargetNatureImmune;
 
             if (skipFlameShock)
             {
@@ -146,7 +182,7 @@ namespace WoWHelper
             skipEarthShock |= !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20 && !WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
             // Don't earth shock casters that aren't currently casting
             // TODO: Rename IsTargetCasterMob to something like "ShouldWaitToCounterspell" or something
-            skipEarthShock |= WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
+            skipEarthShock |= (WorldState.IsTargetCasterMob || WorldState.IsTargetLongRangeCaster) && !WorldState.IsTargetCasting;
 
             if (skipEarthShock)
             {
@@ -174,13 +210,11 @@ namespace WoWHelper
             }
 
             // water??
-            await Task.Delay(0);
-            /*
-            if (WorldState.PlayerHpPercent < WowPlayerConstants.DRINK_WATER_MP_THRESHOLD)
+            await Task.Delay(500);
+            if (WorldState.ResourcePercent < WowPlayerConstants.DRINK_WATER_MP_THRESHOLD)
             {
                 await WowInput.PressKeyWithShift(WowInput.SHIFT_DRINK_WATER);
             }
-            */
 
             return true;
         }
@@ -235,12 +269,20 @@ namespace WoWHelper
             return battleReady;
         }
 
+        // Simplified while the engage flow is being reworked around the new target-marker
+        // bearing detection (see WowMovementTasks.TurnToFaceTargetMarkerTask) -- no longer
+        // presses the pull cast here at all; that's moving into
+        // ShamanFaceCorrectDirectionToEngageTask below, after facing is actually corrected.
+        // Not yet complete.
         public async Task<bool> ShamanKickOffEngageTask(WowShamanClassState classState)
         {
+            await Task.Delay(0);
             EngageAttempts = 1;
-
-            Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
-            await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
+            await TurnToFaceTargetMarkerTask();
+            // TODO: figure out distance to walk forward
+            //await StartWalkForwardTask();
+            //await Task.Delay(1000);
+            //await EndWalkForwardTask();
             return true;
         }
 
@@ -253,10 +295,18 @@ namespace WoWHelper
                 return false;
             }
 
+            if (WorldState.IsTargetLongRangeCaster && !classState.IsInEarthShockRange)
+            {
+                await ShamanRunIntoEarthShockRange(classState);
+            }
+
             Console.WriteLine($"ShamanFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}, WorldState.IsInCombat? {WorldState.IsInCombat}");
             if (!WorldState.IsCurrentlyCasting && !WorldState.IsInCombat)
             {
-                await TurnABitToTheLeftTask();
+                // Replaces the old blind TurnABitToTheLeftTask() -- see
+                // WowMovementTasks.TurnToFaceTargetMarkerTask for the target-marker-based
+                // bearing detection this now uses instead.
+                await TurnToFaceTargetMarkerTask();
                 Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
                 await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
                 await UpdateWorldStateAsync();

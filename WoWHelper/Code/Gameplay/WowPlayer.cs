@@ -227,7 +227,48 @@ namespace WoWHelper
             await FocusOnWindowTask();
             await UpdateWorldStateAsync();
             //await PetriAltF4Task();
-            await CreateHeatmapForLooting(saveBitmaps: true);
+            //await CreateHeatmapForLooting(saveBitmaps: true);
+            //await TargetMarkerDebugTask();
+
+            // Testing ShamanFaceCorrectDirectionToEngageTask/TurnToFaceTargetMarkerTask (see
+            // the "Approach ranged/caster mobs" plan) in isolation, without the full engage
+            // state machine around it. ClassState needs resolving once before the loop so the
+            // WowShamanClassState cast below has something real to work with.
+            //
+            // ESC ends the loop early (KeyPoller is the same global ESC-detection mechanism
+            // used elsewhere in this codebase) -- useful since this loop otherwise only exits
+            // once ShamanFaceCorrectDirectionToEngageTask succeeds, which might never happen
+            // mid-test. Scoped to just this task: subscribed/started right before the loop,
+            // unsubscribed/stopped right after, so repeat AdHocTest runs don't stack handlers
+            // on KeyPoller's static event.
+            bool escPressed = false;
+            Action onEsc = () => escPressed = true;
+            KeyPoller.EscPressed += onEsc;
+            KeyPoller.Start();
+
+            try
+            {
+                ResolveCombatConfiguration();
+                while (true)
+                {
+                    if (escPressed)
+                    {
+                        Console.WriteLine("ESC pressed, ending ad hoc test loop");
+                        break;
+                    }
+
+                    await UpdateWorldStateAsync();
+                    bool canEngage = await ShamanFaceCorrectDirectionToEngageTask((WowShamanClassState)ClassState);
+                    break;
+                }
+            }
+            finally
+            {
+                KeyPoller.EscPressed -= onEsc;
+                KeyPoller.Stop();
+            }
+
+            await AvoidObstacleByJumping();
             return true;
             /*
             await FocusOnWindowTask();
@@ -257,6 +298,64 @@ namespace WoWHelper
             await Task.Delay(0);
             return true;
             */
+        }
+
+        // Captures a full-screen screenshot and searches it for the sentinel-colored target
+        // marker UIFunctions.lua paints onto the current target's nameplate (see
+        // WowScreenConfiguration.TARGET_MARKER_COLOR) -- a full-resolution capture, not the
+        // tiny fixed pixel-row crop WorldState normally reads, since the marker can be
+        // anywhere on screen. Returns its screen position, or null if not found (marker not
+        // created yet, target occluded, or no target at all). Shared by TargetMarkerDebugTask
+        // and WowMovementTasks.TurnToFaceTargetMarkerTask.
+        public Point? FindTargetMarkerOnScreen()
+        {
+            var resolution = FarmingConfig.ScreenConfiguration.Resolution;
+            var fullScreenRect = new Rectangle(0, 0, resolution.Width, resolution.Height);
+
+            using (Bitmap fullBmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(fullScreenRect))
+            {
+                Point? centroid = BitmapDifferenceVisualizer.FindColorCentroid(fullBmp, WowScreenConfiguration.TARGET_MARKER_COLOR);
+                if (centroid != null)
+                {
+                    //LootX = centroid.Value.X;
+                    //LootY = centroid.Value.Y;
+                }
+                return centroid;
+            }
+        }
+
+        // TEMP diagnostic (see the "Approach ranged/caster mobs" plan): verify the
+        // sentinel-colored target marker UIFunctions.lua paints onto the current target's
+        // nameplate is actually findable via screen-capture pixel search, and that its
+        // position relative to screen center matches expectations (this bot is run with the
+        // camera pitched straight down, so X < center should mean the target is to the
+        // player's left, Y < center should mean in front). Loops once a second until the
+        // process is stopped -- wired up to the AdHocTest button so it can be exercised in
+        // isolation, without running the full combat loop. Remove once confirmed.
+        public async Task<bool> TargetMarkerDebugTask()
+        {
+            while (true)
+            {
+                await UpdateWorldStateAsync();
+
+                var resolution = FarmingConfig.ScreenConfiguration.Resolution;
+                var marker = FindTargetMarkerOnScreen();
+                int centerX = resolution.Width / 2;
+                int centerY = resolution.Height / 2;
+
+                if (marker == null)
+                {
+                    Console.WriteLine("WoWHelper DEBUG: target marker NOT FOUND on screen");
+                }
+                else
+                {
+                    string leftRight = marker.Value.X < centerX ? "LEFT" : "RIGHT";
+                    string frontBack = marker.Value.Y < centerY ? "FRONT" : "BEHIND";
+                    Console.WriteLine($"WoWHelper DEBUG: target marker at {marker.Value} (screen center {centerX},{centerY}) -> {leftRight}/{frontBack}");
+                }
+
+                await Task.Delay(1000);
+            }
         }
 
         public async Task<bool> CreateHeatmapForLooting(bool saveBitmaps = false)
@@ -430,6 +529,7 @@ namespace WoWHelper
                     case PlayerState.TARGET_DEFEATED:
                         Console.WriteLine("Target defeated, trying to loot");
                         // TODO: /canceltarget and /stopcasting and /stopattack here so we don't accidentally attack something
+                        await Task.Delay(1000); // give the dying anim a sec
                         LootX = FarmingConfig.ScreenConfiguration.LootDefaultX;
                         LootY = FarmingConfig.ScreenConfiguration.LootDefaultY;
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),

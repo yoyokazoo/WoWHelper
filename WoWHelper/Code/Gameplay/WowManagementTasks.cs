@@ -91,6 +91,17 @@ namespace WoWHelper
                 }
             }
 
+            // Bail immediately if we've spotted a mob from LOGOFF_IF_SEEN_MOB_NAMES
+            // (CreatureConfig.lua, e.g. "Watery Invader") anywhere nearby -- checked every
+            // tick regardless of player state (like the level-up check above), rather than
+            // waiting for the CHECK_FOR_LOGOUT state, since we want out the moment it's seen.
+            if (WorldState.LogoffMobSeen && !LogoutTriggered)
+            {
+                LogoutTriggered = true;
+                LogoutReason = "Logoff-if-seen mob spotted (see LOGOFF_IF_SEEN_MOB_NAMES in CreatureConfig.lua)";
+                SlackHelper.SendMessageToChannel($"Logging out, Logoff-if-seen mob spotted!");
+            }
+
             // If we're about to die, petri alt+f4
             if (WorldState.PlayerHpPercent <= WowPlayerConstants.PETRI_ALTF4_HP_THRESHOLD && WorldState.PlayerLevel >= WowGameplayConstants.PETRIFICATION_FLASK_LEVEL)
             {

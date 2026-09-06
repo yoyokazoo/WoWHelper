@@ -148,4 +148,39 @@ public static class BitmapDifferenceVisualizer
     {
         return (color.R * 255 * 255) + (color.G * 255) + color.B;
     }
+
+    /// <summary>
+    /// Scans a bitmap for pixels exactly matching markerColor and returns the centroid
+    /// (average position) of every match, or null if none found. Used to locate the
+    /// sentinel-colored target marker UIFunctions.lua paints onto the current target's
+    /// nameplate (see WowScreenConfiguration.TARGET_MARKER_COLOR) -- since the marker is a
+    /// solid NxN square, a handful of exact-match hits toward its interior is expected even
+    /// stepping across the bitmap rather than checking every pixel (cheaper over a
+    /// near-full-screen capture, same tradeoff FindHotspots above makes).
+    /// </summary>
+    public static Point? FindColorCentroid(Bitmap bmp, Color markerColor, int step = 4)
+    {
+        long sumX = 0, sumY = 0;
+        int count = 0;
+
+        for (int x = 0; x < bmp.Width; x += step)
+        {
+            for (int y = 0; y < bmp.Height; y += step)
+            {
+                if (bmp.GetPixel(x, y) == markerColor)
+                {
+                    sumX += x;
+                    sumY += y;
+                    count++;
+                }
+            }
+        }
+
+        if (count == 0)
+        {
+            return null;
+        }
+
+        return new Point((int)(sumX / count), (int)(sumY / count));
+    }
 }

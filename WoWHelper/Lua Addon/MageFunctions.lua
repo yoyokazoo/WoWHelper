@@ -53,9 +53,9 @@ end
 ------------------------------------------------------------
 -- Packs Mage-specific state into the ClassBool/ClassInt pixels. Called via
 -- the GetClassBoolOne/Two/GetClassIntOne dispatchers in WoWFunctions.lua
--- once UnitClass("player") resolves to MAGE. NOT wired into C# yet, and NOT
--- yet removed from GetMultiBoolOne/Two -- see the "duplicated in ClassBool"
--- comments there for what should eventually be stripped out.
+-- once UnitClass("player") resolves to MAGE. NOT read yet on the other end,
+-- and NOT yet removed from GetMultiBoolOne/Two -- see the "duplicated in
+-- ClassBool" comments there for what should eventually be stripped out.
 ------------------------------------------------------------
 function GetMageClassBoolOne()
     local boolR1 = IsMageArmorActive()
