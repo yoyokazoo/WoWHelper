@@ -72,7 +72,7 @@ see "Adding a new pixel" below):
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
 | 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1-R3 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning` |
-| 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R2 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`) |
+| 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
 matching Lua's `EncodeFloatToColor`); packed bools bit-pack 8 flags per
@@ -226,8 +226,17 @@ R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
 independent of `CanCastEarthShock`'s cooldown/usability check), bit 2 is
 Shaman's `HasClearcasting` (Elemental Focus's proc buff, name-matched via
-`HasBuffNamed("Clearcasting")`); R3-8 and the G/B bytes are still reserved
-for the next Shaman-specific flag).
+`HasBuffNamed("Clearcasting")`), and bit 3 is Shaman's `CanCastFrostShock`
+(cooldown/usability check via `SpellIsCooledDown(8056)`/`IsSpellUsable(8056)`,
+same pattern as `CanCastEarthShock`). Frost Shock does the same damage as
+Earth Shock but never interrupts a cast, so `WowShamanTasks.cs`'s
+`ShamanShouldCastFrostShock()` only uses it as Earth Shock's substitute
+against nature-immune targets (`WorldState.IsTargetNatureImmune`) — Earth
+Shock is nature damage and does nothing to them. Shocks share both a
+cooldown category and a 20-yard range in Classic, so bit 1
+(`IsInEarthShockRange`) doubles as the range check for Frost Shock too — no
+separate range bit needed. R4-8 and the G/B bytes are still reserved for the
+next Shaman-specific flag).
 
 **Adding a new pixel:** append a new `AddSwatch(N, ...)` call in
 `InitializePixelRow()` (Lua) AND a new `PixelRowPoint(N)`-based property on

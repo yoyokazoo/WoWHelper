@@ -94,6 +94,12 @@ namespace WoWHelper
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.SHAMAN_EARTH_SHOCK);
                 }
+                else if (ShamanShouldCastFrostShock(classState))
+                {
+                    Console.WriteLine($"Trying to Frost Shock!");
+                    await WaitForGlobalCooldownTask();
+                    Keyboard.KeyPress(WowInput.SHAMAN_FROST_SHOCK);
+                }
                 else if (ShamanShouldCastCureDisease(classState))
                 {
                     Console.WriteLine($"Trying to Cure Disease!");
@@ -176,7 +182,8 @@ namespace WoWHelper
 
         public bool ShamanShouldCastEarthShock(WowShamanClassState classState)
         {
-            // Skip if nature immune
+            // Skip if nature immune -- Frost Shock takes over entirely for those targets,
+            // see ShamanShouldCastFrostShock below.
             bool skipEarthShock = WorldState.IsTargetNatureImmune;
             // Always shock runners, if we're low hp, if there are multiple mobs, or if the mob is high hp
             skipEarthShock |= !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20 && !WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
@@ -190,6 +197,32 @@ namespace WoWHelper
             }
 
             return classState.CanCastEarthShock;
+        }
+
+        // Frost Shock does the same damage as Earth Shock but never interrupts a cast, so
+        // it's strictly worse than Earth Shock whenever Earth Shock is usable -- this only
+        // fires as Earth Shock's substitute against nature-immune targets, which Earth
+        // Shock (nature damage) does nothing to.
+        public bool ShamanShouldCastFrostShock(WowShamanClassState classState)
+        {
+            if (!WorldState.IsTargetNatureImmune)
+            {
+                return false;
+            }
+
+            // Same "don't bother, it'll die to melee before this matters" skip as Earth
+            // Shock above -- but deliberately no caster-hold skip here. Earth Shock holds
+            // off on casters until they're actually casting so the shock lands as an
+            // interrupt; Frost Shock never interrupts, so there's nothing gained by
+            // waiting -- just take the damage whenever it's up.
+            bool skipFrostShock = !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20;
+
+            if (skipFrostShock)
+            {
+                return false;
+            }
+
+            return classState.CanCastFrostShock;
         }
 
         public bool ShamanShouldCastCurePoison(WowShamanClassState classState)

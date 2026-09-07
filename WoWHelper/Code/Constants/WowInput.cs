@@ -113,7 +113,12 @@ namespace WoWHelper.Code
         public const Keys SHAMAN_CURE_POISON = Keys.D5;
         public const Keys SHAMAN_SHIFT_CURE_DISEASE = Keys.D5;
 
-        public const Keys SHAMAN_6 = Keys.D6;
+        /*
+         * 6 Frost Shock
+#showtooltip Frost Shock
+/cast Frost Shock
+        */
+        public const Keys SHAMAN_FROST_SHOCK = Keys.D6;
         public const Keys SHAMAN_SHIFT_6 = Keys.D6;
 
         public const Keys SHAMAN_7 = Keys.D7;

@@ -36,9 +36,25 @@ function CanCastEarthShock()
 end
 
 -- Pure range check, independent of cooldown -- see SpellIsInRange() in
--- WoWFunctions.lua.
+-- WoWFunctions.lua. Shocks share both a range and a cooldown category in
+-- Classic, so this also covers Frost Shock below -- no separate
+-- IsInFrostShockRange needed.
 function IsInEarthShockRange()
     return SpellIsInRange(8042)
+end
+
+-- Frost Shock Rank 1, 8056. Same damage as Earth Shock but doesn't interrupt
+-- a cast -- used only as Earth Shock's substitute against nature-immune
+-- targets (see ShamanShouldCastFrostShock in WowShamanTasks.cs). Shares Earth
+-- Shock's cooldown category, so checking this button's own cooldown/usability
+-- is enough (no separate "is any shock up" check needed).
+-- TODO: set dynamically on startup and on levelup, same as ShouldCastFlameShock
+-- rank 1, 8056
+-- rank 2, 8058
+-- rank 3, 10472
+-- rank 4, 10473
+function CanCastFrostShock()
+    return SpellIsCooledDown(8056) and IsSpellUsable(8056)
 end
 
 -- Elemental Focus's proc buff -- next two spells cost less mana. Name-matched
@@ -96,14 +112,15 @@ function GetShamanClassBoolOne()
     return rByte/255.0, 0, 0
 end
 
--- R1 (IsInEarthShockRange) and R2 (HasClearcasting) are the flags packed
--- here so far -- R3-R8 and the G/B bytes are still reserved for future
--- Shaman-specific flags.
+-- R1 (IsInEarthShockRange), R2 (HasClearcasting), and R3 (CanCastFrostShock)
+-- are the flags packed here so far -- R4-R8 and the G/B bytes are still
+-- reserved for future Shaman-specific flags.
 function GetShamanClassBoolTwo()
     local boolR1 = IsInEarthShockRange()
     local boolR2 = HasClearcasting()
+    local boolR3 = CanCastFrostShock()
 
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, false, false, false, false, false, false)
+    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, false, false, false, false, false)
 
     return rByte/255.0, 0, 0
 end
