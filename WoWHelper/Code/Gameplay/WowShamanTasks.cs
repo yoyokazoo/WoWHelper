@@ -355,7 +355,20 @@ namespace WoWHelper
                 // WowMovementTasks.TurnToFaceTargetMarkerTask for the target-marker-based
                 // bearing detection this now uses instead.
                 await TurnToFaceTargetMarkerTask();
-                Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
+
+                // Rank 1 does exactly as much damage as top rank against a nature-immune
+                // target -- zero -- so pull with Rank 1 there instead, to avoid wasting mana
+                // on a full-rank cast that can't land any damage either way. See the "2 Bolt"
+                // macro comment in WowInput.cs.
+                if (WorldState.IsTargetNatureImmune)
+                {
+                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_LIGHTNING_BOLT_RANK_1);
+                }
+                else
+                {
+                    Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
+                }
+
                 await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
                 await UpdateWorldStateAsync();
             }
