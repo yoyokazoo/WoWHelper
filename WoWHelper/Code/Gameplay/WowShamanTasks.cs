@@ -151,6 +151,18 @@ namespace WoWHelper
 
         public bool ShamanShouldCastLightningShield(WowShamanClassState classState)
         {
+            // Skip entirely if every mob this route can pull is nature immune -- Lightning
+            // Shield's return-damage proc is nature damage, so it can never land here, unlike
+            // the per-target check below which still lets multi-attacker fights waste charges
+            // on a mix of immune/non-immune mobs. Guarded on LocationConfiguration != null --
+            // this runs inside the combat loop, which can be reached with it still unresolved
+            // if the bot was (re)started mid-fight (see "Automatic farming-config resolution"
+            // in CLAUDE.md).
+            if (FarmingConfig.LocationConfiguration != null && FarmingConfig.LocationConfiguration.AllMobsInZoneAreNatureImmune())
+            {
+                return false;
+            }
+
             // Skip if the only mob we're fighting is nature immune
             // We still waste charges in the multi-attacker scenario, but we just want to dump mana to kill ASAP in those cases
             bool skipLightningShield = WorldState.IsTargetNatureImmune && WorldState.AttackerCount <= 1;

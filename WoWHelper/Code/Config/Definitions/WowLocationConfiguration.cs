@@ -66,6 +66,13 @@ namespace WoWHelper.Code.WorldState
         public WaypointTargetFindMethod TargetFindMethod { get; set; }
         public float DistanceTolerance { get; set; }
 
+        // Every mob name expected to be encountered while running this route, e.g.
+        // { "Desert Rumbler" } for LEVEL_58_SILITHUS_RUMBLERS -- used by
+        // AllMobsInZoneAreNatureImmune() below. NOT the same thing as the "/target Foo"
+        // macro comments scattered through WowLocationConfigs.cs -- those are partial
+        // name substrings for a target-cycling macro, not a complete/exact roster.
+        public List<string> ExpectedMobNames { get; set; }
+
         public EngagementMethod EngageMethod { get; set; }
         public bool UseRend { get; set; } // some mobs are immune to bleed
         public bool PreemptFear { get; set; } // if fighting mobs that Fear, start each fight with Berserker Rage
@@ -89,6 +96,31 @@ namespace WoWHelper.Code.WorldState
             // Default to Unknown, not the implicit Durotar (enum value 0) -- a config that
             // forgets to set Zone should fail loudly/obviously, not silently claim Durotar.
             Zone = WowZone.Unknown;
+
+            ExpectedMobNames = new List<string>();
+        }
+
+        // True only if every mob this route expects to fight (ExpectedMobNames above) is in
+        // CreatureConfig.NATURE_IMMUNE_MOB_NAMES -- the C# mirror of CreatureConfig.lua's
+        // NATURE_IMMUNE_MOB_NAMES table (see that file's comment for why the mirror exists).
+        // An empty ExpectedMobNames list returns false rather than vacuously true -- a route
+        // that hasn't been given its mob roster yet shouldn't silently claim nature immunity.
+        public bool AllMobsInZoneAreNatureImmune()
+        {
+            if (ExpectedMobNames == null || ExpectedMobNames.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (string mobName in ExpectedMobNames)
+            {
+                if (!CreatureConfig.NATURE_IMMUNE_MOB_NAMES.Contains(mobName))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

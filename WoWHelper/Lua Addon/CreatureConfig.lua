@@ -31,6 +31,7 @@ FIRE_IMMUNE_MOB_NAMES = {
 NATURE_IMMUNE_MOB_NAMES = {
     ["Swirling Vortex"] = true,
     ["Rotting Worm"] = true,
+    ["Desert Rumbler"] = true,
 }
 
 -- Mobs with a ranged attack whose range exceeds Earth Shock's -- worth

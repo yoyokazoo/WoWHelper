@@ -12,6 +12,7 @@ namespace WoWHelper.Code.WorldState
             Title = "Silithus Rumblers (Level 58+)",
             MinimumLevel = 58,
             Zone = WowZone.Silithus,
+            ExpectedMobNames = new List<string> { "Desert Rumbler" },
 
             Waypoints = new List<Vector2>
             {

@@ -111,6 +111,23 @@ one constant sized off the loosest route's own largest adjacent-waypoint gap,
 not a per-config value) is wired into `WowManagementTasks.SetLogoutVariablesTask()`,
 checked first so a bad start gives the clearest possible logout reason.
 
+**Expected mob roster (`WowLocationConfiguration.ExpectedMobNames`):** every
+mob name a route is expected to pull, e.g. `{ "Desert Rumbler" }` for
+`LEVEL_58_SILITHUS_RUMBLERS` — distinct from the `/target Foo` macro
+comments scattered through `WowLocationConfigs.cs`, which are partial name
+substrings for a target-cycling macro, not a complete/exact roster.
+`WowLocationConfiguration.AllMobsInZoneAreNatureImmune()` checks every name
+in that list against `CreatureConfig.NATURE_IMMUNE_MOB_NAMES`
+(`Config/Definitions/CreatureConfig.cs`) — a **C# mirror** of
+`CreatureConfig.lua`'s `NATURE_IMMUNE_MOB_NAMES` table, since this check
+runs at config-selection time, with no live target on screen to decode a
+pixel-based `IsTargetNatureImmune` off of. The two lists MUST stay in sync —
+same class of coupling as the `WowZone` enum/`ZONE_NAME_TO_ID` split above.
+Only `NATURE_IMMUNE_MOB_NAMES` is mirrored so far; mirror more of
+`CreatureConfig.lua`'s lists only once something on the C# side actually
+needs them. An empty/unset `ExpectedMobNames` makes
+`AllMobsInZoneAreNatureImmune()` return `false` rather than vacuously `true`.
+
 **Automatic farming-config resolution:** `WowFarmingConfigs.CURRENT_CONFIG`
 only sets `ManagementConfiguration` now — `LocationConfiguration` and
 `CombatConfiguration` are no longer hardcoded there. Both start out
@@ -335,7 +352,11 @@ of truth — edits should be made here, not in the WoW install directory.
   (human-readable, includes the minimum level), `MinimumLevel`, and `Zone`
   (`WowZone` enum, `WowLocationConfiguration.cs`) — see the zone ID
   note in the color-encoding contract above for how `Zone` ties to
-  `WowWorldState.CurrentZone`.
+  `WowWorldState.CurrentZone` — plus `ExpectedMobNames` and the
+  `AllMobsInZoneAreNatureImmune()` helper built on it; see "Expected mob
+  roster" above. `Config/Definitions/CreatureConfig.cs` is the C# mirror of
+  the Lua addon's `CreatureConfig.lua` name lists that `ExpectedMobNames`
+  checks against.
 - **`Constants/`** — `WowInput.cs` maps logical actions to keybinds/macros the
   bot presses (expects specific in-game keybinds/macros to be set up to match),
   `WowPlayerConstants.cs` / `WowGameplayConstants.cs` hold thresholds/timings.
