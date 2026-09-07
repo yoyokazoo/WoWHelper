@@ -26,7 +26,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(22.50f, 14.59f),
                 new Vector2(21.30f, 15.79f),
                 new Vector2(22.04f, 17.74f),
-                new Vector2(22.92f, 17.88f),
+                //new Vector2(22.92f, 17.88f),
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,

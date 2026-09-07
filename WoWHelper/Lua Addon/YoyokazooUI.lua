@@ -75,8 +75,25 @@ end
 -- Read by AreWeLowOnDynamite() (WoWFunctions.lua). Not piped to the C# side at
 -- all -- unlike the two booleans above, this only ever needs to be known on the
 -- Lua side, where the actual bag-count check happens.
+--
+-- Defensively re-defaults and repairs the saved variable if it's ever
+-- missing/invalid, rather than just nil-checking at init time -- seen once in
+-- testing returning nil despite the default-init above having already run
+-- earlier in this same file's load, cause not yet confirmed. GetItemCount
+-- (the only caller, via AreWeLowOnDynamite) throws a hard Lua error on a
+-- non-number/string itemInfo, so this guards that directly instead of
+-- crashing InitializeIndicators()/InitializePixelRow() on the very first
+-- PLAYER_ENTERING_WORLD. The print only fires on the invalid path, so if this
+-- turns out to be a recurring issue rather than a one-off, it'll show up
+-- again instead of going silent.
 function GetDynamiteItemId()
-    return YoyokazooUIDB.dynamiteItemId
+    local itemId = YoyokazooUIDB.dynamiteItemId
+    if type(itemId) ~= "number" then
+        print("YoyokazooUI: dynamiteItemId was invalid (" .. tostring(itemId) .. "), resetting to default (Dense Dynamite, 18641).")
+        itemId = 18641
+        YoyokazooUIDB.dynamiteItemId = itemId
+    end
+    return itemId
 end
 
 -- Create a frame to be our black box
