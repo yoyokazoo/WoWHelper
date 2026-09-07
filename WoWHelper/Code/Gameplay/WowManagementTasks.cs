@@ -152,7 +152,10 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = $"Too far from this route's waypoints (closest is {closestWaypointDistance:0.00}, allowed {WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT:0.00})";
             }
-            else if (FarmingConfig.LogoutOnLowDynamite && WorldState.LowOnDynamite)
+            // LogoutOnLowDynamiteEnabled is toggled live in-game via the addon's
+            // /yyconfig menu (YoyokazooUI.lua), not hardcoded in WowManagementConfiguration
+            // -- see WowWorldState.LogoutOnLowDynamiteEnabled.
+            else if (WorldState.LogoutOnLowDynamiteEnabled && WorldState.LowOnDynamite)
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Dynamite";
@@ -184,7 +187,9 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = $"Failed to engage target after {WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS} loops.  Something wrong?";
             }
-            else if (FarmingConfig.LogoutOnFullBags && WorldState.BagsAreFull)
+            // Same deal as LogoutOnLowDynamiteEnabled above -- toggled live via /yyconfig,
+            // not hardcoded in WowManagementConfiguration.
+            else if (WorldState.LogoutOnFullBagsEnabled && WorldState.BagsAreFull)
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Bags are full!";

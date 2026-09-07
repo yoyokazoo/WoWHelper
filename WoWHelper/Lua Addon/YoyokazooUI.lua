@@ -36,6 +36,49 @@ if YoyokazooUIDB.debugFrameEnabled == nil then
     YoyokazooUIDB.debugFrameEnabled = true -- default on, matches the old always-on behavior
 end
 
+-- Run-specific settings, toggled live via the /yyconfig menu below instead of being
+-- hardcoded in the C# side's WowManagementConfiguration. Defaults here match what
+-- WowManagementConfigs.FULL_BABYSIT (the only profile CURRENT_CONFIG actually uses) used
+-- to hardcode, before these moved here.
+--
+-- Stored in YoyokazooUIDB, i.e. SavedVariablesPerCharacter (see YoyokazooUI.toc) -- a
+-- plain local file under this WoW install's WTF folder, written to disk on logout/reload,
+-- never transmitted anywhere. Per-character on purpose: each character can run a
+-- different farming setup, so these intentionally don't carry over to other characters on
+-- the same account/computer.
+if YoyokazooUIDB.logoutOnLowDynamite == nil then
+    YoyokazooUIDB.logoutOnLowDynamite = true
+end
+if YoyokazooUIDB.logoutOnFullBags == nil then
+    YoyokazooUIDB.logoutOnFullBags = false
+end
+
+-- Which dynamite-tier item AreWeLowOnDynamite() (WoWFunctions.lua) checks the bag
+-- count of -- selectable via the /yyconfig "Dynamite item" selector below instead
+-- of being hardcoded. Defaults to Dense Dynamite (18641), what it used to be
+-- hardcoded to. See DYNAMITE_ITEM_CHOICES (WoWFunctions.lua) for the full list.
+if YoyokazooUIDB.dynamiteItemId == nil then
+    YoyokazooUIDB.dynamiteItemId = 18641
+end
+
+-- Read by GetMultiBoolTwo() (WoWFunctions.lua) to pack these into MultiBoolTwo's R4/R5,
+-- decoded on the C# side into WowWorldState.LogoutOnLowDynamiteEnabled/
+-- LogoutOnFullBagsEnabled.
+function IsLogoutOnLowDynamiteEnabled()
+    return YoyokazooUIDB.logoutOnLowDynamite
+end
+
+function IsLogoutOnFullBagsEnabled()
+    return YoyokazooUIDB.logoutOnFullBags
+end
+
+-- Read by AreWeLowOnDynamite() (WoWFunctions.lua). Not piped to the C# side at
+-- all -- unlike the two booleans above, this only ever needs to be known on the
+-- Lua side, where the actual bag-count check happens.
+function GetDynamiteItemId()
+    return YoyokazooUIDB.dynamiteItemId
+end
+
 -- Create a frame to be our black box
 local frame = CreateFrame("Frame", "YoyokazooUIFrame", UIParent, "BackdropTemplate")
 -- Size and position
@@ -215,4 +258,59 @@ SlashCmdList["YYDEBUG"] = function()
     YoyokazooUIDB.debugFrameEnabled = not YoyokazooUIDB.debugFrameEnabled
     ApplyDebugFrameVisibility()
     print("YoyokazooUI: debug frame " .. (YoyokazooUIDB.debugFrameEnabled and "ON" or "OFF") .. " (saved).")
+end
+
+-- /yyconfig toggles the run-specific settings menu (CreateSettingsMenu(), UIFunctions.lua)
+-- -- "log out on low dynamite"/"log out on full bags" for now, more can be added to the
+-- options list below as they come up. Built once, lazily, on first use rather than
+-- unconditionally at load time like the debug frame above, since there's no reason to pay
+-- for it on a run that never opens the menu.
+local settingsMenu = nil
+
+SLASH_YYCONFIG1 = "/yyconfig"
+SlashCmdList["YYCONFIG"] = function()
+    if not settingsMenu then
+        settingsMenu = CreateSettingsMenu({
+            {
+                label = "Log out on low dynamite",
+                get = IsLogoutOnLowDynamiteEnabled,
+                set = function(value)
+                    YoyokazooUIDB.logoutOnLowDynamite = value
+                    print("YoyokazooUI: Log out on low dynamite " .. (value and "ON" or "OFF") .. " (saved).")
+                end,
+            },
+            {
+                label = "Log out on full bags",
+                get = IsLogoutOnFullBagsEnabled,
+                set = function(value)
+                    YoyokazooUIDB.logoutOnFullBags = value
+                    print("YoyokazooUI: Log out on full bags " .. (value and "ON" or "OFF") .. " (saved).")
+                end,
+            },
+            {
+                label = "Dynamite item",
+                type = "selector",
+                choices = DYNAMITE_ITEM_CHOICES,
+                get = GetDynamiteItemId,
+                set = function(id)
+                    YoyokazooUIDB.dynamiteItemId = id
+
+                    local chosenLabel = tostring(id)
+                    for _, choice in ipairs(DYNAMITE_ITEM_CHOICES) do
+                        if choice.id == id then
+                            chosenLabel = choice.label
+                            break
+                        end
+                    end
+                    print("YoyokazooUI: Dynamite item set to " .. chosenLabel .. " (saved).")
+                end,
+            },
+        })
+    end
+
+    if settingsMenu:IsShown() then
+        settingsMenu:Hide()
+    else
+        settingsMenu:Show()
+    end
 end

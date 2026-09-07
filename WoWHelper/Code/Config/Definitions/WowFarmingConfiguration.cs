@@ -32,8 +32,9 @@ namespace WoWHelper.Code.Gameplay
         public bool AlertOnPotionUsed => ManagementConfiguration.AlertOnPotionUsed;
         public bool AlertOnFullBags => ManagementConfiguration.AlertOnFullBags;
         public bool AlertOnUnreadWhisper => ManagementConfiguration.AlertOnUnreadWhisper;
-        public bool LogoutOnFullBags => ManagementConfiguration.LogoutOnFullBags;
-        public bool LogoutOnLowDynamite => ManagementConfiguration.LogoutOnLowDynamite;
+        // LogoutOnFullBags/LogoutOnLowDynamite are no longer here -- see
+        // WowWorldState.LogoutOnFullBagsEnabled/LogoutOnLowDynamiteEnabled, set live via
+        // the addon's /yyconfig menu instead of this hardcoded config.
 
         public EngagementMethod EngageMethod => LocationConfiguration.EngageMethod;
         // Warrior-only, read from inside WarriorCombatLoopTask's rotation. Still NREs if

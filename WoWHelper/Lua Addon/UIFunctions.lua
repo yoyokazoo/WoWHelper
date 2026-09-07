@@ -142,6 +142,122 @@ function CreatePixelSwatch(parent, x, y, size, colorFunc)
     }
 end
 
+--------------------------------------------------
+-- Run-specific settings menu (/yyconfig) -- toggles like "log out on low
+-- dynamite"/"log out on full bags" used to be hardcoded per-profile in the C#
+-- side's WowManagementConfiguration; now they're checkboxes here instead, so
+-- they can be flipped live for the current run without touching C# config at
+-- all. Each row is backed by a YoyokazooUIDB field (see YoyokazooUI.lua, which
+-- owns the SavedVariable and the get/set wiring). The two boolean checkboxes
+-- are piped to the C# side the same way every other bit of state in this addon
+-- is -- packed into GetMultiBoolTwo() (WoWFunctions.lua) and read back as a
+-- color -- but that's not a requirement of this menu itself: the "Dynamite
+-- item" selector below is Lua-only (only AreWeLowOnDynamite(), WoWFunctions.lua,
+-- ever needs it), and isn't piped to C# at all.
+--
+-- options: array of either
+--   { label = "...", get = function() end, set = function(bool) end }               -- checkbox (default)
+-- or
+--   { label = "...", type = "selector", choices = { { id = ..., label = "..." }, ... },
+--     get = function() return currentId end, set = function(id) end }               -- cycling button
+-- Returns the frame, hidden by default -- the caller (YoyokazooUI.lua's
+-- /yyconfig handler) shows/hides it.
+--------------------------------------------------
+function CreateSettingsMenu(options)
+    local ROW_HEIGHT = 26
+
+    local frame = CreateFrame("Frame", "YoyokazooUISettingsFrame", UIParent, "BackdropTemplate")
+    frame:SetSize(260, 40 + (#options * ROW_HEIGHT))
+    frame:SetPoint("CENTER", UIParent, "CENTER", 0, 100)
+    frame:SetFrameStrata("DIALOG")
+    frame:SetMovable(true)
+    frame:EnableMouse(true)
+    frame:RegisterForDrag("LeftButton")
+    frame:SetScript("OnDragStart", frame.StartMoving)
+    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+
+    frame:SetBackdrop({
+        bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        tile = false,
+        edgeSize = 12,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    })
+    frame:SetBackdropColor(0, 0, 0, 0.9)
+
+    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    title:SetPoint("TOP", frame, "TOP", 0, -10)
+    title:SetText("YoyokazooUI Settings")
+
+    -- Standard Blizzard close-button template (the same "X" used on every stock UI
+    -- panel) -- just hides the frame, same as running /yyconfig again.
+    local closeButton = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -2)
+    closeButton:SetScript("OnClick", function() frame:Hide() end)
+
+    for i, option in ipairs(options) do
+        local rowY = -35 - ((i - 1) * ROW_HEIGHT)
+
+        if option.type == "selector" then
+            -- Cycling button: each click advances to the next entry in
+            -- option.choices (wrapping around), rather than a dropdown -- fewer
+            -- moving parts for a handful of choices like the dynamite tiers.
+            local label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            label:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, rowY - 4)
+            label:SetText(option.label)
+
+            local button = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+            button:SetSize(110, 22)
+            button:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, rowY)
+
+            local function LabelForCurrentChoice()
+                local currentId = option.get()
+                for _, choice in ipairs(option.choices) do
+                    if choice.id == currentId then
+                        return choice.label
+                    end
+                end
+                return tostring(currentId)
+            end
+
+            button:SetText(LabelForCurrentChoice())
+
+            button:SetScript("OnClick", function()
+                local currentId = option.get()
+                local currentIndex = 1
+                for idx, choice in ipairs(option.choices) do
+                    if choice.id == currentId then
+                        currentIndex = idx
+                        break
+                    end
+                end
+
+                local nextChoice = option.choices[(currentIndex % #option.choices) + 1]
+                option.set(nextChoice.id)
+                button:SetText(nextChoice.label)
+            end)
+        else
+            local check = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+            check:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, rowY)
+            check:SetChecked(option.get())
+
+            local label = check:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            label:SetPoint("LEFT", check, "RIGHT", 4, 0)
+            label:SetText(option.label)
+
+            -- GetChecked() returns 1/nil in Classic, not true/false -- normalize before
+            -- handing off to option.set so callers (and the saved variable) always store a
+            -- real boolean.
+            check:SetScript("OnClick", function(self)
+                option.set(self:GetChecked() and true or false)
+            end)
+        end
+    end
+
+    frame:Hide()
+    return frame
+end
+
 -- Section 1 of the redesigned addon UI: a row of exact pixels pinned to the
 -- screen's top-left corner at PIXEL_SIZE spacing -- one swatch per field
 -- actually consumed elsewhere, in a fixed, resolution-independent spot, in

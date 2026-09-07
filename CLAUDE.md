@@ -71,7 +71,7 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1-R3 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning` |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1-R5 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -237,7 +237,20 @@ regardless of player state, same as the level-up check there), and bit 3 is
 current cast, `UnitCastingInfo("player") == "Skinning"` — Skinning is a
 regular cast-bar action, not a channel, and isn't cast via a normal
 spellbook ID the way e.g. `CanCurePoison`'s `IsSpellKnownByName()` match is);
-R4-8 and the G/B bytes are still reserved for the next class-agnostic bool.
+bit 4 is `WowWorldState.LogoutOnLowDynamiteEnabled` and bit 5 is
+`WowWorldState.LogoutOnFullBagsEnabled` — unlike every other bit in this row,
+these two aren't live game-state queries at all. They're run-specific
+settings toggled in-game via the addon's `/yyconfig` menu
+(`CreateSettingsMenu()` in `UIFunctions.lua`, wired up in `YoyokazooUI.lua`),
+saved into `YoyokazooUIDB.logoutOnLowDynamite`/`logoutOnFullBags`
+(`YoyokazooUIDB` is the addon's `SavedVariablesPerCharacter` table — see
+`YoyokazooUI.toc`), and read by `IsLogoutOnLowDynamiteEnabled()`/
+`IsLogoutOnFullBagsEnabled()` when `GetMultiBoolTwo()` packs the byte. This
+replaced hardcoding the equivalent `LogoutOnLowDynamite`/`LogoutOnFullBags`
+booleans on the C# side's `WowManagementConfiguration` — see
+`WowManagementTasks.SetLogoutVariablesTask()`, the only reader of
+`WowWorldState.LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`. R6-8
+and the G/B bytes are still reserved for the next class-agnostic bool.
 `ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
@@ -344,7 +357,10 @@ of truth — edits should be made here, not in the WoW install directory.
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
   farming-config resolution" above), per-resolution screen pixel maps
   (`WowScreenConfigs.cs`), management/alert toggles
-  (`WowManagementConfigs.cs`), the farming profile
+  (`WowManagementConfigs.cs` — logout-on-low-dynamite/logout-on-full-bags used
+  to live here too; they're now run-specific, toggled live via the addon's
+  `/yyconfig` menu instead — see the `MultiBoolTwo` R4/R5 note in the
+  color-encoding contract above), the farming profile
   (`WowFarmingConfigs.cs` — now only `ManagementConfiguration`;
   `LocationConfiguration`/`CombatConfiguration` are resolved at runtime, not
   set here). `Config/Definitions/` holds the POCOs these configs are
@@ -432,10 +448,24 @@ of truth — edits should be made here, not in the WoW install directory.
     (`YoyokazooUIFrame`), showing every value (including ones the bot doesn't
     consume) legibly with labels, for human debugging. The bot never reads
     its position; kept purely as a human-facing debug display.
+
+  Also holds `CreateSettingsMenu()` — a third, unrelated frame: a small
+  checkbox-list dialog (not tied to any live game-state read/OnUpdate loop,
+  unlike the two above) toggled by `YoyokazooUI.lua`'s `/yyconfig` slash
+  command, for run-specific settings like "log out on low dynamite"/"log out
+  on full bags" — see the `MultiBoolTwo` R4/R5 note in the color-encoding
+  contract above for how those reach the C# side.
 - **`MathFunctions.lua`** — small numeric helpers shared by the above.
 - **`YoyokazooUI.lua`** — addon entry point/event wiring (login, XP/level-up
   tracking, whisper tracking for "unseen whisper" alerts) and indicator
-  initialization. Also auto-confirms the bind-on-pickup loot popup: on
+  initialization. Owns `YoyokazooUIDB` (the addon's `SavedVariablesPerCharacter`
+  table) and every slash command built on it: `/yydebug` toggles the debug
+  frame's visibility; `/yyconfig` opens/closes the `CreateSettingsMenu()`
+  dialog (built lazily, on first use) for the run-specific settings above,
+  each backed by its own `YoyokazooUIDB` field
+  (`logoutOnLowDynamite`/`logoutOnFullBags`) read via
+  `IsLogoutOnLowDynamiteEnabled()`/`IsLogoutOnFullBagsEnabled()` when
+  `GetMultiBoolTwo()` packs the pixel row. Also auto-confirms the bind-on-pickup loot popup: on
   `LOOT_BIND_CONFIRM` it hides Blizzard's `"LOOT_BIND"` StaticPopup (if
   already shown — our frame registers after the default UI's own handler)
   and calls `ConfirmLootSlot(lootSlot)` — the same action that popup's own

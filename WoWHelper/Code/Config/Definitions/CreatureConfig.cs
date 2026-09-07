@@ -22,6 +22,8 @@ namespace WoWHelper.Code.WorldState
             "Swirling Vortex",
             "Rotting Worm",
             "Desert Rumbler",
+            "Whirling Invader",
+            "Dust Stormer",
         };
     }
 }
