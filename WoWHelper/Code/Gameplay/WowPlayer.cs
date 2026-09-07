@@ -529,7 +529,7 @@ namespace WoWHelper
                     case PlayerState.TARGET_DEFEATED:
                         Console.WriteLine("Target defeated, trying to loot");
                         // TODO: /canceltarget and /stopcasting and /stopattack here so we don't accidentally attack something
-                        await Task.Delay(1000); // give the dying anim a sec
+                        await WaitUnlessInCombatTask(1500); // give the dying anim a sec
                         LootX = FarmingConfig.ScreenConfiguration.LootDefaultX;
                         LootY = FarmingConfig.ScreenConfiguration.LootDefaultY;
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
