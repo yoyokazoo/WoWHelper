@@ -58,7 +58,7 @@ namespace WoWHelper
         public int LootHeatmapHeight { get; set; }
 
         public int LootDefaultX => (Resolution.Width / 2);
-        public int LootDefaultY => (Resolution.Height / 2) - 100;
+        public int LootDefaultY => (Resolution.Height / 2) - (Resolution.Height / 6);
 
         public int LootHeatmapIgnoreX { get; set; }
         public int LootHeatmapIgnoreY { get; set; }

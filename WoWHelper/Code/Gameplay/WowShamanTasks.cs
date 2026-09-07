@@ -313,9 +313,12 @@ namespace WoWHelper
             EngageAttempts = 1;
             await TurnToFaceTargetMarkerTask();
             // TODO: figure out distance to walk forward
-            //await StartWalkForwardTask();
-            //await Task.Delay(1000);
-            //await EndWalkForwardTask();
+            if (!classState.IsInEarthShockRange)
+            {
+                await StartWalkForwardTask();
+                await Task.Delay(1000);
+                await EndWalkForwardTask();
+            }
             return true;
         }
 

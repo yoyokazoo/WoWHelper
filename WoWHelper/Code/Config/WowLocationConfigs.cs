@@ -49,7 +49,8 @@ namespace WoWHelper.Code.WorldState
             Waypoints = new List<Vector2>
             {
                 new Vector2(64.33f, 40.78f),
-                new Vector2(64.84f, 41.54f), // 59?
+                new Vector2(64.84f, 41.54f),
+                new Vector2(65.06f, 41.94f),
                 new Vector2(65.39f, 42.88f),
                 new Vector2(65.73f, 43.53f),
                 new Vector2(65.96f, 44.94f),
@@ -58,7 +59,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(66.92f, 45.41f),
                 new Vector2(67.09f, 44.50f),
                 new Vector2(66.06f, 43.82f),
-                new Vector2(66.43f, 38.86f),
+                //new Vector2(66.43f, 38.86f),
                 new Vector2(65.87f, 41.89f),
                 new Vector2(65.09f, 40.48f),
             },
@@ -192,6 +193,12 @@ namespace WoWHelper.Code.WorldState
             DistanceTolerance = 0.06f
         };
 
+        /*
+/target Ironbeak
+/target Angerclaw
+/target Warpwood
+/target Felpaw
+            */
         public static readonly WowLocationConfiguration LEVEL_53_NORTH_FELWOOD = new WowLocationConfiguration
         {
             Title = "North Felwood (Level 53+)",
@@ -224,6 +231,7 @@ namespace WoWHelper.Code.WorldState
         /*
 /target Ironbeak
 /target Angerclaw
+/target Warpwood
 /target Felpaw
 /target Warpwood
             */
