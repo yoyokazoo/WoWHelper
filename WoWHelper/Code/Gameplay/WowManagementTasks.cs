@@ -212,6 +212,52 @@ namespace WoWHelper
             return LogoutTriggered;
         }
 
+        // Loops until WorldState.HasDesiredWorldBuff comes back true -- which world buff that
+        // checks for (Ony/Rend/ZG) is chosen in-game via the addon's /yyconfig "Desired world
+        // buff" selector (YoyokazooUI.lua/WoWFunctions.lua), not hardcoded here. Meant to be
+        // run while standing in a city/raid waiting area for a world buff to land: each
+        // iteration waits up to WowPlayerConstants.WORLD_BUFF_WAIT_MILLIS, polling WorldState
+        // at the normal UpdateWorldStateAsync cadence (same pattern as WaitUnlessInCombatTask
+        // in WowCommonCombatTasks.cs) so the buff is noticed the moment it lands instead of
+        // only at the end of the wait, then taps strafe-left/strafe-right briefly to reset
+        // WoW's AFK kick timer before waiting again. Once the buff is seen, sends a Slack
+        // alert and logs out.
+        public async Task<bool> WaitForWorldBuffThenLogoffTask()
+        {
+            Console.WriteLine("Waiting for desired world buff...");
+            await UpdateWorldStateAsync();
+
+            while (!WorldState.HasDesiredWorldBuff)
+            {
+                long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.WORLD_BUFF_WAIT_MILLIS;
+                while (!WorldState.HasDesiredWorldBuff && DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
+                {
+                    await UpdateWorldStateAsync();
+                }
+
+                if (WorldState.HasDesiredWorldBuff)
+                {
+                    break;
+                }
+
+                // Nudge left/right -- doesn't move the player anywhere real, just enough
+                // input to reset the client's AFK timer.
+                Keyboard.KeyDown(WowInput.STRAFE_LEFT);
+                await Task.Delay(200);
+                Keyboard.KeyUp(WowInput.STRAFE_LEFT);
+
+                Keyboard.KeyDown(WowInput.STRAFE_RIGHT);
+                await Task.Delay(200);
+                Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
+            }
+
+            Console.WriteLine("Desired world buff detected, logging out.");
+            SlackHelper.SendMessageToChannel("Got the desired world buff! Logging out.");
+            await StartLogoutTask();
+
+            return true;
+        }
+
         public async Task<bool> StartLogoutTask()
         {
             Console.WriteLine($"Starting logout: {LogoutReason}");

@@ -64,6 +64,13 @@ namespace WoWHelper
         public bool LogoutOnLowDynamiteEnabled { get; private set; }
         public bool LogoutOnFullBagsEnabled { get; private set; }
 
+        // Decoded from MultiBoolTwo's R byte, b6. Also a /yyconfig-driven setting rather than
+        // a live game-state query -- true when the player currently has whichever world buff
+        // is selected by the addon's "Desired world buff" selector (HasDesiredWorldBuff() in
+        // WoWFunctions.lua, WORLD_BUFF_CHOICES for the list of choices). Consumed by
+        // WowManagementTasks.WaitForWorldBuffThenLogoffTask().
+        public bool HasDesiredWorldBuff { get; private set; }
+
         // Which of the three bot-supported classes the player is playing, decoded from
         // MultiBoolOne's B byte (b2/b3/b4 -- see GetMultiBoolOne() in WoWFunctions.lua).
         // Null if none of those bits are set -- an unsupported class, or the addon hasn't
@@ -257,19 +264,21 @@ namespace WoWHelper
         }
 
         // R1 (IsTargetLongRangeCaster), R2 (LogoffMobSeen), R3 (IsCurrentlySkinning), R4
-        // (LogoutOnLowDynamiteEnabled), and R5 (LogoutOnFullBagsEnabled) are the fields
-        // packed here so far -- R6-R8 and the G/B bytes are still reserved for future
-        // class-agnostic flags (see GetMultiBoolTwo() in WoWFunctions.lua).
+        // (LogoutOnLowDynamiteEnabled), R5 (LogoutOnFullBagsEnabled), and R6
+        // (HasDesiredWorldBuff) are the fields packed here so far -- R7-R8 and the G/B bytes
+        // are still reserved for future class-agnostic flags (see GetMultiBoolTwo() in
+        // WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
-            DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out _, out _, out _);
+            DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out _, out _);
 
             IsTargetLongRangeCaster = r1;
             LogoffMobSeen = r2;
             IsCurrentlySkinning = r3;
             LogoutOnLowDynamiteEnabled = r4;
             LogoutOnFullBagsEnabled = r5;
+            HasDesiredWorldBuff = r6;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

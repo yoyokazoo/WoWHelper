@@ -71,7 +71,7 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1-R5 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled` |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1-R6 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -249,7 +249,7 @@ saved into `YoyokazooUIDB.logoutOnLowDynamite`/`logoutOnFullBags`
 replaced hardcoding the equivalent `LogoutOnLowDynamite`/`LogoutOnFullBags`
 booleans on the C# side's `WowManagementConfiguration` — see
 `WowManagementTasks.SetLogoutVariablesTask()`, the only reader of
-`WowWorldState.LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`. R6-8
+`WowWorldState.LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`. R7-8
 and the G/B bytes are still reserved for the next class-agnostic bool.
 The `/yyconfig` menu also has a "Dynamite item" row, letting which
 dynamite-tier item `AreWeLowOnDynamite()` (`WoWFunctions.lua`) checks the bag
@@ -260,6 +260,23 @@ and never reaches the C# side. This is `CreateSettingsMenu()`'s second option
 shape (`type = "selector"`, a cycling button through `choices`) alongside its
 original checkboxes — see that function's own comment in `UIFunctions.lua`
 for the option-table shapes it accepts.
+
+Bit 6 is `WowWorldState.HasDesiredWorldBuff` — same "run-specific setting, not
+a plain game-state query" deal as bits 4/5: which world buff it checks for
+(Ony's Rallying Cry, Rend's Warchief's Blessing, or ZG's Spirit of Zandalar)
+is chosen via the `/yyconfig` menu's "Desired world buff" row, another
+`type = "selector"` entry cycling through `WORLD_BUFF_CHOICES`
+(`WoWFunctions.lua`) — saved into `YoyokazooUIDB.desiredWorldBuffId`, read via
+`GetDesiredWorldBuffId()`, and matched against the player's actual buffs by
+`HasDesiredWorldBuff()` (`WoWFunctions.lua`, via the existing `HasBuffNamed()`
+helper). Unlike the "Dynamite item" selector, this one *does* reach the C#
+side — it's packed into `GetMultiBoolTwo()` like the two booleans above.
+Consumed by `WowManagementTasks.WaitForWorldBuffThenLogoffTask()`: loops
+idle (tapping strafe-left/strafe-right every
+`WowPlayerConstants.WORLD_BUFF_WAIT_MILLIS` to dodge WoW's AFK kick) until
+this bit comes true, then Slack-alerts and logs out. Wired up to the
+`AdHocTest` button (`WowPlayer.AdHocTestTask()`) for now rather than a
+dedicated `PlayerState`.
 `ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
@@ -349,7 +366,9 @@ of truth — edits should be made here, not in the WoW install directory.
   `WowCommonCombatTasks` (shared combat logic), `WowWarriorTasks` /
   `WowMageTasks` / `WowShamanTasks` (class-specific rotations, selected via
   `WowCombatConfiguration`), `WowManagementTasks` (logout conditions, low
-  supplies, trade window handling, Slack alerts). The class-specific task
+  supplies, trade window handling, Slack alerts, the `WaitForWorldBuffThenLogoffTask()`
+  world-buff-waiting loop — see the `MultiBoolTwo` bit 6 note in the
+  color-encoding contract above). The class-specific task
   files' entry points (dispatched from `WowPlayerCombatConfig.cs`) take their
   own class's `WowClassState` subtype as a **method parameter**, not read off
   `this` — so a Mage-only field is unreachable from inside a Warrior method's

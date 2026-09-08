@@ -65,6 +65,16 @@ if YoyokazooUIDB.dynamiteItemId == nil then
     YoyokazooUIDB.dynamiteItemId = 18641
 end
 
+-- Which world buff HasDesiredWorldBuff() (WoWFunctions.lua) checks for -- selectable via the
+-- /yyconfig "Desired world buff" selector below instead of being hardcoded. Defaults to Ony's
+-- Rallying Cry. See WORLD_BUFF_CHOICES (WoWFunctions.lua) for the full list. Read by
+-- GetMultiBoolTwo() into MultiBoolTwo's R6, decoded on the C# side into
+-- WowWorldState.HasDesiredWorldBuff, consumed by WaitForWorldBuffThenLogoffTask
+-- (WowManagementTasks.cs).
+if YoyokazooUIDB.desiredWorldBuffId == nil then
+    YoyokazooUIDB.desiredWorldBuffId = "ony"
+end
+
 -- Read by GetMultiBoolTwo() (WoWFunctions.lua) to pack these into MultiBoolTwo's R4/R5,
 -- decoded on the C# side into WowWorldState.LogoutOnLowDynamiteEnabled/
 -- LogoutOnFullBagsEnabled.
@@ -90,6 +100,10 @@ end
 -- PLAYER_ENTERING_WORLD. The print only fires on the invalid path, so if this
 -- turns out to be a recurring issue rather than a one-off, it'll show up
 -- again instead of going silent.
+function GetDesiredWorldBuffId()
+    return YoyokazooUIDB.desiredWorldBuffId
+end
+
 function GetDynamiteItemId()
     local itemId = YoyokazooUIDB.dynamiteItemId
     if type(itemId) ~= "number" then
@@ -308,8 +322,9 @@ SlashCmdList["YYDEBUG"] = function()
 end
 
 -- /yyconfig toggles the run-specific settings menu (CreateSettingsMenu(), UIFunctions.lua)
--- -- "log out on low dynamite"/"log out on full bags" for now, more can be added to the
--- options list below as they come up. Built once, lazily, on first use rather than
+-- -- "log out on low dynamite"/"log out on full bags"/"dynamite item"/"desired world buff"
+-- for now, more can be added to the options list below as they come up. Built once, lazily,
+-- on first use rather than
 -- unconditionally at load time like the debug frame above, since there's no reason to pay
 -- for it on a run that never opens the menu.
 local settingsMenu = nil
@@ -350,6 +365,24 @@ SlashCmdList["YYCONFIG"] = function()
                         end
                     end
                     print("YoyokazooUI: Dynamite item set to " .. chosenLabel .. " (saved).")
+                end,
+            },
+            {
+                label = "Desired world buff",
+                type = "selector",
+                choices = WORLD_BUFF_CHOICES,
+                get = GetDesiredWorldBuffId,
+                set = function(id)
+                    YoyokazooUIDB.desiredWorldBuffId = id
+
+                    local chosenLabel = tostring(id)
+                    for _, choice in ipairs(WORLD_BUFF_CHOICES) do
+                        if choice.id == id then
+                            chosenLabel = choice.label
+                            break
+                        end
+                    end
+                    print("YoyokazooUI: Desired world buff set to " .. chosenLabel .. " (saved).")
                 end,
             },
         })

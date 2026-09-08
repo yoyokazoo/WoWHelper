@@ -487,6 +487,29 @@ function HasBuffNamed(buffName)
     end
 end
 
+-- World buffs WaitForWorldBuffThenLogoffTask (WowManagementTasks.cs) waits on -- selectable
+-- via the /yyconfig "Desired world buff" selector (YoyokazooUI.lua/UIFunctions.lua) instead of
+-- being hardcoded, same pattern as DYNAMITE_ITEM_CHOICES below. GetDesiredWorldBuffId()
+-- (YoyokazooUI.lua) returns whichever one is currently selected; HasDesiredWorldBuff() checks
+-- for that buff by name via HasBuffNamed().
+WORLD_BUFF_CHOICES = {
+    { id = "ony",  label = "Rallying Cry (Ony)",         buffName = "Rallying Cry of the Dragonslayer" },
+    { id = "rend", label = "Warchief's Blessing (Rend)", buffName = "Warchief's Blessing" },
+    { id = "zg",   label = "Spirit of Zandalar (ZG)",    buffName = "Spirit of Zandalar" },
+}
+
+-- Read by GetMultiBoolTwo() to pack into MultiBoolTwo's R6, decoded on the C# side into
+-- WowWorldState.HasDesiredWorldBuff.
+function HasDesiredWorldBuff()
+    local desiredId = GetDesiredWorldBuffId()
+    for _, choice in ipairs(WORLD_BUFF_CHOICES) do
+        if choice.id == desiredId then
+            return HasBuffNamed(choice.buffName)
+        end
+    end
+    return false
+end
+
 -- overpower rank 1, 7384
 -- fireblast rank 1, 2136
 -- cone of cold rank 1,
@@ -954,19 +977,20 @@ function GetMultiBoolOne()
 end
 
 -- R1 (IsTargetLongRangeCaster), R2 (IsLogoffMobSeen), R3 (IsCurrentlySkinning),
--- R4 (IsLogoutOnLowDynamiteEnabled), and R5 (IsLogoutOnFullBagsEnabled) are the
--- flags packed in here so far -- R6-R8 and the G/B bytes are still fully
--- reserved for future class-agnostic flags. R4/R5 are run-specific settings
--- toggled live in-game via the /yyconfig menu (YoyokazooUI.lua) rather than
--- live game-state queries like the others here.
+-- R4 (IsLogoutOnLowDynamiteEnabled), R5 (IsLogoutOnFullBagsEnabled), and R6
+-- (HasDesiredWorldBuff) are the flags packed in here so far -- R7-R8 and the G/B
+-- bytes are still fully reserved for future class-agnostic flags. R4/R5/R6 are
+-- run-specific settings toggled live in-game via the /yyconfig menu
+-- (YoyokazooUI.lua) rather than live game-state queries like the others here.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()
     local boolR3 = IsCurrentlySkinning()
     local boolR4 = IsLogoutOnLowDynamiteEnabled()
     local boolR5 = IsLogoutOnFullBagsEnabled()
+    local boolR6 = HasDesiredWorldBuff()
 
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, false, false, false)
+    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, false, false)
 
     return rByte/255.0, 0, 0
 end
