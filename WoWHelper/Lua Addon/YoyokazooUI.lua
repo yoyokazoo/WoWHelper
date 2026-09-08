@@ -19,12 +19,16 @@ local lastEvadeTime = nil
 -- PLAYER_ENTERING_WORLD fires on every loading screen, not just the initial login --
 -- zoning, taxis, death+release, and hearthing all re-fire it. InitializeIndicators()/
 -- InitializePixelRow() build a fresh set of frames/textures every time they're called
--- with no cleanup of the old set, so without this guard each re-fire stacked a whole
--- new copy of the debug frame's text directly on top of the previous one. Neither
--- function needs to re-run after the first login -- both already poll live values
--- (and, for the pixel row, re-calibrate screen scale) every tick via their own
--- OnUpdate handlers, so nothing about them goes stale across a zone change.
-local uiInitialized = false
+-- with no cleanup of the old set, so without a guard each re-fire stacks a whole new
+-- copy of the debug frame's text directly on top of the previous one. Neither function
+-- needs to re-run after it's succeeded once -- both already poll live values (and, for
+-- the pixel row, re-calibrate screen scale) every tick via their own OnUpdate handlers,
+-- so nothing about them goes stale across a zone change.
+--
+-- Tracked as two SEPARATE flags (not one shared uiInitialized) so each one only counts
+-- as done once it actually succeeds -- see the pcall wrapping below.
+local indicatorsInitialized = false
+local pixelRowInitialized = false
 
 -- YoyokazooUIDB is a SavedVariablesPerCharacter table (see YoyokazooUI.toc).
 -- The .toc also sets "## LoadSavedVariablesFirst 1", which guarantees this
@@ -205,12 +209,38 @@ frame:SetScript("OnEvent", function(self, event, ...)
 
         print("XP session started. Level:", xpTracker.startLevel, "XP:", xpTracker.startXP)
 
-        if not uiInitialized then
-            InitializeIndicators()
-            InitializePixelRow()
-            ApplyDebugFrameVisibility()
-            uiInitialized = true
+        -- InitializeIndicators() (human-only debug overlay) and InitializePixelRow()
+        -- (the ONLY thing the C# bot actually reads) used to run back-to-back with no
+        -- error isolation between them -- an uncaught Lua error building the debug
+        -- frame would unwind straight out of this whole block, meaning
+        -- InitializePixelRow() never even got called, silently freezing every decoded
+        -- bot flag (combat state, HP%, casting, zone, all of it) for the rest of the
+        -- session. Confirmed happening in testing (a bug in one of GetMultiBoolOne's
+        -- inputs, read by InitializeIndicators()'s debug swatch, blocked
+        -- InitializePixelRow() from ever running). pcall-isolating each one, with its
+        -- own success flag, means a bug in the debug-only frame can never again take
+        -- down the real one, and either one that fails keeps retrying on the next
+        -- PLAYER_ENTERING_WORLD (zone change, death+release, hearth, /reload) instead
+        -- of being stuck for the rest of the session.
+        if not indicatorsInitialized then
+            local ok, err = pcall(InitializeIndicators)
+            if ok then
+                indicatorsInitialized = true
+            else
+                print("YoyokazooUI: InitializeIndicators() failed, debug frame not built (will retry next PLAYER_ENTERING_WORLD): " .. tostring(err))
+            end
         end
+
+        if not pixelRowInitialized then
+            local ok, err = pcall(InitializePixelRow)
+            if ok then
+                pixelRowInitialized = true
+            else
+                print("YoyokazooUI: InitializePixelRow() failed -- the bot's pixel row was NOT built (will retry next PLAYER_ENTERING_WORLD): " .. tostring(err))
+            end
+        end
+
+        ApplyDebugFrameVisibility()
     end
 
     if event == "PLAYER_XP_UPDATE" then

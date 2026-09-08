@@ -251,6 +251,15 @@ booleans on the C# side's `WowManagementConfiguration` — see
 `WowManagementTasks.SetLogoutVariablesTask()`, the only reader of
 `WowWorldState.LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`. R6-8
 and the G/B bytes are still reserved for the next class-agnostic bool.
+The `/yyconfig` menu also has a "Dynamite item" row, letting which
+dynamite-tier item `AreWeLowOnDynamite()` (`WoWFunctions.lua`) checks the bag
+count of be picked from `DYNAMITE_ITEM_CHOICES` at runtime instead of being
+hardcoded — saved into `YoyokazooUIDB.dynamiteItemId`, read via
+`GetDynamiteItemId()`. Unlike the two booleans above, this one is Lua-only
+and never reaches the C# side. This is `CreateSettingsMenu()`'s second option
+shape (`type = "selector"`, a cycling button through `choices`) alongside its
+original checkboxes — see that function's own comment in `UIFunctions.lua`
+for the option-table shapes it accepts.
 `ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
@@ -458,7 +467,20 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`MathFunctions.lua`** — small numeric helpers shared by the above.
 - **`YoyokazooUI.lua`** — addon entry point/event wiring (login, XP/level-up
   tracking, whisper tracking for "unseen whisper" alerts) and indicator
-  initialization. Owns `YoyokazooUIDB` (the addon's `SavedVariablesPerCharacter`
+  initialization. On the first `PLAYER_ENTERING_WORLD`, `InitializeIndicators()`
+  (the human-only debug frame) and `InitializePixelRow()` (the only thing the
+  C# bot actually reads) are each called through `pcall`, with their own
+  success flag (`indicatorsInitialized`/`pixelRowInitialized`), rather than
+  called back-to-back unguarded. This isn't defensive-for-its-own-sake: an
+  uncaught error building the debug frame used to unwind straight out of that
+  whole block, meaning `InitializePixelRow()` never even ran, silently
+  freezing every decoded bot flag for the rest of the session — confirmed
+  happening in testing (a bug in one of `GetMultiBoolOne()`'s inputs, read by
+  one of the debug frame's swatches, blocked the pixel row from ever being
+  built). Now a failure in either one is isolated to that one, and (since its
+  flag stays false) retries on the next `PLAYER_ENTERING_WORLD` (zone change,
+  death+release, hearth, `/reload`) instead of being stuck all session.
+  Owns `YoyokazooUIDB` (the addon's `SavedVariablesPerCharacter`
   table) and every slash command built on it: `/yydebug` toggles the debug
   frame's visibility; `/yyconfig` opens/closes the `CreateSettingsMenu()`
   dialog (built lazily, on first use) for the run-specific settings above,
