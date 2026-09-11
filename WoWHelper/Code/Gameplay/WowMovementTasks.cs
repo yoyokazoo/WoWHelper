@@ -512,5 +512,21 @@ namespace WoWHelper
 
             return true;
         }
+
+        public async Task<bool> KeyUpMovementKeys()
+        {
+            Keyboard.KeyUp(WowInput.MOVE_FORWARD);
+            Keyboard.KeyUp(WowInput.MOVE_BACK);
+            Keyboard.KeyUp(WowInput.TURN_LEFT);
+            Keyboard.KeyUp(WowInput.TURN_RIGHT);
+            Keyboard.KeyUp(WowInput.JUMP);
+            Keyboard.KeyUp(WowInput.STRAFE_LEFT);
+            Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
+            Keyboard.KeyUp(WowInput.LatestShiftKey);
+            Keyboard.KeyUp(Keys.LShiftKey);
+            await Task.Delay(0);
+
+            return true;
+        }
     }
 }

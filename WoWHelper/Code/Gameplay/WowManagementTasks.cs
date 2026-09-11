@@ -26,6 +26,24 @@ namespace WoWHelper
             return !WorldState.OnLoginScreen;
         }
 
+        public async Task<bool> RecoverFromLostWindowFocusTask()
+        {
+            SlackHelper.SendMessageToChannel("Lost focus on WoWClassic window! Refocusing...");
+            await FocusOnWindowTask();
+
+            Mouse.Move(FarmingConfig.ScreenConfiguration.LootDefaultX, FarmingConfig.ScreenConfiguration.LootDefaultX);
+            Mouse.PressButton(Mouse.MouseKeys.Left);
+
+            await Task.Delay(300);
+
+            await KeyUpMovementKeys();
+
+            LogoutTriggered = true;
+            LogoutReason = "Lost window focus";
+
+            return true;
+        }
+
         public async Task<bool> EveryWorldStateUpdateTasks()
         {
             // ping + refocus if something stole foreground focus from WoW -- every task
@@ -38,8 +56,7 @@ namespace WoWHelper
                 IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
                 if (wowHandle != IntPtr.Zero && ScreenCapture.GetForegroundWindow() != wowHandle)
                 {
-                    SlackHelper.SendMessageToChannel("Lost focus on WoWClassic window! Refocusing...");
-                    await FocusOnWindowTask();
+                    await RecoverFromLostWindowFocusTask();
                 }
             }
 
