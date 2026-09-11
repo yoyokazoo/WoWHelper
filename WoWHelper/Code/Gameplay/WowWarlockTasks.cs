@@ -50,6 +50,13 @@ namespace WoWHelper
                     buffed = true;
                 }
 
+                if (classState.ShouldSummonPet)
+                {
+                    await WaitForGlobalCooldownTask();
+                    Keyboard.KeyPress(WowInput.WARLOCK_SUMMON_PET);
+                    buffed = true;
+                }
+
                 if (buffed)
                 {
                     return false;
@@ -108,9 +115,23 @@ namespace WoWHelper
 
                 await EveryWorldStateUpdateTasks();
 
+                await WaitForGlobalCooldownTask();
+
                 if (classState.ShouldCastDemonArmor)
                 {
                     await WowInput.PressKeyWithShift(WowInput.WARLOCK_SHIFT_DEMON_ARMOR);
+                    continue;
+                }
+
+                if (classState.ShouldCastImmolate)
+                {
+                    await WowInput.PressKeyWithShift(WowInput.WARLOCK_SHIFT_IMMOLATE);
+                    continue;
+                }
+
+                if (classState.ShouldCastCorruption)
+                {
+                    Keyboard.KeyPress(WowInput.WARLOCK_CORRUPTION);
                     continue;
                 }
 

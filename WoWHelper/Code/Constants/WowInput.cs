@@ -135,12 +135,21 @@ namespace WoWHelper.Code
         public const Keys WARLOCK_SHIFT_2 = Keys.D2;
 
         /*
+         * 3 Dot
+#showtooltip [mod:shift] Immolate; Corruption
+/use [nomod] Corruption
+/use [mod:shift] Immolate
+         */
+        public const Keys WARLOCK_CORRUPTION = Keys.D3;
+        public const Keys WARLOCK_SHIFT_IMMOLATE = Keys.D3;
+
+        /*
          * 4 Buff
-#showtooltip [mod:shift] Demon Skin; Lightning Shield
-/use [nomod] Lightning Shield
+#showtooltip [mod:shift] Demon Skin; Summon Imp
+/use [nomod] Summon Imp
 /use [mod:shift] Demon Skin
         */
-        public const Keys WARLOCK_4 = Keys.D4;
+        public const Keys WARLOCK_SUMMON_PET = Keys.D4;
         public const Keys WARLOCK_SHIFT_DEMON_ARMOR = Keys.D4;
 
         #endregion

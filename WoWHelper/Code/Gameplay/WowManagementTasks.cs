@@ -250,7 +250,26 @@ namespace WoWHelper
         {
             Mouse.Move(LootX, LootY);
             Mouse.PressButton(Mouse.MouseKeys.Right);
-            await WaitUnlessInCombatTask(3000);
+
+            // Give the client a moment to register the right-click and start the Skinning
+            // cast bar, then check WorldState.IsCurrentlySkinning (see UIFunctions.lua's
+            // pixel row / WoWFunctions.lua's IsCurrentlySkinning()) -- if it never started
+            // (e.g. the corpse wasn't actually skinnable, or the click missed), there's
+            // nothing to wait out, so return immediately instead of sitting through the
+            // rest of the old flat 3000ms wait. UpdateWorldState() (not the Async variant)
+            // since we just want an immediate re-capture here, not another throttled wait
+            // on top of the 200ms we already did.
+            await Task.Delay(200);
+            UpdateWorldState();
+
+            if (WorldState.IsCurrentlySkinning)
+            {
+                // Skinning is actually in progress -- wait out the rest of its ~3s cast.
+                // WaitUnlessInCombatTask keeps this interruptible if a mob aggroes mid-skin,
+                // same protection the old flat wait had.
+                await WaitUnlessInCombatTask(2800);
+            }
+
             return true;
         }
 

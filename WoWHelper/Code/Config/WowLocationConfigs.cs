@@ -914,6 +914,31 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 6,
         };
 
+        /*
+/target Mangy
+/target Ragged
+        */
+        public static readonly WowLocationConfiguration LEVEL_4_TIRISFAL_ANIMALS = new WowLocationConfiguration
+        {
+            Title = "Tirisfal Bats and Wolves (Level 1+)",
+            MinimumLevel = 4,
+            Zone = WowZone.TirisfalGlades,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(36.99f, 56.80f),
+                new Vector2(37.66f, 58.31f),
+                new Vector2(37.39f, 60.60f),
+                new Vector2(35.67f, 61.43f),
+                new Vector2(34.89f, 61.68f),
+                new Vector2(35.33f, 59.87f),
+                new Vector2(34.60f, 58.76f),
+                new Vector2(36.14f, 57.73f),
+            },
+            EngageMethod = EngagementMethod.Pull,
+            LogoffLevel = 7,
+        };
+
         public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
         {
             Title = "Mulgore Plainstriders (Level 1+)",
@@ -963,7 +988,7 @@ namespace WoWHelper.Code.WorldState
 /target Mindless
 /target Wretched
 /target Rattlecage
-            */
+        */
         public static readonly WowLocationConfiguration LEVEL_1_TIRISFAL_UNDEAD = new WowLocationConfiguration
         {
             Title = "Tirisfal Zombies (Level 1+)",
@@ -1026,6 +1051,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_8_MULGORE_MIXED_BEASTS,
             LEVEL_6_MULGORE_BATTLEBOARS,
             LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
+            LEVEL_4_TIRISFAL_ANIMALS,
             LEVEL_1_MULGORE_PLAINSTRIDERS,
             LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
             LEVEL_1_TIRISFAL_UNDEAD,

@@ -267,13 +267,20 @@ class-agnostic callers (e.g. `WowMovementTasks.PathfindingLoopTask`), while
 logic and take that class's typed `ClassState` directly. **Warlock is a
 work in progress**, filled in incrementally the same way Shaman was — so far
 `WowWarlockClassState` decodes ClassBoolOne's R1 (`CanSpellcastPullTarget`,
-Shadow Bolt) and R2 (`ShouldCastDemonArmor`, true when neither Demon Skin nor
+Shadow Bolt), R2 (`ShouldCastDemonArmor`, true when neither Demon Skin nor
 Demon Armor is active — only one of those two differently-named buffs is
 ever up at a time, so `ShouldCastDemonArmor()` in `WarlockFunctions.lua`
-checks for either); R3-R8, `ClassBoolTwo`, and `ClassIntOne` are still fully
-reserved. The rest of the dispatch wiring (enum value, `CreateClassState`,
-all six `WowPlayerCombatConfig.cs` switches, the `MultiBoolTwo` R4
-class-detect bit) is also in place.
+checks for either), R3 (`ShouldSummonPet`, true once the player knows at
+least Summon Imp -- the level-1 pet spell, gating whether a pet can be
+summoned at all yet -- and doesn't currently have a living pet out), and R4/R5
+(`ShouldCastImmolate`/`ShouldCastCorruption`, true when the player knows that
+spell and the target doesn't already have that DoT on it -- same
+name-matched-against-`TargetHasDebuffSpellName()` pattern Shaman's
+`ShouldCastFlameShock`/`TargetHasFlameShock` use); R6-R8, `ClassBoolTwo`, and
+`ClassIntOne` are still fully reserved. The rest of the dispatch wiring (enum
+value, `CreateClassState`, all six
+`WowPlayerCombatConfig.cs` switches, the `MultiBoolTwo` R4 class-detect bit)
+is also in place.
 
 The `Screen.PrimaryScreen.Bounds`-based per-resolution config in
 `WowFarmingConfiguration` still selects a `WowScreenConfiguration`, but that
@@ -405,17 +412,26 @@ of truth — edits should be made here, not in the WoW install directory.
   — that class's specific checks (e.g. `TargetHasRend`, `CanCastWhirlwind` for
   Warrior; `ShouldWeSummonWater`, `IsFireblastCooledDown` for Mage;
   `ShouldCastRockbiterWeapon`, `CanCastEarthShock` for Shaman;
-  `ShouldCastDemonArmor` for Warlock) plus a `GetXClassBoolOne/Two`/
+  `ShouldCastDemonArmor`/`ShouldSummonPet`/`ShouldCastImmolate`/
+  `ShouldCastCorruption` for Warlock) plus a `GetXClassBoolOne/Two`/
   `GetXClassIntOne` set that packs that class's state into the ClassBool/
   ClassInt pixels. Split out of `WoWFunctions.lua` to keep class-specific
   logic physically separated as more classes/fields get added.
   `WarlockFunctions.lua` is a work in progress — `GetWarlockClassBoolOne`
-  packs `CanSpellcastPullTarget()` (shared, from `WoWFunctions.lua`) and
+  packs `CanSpellcastPullTarget()` (shared, from `WoWFunctions.lua`),
   `ShouldCastDemonArmor()` (checks `HasBuffNamed("Demon Skin")`/
   `HasBuffNamed("Demon Armor")` — only one is ever active — and
   `IsSpellKnownByName()` for either, the same name-matching pattern
   `CanCurePoison`/`CanCureDisease` use in `ShamanFunctions.lua`, since
-  Demon Skin/Demon Armor are different spell IDs at different ranks);
+  Demon Skin/Demon Armor are different spell IDs at different ranks),
+  `ShouldSummonPet()` (`IsSpellKnownByName("Summon Imp")` gating whether a
+  pet can be summoned at all yet, plus `UnitExists("pet")`/
+  `UnitIsDeadOrGhost("pet")` to catch both "no pet out" and "pet died"), and
+  `ShouldCastImmolate()`/`ShouldCastCorruption()` (each
+  `IsSpellKnownByName()` plus `TargetHasDebuffSpellName()` — both
+  `WoWFunctions.lua` — to check the player knows the spell and the target
+  doesn't already have that DoT, same pattern
+  `ShouldCastFlameShock()`/`TargetHasFlameShock()` use for Shaman);
   `GetWarlockClassBoolTwo`/`GetWarlockClassIntOne` are still all-zero.
 - **`UIFunctions.lua`** — builds the on-screen indicator frame/swatches and
   encodes values/booleans into the colors the C# side decodes
