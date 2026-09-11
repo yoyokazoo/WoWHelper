@@ -125,6 +125,24 @@ namespace WoWHelper.Code
         // TODO: define Warlock keybinds/macros here once the rotation is designed,
         // same pattern as the Warrior/Mage/Shaman regions above (a const Keys per
         // in-game keybind/macro slot, referenced from WowWarlockTasks.cs).
+
+        /*
+         * 2 Bolt
+#showtooltip Shadow Bolt
+/cast Shadow Bolt
+        */
+        public const Keys WARLOCK_SHADOW_BOLT = Keys.D2;
+        public const Keys WARLOCK_SHIFT_2 = Keys.D2;
+
+        /*
+         * 4 Buff
+#showtooltip [mod:shift] Demon Skin; Lightning Shield
+/use [nomod] Lightning Shield
+/use [mod:shift] Demon Skin
+        */
+        public const Keys WARLOCK_4 = Keys.D4;
+        public const Keys WARLOCK_SHIFT_DEMON_ARMOR = Keys.D4;
+
         #endregion
 
         #region Common

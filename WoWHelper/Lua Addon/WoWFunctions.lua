@@ -333,6 +333,7 @@ local ZONE_NAME_TO_ID = {
     ["Silithus"] = 12,
     ["Azshara"] = 13,
     ["Winterspring"] = 14,
+    ["Tirisfal Glades"] = 15,
 }
 
 -- 255 = current zone isn't one of the known farming zones on the decoding

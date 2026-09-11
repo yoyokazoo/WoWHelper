@@ -968,12 +968,17 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Tirisfal Zombies (Level 1+)",
             MinimumLevel = 1,
-            Zone = WowZone.Durotar,
+            Zone = WowZone.TirisfalGlades,
 
             Waypoints = new List<Vector2>
             {
-                new Vector2(44.19f, 66.23f),
-                
+                new Vector2(31.51f, 63.69f),
+                new Vector2(30.16f, 63.75f),
+                new Vector2(29.95f, 61.80f),
+                new Vector2(30.81f, 61.16f),
+                new Vector2(32.20f, 60.61f),
+                new Vector2(32.41f, 61.90f),
+                new Vector2(31.90f, 62.98f),
             },
             EngageMethod = EngagementMethod.Pull,
             LogoffLevel = 4,
@@ -1023,6 +1028,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
             LEVEL_1_MULGORE_PLAINSTRIDERS,
             LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
+            LEVEL_1_TIRISFAL_UNDEAD,
         };
     }
 }
