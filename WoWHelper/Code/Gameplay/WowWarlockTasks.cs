@@ -9,15 +9,11 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        // Warlock rotation -- not implemented yet. Mirrors the six dispatch
-        // entry points WowWarriorTasks/WowMageTasks/WowShamanTasks each
-        // provide (see WowPlayerCombatConfig.cs's six switches), stubbed out
-        // so WowCombatConfiguration.Warlock dispatches cleanly to here
-        // instead of hitting the "no dispatch implemented" NotImplementedException
-        // in WowPlayerCombatConfig.cs. Each throws its own NotImplementedException
-        // for now -- fill these in the same way WowShamanTasks.cs does for
-        // Shaman (that file is the most recently-added class and the closest
-        // model to follow).
+        // Warlock rotation -- in progress. Mirrors the six dispatch entry
+        // points WowWarriorTasks/WowMageTasks/WowShamanTasks each provide
+        // (see WowPlayerCombatConfig.cs's six switches). Modeled closely on
+        // WowShamanTasks.cs since Shaman is the closest existing
+        // ranged-pull/melee-sustain pattern to follow.
         public async Task<bool> WarlockStartBattleReadyRecoverTask(WowWarlockClassState classState)
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
@@ -47,7 +43,7 @@ namespace WoWHelper
             if (battleReady)
             {
                 bool buffed = false;
-                if (classState.ShouldCastRockbiterWeapon)
+                if (classState.ShouldCastDemonArmor)
                 {
                     await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.WARLOCK_SHIFT_DEMON_ARMOR);
@@ -112,7 +108,7 @@ namespace WoWHelper
 
                 await EveryWorldStateUpdateTasks();
 
-                if (classState.ShouldCastRockbiterWeapon)
+                if (classState.ShouldCastDemonArmor)
                 {
                     await WowInput.PressKeyWithShift(WowInput.WARLOCK_SHIFT_DEMON_ARMOR);
                     continue;

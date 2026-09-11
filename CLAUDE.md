@@ -264,14 +264,16 @@ in `WowPlayerCombatConfig.cs` is a thin class-dispatching wrapper for
 class-agnostic callers (e.g. `WowMovementTasks.PathfindingLoopTask`), while
 `WarriorCanEngageTarget`/`MageCanEngageTarget`/`ShamanCanEngageTarget`/
 `WarlockCanEngageTarget` (one per `Wow*Tasks.cs`) hold the real per-class
-logic and take that class's typed `ClassState` directly. **Warlock is
-currently stubbed only** — `WowWarlockClassState` decodes no fields yet, and
-every `WowWarlockTasks.cs` entry point (including `WarlockCanEngageTarget`)
-throws `NotImplementedException`; the dispatch wiring (enum value, `CreateClassState`,
-all six `WowPlayerCombatConfig.cs` switches, the `MultiBoolTwo` R4 class-detect
-bit, `WarlockFunctions.lua`'s all-zero `GetWarlockClassBoolOne/Two/IntOne`) is
-in place so a real rotation can be filled in incrementally, the same way
-Shaman was.
+logic and take that class's typed `ClassState` directly. **Warlock is a
+work in progress**, filled in incrementally the same way Shaman was — so far
+`WowWarlockClassState` decodes ClassBoolOne's R1 (`CanSpellcastPullTarget`,
+Shadow Bolt) and R2 (`ShouldCastDemonArmor`, true when neither Demon Skin nor
+Demon Armor is active — only one of those two differently-named buffs is
+ever up at a time, so `ShouldCastDemonArmor()` in `WarlockFunctions.lua`
+checks for either); R3-R8, `ClassBoolTwo`, and `ClassIntOne` are still fully
+reserved. The rest of the dispatch wiring (enum value, `CreateClassState`,
+all six `WowPlayerCombatConfig.cs` switches, the `MultiBoolTwo` R4
+class-detect bit) is also in place.
 
 The `Screen.PrimaryScreen.Bounds`-based per-resolution config in
 `WowFarmingConfiguration` still selects a `WowScreenConfiguration`, but that
@@ -402,13 +404,19 @@ of truth — edits should be made here, not in the WoW install directory.
   / **`WarlockFunctions.lua`**
   — that class's specific checks (e.g. `TargetHasRend`, `CanCastWhirlwind` for
   Warrior; `ShouldWeSummonWater`, `IsFireblastCooledDown` for Mage;
-  `ShouldCastRockbiterWeapon`, `CanCastEarthShock` for Shaman) plus a
-  `GetXClassBoolOne/Two`/`GetXClassIntOne` set that packs that class's state
-  into the ClassBool/ClassInt pixels. Split out of `WoWFunctions.lua` to keep
-  class-specific logic physically separated as more classes/fields get added.
-  `WarlockFunctions.lua` is currently a stub — its `GetWarlockClassBoolOne/Two`/
-  `GetWarlockClassIntOne` all return all-zero (no real checks added above them
-  yet); fill in real Warlock checks the same way `ShamanFunctions.lua` does.
+  `ShouldCastRockbiterWeapon`, `CanCastEarthShock` for Shaman;
+  `ShouldCastDemonArmor` for Warlock) plus a `GetXClassBoolOne/Two`/
+  `GetXClassIntOne` set that packs that class's state into the ClassBool/
+  ClassInt pixels. Split out of `WoWFunctions.lua` to keep class-specific
+  logic physically separated as more classes/fields get added.
+  `WarlockFunctions.lua` is a work in progress — `GetWarlockClassBoolOne`
+  packs `CanSpellcastPullTarget()` (shared, from `WoWFunctions.lua`) and
+  `ShouldCastDemonArmor()` (checks `HasBuffNamed("Demon Skin")`/
+  `HasBuffNamed("Demon Armor")` — only one is ever active — and
+  `IsSpellKnownByName()` for either, the same name-matching pattern
+  `CanCurePoison`/`CanCureDisease` use in `ShamanFunctions.lua`, since
+  Demon Skin/Demon Armor are different spell IDs at different ranks);
+  `GetWarlockClassBoolTwo`/`GetWarlockClassIntOne` are still all-zero.
 - **`UIFunctions.lua`** — builds the on-screen indicator frame/swatches and
   encodes values/booleans into the colors the C# side decodes
   (`EncodeFloatToColor` and friends). Two rendering paths coexist, both fed
