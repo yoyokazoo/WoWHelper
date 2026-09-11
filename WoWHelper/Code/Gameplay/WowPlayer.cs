@@ -99,6 +99,7 @@ namespace WoWHelper
                 case WowCombatConfiguration.Warrior: return new WowWarriorClassState();
                 case WowCombatConfiguration.Mage: return new WowMageClassState();
                 case WowCombatConfiguration.Shaman: return new WowShamanClassState();
+                case WowCombatConfiguration.Warlock: return new WowWarlockClassState();
                 default: throw new System.NotImplementedException(
                     $"{nameof(CreateClassState)}: no ClassState implemented for CombatConfiguration \"{combatConfiguration}\" -- " +
                     $"this should only be called with a resolved (non-Unknown) CombatConfiguration.");

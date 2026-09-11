@@ -153,6 +153,7 @@
     <Compile Include="Code\Gameplay\WowPathfinding.cs" />
     <Compile Include="Code\Gameplay\WowPlayerCombatConfig.cs" />
     <Compile Include="Code\Gameplay\WowShamanTasks.cs" />
+    <Compile Include="Code\Gameplay\WowWarlockTasks.cs" />
     <Compile Include="Code\Gameplay\WowWarriorTasks.cs" />
     <Compile Include="Code\Shared\BitmapDifferenceVisualizer.cs" />
     <Compile Include="Code\Shared\KeyPoller.cs" />
@@ -163,6 +164,7 @@
     <Compile Include="Code\Gameplay\WowWarriorClassState.cs" />
     <Compile Include="Code\Gameplay\WowMageClassState.cs" />
     <Compile Include="Code\Gameplay\WowShamanClassState.cs" />
+    <Compile Include="Code\Gameplay\WowWarlockClassState.cs" />
     <Compile Include="Code\Shared\PathSubdivision.cs" />
     <Compile Include="Code\Shared\TessaractSingleton.cs" />
     <Compile Include="Code\Shared\SlackFileUploadWorkaround.cs" />
@@ -206,6 +208,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Lua Addon\ShamanFunctions.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Lua Addon\WarlockFunctions.lua">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Lua Addon\YoyokazooUI.lua">

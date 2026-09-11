@@ -56,8 +56,11 @@ namespace WoWHelper
         public bool LogoffMobSeen { get; private set; }
         public bool IsCurrentlySkinning { get; private set; }
 
-        // Which of the three bot-supported classes the player is playing, decoded from
-        // MultiBoolOne's B byte (b2/b3/b4 -- see GetMultiBoolOne() in WoWFunctions.lua).
+        // Which of the four bot-supported classes the player is playing, decoded from
+        // MultiBoolOne's B byte (b2/b3/b4 -- see GetMultiBoolOne() in WoWFunctions.lua)
+        // for Warrior/Mage/Shaman, plus MultiBoolTwo's R4 (see UpdateMultiBoolTwo below)
+        // for Warlock -- that byte was already fully packed (b1-b8) by the time Warlock
+        // support was added, so its bit lives in MultiBoolTwo's reserved space instead.
         // Null if none of those bits are set -- an unsupported class, or the addon hasn't
         // rendered a real row yet (e.g. still on the login screen). Reuses
         // WowCombatConfiguration rather than a separate "player class" enum since the two
@@ -124,6 +127,10 @@ namespace WoWHelper
             PlayerLocation = new Vector2(MapX, MapY);
             UpdateFacingDegrees(bmp);
 
+            // UpdateMultiBoolOne must run before UpdateMultiBoolTwo -- the latter can
+            // override PlayerClass to Warlock (see UpdateMultiBoolTwo below), which
+            // depends on UpdateMultiBoolOne having already set it (to null, since none
+            // of the three class bits it owns will be set for a Warlock).
             UpdateMultiBoolOne(bmp);
             UpdateMultiBoolTwo(bmp);
             UpdateMultiIntOne(bmp);
@@ -248,17 +255,26 @@ namespace WoWHelper
             IsTargetCasting = b8;
         }
 
-        // R1 (IsTargetLongRangeCaster), R2 (LogoffMobSeen), and R3 (IsCurrentlySkinning) are
-        // the only fields packed here so far -- R4-R8 and the G/B bytes are still reserved for
+        // R1 (IsTargetLongRangeCaster), R2 (LogoffMobSeen), R3 (IsCurrentlySkinning), and
+        // R4 (the 4th "which supported class" bit, Warlock -- see PlayerClass) are the
+        // fields packed here so far -- R5-R8 and the G/B bytes are still reserved for
         // future class-agnostic flags (see GetMultiBoolTwo() in WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
-            DecodeByte(color.R, out var r1, out var r2, out var r3, out _, out _, out _, out _, out _);
+            DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out _, out _, out _, out _);
 
             IsTargetLongRangeCaster = r1;
             LogoffMobSeen = r2;
             IsCurrentlySkinning = r3;
+
+            // Overrides PlayerClass (set to null by UpdateMultiBoolOne, since none of its
+            // three class bits will be set for a Warlock) rather than duplicating the
+            // "exactly one true" logic across two bytes -- see the comment on PlayerClass.
+            if (r4)
+            {
+                PlayerClass = WowCombatConfiguration.Warlock;
+            }
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

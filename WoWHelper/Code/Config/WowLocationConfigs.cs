@@ -957,6 +957,28 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 4,
         };
 
+        /*
+/target Young
+/target Duskbat
+/target Mindless
+/target Wretched
+/target Rattlecage
+            */
+        public static readonly WowLocationConfiguration LEVEL_1_TIRISFAL_UNDEAD = new WowLocationConfiguration
+        {
+            Title = "Tirisfal Zombies (Level 1+)",
+            MinimumLevel = 1,
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(44.19f, 66.23f),
+                
+            },
+            EngageMethod = EngagementMethod.Pull,
+            LogoffLevel = 4,
+        };
+
         // Every location config eligible for WowPlayer.ResolveFarmingConfigurationTask's
         // automatic startup selection (matched by player level/zone/waypoint-proximity --
         // see that method). Deliberately an explicit list rather than reflecting over all

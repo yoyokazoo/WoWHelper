@@ -13,5 +13,6 @@ WoWFunctions.lua
 WarriorFunctions.lua
 MageFunctions.lua
 ShamanFunctions.lua
+WarlockFunctions.lua
 UIFunctions.lua
 YoyokazooUI.lua

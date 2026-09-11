@@ -17,6 +17,7 @@ namespace WoWHelper.Code.Gameplay
         Warrior = 0,
         Mage = 1,
         Shaman = 2,
+        Warlock = 3,
     }
 
     public class WowFarmingConfiguration

@@ -199,9 +199,10 @@ end
 
 -- CanChargeTarget() and CanShootTarget() moved to WarriorFunctions.lua.
 
--- Shared between Mage and Shaman (branches internally below), so it stays
--- here rather than moving to a single class file -- see the note atop
--- MageFunctions.lua/ShamanFunctions.lua about why it isn't split further.
+-- Shared between Mage, Shaman, and Warlock (branches internally below), so
+-- it stays here rather than moving to a single class file -- see the note
+-- atop MageFunctions.lua/ShamanFunctions.lua/WarlockFunctions.lua about why
+-- it isn't split further.
 function CanSpellcastPullTarget()
     if not ShouldWeAttackTarget() then
         return false
@@ -213,6 +214,8 @@ function CanSpellcastPullTarget()
 
     if classFile == "SHAMAN" then
         spellId = 403 -- Lightning Bolt (Rank 1)
+    elseif classFile == "WARLOCK" then
+        spellId = 686 -- Shadow Bolt (Rank 1), known from level 1 -- TODO: verify in-game
     else
         -- Mage logic
         -- Frostbolt (Rank 1) learned at level 4
@@ -762,10 +765,12 @@ function IsGlobalCooldownCooledDown()
     --
     -- Confirmed via testing: Shaman (Lightning Bolt Rank 1, same spell ID CanSpellcastPullTarget()
     -- already uses above). NOT yet confirmed via testing: Mage (Fireball Rank 1, known from
-    -- level 1 per CanSpellcastPullTarget()'s own comment, no cooldown beyond GCD) and Warrior
+    -- level 1 per CanSpellcastPullTarget()'s own comment, no cooldown beyond GCD), Warrior
     -- (Heroic Strike, known from level 1, rage-gated with no cooldown beyond GCD -- already
-    -- referenced by name in WarriorFunctions.lua). Verify these the same way Shaman was (debug
-    -- log around a cast, watch GCDCooledDown flip false->true) before trusting them.
+    -- referenced by name in WarriorFunctions.lua), and Warlock (Shadow Bolt Rank 1, same spell ID
+    -- CanSpellcastPullTarget() uses above, known from level 1, no cooldown beyond GCD). Verify
+    -- these the same way Shaman was (debug log around a cast, watch GCDCooledDown flip
+    -- false->true) before trusting them.
     local probeSpell = GCD_SPELL_ID
     if classFile == "SHAMAN" then
         probeSpell = 403 -- Lightning Bolt (Rank 1)
@@ -773,6 +778,8 @@ function IsGlobalCooldownCooledDown()
         probeSpell = 133 -- Fireball (Rank 1)
     elseif classFile == "WARRIOR" then
         probeSpell = "Heroic Strike" -- UNTESTED
+    elseif classFile == "WARLOCK" then
+        probeSpell = 686 -- Shadow Bolt (Rank 1) -- UNTESTED
     end
 
     local start, duration = GetSpellCooldown(probeSpell)
@@ -906,15 +913,15 @@ end
 -- Class-specific fields (Battle Shout, Rend, Frost Armor, Rockbiter, etc.)
 -- moved to GetClassBoolOne/Two (see the dispatchers further down and
 -- GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
--- ShamanFunctions.lua) -- those are used instead of these now. All
--- class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G are both fully
--- packed, and the B byte carries HasRecentTargetEvade() (b1), which of the
--- three supported classes the player is playing (b2 Warrior, b3 Mage,
--- b4 Shaman -- exactly one true, used to auto-detect the player's class
--- instead of it being hardcoded), and
+-- ShamanFunctions.lua/WarlockFunctions.lua) -- those are used instead of
+-- these now. All class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G
+-- are both fully packed, and the B byte carries HasRecentTargetEvade() (b1),
+-- three of the four supported classes the player might be playing (b2
+-- Warrior, b3 Mage, b4 Shaman -- the 4th, Warlock, didn't fit once this byte
+-- was already full, so it lives in GetMultiBoolTwo's R4 instead -- see
+-- there), and
 -- IsPlayerPoisoned/IsPlayerDiseased/IsTargetNatureImmune/IsTargetCasting
--- (b5-b8), which fully packs the byte. MultiBoolTwo is left fully reserved
--- as clean room to grow into, instead of needing a 3rd pixel.
+-- (b5-b8), which fully packs the byte.
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = AreWeLowOnHealthPotions()
@@ -955,15 +962,20 @@ function GetMultiBoolOne()
     return rByte/255.0, gByte/255.0, bByte/255.0
 end
 
--- R1 (IsTargetLongRangeCaster), R2 (IsLogoffMobSeen), and R3
--- (IsCurrentlySkinning) are the flags packed in here so far -- R4-R8 and the
--- G/B bytes are still fully reserved for future class-agnostic flags.
+-- R1 (IsTargetLongRangeCaster), R2 (IsLogoffMobSeen), R3
+-- (IsCurrentlySkinning), and R4 (the 4th "which supported class" bit,
+-- Warlock -- see GetMultiBoolOne's B-byte comment above for why it landed
+-- here instead of there) are the flags packed in here so far -- R5-R8 and
+-- the G/B bytes are still fully reserved for future class-agnostic flags.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()
     local boolR3 = IsCurrentlySkinning()
 
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, false, false, false, false, false)
+    local _, classFile = UnitClass("player")
+    local boolR4 = (classFile == "WARLOCK")
+
+    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, false, false, false, false)
 
     return rByte/255.0, 0, 0
 end
@@ -990,7 +1002,8 @@ end
 -- class once and delegates to that class's own populate function (see
 -- GetWarriorClassBoolOne/Two, GetMageClassBoolOne/Two, and
 -- GetShamanClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
--- ShamanFunctions.lua). Unsupported/unrecognized classes get all-zero.
+-- ShamanFunctions.lua/WarlockFunctions.lua). Unsupported/unrecognized
+-- classes get all-zero.
 ------------------------------------------------------------
 function GetClassBoolOne()
     local _, classFile = UnitClass("player")
@@ -1001,6 +1014,8 @@ function GetClassBoolOne()
         return GetMageClassBoolOne()
     elseif classFile == "SHAMAN" then
         return GetShamanClassBoolOne()
+    elseif classFile == "WARLOCK" then
+        return GetWarlockClassBoolOne()
     end
 
     return 0, 0, 0
@@ -1015,6 +1030,8 @@ function GetClassBoolTwo()
         return GetMageClassBoolTwo()
     elseif classFile == "SHAMAN" then
         return GetShamanClassBoolTwo()
+    elseif classFile == "WARLOCK" then
+        return GetWarlockClassBoolTwo()
     end
 
     return 0, 0, 0
@@ -1029,6 +1046,8 @@ function GetClassIntOne()
         return GetMageClassIntOne()
     elseif classFile == "SHAMAN" then
         return GetShamanClassIntOne()
+    elseif classFile == "WARLOCK" then
+        return GetWarlockClassIntOne()
     end
 
     return 0, 0, 0

@@ -121,6 +121,12 @@ namespace WoWHelper.Code
 
         #endregion
 
+        #region Warlock
+        // TODO: define Warlock keybinds/macros here once the rotation is designed,
+        // same pattern as the Warrior/Mage/Shaman regions above (a const Keys per
+        // in-game keybind/macro slot, referenced from WowWarlockTasks.cs).
+        #endregion
+
         #region Common
         // Common Input
         // For the sake of sharing tasks, forcing these common keys to be shared
