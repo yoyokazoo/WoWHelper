@@ -94,25 +94,25 @@ namespace WoWHelper
                 // Finally, if we've made it this far, do standard combat actions
                 if (!classState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
                 {
-                    Keyboard.KeyPress(WowInput.WARRIOR_BATTLE_SHOUT_KEY);
+                    await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT_KEY);
                 }
                 else if (classState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
                 {
-                    Keyboard.KeyPress(WowInput.WARRIOR_OVERPOWER_KEY);
+                    await WowInput.PressKey(WowInput.WARRIOR_OVERPOWER_KEY);
                 }
                 else if (WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST)
                 {
-                    Keyboard.KeyPress(WowInput.WARRIOR_EXECUTE_KEY);
+                    await WowInput.PressKey(WowInput.WARRIOR_EXECUTE_KEY);
                 }
                 else if (!classState.TargetHasRend && !WorldState.IsTargetBleedImmune && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
                 {
-                    Keyboard.KeyPress(WowInput.WARRIOR_REND_KEY);
+                    await WowInput.PressKey(WowInput.WARRIOR_REND_KEY);
                 }
                 else if (WorldState.AttackerCount > 1)
                 {
                     if (classState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
                     {
-                        Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+                        await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
                     }
                     else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST))
                     {
@@ -124,12 +124,12 @@ namespace WoWHelper
                 {
                     if (classState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
                     {
-                        Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+                        await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
                     }
                     else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
                     {
                         // Heroic only if we have enough spare rage to bloodthirst right after
-                        Keyboard.KeyPress(WowInput.WARRIOR_HEROIC_STRIKE_KEY);
+                        await WowInput.PressKey(WowInput.WARRIOR_HEROIC_STRIKE_KEY);
                     }
                     // TODO: Actually split out Heroic Strike and cast if we have really surplus rage
                 }
@@ -172,7 +172,7 @@ namespace WoWHelper
 
             if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
-                Keyboard.KeyPress(WowInput.WARRIOR_CHARGE_KEY);
+                await WowInput.PressKey(WowInput.WARRIOR_CHARGE_KEY);
                 return true;
             }
             else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
@@ -188,7 +188,7 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
-            if (AbandonUnreachableEngageTarget())
+            if (await AbandonUnreachableEngageTarget())
             {
                 return false;
             }
@@ -196,14 +196,14 @@ namespace WoWHelper
             if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
                 await TurnABitToTheLeftTask();
-                Keyboard.KeyPress(WowInput.WARRIOR_CHARGE_KEY);
+                await WowInput.PressKey(WowInput.WARRIOR_CHARGE_KEY);
             }
             else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
                 if (!classState.WaitingToShoot)
                 {
                     await TurnABitToTheLeftTask();
-                    Keyboard.KeyPress(WowInput.WARRIOR_SHOOT_MACRO);
+                    await WowInput.PressKey(WowInput.WARRIOR_SHOOT_MACRO);
                 }
             }
 
@@ -281,13 +281,13 @@ namespace WoWHelper
         {
             await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_BERSERKER_RAGE_MACRO);
             await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
             await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
             await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
             await Task.Delay(150);
-            Keyboard.KeyPress(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
 
             return true;
         }

@@ -57,7 +57,7 @@ namespace WoWHelper
             {
                 Mouse.Move(FarmingConfig.ScreenConfiguration.DynamiteAndDummyX, FarmingConfig.ScreenConfiguration.DynamiteAndDummyY);
                 await Task.Delay(50);
-                Keyboard.KeyPress(WowInput.THROW_DYNAMITE);
+                await WowInput.PressKey(WowInput.THROW_DYNAMITE);
                 await Task.Delay(1000);
             }
 
@@ -111,7 +111,7 @@ namespace WoWHelper
                 if (!WorldState.CurrentTargetInCombatWithUs || (WorldState.CurrentTargetInCombatWithUs && WorldState.AttackerCount > 1))
                 {
                     Console.WriteLine($"tooFarAway || invalidTarget || outOfRange || notInLineOfSight, WorldState.CurrentTargetInCombatWithUs {WorldState.CurrentTargetInCombatWithUs}, WorldState.AttackerCount {WorldState.AttackerCount}");
-                    Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
+                    await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO);
 
                     // if it's actually too far away, waiting a bit won't matter
                     // if we have mistargeted something far away, give the attacker a bit of time to hit us before /startattack,
@@ -122,13 +122,13 @@ namespace WoWHelper
 
             if (notInLineOfSight)
             {
-                Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
+                await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO);
             }
 
             if (attackerJustDied || inCombatButNotAutoAttacking || tooFarAway)
             {
                 // /startattack
-                Keyboard.KeyPress(WowInput.START_ATTACK);
+                await WowInput.PressKey(WowInput.START_ATTACK);
             }
 
             return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || targetIsEvading || invalidTarget || outOfRange || notInLineOfSight;
@@ -146,7 +146,7 @@ namespace WoWHelper
         // stamps LastLineOfSightBailoutTime so that pathfinding loop doesn't just immediately
         // re-press find-target and pick the same unreachable mob right back up -- see
         // LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS.
-        public bool AbandonUnreachableEngageTarget()
+        public async Task<bool> AbandonUnreachableEngageTarget()
         {
             if (!WorldState.NotInLineOfSight)
             {
@@ -154,7 +154,7 @@ namespace WoWHelper
             }
 
             Console.WriteLine("Target not in line of sight while trying to engage -- clearing target and suppressing retarget for a bit");
-            Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO);
+            await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO);
             LastLineOfSightBailoutTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             return true;
         }
@@ -164,7 +164,7 @@ namespace WoWHelper
             await Task.Delay(0);
 
             // always kick things off with /startattack
-            Keyboard.KeyPress(WowInput.START_ATTACK);
+            await WowInput.PressKey(WowInput.START_ATTACK);
 
             return true;
         }

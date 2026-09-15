@@ -57,21 +57,21 @@ namespace WoWHelper
 
                     if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.TAB)
                     {
-                        Keyboard.KeyPress(WowInput.TAB_TARGET);
+                        await WowInput.PressKey(WowInput.TAB_TARGET);
                     }
                     else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
                     {
-                        Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
+                        await WowInput.PressKey(WowInput.FIND_TARGET_MACRO);
                     }
                     else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
                     {
                         if (targetChecks % 2 == 0)
                         {
-                            Keyboard.KeyPress(WowInput.TAB_TARGET);
+                            await WowInput.PressKey(WowInput.TAB_TARGET);
                         }
                         else
                         {
-                            Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
+                            await WowInput.PressKey(WowInput.FIND_TARGET_MACRO);
                         }
                     }
 
@@ -81,14 +81,14 @@ namespace WoWHelper
                 if (!CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
                 {
                     LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    Keyboard.KeyPress(WowInput.JUMP);
+                    await WowInput.PressKey(WowInput.JUMP);
                 }
 
                 if (WorldState.IsInCombat)
                 {
                     await EndWalkForwardTask();
                     Console.WriteLine($"Entered combat during pathfinding, clearing target");
-                    Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
+                    await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
 
                     return false;
                 }
@@ -506,9 +506,9 @@ namespace WoWHelper
 
         public async Task<bool> AvoidObstacleByJumping()
         {
-            Keyboard.KeyPress(WowInput.JUMP);
+            await WowInput.PressKey(WowInput.JUMP);
             await Task.Delay(1000);
-            Keyboard.KeyPress(WowInput.JUMP);
+            await WowInput.PressKey(WowInput.JUMP);
 
             return true;
         }

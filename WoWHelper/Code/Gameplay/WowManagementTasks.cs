@@ -279,7 +279,7 @@ namespace WoWHelper
         {
             Console.WriteLine($"Starting logout: {LogoutReason}");
             await Task.Delay(0);
-            Keyboard.KeyPress(WowInput.LOGOUT_MACRO);
+            await WowInput.PressKey(WowInput.LOGOUT_MACRO);
             return true;
         }
 
@@ -349,7 +349,7 @@ namespace WoWHelper
             Mouse.PressButton(Mouse.MouseKeys.Left);
             await Task.Delay(200);
 
-            Keyboard.KeyPress(System.Windows.Forms.Keys.D2);
+            await WowInput.PressKey(System.Windows.Forms.Keys.D2);
             await Task.Delay(200);
 
             Mouse.Move(290, 350);
@@ -357,9 +357,9 @@ namespace WoWHelper
             Mouse.PressButton(Mouse.MouseKeys.Left);
             await Task.Delay(200);
 
-            Keyboard.KeyPress(System.Windows.Forms.Keys.D1);
+            await WowInput.PressKey(System.Windows.Forms.Keys.D1);
             await Task.Delay(200);
-            Keyboard.KeyPress(System.Windows.Forms.Keys.D0);
+            await WowInput.PressKey(System.Windows.Forms.Keys.D0);
             await Task.Delay(200);
 
             return true;

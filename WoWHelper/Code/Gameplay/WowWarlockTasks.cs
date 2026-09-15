@@ -18,7 +18,7 @@ namespace WoWHelper
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
-                Keyboard.KeyPress(WowInput.EAT_FOOD);
+                await WowInput.PressKey(WowInput.EAT_FOOD);
                 await Task.Delay(200);
             }
 
@@ -53,7 +53,7 @@ namespace WoWHelper
                 if (classState.ShouldSummonPet)
                 {
                     await WaitForGlobalCooldownTask();
-                    Keyboard.KeyPress(WowInput.WARLOCK_SUMMON_PET);
+                    await WowInput.PressKey(WowInput.WARLOCK_SUMMON_PET);
                     buffed = true;
                 }
 
@@ -80,7 +80,7 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
-            if (AbandonUnreachableEngageTarget())
+            if (await AbandonUnreachableEngageTarget())
             {
                 return false;
             }
@@ -89,7 +89,7 @@ namespace WoWHelper
             if (!WorldState.IsCurrentlyCasting && !WorldState.IsInCombat)
             {
                 await TurnToFaceTargetMarkerTask();
-                Keyboard.KeyPress(WowInput.WARLOCK_SHADOW_BOLT);
+                await WowInput.PressKey(WowInput.WARLOCK_SHADOW_BOLT);
                 await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
                 await UpdateWorldStateAsync();
             }
@@ -130,7 +130,7 @@ namespace WoWHelper
 
                 if (WarlockShouldCastCorruption(classState))
                 {
-                    Keyboard.KeyPress(WowInput.WARLOCK_CORRUPTION);
+                    await WowInput.PressKey(WowInput.WARLOCK_CORRUPTION);
                     CorruptionCastTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     continue;
                 }
@@ -260,7 +260,7 @@ namespace WoWHelper
 
                 // Figure out what to do here.  War stomp? Magma Totem? War stomp -> ghost wolf -> run to safety?
                 // Stoneskin totem for now
-                //Keyboard.KeyPress(WowInput.THROW_DYNAMITE);
+                //await WowInput.PressKey(WowInput.THROW_DYNAMITE);
                 await WaitForGlobalCooldownTask();
                 await ThrowDynamiteTask(forceThrow: true);
 
