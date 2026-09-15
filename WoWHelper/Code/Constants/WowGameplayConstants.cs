@@ -41,6 +41,23 @@
         public const int DIAMOND_FLASK_COOLDOWN_MILLIS = 6 * 60 * 1000;
         public const int BERSERKER_RAGE_COOLDOWN_MILLIS = 30 * 1000;
 
+        // Warlock
+
+        // Below this, a mob is expected to die from melee/Shadow Bolt damage before a
+        // freshly-applied DoT would tick for much -- not worth the GCD unless one of the
+        // WarlockShouldCastImmolate/Corruption overrides below applies (multiple attackers,
+        // or we're low enough to want the mob dead by any means).
+        public const int WARLOCK_DOT_TARGET_HP_THRESHOLD = 25;
+
+        // The DoT debuff icon/CLASS_BOOL pixel takes a little while to actually show up
+        // after casting, so WowWarlockClassState.ShouldCastImmolate/ShouldCastCorruption
+        // can still read true for a few ticks after the cast already landed -- without this,
+        // that reads as "no DoT yet" and re-casts the same DoT repeatedly. Suppress
+        // re-casting a given DoT for this long after our own last cast of it, regardless of
+        // what the (possibly stale) decoded bool says.
+        // 2 seconds to account for pushback and time for the buff to update
+        public const int WARLOCK_DOT_RECAST_SUPPRESS_MILLIS = 4000;
+
         // Shared
         public const int DYNAMITE_LEVEL = 6;
         public const int PETRIFICATION_FLASK_LEVEL = 50;

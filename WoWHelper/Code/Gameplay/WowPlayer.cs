@@ -37,6 +37,11 @@ namespace WoWHelper
         public long HealthPotionTime { get; private set; }
         public long HealingTrinketTime { get; private set; } // and Diamond Flask
         public long BerserkerRageTime { get; private set; }
+        // Warlock DoTs -- see WarlockShouldCastImmolate/WarlockShouldCastCorruption in
+        // WowWarlockTasks.cs, which suppress re-casting a DoT within
+        // WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS of these.
+        public long ImmolateCastTime { get; private set; }
+        public long CorruptionCastTime { get; private set; }
         public long NextUpdateTime { get; private set; }
 
         public bool FullBagsAlertSent { get; private set; }

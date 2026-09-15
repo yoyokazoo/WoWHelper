@@ -915,12 +915,44 @@ namespace WoWHelper.Code.WorldState
         };
 
         /*
+/target Decrepit
+/target Greater
+/target Rotting
+/target Ravaged
+        */
+        public static readonly WowLocationConfiguration LEVEL_7_TIRISFAL_ZOMBIES = new WowLocationConfiguration
+        {
+            Title = "Tirisfal Zombies (Level 7+)",
+            MinimumLevel = 6,
+            Zone = WowZone.TirisfalGlades,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(55.43f, 51.36f),
+                new Vector2(54.76f, 50.26f),
+                new Vector2(53.97f, 49.84f),
+                new Vector2(53.69f, 51.11f),
+                new Vector2(53.01f, 50.36f),
+                new Vector2(52.21f, 49.69f),
+                new Vector2(51.10f, 51.23f),
+                new Vector2(51.52f, 53.00f),
+                new Vector2(51.81f, 53.65f),
+                new Vector2(53.19f, 52.08f),
+                new Vector2(54.55f, 52.90f),
+                new Vector2(56.45f, 53.12f),
+                new Vector2(56.34f, 51.48f),
+            },
+            EngageMethod = EngagementMethod.Pull,
+            LogoffLevel = 10,
+        };
+
+        /*
 /target Mangy
 /target Ragged
         */
         public static readonly WowLocationConfiguration LEVEL_4_TIRISFAL_ANIMALS = new WowLocationConfiguration
         {
-            Title = "Tirisfal Bats and Wolves (Level 1+)",
+            Title = "Tirisfal Bats and Wolves (Level 4+)",
             MinimumLevel = 4,
             Zone = WowZone.TirisfalGlades,
 
@@ -1045,6 +1077,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS,
             LEVEL_11_DUROTAR_COAST_WAYPOINTS,
             LEVEL_9_DUROTAR_SKULL_ROCK_COAST_WAYPOINTS,
+            LEVEL_7_TIRISFAL_ZOMBIES,
             LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
             LEVEL_4_DUROTAR_IMPS,
             LEVEL_10_MULGORE_MIXED_BEASTS,

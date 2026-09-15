@@ -107,7 +107,7 @@ namespace WoWHelper
             bool isFacingLongRangeCaster = false;
             bool hasWalkedTowardsLongRangeCaster = false;
 
-            await StartAttackTask();
+            bool startedWanding = false;
 
             do
             {
@@ -115,23 +115,23 @@ namespace WoWHelper
 
                 await EveryWorldStateUpdateTasks();
 
-                await WaitForGlobalCooldownTask();
-
                 if (classState.ShouldCastDemonArmor)
                 {
                     await WowInput.PressKeyWithShift(WowInput.WARLOCK_SHIFT_DEMON_ARMOR);
                     continue;
                 }
 
-                if (classState.ShouldCastImmolate)
+                if (WarlockShouldCastImmolate(classState))
                 {
                     await WowInput.PressKeyWithShift(WowInput.WARLOCK_SHIFT_IMMOLATE);
+                    ImmolateCastTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     continue;
                 }
 
-                if (classState.ShouldCastCorruption)
+                if (WarlockShouldCastCorruption(classState))
                 {
                     Keyboard.KeyPress(WowInput.WARLOCK_CORRUPTION);
+                    CorruptionCastTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     continue;
                 }
 
@@ -139,6 +139,11 @@ namespace WoWHelper
                 if (!WorldState.IsTargetLongRangeCaster && await MeleeMakeSureWeAreAttackingEnemyTask())
                 {
                     continue;
+                }
+
+                if (!startedWanding)
+                {
+                    await StartAttackTask();
                 }
 
                 if ((WorldState.IsTargetLongRangeCaster && !isFacingLongRangeCaster) ||
@@ -191,6 +196,54 @@ namespace WoWHelper
         public bool WarlockCanEngageTarget(WowWarlockClassState classState)
         {
             return classState.CanSpellcastPullTarget;
+        }
+
+        // Shared gate for both DoTs below: only worth spending a GCD on a fresh DoT if the
+        // mob isn't already about to die from direct damage
+        // (WARLOCK_DOT_TARGET_HP_THRESHOLD) -- unless we're fighting more than one
+        // attacker (the extra sustained damage helps) or we're low enough on HP that
+        // ending the fight by any means available is the priority.
+        public bool WarlockShouldConsiderCastingDot()
+        {
+            return WorldState.TargetHpPercent > WowGameplayConstants.WARLOCK_DOT_TARGET_HP_THRESHOLD
+                //|| WorldState.AttackerCount > 1
+                || WorldState.PlayerHpPercent <= WowGameplayConstants.HEALING_POTION_HP_THRESHOLD;
+        }
+
+        // classState.ShouldCastImmolate goes true the instant Immolate is cast (it just
+        // checks TargetHasDebuffSpellName("Immolate")), but the debuff icon/pixel takes a
+        // little while to actually show up, so without a cooldown of our own here the combat
+        // loop re-presses Immolate several times before the first cast is ever reflected.
+        // ImmolateCastTime is set right after we press the key (see WarlockCombatLoopTask).
+        public bool WarlockShouldCastImmolate(WowWarlockClassState classState)
+        {
+            if (!WarlockShouldConsiderCastingDot())
+            {
+                return false;
+            }
+
+            if (WowPlayer.CurrentTimeInsideDuration(ImmolateCastTime, WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS))
+            {
+                return false;
+            }
+
+            return classState.ShouldCastImmolate;
+        }
+
+        // Same double-cast problem/fix as WarlockShouldCastImmolate above, for Corruption.
+        public bool WarlockShouldCastCorruption(WowWarlockClassState classState)
+        {
+            if (!WarlockShouldConsiderCastingDot())
+            {
+                return false;
+            }
+
+            if (WowPlayer.CurrentTimeInsideDuration(CorruptionCastTime, WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS))
+            {
+                return false;
+            }
+
+            return classState.ShouldCastCorruption;
         }
 
         public async Task<bool> WarlockEmergencyTask()
