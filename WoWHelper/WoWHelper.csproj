@@ -147,7 +147,6 @@
     <Compile Include="Code\Config\WowLocationConfigs.cs" />
     <Compile Include="Code\Gameplay\WowCommonCombatTasks.cs" />
     <Compile Include="Code\Gameplay\WowConfigResolutionTasks.cs" />
-    <Compile Include="Code\Gameplay\WowMageTasks.cs" />
     <Compile Include="Code\Gameplay\WowManagementTasks.cs" />
     <Compile Include="Code\Gameplay\WowMovementTasks.cs" />
     <Compile Include="Code\Gameplay\WowPathfinding.cs" />
@@ -162,7 +161,6 @@
     <Compile Include="Code\Gameplay\WowWorldState.cs" />
     <Compile Include="Code\Gameplay\WowClassState.cs" />
     <Compile Include="Code\Gameplay\WowWarriorClassState.cs" />
-    <Compile Include="Code\Gameplay\WowMageClassState.cs" />
     <Compile Include="Code\Gameplay\WowShamanClassState.cs" />
     <Compile Include="Code\Gameplay\WowWarlockClassState.cs" />
     <Compile Include="Code\Shared\PathSubdivision.cs" />
@@ -202,9 +200,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Lua Addon\WarriorFunctions.lua">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Lua Addon\MageFunctions.lua">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Lua Addon\ShamanFunctions.lua">

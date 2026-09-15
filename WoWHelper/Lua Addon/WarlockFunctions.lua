@@ -6,8 +6,8 @@
 -- the dispatchers in WoWFunctions.lua and GetWarlockClassBoolOne/Two below).
 --
 -- Note: CanSpellcastPullTarget() stays in WoWFunctions.lua -- it's shared
--- between Mage/Shaman/Warlock (branches internally on class); giving it the
--- same name here would collide (last file loaded in the .toc silently wins,
+-- between Shaman/Warlock (branches internally on class); giving it the same
+-- name here would collide (last file loaded in the .toc silently wins,
 -- since addon globals are one flat namespace).
 ------------------------------------------------------------
 

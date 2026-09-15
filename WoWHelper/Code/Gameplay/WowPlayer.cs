@@ -102,7 +102,6 @@ namespace WoWHelper
             switch (combatConfiguration)
             {
                 case WowCombatConfiguration.Warrior: return new WowWarriorClassState();
-                case WowCombatConfiguration.Mage: return new WowMageClassState();
                 case WowCombatConfiguration.Shaman: return new WowShamanClassState();
                 case WowCombatConfiguration.Warlock: return new WowWarlockClassState();
                 default: throw new System.NotImplementedException(
@@ -437,14 +436,15 @@ namespace WoWHelper
                 // TODO: if on login screen all other values will be messed up
                 if (!WorldState.OnLoginScreen && WorldState.IsInCombat)
                 {
-                    // Mage/Shaman always pull with a spell regardless of FarmingConfig.EngageMethod
+                    // Shaman always pulls with a spell regardless of FarmingConfig.EngageMethod
                     // (Charge/Pull only distinguishes Warrior's two options -- see the enum's own
                     // comment on WowLocationConfiguration.cs), so checking CombatConfiguration here
-                    // instead of EngageMethod covers both classes without needing to know which
-                    // location we're on.
+                    // instead of EngageMethod covers it without needing to know which location
+                    // we're on. (Warlock also always pulls with a spell but isn't checked here --
+                    // pre-existing gap from before Warlock support was added, not touched by the
+                    // Mage removal that dropped the Mage half of this check.)
                     if (CurrentPlayerState == PlayerState.CONTINUE_TO_TRY_TO_ENGAGE &&
-                        (FarmingConfig.CombatConfiguration == WowCombatConfiguration.Mage ||
-                         FarmingConfig.CombatConfiguration == WowCombatConfiguration.Shaman) &&
+                        FarmingConfig.CombatConfiguration == WowCombatConfiguration.Shaman &&
                         WorldState.ResourcePercent < 100)
                     {
                         // We likely just cast a spell that hasn't yet hit the target.  Wait a little bit so it does,

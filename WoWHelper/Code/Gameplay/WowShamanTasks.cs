@@ -316,7 +316,7 @@ namespace WoWHelper
         }
 
         // Replaces the old shared CanEngageTarget() for the Shaman case --
-        // CanSpellcastPullTarget is shared with Mage under the same name but
+        // CanSpellcastPullTarget is shared with Warlock under the same name but
         // each class gets its own ClassState type, so each also gets its own
         // thin CanEngageTarget wrapper. Shaman always pulls with a spell
         // regardless of FarmingConfig.EngageMethod (Charge/Pull only matters for

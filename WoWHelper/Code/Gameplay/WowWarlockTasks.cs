@@ -10,7 +10,7 @@ namespace WoWHelper
     public partial class WowPlayer
     {
         // Warlock rotation -- in progress. Mirrors the six dispatch entry
-        // points WowWarriorTasks/WowMageTasks/WowShamanTasks each provide
+        // points WowWarriorTasks/WowShamanTasks each provide
         // (see WowPlayerCombatConfig.cs's six switches). Modeled closely on
         // WowShamanTasks.cs since Shaman is the closest existing
         // ranged-pull/melee-sustain pattern to follow.

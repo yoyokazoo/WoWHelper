@@ -40,46 +40,6 @@ namespace WoWHelper.Code
         public const Keys WARRIOR_SHIFT_EAT_FOOD_KEY = Keys.D0;
         #endregion
 
-        #region Mage
-        // Mage Input
-
-        public const Keys MAGE_WAND = Keys.D1;
-        public const Keys MAGE_SHIFT_1 = Keys.D1;
-
-        public const Keys MAGE_FROSTBOLT = Keys.D2;
-        public const Keys MAGE_SHIFT_2 = Keys.D2;
-
-        public const Keys MAGE_FIREBLAST = Keys.D3;
-        public const Keys MAGE_SHIFT_CONE_OF_COLD = Keys.D3;
-
-        public const Keys MAGE_ARCANE_EXPLOSION = Keys.D4;
-        public const Keys MAGE_SHIFT_4 = Keys.D4;
-
-        public const Keys MAGE_5 = Keys.D5;
-        public const Keys MAGE_SHIFT_5 = Keys.D5;
-
-        /*
-#showtooltip [mod:shift] Arcane Intellect; Frost Armor
-/cast [nomod] Frost Armor
-/stopmacro [nomod]
-/cleartarget
-/cast Arcane Intellect
-        */
-        public const Keys MAGE_FROST_ARMOR = Keys.D6;
-        public const Keys MAGE_SHIFT_ARCANE_INTELLECT = Keys.D6;
-
-        /*
-#showtooltip [mod:shift] Conjure Food; Conjure Water
-/cast [nomod] Conjure Water
-/cast [mod:shift] Conjure Food
-        */
-        public const Keys MAGE_CONJURE_WATER = Keys.D7;
-        public const Keys MAGE_SHIFT_CONJURE_FOOD = Keys.D7;
-
-
-
-        #endregion
-
         #region Shaman
 
         /*
@@ -127,7 +87,7 @@ namespace WoWHelper.Code
 
         #region Warlock
         // TODO: define Warlock keybinds/macros here once the rotation is designed,
-        // same pattern as the Warrior/Mage/Shaman regions above (a const Keys per
+        // same pattern as the Warrior/Shaman regions above (a const Keys per
         // in-game keybind/macro slot, referenced from WowWarlockTasks.cs).
 
         /*

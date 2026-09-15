@@ -181,7 +181,7 @@ namespace WoWHelper
                 LogoutReason = $"Low on Health Potions";
             }
             // EngageMethod.Pull now covers both Warrior's ranged bow/gun pull (which needs
-            // ammo) and Mage/Shaman's spell pull (which never does -- and would otherwise
+            // ammo) and Shaman's spell pull (which never does -- and would otherwise
             // always read as "low on ammo", since a caster's ammo slot is just empty, not
             // merely low). Only Warrior can actually run out of ammo, so gate on class too.
             else if (WorldState.LowOnAmmo &&

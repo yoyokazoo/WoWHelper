@@ -46,15 +46,15 @@ namespace WoWHelper.Code.WorldState
         }
 
         // Only distinguishes the one thing that actually varies by class: Warriors either
-        // charge in or pull at range (bow/gun); Mages and Shamans always pull with a spell
-        // regardless of what this says (MageCanEngageTarget/ShamanCanEngageTarget ignore
-        // it entirely -- see WowMageTasks.cs/WowShamanTasks.cs). Used to have a third,
+        // charge in or pull at range (bow/gun); Shaman/Warlock always pull with a spell
+        // regardless of what this says (ShamanCanEngageTarget/WarlockCanEngageTarget ignore
+        // it entirely -- see WowShamanTasks.cs/WowWarlockTasks.cs). Used to have a third,
         // redundant Spellcast value alongside Shoot; collapsed since both meant "not a
         // melee gap-closer" and only Warrior's dispatch ever cared about the distinction.
         public enum EngagementMethod
         {
             Charge, // melee gap-closer (Warrior only)
-            Pull // shoot bow/gun (Warrior) or cast a pull spell -- frostbolt, lightning bolt, etc. (Mage/Shaman)
+            Pull // shoot bow/gun (Warrior) or cast a pull spell -- lightning bolt, shadow bolt, etc. (Shaman/Warlock)
         }
 
         // Human-readable name, including the minimum level, e.g. "Durotar Imps (Level 4+)".

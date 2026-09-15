@@ -61,11 +61,13 @@ namespace WoWHelper
         public bool IsTargetBleedImmune { get; private set; }
         public bool IsTargetFearCaster { get; private set; }
 
-        // Which of the four bot-supported classes the player is playing, decoded from
-        // MultiBoolOne's B byte (b2/b3/b4 -- see GetMultiBoolOne() in WoWFunctions.lua)
-        // for Warrior/Mage/Shaman, plus MultiBoolTwo's R4 (see UpdateMultiBoolTwo below)
-        // for Warlock -- that byte was already fully packed (b1-b8) by the time Warlock
+        // Which of the three bot-supported classes the player is playing, decoded from
+        // MultiBoolOne's B byte (b2/b4 -- see GetMultiBoolOne() in WoWFunctions.lua) for
+        // Warrior/Shaman, plus MultiBoolTwo's R4 (see UpdateMultiBoolTwo below) for
+        // Warlock -- that byte was already fully packed (b1-b8) by the time Warlock
         // support was added, so its bit lives in MultiBoolTwo's reserved space instead.
+        // (b3 is reserved/unused -- previously Mage, removed along with Mage support; not
+        // reused, to avoid confusing anything that might expect the old bit meaning.)
         // Null if none of those bits are set -- an unsupported class, or the addon hasn't
         // rendered a real row yet (e.g. still on the login screen). Reuses
         // WowCombatConfiguration rather than a separate "player class" enum since the two
@@ -234,15 +236,11 @@ namespace WoWHelper
             TargetRecentlyEvaded = b1;
 
             // Exactly one of these should be true once the addon is loaded and the
-            // player is one of the three bot-supported classes -- see comment on
-            // PlayerClass.
+            // player is one of the two classes this byte covers -- see comment on
+            // PlayerClass. (b3 is reserved/unused -- previously Mage.)
             if (b2)
             {
                 PlayerClass = WowCombatConfiguration.Warrior;
-            }
-            else if (b3)
-            {
-                PlayerClass = WowCombatConfiguration.Mage;
             }
             else if (b4)
             {

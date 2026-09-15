@@ -1,4 +1,4 @@
-﻿using System.Runtime.Remoting.Messaging;
+using System.Runtime.Remoting.Messaging;
 using System.Threading.Tasks;
 using WoWHelper.Code.WorldState;
 
@@ -30,7 +30,6 @@ namespace WoWHelper
             switch (FarmingConfig.CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorStartBattleReadyRecoverTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Mage: return await MageStartBattleReadyRecoverTask((WowMageClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask((WowShamanClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockStartBattleReadyRecoverTask((WowWarlockClassState)ClassState);
                 default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(StartBattleReadyTask)));
@@ -42,7 +41,6 @@ namespace WoWHelper
             switch (FarmingConfig.CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorWaitUntilBattleReadyTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Mage: return await MageWaitUntilBattleReadyTask((WowMageClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanWaitUntilBattleReadyTask((WowShamanClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockWaitUntilBattleReadyTask((WowWarlockClassState)ClassState);
                 default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(WaitUntilBattleReadyTask)));
@@ -54,7 +52,6 @@ namespace WoWHelper
             switch (FarmingConfig.CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorKickOffEngageTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Mage: return await MageKickOffEngageTask((WowMageClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanKickOffEngageTask((WowShamanClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockKickOffEngageTask((WowWarlockClassState)ClassState);
                 default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(StartEngageTask)));
@@ -66,7 +63,6 @@ namespace WoWHelper
             switch (FarmingConfig.CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorFaceCorrectDirectionToEngageTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Mage: return await MageFaceCorrectDirectionToEngageTask((WowMageClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanFaceCorrectDirectionToEngageTask((WowShamanClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockFaceCorrectDirectionToEngageTask((WowWarlockClassState)ClassState);
                 default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(WaitUntilEngageTask)));
@@ -78,15 +74,14 @@ namespace WoWHelper
             switch (FarmingConfig.CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorCombatLoopTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Mage: return await MageCombatLoopTask((WowMageClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanCombatLoopTask((WowShamanClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockCombatLoopTask((WowWarlockClassState)ClassState);
                 default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(CombatLoopTask)));
             }
         }
 
-        // The real per-class logic lives in WarriorCanEngageTarget/MageCanEngageTarget/
-        // ShamanCanEngageTarget (each in its own Wow*Tasks.cs, called there with
+        // The real per-class logic lives in WarriorCanEngageTarget/ShamanCanEngageTarget/
+        // WarlockCanEngageTarget (each in its own Wow*Tasks.cs, called there with
         // that class's own typed ClassState directly -- no dispatch needed since
         // the caller already knows its class). This thin wrapper exists only for
         // genuinely class-agnostic callers, like WowMovementTasks.cs's
@@ -97,7 +92,6 @@ namespace WoWHelper
             switch (FarmingConfig.CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return WarriorCanEngageTarget((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Mage: return MageCanEngageTarget((WowMageClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return ShamanCanEngageTarget((WowShamanClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Warlock: return WarlockCanEngageTarget((WowWarlockClassState)ClassState);
                 default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(CanEngageTarget)));
