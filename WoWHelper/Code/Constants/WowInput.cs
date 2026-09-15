@@ -11,12 +11,19 @@ namespace WoWHelper.Code
 
         #region Warrior
         // Warrior Input
-        //public const Keys WARRIOR_FIND_TARGET_MACRO = Keys.D1;
+
+        /*
+         * 2 Pull
+#showtooltip [mod:shift] Shoot; Charge
+/cast [nomod] Charge
+/cast [mod:shift] Shoot
+        */
         public const Keys WARRIOR_CHARGE_KEY = Keys.D2;
+        public const Keys WARRIOR_SHIFT_SHOOT = Keys.D2;
+
+
         public const Keys WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO = Keys.D3;
         public const Keys WARRIOR_HEROIC_STRIKE_KEY = Keys.D4;
-        //public const Keys WARRIOR_DYNAMITE_KEY = Keys.D5;
-        //public const Keys WARRIOR_HEALING_POTION_KEY = Keys.D6;
         public const Keys WARRIOR_BATTLE_SHOUT_KEY = Keys.D7;
         public const Keys WARRIOR_SHOOT_MACRO = Keys.D8;
         public const Keys WARRIOR_OVERPOWER_KEY = Keys.D9;
@@ -26,26 +33,15 @@ namespace WoWHelper.Code
 
         public const Keys WARRIOR_SHIFT_RETALIATION_KEY = Keys.D1;
         public const Keys WARRIOR_SHIFT_BERSERKER_RAGE_MACRO = Keys.D2;
-        // Not currently pressed anywhere -- Whirlwind's cooldown used to be tracked
-        // (WowWarriorClassState.WhirlwindCooledDown) but nothing ever consumed it, so both
-        // were removed. Re-add if Whirlwind gets wired into the multi-attacker rotation.
-        //public const Keys WARRIOR_SHIFT_WHIRLWIND_MACRO = Keys.D3;
         public const Keys WARRIOR_SHIFT_CLEAVE_MACRO = Keys.D4;
-        //public const Keys WARRIOR_SHIFT_LOGOUT_MACRO = Keys.D5;
-        // Not currently pressed anywhere -- see WARRIOR_SHIFT_WHIRLWIND_MACRO above.
-        //public const Keys WARRIOR_SHIFT_SHIELD_WALL = Keys.D6;
         public const Keys WARRIOR_SHIFT_HEALING_TRINKET = Keys.D7;
-        //public const Keys WARRIOR_SHIFT_TARGET_DUMMY = Keys.D8;
-        //public const Keys WARRIOR_SHIFT_PETRIFICATION_FLASK = Keys.D9;
         public const Keys WARRIOR_SHIFT_EAT_FOOD_KEY = Keys.D0;
         #endregion
 
         #region Shaman
 
         /*
-         * 2 Bolt (pull). Rank 1 does exactly as much damage as top rank against a
-         * nature-immune target -- zero -- so pull with Rank 1 in that case to avoid
-         * wasting mana on a full-rank cast that can't land any damage either way.
+         * 2 Bolt
 #showtooltip [mod:shift] Lightning Bolt(Rank 1); Lightning Bolt
 /cast [nomod] Lightning Bolt
 /cast [mod:shift] Lightning Bolt(Rank 1)
@@ -203,6 +199,12 @@ namespace WoWHelper.Code
         #endregion
 
         #region Shift/Alt Handling
+
+        public static async Task PressKey(Keys key)
+        {
+            Keyboard.KeyPress(key);
+            await Task.Delay(0);
+        }
 
         // For when we exit the program with ESC, make sure we don't have any lingering keys pressed down
         public static Keys LatestShiftKey;

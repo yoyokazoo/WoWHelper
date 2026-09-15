@@ -177,7 +177,7 @@ namespace WoWHelper
             }
             else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
-                Keyboard.KeyPress(WowInput.WARRIOR_SHOOT_MACRO);
+                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_SHOOT);
                 return true;
             }
 

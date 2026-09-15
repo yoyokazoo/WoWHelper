@@ -990,6 +990,10 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 4,
         };
 
+        /*
+/target Mottled
+/target Scorpid
+        */
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
         {
             Title = "Durotar Boars and Scorpions (Level 1+)",
@@ -1008,8 +1012,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.29f, 62.22f),
                 new Vector2(45.49f, 64.54f),
             },
-            EngageMethod = EngagementMethod.Pull,
-            TooManyAttackersThreshold = 2,
+            EngageMethod = EngagementMethod.Charge,
             LogoffLevel = 4,
         };
 
