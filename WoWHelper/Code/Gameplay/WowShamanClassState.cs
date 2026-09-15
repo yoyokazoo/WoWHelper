@@ -15,12 +15,18 @@ namespace WoWHelper
         public bool CanCurePoison { get; private set; }
         public bool CanCureDisease { get; private set; }
 
-        // Decoded from ClassBoolTwo's R byte, b1/b2 (see GetShamanClassBoolTwo() in
+        // Decoded from ClassBoolTwo's R byte, b1/b2/b3 (see GetShamanClassBoolTwo() in
         // ShamanFunctions.lua). IsInEarthShockRange is a pure range check for Earth Shock,
         // independent of CanCastEarthShock's cooldown/usability check above. HasClearcasting
         // is Elemental Focus's proc buff (next two spells cost less mana).
         public bool IsInEarthShockRange { get; private set; }
         public bool HasClearcasting { get; private set; }
+
+        // Frost Shock -- same damage as Earth Shock but doesn't interrupt a cast, so it's
+        // only used as Earth Shock's substitute against nature-immune targets (see
+        // ShamanShouldCastFrostShock in WowShamanTasks.cs). Shares Earth Shock's range and
+        // cooldown category, so IsInEarthShockRange above covers range for both.
+        public bool CanCastFrostShock { get; private set; }
 
         public override void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig)
         {
@@ -39,10 +45,11 @@ namespace WoWHelper
             CanCureDisease = r8;
 
             Color classBoolTwoColor = bmp.GetPixel(screenConfig.ClassBoolTwoPosition.X, screenConfig.ClassBoolTwoPosition.Y);
-            WowWorldState.DecodeByte(classBoolTwoColor.R, out var classBoolTwoR1, out var classBoolTwoR2, out _, out _, out _, out _, out _, out _);
+            WowWorldState.DecodeByte(classBoolTwoColor.R, out var classBoolTwoR1, out var classBoolTwoR2, out var classBoolTwoR3, out _, out _, out _, out _, out _);
 
             IsInEarthShockRange = classBoolTwoR1;
             HasClearcasting = classBoolTwoR2;
+            CanCastFrostShock = classBoolTwoR3;
             // ClassIntOne currently reserved/unused for Shaman.
         }
     }

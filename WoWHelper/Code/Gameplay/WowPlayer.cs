@@ -200,8 +200,7 @@ namespace WoWHelper
         public void AdHocTest()
         {
             _ = AdHocTestTask();
-            /*
-            //_ = AdHocTestTask();
+
             KeyPoller.EscPressed += async () => {
                 Console.WriteLine("ESC detected! Performing cleanup then quitting");
                 await Task.Delay(0);
@@ -220,9 +219,6 @@ namespace WoWHelper
                 Environment.Exit(0);
             };
             KeyPoller.Start();
-
-            _ = CupidTradeLoopTask();
-            */
         }
 
         public async Task<bool> AdHocTestTask()
@@ -235,6 +231,9 @@ namespace WoWHelper
             //await CreateHeatmapForLooting(saveBitmaps: true);
             //await TargetMarkerDebugTask();
 
+            return await WaitForWorldBuffThenLogoffTask();
+
+            /*
             // Testing ShamanFaceCorrectDirectionToEngageTask/TurnToFaceTargetMarkerTask (see
             // the "Approach ranged/caster mobs" plan) in isolation, without the full engage
             // state machine around it. ClassState needs resolving once before the loop so the
@@ -275,6 +274,7 @@ namespace WoWHelper
 
             await AvoidObstacleByJumping();
             return true;
+            */
             /*
             await FocusOnWindowTask();
             await PetriAltF4Task();
@@ -535,7 +535,7 @@ namespace WoWHelper
                     case PlayerState.TARGET_DEFEATED:
                         Console.WriteLine("Target defeated, trying to loot");
                         // TODO: /canceltarget and /stopcasting and /stopattack here so we don't accidentally attack something
-                        await Task.Delay(1000); // give the dying anim a sec
+                        await WaitUnlessInCombatTask(1500); // give the dying anim a sec
                         LootX = FarmingConfig.ScreenConfiguration.LootDefaultX;
                         LootY = FarmingConfig.ScreenConfiguration.LootDefaultY;
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),

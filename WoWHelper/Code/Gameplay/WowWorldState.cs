@@ -61,6 +61,23 @@ namespace WoWHelper
         public bool IsTargetBleedImmune { get; private set; }
         public bool IsTargetFearCaster { get; private set; }
 
+        // Decoded from MultiBoolTwo's G byte, b1/b2 (the R byte was already claimed by
+        // IsTargetLongRangeCaster..IsTargetFearCaster above, so these spill into the
+        // previously-unused G byte instead). Run-specific settings toggled live
+        // in-game via the addon's /yyconfig menu (YoyokazooUIDB.logoutOnLowDynamite/
+        // logoutOnFullBags, IsLogoutOnLowDynamiteEnabled()/IsLogoutOnFullBagsEnabled() in
+        // YoyokazooUI.lua) rather than hardcoded on the C# WowManagementConfiguration side --
+        // see WowManagementTasks.SetLogoutVariablesTask(), the only reader of these.
+        public bool LogoutOnLowDynamiteEnabled { get; private set; }
+        public bool LogoutOnFullBagsEnabled { get; private set; }
+
+        // Decoded from MultiBoolTwo's G byte, b3. Also a /yyconfig-driven setting rather than
+        // a live game-state query -- true when the player currently has whichever world buff
+        // is selected by the addon's "Desired world buff" selector (HasDesiredWorldBuff() in
+        // WoWFunctions.lua, WORLD_BUFF_CHOICES for the list of choices). Consumed by
+        // WowManagementTasks.WaitForWorldBuffThenLogoffTask().
+        public bool HasDesiredWorldBuff { get; private set; }
+
         // Which of the three bot-supported classes the player is playing, decoded from
         // MultiBoolOne's B byte (b2/b4 -- see GetMultiBoolOne() in WoWFunctions.lua) for
         // Warrior/Shaman, plus MultiBoolTwo's R4 (see UpdateMultiBoolTwo below) for
@@ -260,9 +277,12 @@ namespace WoWHelper
 
         // R1 (IsTargetLongRangeCaster), R2 (LogoffMobSeen), R3 (IsCurrentlySkinning),
         // R4 (the 4th "which supported class" bit, Warlock -- see PlayerClass), R5
-        // (IsTargetBleedImmune), and R6 (IsTargetFearCaster) are the fields packed here
-        // so far -- R7-R8 and the G/B bytes are still reserved for future class-agnostic
-        // flags (see GetMultiBoolTwo() in WoWFunctions.lua).
+        // (IsTargetBleedImmune), and R6 (IsTargetFearCaster) are the fields packed into
+        // the R byte so far -- R7-R8 are still reserved. G1 (LogoutOnLowDynamiteEnabled),
+        // G2 (LogoutOnFullBagsEnabled), and G3 (HasDesiredWorldBuff) are packed into the
+        // previously-unused G byte instead of continuing into R7/R8 -- G4-G8 and the B
+        // byte are still reserved for future class-agnostic flags (see GetMultiBoolTwo()
+        // in WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
@@ -282,6 +302,12 @@ namespace WoWHelper
 
             IsTargetBleedImmune = r5;
             IsTargetFearCaster = r6;
+
+            DecodeByte(color.G, out var g1, out var g2, out var g3, out _, out _, out _, out _, out _);
+
+            LogoutOnLowDynamiteEnabled = g1;
+            LogoutOnFullBagsEnabled = g2;
+            HasDesiredWorldBuff = g3;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

@@ -7,6 +7,11 @@
         public const long TIME_BETWEEN_JUMPS_MILLIS = 8 * 1000; // 8 seconds
         public const long FARM_TIME_LIMIT_MILLIS = 10 * 60 * 60 * 1000; // 10 hours
 
+        // How long WaitForWorldBuffThenLogoffTask (WowManagementTasks.cs) sits idle, polling
+        // for WorldState.HasDesiredWorldBuff, before it taps strafe-left/strafe-right briefly
+        // to reset WoW's AFK kick timer and goes back to waiting.
+        public const long WORLD_BUFF_WAIT_MILLIS = 5 * 60 * 1000; // 5 minutes
+
         public const int STOP_RESTING_HP_THRESHOLD = 94;
         public const int STOP_RESTING_MP_THRESHOLD = 98;
 

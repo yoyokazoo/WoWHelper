@@ -19,12 +19,16 @@ local lastEvadeTime = nil
 -- PLAYER_ENTERING_WORLD fires on every loading screen, not just the initial login --
 -- zoning, taxis, death+release, and hearthing all re-fire it. InitializeIndicators()/
 -- InitializePixelRow() build a fresh set of frames/textures every time they're called
--- with no cleanup of the old set, so without this guard each re-fire stacked a whole
--- new copy of the debug frame's text directly on top of the previous one. Neither
--- function needs to re-run after the first login -- both already poll live values
--- (and, for the pixel row, re-calibrate screen scale) every tick via their own
--- OnUpdate handlers, so nothing about them goes stale across a zone change.
-local uiInitialized = false
+-- with no cleanup of the old set, so without a guard each re-fire stacks a whole new
+-- copy of the debug frame's text directly on top of the previous one. Neither function
+-- needs to re-run after it's succeeded once -- both already poll live values (and, for
+-- the pixel row, re-calibrate screen scale) every tick via their own OnUpdate handlers,
+-- so nothing about them goes stale across a zone change.
+--
+-- Tracked as two SEPARATE flags (not one shared uiInitialized) so each one only counts
+-- as done once it actually succeeds -- see the pcall wrapping below.
+local indicatorsInitialized = false
+local pixelRowInitialized = false
 
 -- YoyokazooUIDB is a SavedVariablesPerCharacter table (see YoyokazooUI.toc).
 -- The .toc also sets "## LoadSavedVariablesFirst 1", which guarantees this
@@ -34,6 +38,80 @@ local uiInitialized = false
 YoyokazooUIDB = YoyokazooUIDB or {}
 if YoyokazooUIDB.debugFrameEnabled == nil then
     YoyokazooUIDB.debugFrameEnabled = true -- default on, matches the old always-on behavior
+end
+
+-- Run-specific settings, toggled live via the /yyconfig menu below instead of being
+-- hardcoded in the C# side's WowManagementConfiguration. Defaults here match what
+-- WowManagementConfigs.FULL_BABYSIT (the only profile CURRENT_CONFIG actually uses) used
+-- to hardcode, before these moved here.
+--
+-- Stored in YoyokazooUIDB, i.e. SavedVariablesPerCharacter (see YoyokazooUI.toc) -- a
+-- plain local file under this WoW install's WTF folder, written to disk on logout/reload,
+-- never transmitted anywhere. Per-character on purpose: each character can run a
+-- different farming setup, so these intentionally don't carry over to other characters on
+-- the same account/computer.
+if YoyokazooUIDB.logoutOnLowDynamite == nil then
+    YoyokazooUIDB.logoutOnLowDynamite = true
+end
+if YoyokazooUIDB.logoutOnFullBags == nil then
+    YoyokazooUIDB.logoutOnFullBags = false
+end
+
+-- Which dynamite-tier item AreWeLowOnDynamite() (WoWFunctions.lua) checks the bag
+-- count of -- selectable via the /yyconfig "Dynamite item" selector below instead
+-- of being hardcoded. Defaults to Dense Dynamite (18641), what it used to be
+-- hardcoded to. See DYNAMITE_ITEM_CHOICES (WoWFunctions.lua) for the full list.
+if YoyokazooUIDB.dynamiteItemId == nil then
+    YoyokazooUIDB.dynamiteItemId = 18641
+end
+
+-- Which world buff HasDesiredWorldBuff() (WoWFunctions.lua) checks for -- selectable via the
+-- /yyconfig "Desired world buff" selector below instead of being hardcoded. Defaults to Ony's
+-- Rallying Cry. See WORLD_BUFF_CHOICES (WoWFunctions.lua) for the full list. Read by
+-- GetMultiBoolTwo() into MultiBoolTwo's R6, decoded on the C# side into
+-- WowWorldState.HasDesiredWorldBuff, consumed by WaitForWorldBuffThenLogoffTask
+-- (WowManagementTasks.cs).
+if YoyokazooUIDB.desiredWorldBuffId == nil then
+    YoyokazooUIDB.desiredWorldBuffId = "ony"
+end
+
+-- Read by GetMultiBoolTwo() (WoWFunctions.lua) to pack these into MultiBoolTwo's R4/R5,
+-- decoded on the C# side into WowWorldState.LogoutOnLowDynamiteEnabled/
+-- LogoutOnFullBagsEnabled.
+function IsLogoutOnLowDynamiteEnabled()
+    return YoyokazooUIDB.logoutOnLowDynamite
+end
+
+function IsLogoutOnFullBagsEnabled()
+    return YoyokazooUIDB.logoutOnFullBags
+end
+
+-- Read by AreWeLowOnDynamite() (WoWFunctions.lua). Not piped to the C# side at
+-- all -- unlike the two booleans above, this only ever needs to be known on the
+-- Lua side, where the actual bag-count check happens.
+--
+-- Defensively re-defaults and repairs the saved variable if it's ever
+-- missing/invalid, rather than just nil-checking at init time -- seen once in
+-- testing returning nil despite the default-init above having already run
+-- earlier in this same file's load, cause not yet confirmed. GetItemCount
+-- (the only caller, via AreWeLowOnDynamite) throws a hard Lua error on a
+-- non-number/string itemInfo, so this guards that directly instead of
+-- crashing InitializeIndicators()/InitializePixelRow() on the very first
+-- PLAYER_ENTERING_WORLD. The print only fires on the invalid path, so if this
+-- turns out to be a recurring issue rather than a one-off, it'll show up
+-- again instead of going silent.
+function GetDesiredWorldBuffId()
+    return YoyokazooUIDB.desiredWorldBuffId
+end
+
+function GetDynamiteItemId()
+    local itemId = YoyokazooUIDB.dynamiteItemId
+    if type(itemId) ~= "number" then
+        print("YoyokazooUI: dynamiteItemId was invalid (" .. tostring(itemId) .. "), resetting to default (Dense Dynamite, 18641).")
+        itemId = 18641
+        YoyokazooUIDB.dynamiteItemId = itemId
+    end
+    return itemId
 end
 
 -- Create a frame to be our black box
@@ -145,12 +223,38 @@ frame:SetScript("OnEvent", function(self, event, ...)
 
         print("XP session started. Level:", xpTracker.startLevel, "XP:", xpTracker.startXP)
 
-        if not uiInitialized then
-            InitializeIndicators()
-            InitializePixelRow()
-            ApplyDebugFrameVisibility()
-            uiInitialized = true
+        -- InitializeIndicators() (human-only debug overlay) and InitializePixelRow()
+        -- (the ONLY thing the C# bot actually reads) used to run back-to-back with no
+        -- error isolation between them -- an uncaught Lua error building the debug
+        -- frame would unwind straight out of this whole block, meaning
+        -- InitializePixelRow() never even got called, silently freezing every decoded
+        -- bot flag (combat state, HP%, casting, zone, all of it) for the rest of the
+        -- session. Confirmed happening in testing (a bug in one of GetMultiBoolOne's
+        -- inputs, read by InitializeIndicators()'s debug swatch, blocked
+        -- InitializePixelRow() from ever running). pcall-isolating each one, with its
+        -- own success flag, means a bug in the debug-only frame can never again take
+        -- down the real one, and either one that fails keeps retrying on the next
+        -- PLAYER_ENTERING_WORLD (zone change, death+release, hearth, /reload) instead
+        -- of being stuck for the rest of the session.
+        if not indicatorsInitialized then
+            local ok, err = pcall(InitializeIndicators)
+            if ok then
+                indicatorsInitialized = true
+            else
+                print("YoyokazooUI: InitializeIndicators() failed, debug frame not built (will retry next PLAYER_ENTERING_WORLD): " .. tostring(err))
+            end
         end
+
+        if not pixelRowInitialized then
+            local ok, err = pcall(InitializePixelRow)
+            if ok then
+                pixelRowInitialized = true
+            else
+                print("YoyokazooUI: InitializePixelRow() failed -- the bot's pixel row was NOT built (will retry next PLAYER_ENTERING_WORLD): " .. tostring(err))
+            end
+        end
+
+        ApplyDebugFrameVisibility()
     end
 
     if event == "PLAYER_XP_UPDATE" then
@@ -215,4 +319,78 @@ SlashCmdList["YYDEBUG"] = function()
     YoyokazooUIDB.debugFrameEnabled = not YoyokazooUIDB.debugFrameEnabled
     ApplyDebugFrameVisibility()
     print("YoyokazooUI: debug frame " .. (YoyokazooUIDB.debugFrameEnabled and "ON" or "OFF") .. " (saved).")
+end
+
+-- /yyconfig toggles the run-specific settings menu (CreateSettingsMenu(), UIFunctions.lua)
+-- -- "log out on low dynamite"/"log out on full bags"/"dynamite item"/"desired world buff"
+-- for now, more can be added to the options list below as they come up. Built once, lazily,
+-- on first use rather than
+-- unconditionally at load time like the debug frame above, since there's no reason to pay
+-- for it on a run that never opens the menu.
+local settingsMenu = nil
+
+SLASH_YYCONFIG1 = "/yyconfig"
+SlashCmdList["YYCONFIG"] = function()
+    if not settingsMenu then
+        settingsMenu = CreateSettingsMenu({
+            {
+                label = "Log out on low dynamite",
+                get = IsLogoutOnLowDynamiteEnabled,
+                set = function(value)
+                    YoyokazooUIDB.logoutOnLowDynamite = value
+                    print("YoyokazooUI: Log out on low dynamite " .. (value and "ON" or "OFF") .. " (saved).")
+                end,
+            },
+            {
+                label = "Log out on full bags",
+                get = IsLogoutOnFullBagsEnabled,
+                set = function(value)
+                    YoyokazooUIDB.logoutOnFullBags = value
+                    print("YoyokazooUI: Log out on full bags " .. (value and "ON" or "OFF") .. " (saved).")
+                end,
+            },
+            {
+                label = "Dynamite item",
+                type = "selector",
+                choices = DYNAMITE_ITEM_CHOICES,
+                get = GetDynamiteItemId,
+                set = function(id)
+                    YoyokazooUIDB.dynamiteItemId = id
+
+                    local chosenLabel = tostring(id)
+                    for _, choice in ipairs(DYNAMITE_ITEM_CHOICES) do
+                        if choice.id == id then
+                            chosenLabel = choice.label
+                            break
+                        end
+                    end
+                    print("YoyokazooUI: Dynamite item set to " .. chosenLabel .. " (saved).")
+                end,
+            },
+            {
+                label = "Desired world buff",
+                type = "selector",
+                choices = WORLD_BUFF_CHOICES,
+                get = GetDesiredWorldBuffId,
+                set = function(id)
+                    YoyokazooUIDB.desiredWorldBuffId = id
+
+                    local chosenLabel = tostring(id)
+                    for _, choice in ipairs(WORLD_BUFF_CHOICES) do
+                        if choice.id == id then
+                            chosenLabel = choice.label
+                            break
+                        end
+                    end
+                    print("YoyokazooUI: Desired world buff set to " .. chosenLabel .. " (saved).")
+                end,
+            },
+        })
+    end
+
+    if settingsMenu:IsShown() then
+        settingsMenu:Hide()
+    else
+        settingsMenu:Show()
+    end
 end

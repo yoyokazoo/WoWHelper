@@ -12,6 +12,7 @@ namespace WoWHelper.Code.WorldState
             Title = "Silithus Rumblers (Level 58+)",
             MinimumLevel = 58,
             Zone = WowZone.Silithus,
+            ExpectedMobNames = new List<string> { "Desert Rumbler" },
 
             Waypoints = new List<Vector2>
             {
@@ -25,7 +26,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(22.50f, 14.59f),
                 new Vector2(21.30f, 15.79f),
                 new Vector2(22.04f, 17.74f),
-                new Vector2(22.92f, 17.88f),
+                //new Vector2(22.92f, 17.88f),
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
@@ -48,7 +49,8 @@ namespace WoWHelper.Code.WorldState
             Waypoints = new List<Vector2>
             {
                 new Vector2(64.33f, 40.78f),
-                new Vector2(64.84f, 41.54f), // 59?
+                new Vector2(64.84f, 41.54f),
+                new Vector2(65.06f, 41.94f),
                 new Vector2(65.39f, 42.88f),
                 new Vector2(65.73f, 43.53f),
                 new Vector2(65.96f, 44.94f),
@@ -57,7 +59,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(66.92f, 45.41f),
                 new Vector2(67.09f, 44.50f),
                 new Vector2(66.06f, 43.82f),
-                new Vector2(66.43f, 38.86f),
+                //new Vector2(66.43f, 38.86f),
                 new Vector2(65.87f, 41.89f),
                 new Vector2(65.09f, 40.48f),
             },

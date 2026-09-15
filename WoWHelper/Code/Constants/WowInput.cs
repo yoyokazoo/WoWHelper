@@ -43,12 +43,15 @@ namespace WoWHelper.Code
         #region Shaman
 
         /*
-         * 2 Bolt
-#showtooltip Lightning Bolt
-/cast Lightning Bolt
+         * 2 Bolt (pull). Rank 1 does exactly as much damage as top rank against a
+         * nature-immune target -- zero -- so pull with Rank 1 in that case to avoid
+         * wasting mana on a full-rank cast that can't land any damage either way.
+#showtooltip [mod:shift] Lightning Bolt(Rank 1); Lightning Bolt
+/cast [nomod] Lightning Bolt
+/cast [mod:shift] Lightning Bolt(Rank 1)
         */
         public const Keys SHAMAN_LIGHTNING_BOLT = Keys.D2;
-        public const Keys SHAMAN_SHIFT_2 = Keys.D2;
+        public const Keys SHAMAN_SHIFT_LIGHTNING_BOLT_RANK_1 = Keys.D2;
 
         /*
          * 3 Shock
@@ -77,7 +80,12 @@ namespace WoWHelper.Code
         public const Keys SHAMAN_CURE_POISON = Keys.D5;
         public const Keys SHAMAN_SHIFT_CURE_DISEASE = Keys.D5;
 
-        public const Keys SHAMAN_6 = Keys.D6;
+        /*
+         * 6 Frost Shock
+#showtooltip Frost Shock
+/cast Frost Shock
+        */
+        public const Keys SHAMAN_FROST_SHOCK = Keys.D6;
         public const Keys SHAMAN_SHIFT_6 = Keys.D6;
 
         public const Keys SHAMAN_7 = Keys.D7;

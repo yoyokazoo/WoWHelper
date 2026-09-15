@@ -94,6 +94,12 @@ namespace WoWHelper
                     await WaitForGlobalCooldownTask();
                     Keyboard.KeyPress(WowInput.SHAMAN_EARTH_SHOCK);
                 }
+                else if (ShamanShouldCastFrostShock(classState))
+                {
+                    Console.WriteLine($"Trying to Frost Shock!");
+                    await WaitForGlobalCooldownTask();
+                    Keyboard.KeyPress(WowInput.SHAMAN_FROST_SHOCK);
+                }
                 else if (ShamanShouldCastCureDisease(classState))
                 {
                     Console.WriteLine($"Trying to Cure Disease!");
@@ -145,6 +151,18 @@ namespace WoWHelper
 
         public bool ShamanShouldCastLightningShield(WowShamanClassState classState)
         {
+            // Skip entirely if every mob this route can pull is nature immune -- Lightning
+            // Shield's return-damage proc is nature damage, so it can never land here, unlike
+            // the per-target check below which still lets multi-attacker fights waste charges
+            // on a mix of immune/non-immune mobs. Guarded on LocationConfiguration != null --
+            // this runs inside the combat loop, which can be reached with it still unresolved
+            // if the bot was (re)started mid-fight (see "Automatic farming-config resolution"
+            // in CLAUDE.md).
+            if (FarmingConfig.LocationConfiguration != null && FarmingConfig.LocationConfiguration.AllMobsInZoneAreNatureImmune())
+            {
+                return false;
+            }
+
             // Skip if the only mob we're fighting is nature immune
             // We still waste charges in the multi-attacker scenario, but we just want to dump mana to kill ASAP in those cases
             bool skipLightningShield = WorldState.IsTargetNatureImmune && WorldState.AttackerCount <= 1;
@@ -176,7 +194,8 @@ namespace WoWHelper
 
         public bool ShamanShouldCastEarthShock(WowShamanClassState classState)
         {
-            // Skip if nature immune
+            // Skip if nature immune -- Frost Shock takes over entirely for those targets,
+            // see ShamanShouldCastFrostShock below.
             bool skipEarthShock = WorldState.IsTargetNatureImmune;
             // Always shock runners, if we're low hp, if there are multiple mobs, or if the mob is high hp
             skipEarthShock |= !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20 && !WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
@@ -190,6 +209,32 @@ namespace WoWHelper
             }
 
             return classState.CanCastEarthShock;
+        }
+
+        // Frost Shock does the same damage as Earth Shock but never interrupts a cast, so
+        // it's strictly worse than Earth Shock whenever Earth Shock is usable -- this only
+        // fires as Earth Shock's substitute against nature-immune targets, which Earth
+        // Shock (nature damage) does nothing to.
+        public bool ShamanShouldCastFrostShock(WowShamanClassState classState)
+        {
+            if (!WorldState.IsTargetNatureImmune)
+            {
+                return false;
+            }
+
+            // Same "don't bother, it'll die to melee before this matters" skip as Earth
+            // Shock above -- but deliberately no caster-hold skip here. Earth Shock holds
+            // off on casters until they're actually casting so the shock lands as an
+            // interrupt; Frost Shock never interrupts, so there's nothing gained by
+            // waiting -- just take the damage whenever it's up.
+            bool skipFrostShock = !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20;
+
+            if (skipFrostShock)
+            {
+                return false;
+            }
+
+            return classState.CanCastFrostShock;
         }
 
         public bool ShamanShouldCastCurePoison(WowShamanClassState classState)
@@ -280,9 +325,12 @@ namespace WoWHelper
             EngageAttempts = 1;
             await TurnToFaceTargetMarkerTask();
             // TODO: figure out distance to walk forward
-            //await StartWalkForwardTask();
-            //await Task.Delay(1000);
-            //await EndWalkForwardTask();
+            if (!classState.IsInEarthShockRange)
+            {
+                await StartWalkForwardTask();
+                await Task.Delay(1000);
+                await EndWalkForwardTask();
+            }
             return true;
         }
 
@@ -307,7 +355,20 @@ namespace WoWHelper
                 // WowMovementTasks.TurnToFaceTargetMarkerTask for the target-marker-based
                 // bearing detection this now uses instead.
                 await TurnToFaceTargetMarkerTask();
-                Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
+
+                // Rank 1 does exactly as much damage as top rank against a nature-immune
+                // target -- zero -- so pull with Rank 1 there instead, to avoid wasting mana
+                // on a full-rank cast that can't land any damage either way. See the "2 Bolt"
+                // macro comment in WowInput.cs.
+                if (WorldState.IsTargetNatureImmune)
+                {
+                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_LIGHTNING_BOLT_RANK_1);
+                }
+                else
+                {
+                    Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
+                }
+
                 await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
                 await UpdateWorldStateAsync();
             }

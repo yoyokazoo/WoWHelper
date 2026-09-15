@@ -484,6 +484,29 @@ function HasBuffNamed(buffName)
     end
 end
 
+-- World buffs WaitForWorldBuffThenLogoffTask (WowManagementTasks.cs) waits on -- selectable
+-- via the /yyconfig "Desired world buff" selector (YoyokazooUI.lua/UIFunctions.lua) instead of
+-- being hardcoded, same pattern as DYNAMITE_ITEM_CHOICES below. GetDesiredWorldBuffId()
+-- (YoyokazooUI.lua) returns whichever one is currently selected; HasDesiredWorldBuff() checks
+-- for that buff by name via HasBuffNamed().
+WORLD_BUFF_CHOICES = {
+    { id = "ony",  label = "Rallying Cry (Ony)",         buffName = "Rallying Cry of the Dragonslayer" },
+    { id = "rend", label = "Warchief's Blessing (Rend)", buffName = "Warchief's Blessing" },
+    { id = "zg",   label = "Spirit of Zandalar (ZG)",    buffName = "Spirit of Zandalar" },
+}
+
+-- Read by GetMultiBoolTwo() to pack into MultiBoolTwo's R6, decoded on the C# side into
+-- WowWorldState.HasDesiredWorldBuff.
+function HasDesiredWorldBuff()
+    local desiredId = GetDesiredWorldBuffId()
+    for _, choice in ipairs(WORLD_BUFF_CHOICES) do
+        if choice.id == desiredId then
+            return HasBuffNamed(choice.buffName)
+        end
+    end
+    return false
+end
+
 -- overpower rank 1, 7384
 -- fireblast rank 1, 2136
 -- cone of cold rank 1,
@@ -554,33 +577,31 @@ function AreWeLowOnHealthPotions()
         end
     end
 
-    -- Accept either the current tier OR one tier lower (fallback stock).
+    -- Only the current tier counts -- used to also accept one tier lower as fallback
+    -- stock, but that let a full stack of the previous (weaker) potion mask actually
+    -- being low on the one the player should be drinking, so that fallback was removed.
     local currentId = tiers[currentTierIndex][2]
-    local fallbackId = currentTierIndex > 1 and tiers[currentTierIndex - 1][2] or nil
 
     local count = GetItemCount(currentId, false)
-    if count >= 2 then
-        return false
-    end
-
-    if fallbackId then
-        local fallbackCount = GetItemCount(fallbackId, false)
-        if fallbackCount >= 2 then
-            return false
-        end
-    end
-
-    return true
+    return count < 2
 end
 
--- heavy dynamite, 4378
--- explosive sheep, 4384
--- big bronze bomb, 4380
--- solid dynamite, 10507
--- dense dynamite, 18641
--- hi-explosive bomb, 10562 
+-- Known dynamite-tier consumables, selectable via the /yyconfig "Dynamite item"
+-- selector (YoyokazooUI.lua/UIFunctions.lua) instead of being hardcoded here.
+-- GetDynamiteItemId() (YoyokazooUI.lua) returns whichever one is currently
+-- selected, defaulting to Dense Dynamite (18641) -- the item this used to be
+-- hardcoded to.
+DYNAMITE_ITEM_CHOICES = {
+    { id = 4378,  label = "Heavy Dynamite" },
+    { id = 4384,  label = "Explosive Sheep" },
+    { id = 4380,  label = "Big Bronze Bomb" },
+    { id = 10507, label = "Solid Dynamite" },
+    { id = 18641, label = "Dense Dynamite" },
+    { id = 10562, label = "Hi-Explosive Bomb" },
+}
+
 function AreWeLowOnDynamite()
-    local dynamiteCount = GetItemCount(10507, false)
+    local dynamiteCount = GetItemCount(GetDynamiteItemId(), false)
     return dynamiteCount < 2
 end
 
@@ -976,15 +997,20 @@ function GetMultiBoolOne()
     return rByte/255.0, gByte/255.0, bByte/255.0
 end
 
--- R1 (IsTargetLongRangeCaster), R2 (IsLogoffMobSeen), R3
--- (IsCurrentlySkinning), R4 (the 4th "which supported class" bit,
--- Warlock -- see GetMultiBoolOne's B-byte comment above for why it landed
--- here instead of there), R5 (IsTargetBleedImmune), and R6
--- (IsTargetFearCaster) are the flags packed in here so far -- both mob-name
--- lookups, same pattern as IsTargetLongRangeCaster/IsLogoffMobSeen above, so
--- they live here (class-agnostic) rather than in a class's own ClassBool
--- even though only Warrior consumes them today -- R7-R8 and the G/B bytes
--- are still fully reserved for future class-agnostic flags.
+-- R1 (IsTargetLongRangeCaster), R2 (IsLogoffMobSeen), R3 (IsCurrentlySkinning),
+-- R4 (the 4th "which supported class" bit, Warlock -- see GetMultiBoolOne's
+-- B-byte comment above for why it landed here instead of there), R5
+-- (IsTargetBleedImmune), and R6 (IsTargetFearCaster) are the flags packed
+-- into the R byte so far -- both mob-name lookups, same pattern as
+-- IsTargetLongRangeCaster/IsLogoffMobSeen above, so they live here
+-- (class-agnostic) rather than in a class's own ClassBool even though only
+-- Warrior consumes them today -- R7-R8 are still reserved. G1
+-- (IsLogoutOnLowDynamiteEnabled), G2 (IsLogoutOnFullBagsEnabled), and G3
+-- (HasDesiredWorldBuff) are packed into the previously-unused G byte instead
+-- of continuing into R7/R8 -- run-specific settings toggled live in-game via
+-- the /yyconfig menu (YoyokazooUI.lua) rather than live game-state queries
+-- like everything else in this row. G4-G8 and the B byte are still fully
+-- reserved for future class-agnostic flags.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()
@@ -998,7 +1024,13 @@ function GetMultiBoolTwo()
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, false, false)
 
-    return rByte/255.0, 0, 0
+    local boolG1 = IsLogoutOnLowDynamiteEnabled()
+    local boolG2 = IsLogoutOnFullBagsEnabled()
+    local boolG3 = HasDesiredWorldBuff()
+
+    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, false, false, false, false, false)
+
+    return rByte/255.0, gByte/255.0, 0
 end
 
 function GetMultiIntOne()

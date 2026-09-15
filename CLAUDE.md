@@ -71,8 +71,8 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R4 and R5-R6 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster` |
-| 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R2 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`) |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G3 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff` |
+| 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
 matching Lua's `EncodeFloatToColor`); packed bools bit-pack 8 flags per
@@ -110,6 +110,23 @@ player near *any* of the route's own waypoints, via
 one constant sized off the loosest route's own largest adjacent-waypoint gap,
 not a per-config value) is wired into `WowManagementTasks.SetLogoutVariablesTask()`,
 checked first so a bad start gives the clearest possible logout reason.
+
+**Expected mob roster (`WowLocationConfiguration.ExpectedMobNames`):** every
+mob name a route is expected to pull, e.g. `{ "Desert Rumbler" }` for
+`LEVEL_58_SILITHUS_RUMBLERS` — distinct from the `/target Foo` macro
+comments scattered through `WowLocationConfigs.cs`, which are partial name
+substrings for a target-cycling macro, not a complete/exact roster.
+`WowLocationConfiguration.AllMobsInZoneAreNatureImmune()` checks every name
+in that list against `CreatureConfig.NATURE_IMMUNE_MOB_NAMES`
+(`Config/Definitions/CreatureConfig.cs`) — a **C# mirror** of
+`CreatureConfig.lua`'s `NATURE_IMMUNE_MOB_NAMES` table, since this check
+runs at config-selection time, with no live target on screen to decode a
+pixel-based `IsTargetNatureImmune` off of. The two lists MUST stay in sync —
+same class of coupling as the `WowZone` enum/`ZONE_NAME_TO_ID` split above.
+Only `NATURE_IMMUNE_MOB_NAMES` is mirrored so far; mirror more of
+`CreatureConfig.lua`'s lists only once something on the C# side actually
+needs them. An empty/unset `ExpectedMobNames` makes
+`AllMobsInZoneAreNatureImmune()` return `false` rather than vacuously `true`.
 
 **Automatic farming-config resolution:** `WowFarmingConfigs.CURRENT_CONFIG`
 only sets `ManagementConfiguration` now — `LocationConfiguration` and
@@ -242,14 +259,65 @@ consumes either today (`WowWarriorTasks.cs`'s `WarriorCombatLoopTask` reads
 Berserker Rage) — this replaced an earlier, route-level `UseRend`/
 `PreemptFear` pair of booleans on `WowLocationConfiguration` that couldn't
 express "some mobs at this route bleed-immune/fear-cast, some don't." R7-8
-and the G/B bytes are still reserved for the next class-agnostic bool.
+are still reserved.
+
+G1 is `WowWorldState.LogoutOnLowDynamiteEnabled` and G2 is
+`WowWorldState.LogoutOnFullBagsEnabled` — packed into the previously-unused G
+byte rather than continuing into R7/R8, since (unlike every other bit in this
+row) these two aren't live game-state queries at all. They're run-specific
+settings toggled in-game via the addon's `/yyconfig` menu
+(`CreateSettingsMenu()` in `UIFunctions.lua`, wired up in `YoyokazooUI.lua`),
+saved into `YoyokazooUIDB.logoutOnLowDynamite`/`logoutOnFullBags`
+(`YoyokazooUIDB` is the addon's `SavedVariablesPerCharacter` table — see
+`YoyokazooUI.toc`), and read by `IsLogoutOnLowDynamiteEnabled()`/
+`IsLogoutOnFullBagsEnabled()` when `GetMultiBoolTwo()` packs the byte. This
+replaced hardcoding the equivalent `LogoutOnLowDynamite`/`LogoutOnFullBags`
+booleans on the C# side's `WowManagementConfiguration` — see
+`WowManagementTasks.SetLogoutVariablesTask()`, the only reader of
+`WowWorldState.LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`.
+The `/yyconfig` menu also has a "Dynamite item" row, letting which
+dynamite-tier item `AreWeLowOnDynamite()` (`WoWFunctions.lua`) checks the bag
+count of be picked from `DYNAMITE_ITEM_CHOICES` at runtime instead of being
+hardcoded — saved into `YoyokazooUIDB.dynamiteItemId`, read via
+`GetDynamiteItemId()`. Unlike the two booleans above, this one is Lua-only
+and never reaches the C# side. This is `CreateSettingsMenu()`'s second option
+shape (`type = "selector"`, a cycling button through `choices`) alongside its
+original checkboxes — see that function's own comment in `UIFunctions.lua`
+for the option-table shapes it accepts.
+
+G3 is `WowWorldState.HasDesiredWorldBuff` — same "run-specific setting, not
+a plain game-state query" deal as G1/G2: which world buff it checks for
+(Ony's Rallying Cry, Rend's Warchief's Blessing, or ZG's Spirit of Zandalar)
+is chosen via the `/yyconfig` menu's "Desired world buff" row, another
+`type = "selector"` entry cycling through `WORLD_BUFF_CHOICES`
+(`WoWFunctions.lua`) — saved into `YoyokazooUIDB.desiredWorldBuffId`, read via
+`GetDesiredWorldBuffId()`, and matched against the player's actual buffs by
+`HasDesiredWorldBuff()` (`WoWFunctions.lua`, via the existing `HasBuffNamed()`
+helper). Unlike the "Dynamite item" selector, this one *does* reach the C#
+side — it's packed into `GetMultiBoolTwo()` like the two booleans above.
+Consumed by `WowManagementTasks.WaitForWorldBuffThenLogoffTask()`: loops
+idle (tapping strafe-left/strafe-right every
+`WowPlayerConstants.WORLD_BUFF_WAIT_MILLIS` to dodge WoW's AFK kick) until
+this bit comes true, then Slack-alerts and logs out. Wired up to the
+`AdHocTest` button (`WowPlayer.AdHocTestTask()`) for now rather than a
+dedicated `PlayerState`. G4-G8 and the B byte are still reserved for the
+next class-agnostic bool.
 `ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
 independent of `CanCastEarthShock`'s cooldown/usability check), bit 2 is
 Shaman's `HasClearcasting` (Elemental Focus's proc buff, name-matched via
-`HasBuffNamed("Clearcasting")`); R3-8 and the G/B bytes are still reserved
-for the next Shaman-specific flag).
+`HasBuffNamed("Clearcasting")`), and bit 3 is Shaman's `CanCastFrostShock`
+(cooldown/usability check via `SpellIsCooledDown(8056)`/`IsSpellUsable(8056)`,
+same pattern as `CanCastEarthShock`). Frost Shock does the same damage as
+Earth Shock but never interrupts a cast, so `WowShamanTasks.cs`'s
+`ShamanShouldCastFrostShock()` only uses it as Earth Shock's substitute
+against nature-immune targets (`WorldState.IsTargetNatureImmune`) — Earth
+Shock is nature damage and does nothing to them. Shocks share both a
+cooldown category and a 20-yard range in Classic, so bit 1
+(`IsInEarthShockRange`) doubles as the range check for Frost Shock too — no
+separate range bit needed. R4-8 and the G/B bytes are still reserved for the
+next Shaman-specific flag).
 
 **Adding a new pixel:** append a new `AddSwatch(N, ...)` call in
 `InitializePixelRow()` (Lua) AND a new `PixelRowPoint(N)`-based property on
@@ -342,7 +410,9 @@ of truth — edits should be made here, not in the WoW install directory.
   rotations, selected via `WowCombatConfiguration` — `WowWarlockTasks` is
   currently a stub, every entry point throws `NotImplementedException`),
   `WowManagementTasks` (logout conditions, low
-  supplies, trade window handling, Slack alerts). The class-specific task
+  supplies, trade window handling, Slack alerts, the `WaitForWorldBuffThenLogoffTask()`
+  world-buff-waiting loop — see the `MultiBoolTwo` G3 note in the
+  color-encoding contract above). The class-specific task
   files' entry points (dispatched from `WowPlayerCombatConfig.cs`) take their
   own class's `WowClassState` subtype as a **method parameter**, not read off
   `this` — so a Shaman-only field is unreachable from inside a Warrior method's
@@ -359,7 +429,10 @@ of truth — edits should be made here, not in the WoW install directory.
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
   farming-config resolution" above), per-resolution screen pixel maps
   (`WowScreenConfigs.cs`), management/alert toggles
-  (`WowManagementConfigs.cs`), the farming profile
+  (`WowManagementConfigs.cs` — logout-on-low-dynamite/logout-on-full-bags used
+  to live here too; they're now run-specific, toggled live via the addon's
+  `/yyconfig` menu instead — see the `MultiBoolTwo` R4/R5 note in the
+  color-encoding contract above), the farming profile
   (`WowFarmingConfigs.cs` — now only `ManagementConfiguration`;
   `LocationConfiguration`/`CombatConfiguration` are resolved at runtime, not
   set here). `Config/Definitions/` holds the POCOs these configs are
@@ -367,7 +440,11 @@ of truth — edits should be made here, not in the WoW install directory.
   (human-readable, includes the minimum level), `MinimumLevel`, and `Zone`
   (`WowZone` enum, `WowLocationConfiguration.cs`) — see the zone ID
   note in the color-encoding contract above for how `Zone` ties to
-  `WowWorldState.CurrentZone`.
+  `WowWorldState.CurrentZone` — plus `ExpectedMobNames` and the
+  `AllMobsInZoneAreNatureImmune()` helper built on it; see "Expected mob
+  roster" above. `Config/Definitions/CreatureConfig.cs` is the C# mirror of
+  the Lua addon's `CreatureConfig.lua` name lists that `ExpectedMobNames`
+  checks against.
 - **`Constants/`** — `WowInput.cs` maps logical actions to keybinds/macros the
   bot presses (expects specific in-game keybinds/macros to be set up to match),
   `WowPlayerConstants.cs` / `WowGameplayConstants.cs` hold thresholds/timings.
@@ -466,10 +543,37 @@ of truth — edits should be made here, not in the WoW install directory.
     (`YoyokazooUIFrame`), showing every value (including ones the bot doesn't
     consume) legibly with labels, for human debugging. The bot never reads
     its position; kept purely as a human-facing debug display.
+
+  Also holds `CreateSettingsMenu()` — a third, unrelated frame: a small
+  checkbox-list dialog (not tied to any live game-state read/OnUpdate loop,
+  unlike the two above) toggled by `YoyokazooUI.lua`'s `/yyconfig` slash
+  command, for run-specific settings like "log out on low dynamite"/"log out
+  on full bags" — see the `MultiBoolTwo` R4/R5 note in the color-encoding
+  contract above for how those reach the C# side.
 - **`MathFunctions.lua`** — small numeric helpers shared by the above.
 - **`YoyokazooUI.lua`** — addon entry point/event wiring (login, XP/level-up
   tracking, whisper tracking for "unseen whisper" alerts) and indicator
-  initialization. Also auto-confirms the bind-on-pickup loot popup: on
+  initialization. On the first `PLAYER_ENTERING_WORLD`, `InitializeIndicators()`
+  (the human-only debug frame) and `InitializePixelRow()` (the only thing the
+  C# bot actually reads) are each called through `pcall`, with their own
+  success flag (`indicatorsInitialized`/`pixelRowInitialized`), rather than
+  called back-to-back unguarded. This isn't defensive-for-its-own-sake: an
+  uncaught error building the debug frame used to unwind straight out of that
+  whole block, meaning `InitializePixelRow()` never even ran, silently
+  freezing every decoded bot flag for the rest of the session — confirmed
+  happening in testing (a bug in one of `GetMultiBoolOne()`'s inputs, read by
+  one of the debug frame's swatches, blocked the pixel row from ever being
+  built). Now a failure in either one is isolated to that one, and (since its
+  flag stays false) retries on the next `PLAYER_ENTERING_WORLD` (zone change,
+  death+release, hearth, `/reload`) instead of being stuck all session.
+  Owns `YoyokazooUIDB` (the addon's `SavedVariablesPerCharacter`
+  table) and every slash command built on it: `/yydebug` toggles the debug
+  frame's visibility; `/yyconfig` opens/closes the `CreateSettingsMenu()`
+  dialog (built lazily, on first use) for the run-specific settings above,
+  each backed by its own `YoyokazooUIDB` field
+  (`logoutOnLowDynamite`/`logoutOnFullBags`) read via
+  `IsLogoutOnLowDynamiteEnabled()`/`IsLogoutOnFullBagsEnabled()` when
+  `GetMultiBoolTwo()` packs the pixel row. Also auto-confirms the bind-on-pickup loot popup: on
   `LOOT_BIND_CONFIRM` it hides Blizzard's `"LOOT_BIND"` StaticPopup (if
   already shown — our frame registers after the default UI's own handler)
   and calls `ConfirmLootSlot(lootSlot)` — the same action that popup's own
