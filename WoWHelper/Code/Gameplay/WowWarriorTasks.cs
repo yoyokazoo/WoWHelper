@@ -171,18 +171,8 @@ namespace WoWHelper
         {
             await Task.Delay(0);
             EngageAttempts = 1;
-
-            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
-            {
-                return await FaceAndChargeTarget();
-            }
-            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
-            {
-                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_SHOOT);
-                return true;
-            }
-
-            return false;
+            await TurnToFaceTargetMarkerTask();
+            return true;
         }
 
         public async Task<bool> WarriorFaceCorrectDirectionToEngageTask(WowWarriorClassState classState)
@@ -194,7 +184,12 @@ namespace WoWHelper
                 return false;
             }
 
-            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
+            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge && WorldState.PlayerLevel < 4) // no charge yet
+            {
+                await WalkIntoMeleeRangeTask();
+                await WowInput.PressKey(WowInput.START_ATTACK);
+            }
+            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
                 await FaceAndChargeTarget();
             }

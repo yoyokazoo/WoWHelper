@@ -1000,8 +1000,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 1,
             Zone = WowZone.Durotar,
 
-            // /target Mottled
-            // /target Scorpid
             Waypoints = new List<Vector2>
             { 
                 new Vector2(44.19f, 66.23f),

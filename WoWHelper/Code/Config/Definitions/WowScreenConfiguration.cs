@@ -60,6 +60,31 @@ namespace WoWHelper
         public int LootDefaultX => (Resolution.Width / 2);
         public int LootDefaultY => (Resolution.Height / 2) - (Resolution.Height / 6);
 
+        // Estimates how far away the current target is, from 0.0 (as close as the target
+        // marker -- see WowPlayer.FindTargetMarkerOnScreen -- ever gets, i.e. melee range
+        // immediately in front of the player) to 1.0 (as far as it's ever calibrated to be
+        // seen), by linearly interpolating the marker's Y coordinate between
+        // TargetMarkerNearY (0.0) and TargetMarkerFarY (1.0). Only the marker's Y matters
+        // here, not X -- this assumes the caller already turned to face the target (see
+        // WowMovementTasks.TurnToFaceTargetMarkerTask), so the marker should already be
+        // roughly dead-ahead and its horizontal position isn't a distance signal. Clamped to
+        // [0,1] since a marker slightly outside the calibrated range (anti-aliasing, a target
+        // farther than anything this was calibrated against) shouldn't extrapolate to a
+        // nonsense value. Throws if this resolution hasn't been calibrated (TargetMarkerFarY/
+        // NearY still -1) -- silently returning a made-up distance would be worse than failing
+        // loudly here.
+        public float DistanceFromTarget(Point targetMarkerPosition)
+        {
+            if (TargetMarkerFarY < 0 || TargetMarkerNearY < 0)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(DistanceFromTarget)}: {Name} isn't calibrated yet (TargetMarkerFarY/TargetMarkerNearY are still -1).");
+            }
+
+            float raw = (TargetMarkerNearY - targetMarkerPosition.Y) / (float)(TargetMarkerNearY - TargetMarkerFarY);
+            return Math.Max(0f, Math.Min(1f, raw));
+        }
+
         public int LootHeatmapIgnoreX { get; set; }
         public int LootHeatmapIgnoreY { get; set; }
         public int LootHeatmapIgnoreWidth { get; set; }
@@ -70,6 +95,16 @@ namespace WoWHelper
         // configured for this resolution" -- callers should fall back to
         // the full screen in that case (see SlackFileUploadWorkaround).
         public Rectangle? SlackScreenshotCropRegion { get; set; }
+
+        // Calibration for DistanceFromTarget() below: the target marker's screen Y
+        // coordinate (see WowPlayer.FindTargetMarkerOnScreen) at the two ends of the range
+        // this bot ever walks a target through, assuming the player is already facing it
+        // (camera pitched straight down, so Y alone -- not X -- tracks distance). -1 means
+        // "not calibrated for this resolution yet" -- only 1920x1080 is calibrated so far
+        // (see RESOLUTION_1920_X_1080 in WowScreenConfigs.cs), same "null/-1 until someone
+        // measures it" pattern as SlackScreenshotCropRegion/NotInLineOfSightPositions above.
+        public int TargetMarkerFarY { get; set; } = -1;
+        public int TargetMarkerNearY { get; set; } = -1;
 
         // Error text detections
         public ImageMatchColorPositions FacingWrongWayPositions { get; set; }

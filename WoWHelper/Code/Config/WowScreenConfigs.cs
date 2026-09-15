@@ -197,6 +197,13 @@ namespace WoWHelper.Code.Config
             Name = "1920x1080",
             Resolution = new Size(1920, 1080),
 
+            // See WowScreenConfiguration.DistanceFromTarget(): measured empirically against
+            // the target marker (WowPlayer.FindTargetMarkerOnScreen) with the player facing
+            // the target -- 465 immediately in front of the player (melee range), 77 at the
+            // farthest distance tested.
+            TargetMarkerFarY = 77,
+            TargetMarkerNearY = 465,
+
             DynamiteAndDummyX = 960,
             DynamiteAndDummyY = 540,
 

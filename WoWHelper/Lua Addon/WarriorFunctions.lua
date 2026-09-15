@@ -26,6 +26,12 @@ function CanChargeTarget()
         return false
     end
 
+    -- Charge isn't learned until level 4 -- below that, treat the target as always
+    -- "chargeable" rather than checking a spell the player doesn't know yet.
+    if UnitLevel("player") < 4 then
+        return true
+    end
+
     return SpellIsInRangeAndCooledDown(100)
 end
 

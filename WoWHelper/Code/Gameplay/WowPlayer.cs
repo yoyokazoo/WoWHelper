@@ -51,6 +51,15 @@ namespace WoWHelper
         public int LootX { get; private set; }
         public int LootY { get; private set; }
 
+        // Last position FindTargetMarkerOnScreen() actually found the target marker at --
+        // set by WowMovementTasks.WalkIntoMeleeRangeTask() each time a scan succeeds. Null
+        // until the first successful scan (or if none has succeeded yet this attempt).
+        // Nullable rather than defaulting to 0,0 like LootX/Y above -- unlike loot's "default
+        // to screen center" fallback, there's no sane default screen position for "target not
+        // found," so callers need to be able to tell the difference.
+        public int? MostRecentTargetMarkerX { get; private set; }
+        public int? MostRecentTargetMarkerY { get; private set; }
+
         public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }
 

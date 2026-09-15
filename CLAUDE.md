@@ -424,6 +424,34 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`Gameplay/WowPathfinding.cs`** — pure-math helpers for waypoint following
   (facing/turn-direction math, angle tolerance that tightens near a waypoint,
   lateral-distance-from-path calc). No side effects, unit-testable.
+- **Target-marker screen tracking** (`WowPlayer.FindTargetMarkerOnScreen`,
+  `WowMovementTasks.cs`) — there's no addon-legal way to read a target's
+  actual position/bearing/distance in this client (`UnitPosition`,
+  `C_Map.GetPlayerMapPosition`, and nameplate frame measurement are all
+  confirmed blocked), so `UIFunctions.lua` paints a sentinel-colored marker
+  (`WowScreenConfiguration.TARGET_MARKER_COLOR`) onto the current target's
+  nameplate, found via a full-screen pixel search (`FindTargetMarkerOnScreen`
+  — a separate, full-resolution capture, not the small fixed-position pixel
+  row `WorldState` normally reads). With the bot run camera-pitched straight
+  down, the marker's position relative to screen center IS bearing/distance:
+  `GetTargetMarkerBearingDegrees`/`TurnToFaceTargetMarkerTask`
+  (`WowMovementTasks.cs`) turn to face it (bearing math itself lives in the
+  pure `GetBearingDegreesFromMarkerPosition(Point)`, so it can run against an
+  already-known marker position without a second full-screen scan), and
+  `WowScreenConfiguration.DistanceFromTarget` linearly interpolates the
+  marker's Y coordinate between `TargetMarkerNearY` (melee range, 0.0) and
+  `TargetMarkerFarY` (calibrated max distance, 1.0) into a distance estimate
+  — assumes the marker is dead-ahead (only Y, not X, is used), and is only
+  calibrated for 1920x1080 so far. `WalkIntoMeleeRangeTask`
+  (`WowMovementTasks.cs`) walks straight forward until either
+  `WorldState.IsInMeleeRange` (authoritative) or that distance estimate reads
+  close enough, whichever comes first, caching the last-found marker position
+  in `WowPlayer.MostRecentTargetMarkerX`/`MostRecentTargetMarkerY`. It reuses
+  the marker scan it already does each iteration (for `DistanceFromTarget`)
+  to also check the target hasn't drifted outside `TARGET_FACING_CONE_DEGREES`
+  — if it has, it re-runs `TurnToFaceTargetMarkerTask` before trusting
+  `DistanceFromTarget` again, rather than walking blind off a stale heading.
+  None of this is tuned against live testing yet.
 - **`Config/`** — per-location farming routes/waypoints
   (`WowLocationConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
@@ -431,7 +459,7 @@ of truth — edits should be made here, not in the WoW install directory.
   (`WowScreenConfigs.cs`), management/alert toggles
   (`WowManagementConfigs.cs` — logout-on-low-dynamite/logout-on-full-bags used
   to live here too; they're now run-specific, toggled live via the addon's
-  `/yyconfig` menu instead — see the `MultiBoolTwo` R4/R5 note in the
+  `/yyconfig` menu instead — see the `MultiBoolTwo` G1/G2 note in the
   color-encoding contract above), the farming profile
   (`WowFarmingConfigs.cs` — now only `ManagementConfiguration`;
   `LocationConfiguration`/`CombatConfiguration` are resolved at runtime, not
