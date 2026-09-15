@@ -203,7 +203,7 @@ namespace WoWHelper.Code
         public static async Task PressKey(Keys key)
         {
             Keyboard.KeyPress(key);
-            await Task.Delay(0);
+            await Task.Delay(10);
         }
 
         // For when we exit the program with ESC, make sure we don't have any lingering keys pressed down
