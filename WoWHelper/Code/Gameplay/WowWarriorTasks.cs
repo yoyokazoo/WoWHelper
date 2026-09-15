@@ -73,11 +73,13 @@ namespace WoWHelper
                     continue;
                 }
 
+                /*
                 if (!healingTrinketUsed && await WarriorUseDiamondFlaskTask())
                 {
                     healingTrinketUsed = true;
                     continue;
                 }
+                */
 
                 if (!startOfCombatWiggled && PreviousWorldState.TargetHpPercent == 100 && WorldState.TargetHpPercent < 100)
                 {
@@ -94,42 +96,42 @@ namespace WoWHelper
                 // Finally, if we've made it this far, do standard combat actions
                 if (!classState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
                 {
-                    await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT_KEY);
+                    await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT);
                 }
                 else if (classState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
                 {
-                    await WowInput.PressKey(WowInput.WARRIOR_OVERPOWER_KEY);
+                    await WowInput.PressKey(WowInput.WARRIOR_SHIFT_OVERPOWER);
                 }
                 else if (WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST)
                 {
-                    await WowInput.PressKey(WowInput.WARRIOR_EXECUTE_KEY);
+                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_EXECUTE);
                 }
                 else if (!classState.TargetHasRend && !WorldState.IsTargetBleedImmune && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
                 {
-                    await WowInput.PressKey(WowInput.WARRIOR_REND_KEY);
+                    await WowInput.PressKey(WowInput.WARRIOR_REND);
                 }
                 else if (WorldState.AttackerCount > 1)
                 {
                     if (classState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
                     {
-                        await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+                        await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
                     }
                     else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST))
                     {
                         // Cleave only if we have enough spare rage to bloodthirst right after
-                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_CLEAVE_MACRO);
+                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_CLEAVE);
                     }
                 }
                 else if (WorldState.AttackerCount <= 1) // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
                 {
                     if (classState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
                     {
-                        await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+                        await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
                     }
                     else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
                     {
                         // Heroic only if we have enough spare rage to bloodthirst right after
-                        await WowInput.PressKey(WowInput.WARRIOR_HEROIC_STRIKE_KEY);
+                        await WowInput.PressKey(WowInput.WARRIOR_HEROIC_STRIKE);
                     }
                     // TODO: Actually split out Heroic Strike and cast if we have really surplus rage
                 }
@@ -142,7 +144,7 @@ namespace WoWHelper
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
-                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_EAT_FOOD_KEY);
+                await WowInput.PressKey(WowInput.EAT_FOOD);
             }
 
             return true;
@@ -172,7 +174,7 @@ namespace WoWHelper
 
             if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
-                await WowInput.PressKey(WowInput.WARRIOR_CHARGE_KEY);
+                await WowInput.PressKey(WowInput.WARRIOR_CHARGE);
                 return true;
             }
             else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
@@ -196,14 +198,14 @@ namespace WoWHelper
             if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
                 await TurnABitToTheLeftTask();
-                await WowInput.PressKey(WowInput.WARRIOR_CHARGE_KEY);
+                await WowInput.PressKey(WowInput.WARRIOR_CHARGE);
             }
             else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
                 if (!classState.WaitingToShoot)
                 {
                     await TurnABitToTheLeftTask();
-                    await WowInput.PressKey(WowInput.WARRIOR_SHOOT_MACRO);
+                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_SHOOT);
                 }
             }
 
@@ -249,6 +251,7 @@ namespace WoWHelper
             return tooManyAttackers;
         }
 
+        /*
         public async Task<bool> WarriorUseDiamondFlaskTask()
         {
             bool shouldUseDiamondFlask = WorldState.AttackerCount > 1 &&
@@ -262,32 +265,19 @@ namespace WoWHelper
 
             return shouldUseDiamondFlask;
         }
-
-        public async Task<bool> WarriorUseHealingTrinketTask()
-        {
-            bool shouldUseHealingTrinket = WorldState.PlayerHpPercent <= WowGameplayConstants.HEALING_TRINKET_HP_THRESHOLD &&
-                !CurrentTimeInsideDuration(HealingTrinketTime, WowGameplayConstants.HEALING_TRINKET_COOLDOWN_MILLIS);
-
-            if (shouldUseHealingTrinket)
-            {
-                HealingTrinketTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_HEALING_TRINKET);
-            }
-
-            return shouldUseHealingTrinket;
-        }
+        */
 
         public async Task<bool> WarriorStartOfCombatBerserkerRage()
         {
-            await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_BERSERKER_RAGE_MACRO);
+            await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_BERSERKER_RAGE);
             await Task.Delay(150);
-            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
             await Task.Delay(150);
-            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
             await Task.Delay(150);
-            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
             await Task.Delay(150);
-            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO);
+            await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
 
             return true;
         }

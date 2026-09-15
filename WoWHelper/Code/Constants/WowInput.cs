@@ -18,24 +18,54 @@ namespace WoWHelper.Code
 /cast [nomod] Charge
 /cast [mod:shift] Shoot
         */
-        public const Keys WARRIOR_CHARGE_KEY = Keys.D2;
+        public const Keys WARRIOR_CHARGE = Keys.D2;
         public const Keys WARRIOR_SHIFT_SHOOT = Keys.D2;
 
+        /*
+         * 3 H/C
+#showtooltip [mod:shift] Cleave; Heroic Strike
+/cast [nomod] Heroic Strike
+/cast [mod:shift] Cleave
+        */
+        public const Keys WARRIOR_HEROIC_STRIKE = Keys.D3;
+        public const Keys WARRIOR_SHIFT_CLEAVE = Keys.D3;
 
-        public const Keys WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO = Keys.D3;
-        public const Keys WARRIOR_HEROIC_STRIKE_KEY = Keys.D4;
-        public const Keys WARRIOR_BATTLE_SHOUT_KEY = Keys.D7;
-        public const Keys WARRIOR_SHOOT_MACRO = Keys.D8;
-        public const Keys WARRIOR_OVERPOWER_KEY = Keys.D9;
-        public const Keys WARRIOR_CLEAR_TARGET_MACRO = Keys.D0;
-        public const Keys WARRIOR_REND_KEY = Keys.OemMinus;
-        public const Keys WARRIOR_EXECUTE_KEY = Keys.Oemplus;
+        /*
+         * 4 Buff
+#showtooltip [mod:shift] Berserker Rage; Battle Shout
+/cast [nomod] Battle Shout
+/cast [mod:shift] Berserker Rage
+        */
+        public const Keys WARRIOR_BATTLE_SHOUT = Keys.D4;
+        // TODO: add stance dancing to macros??
+        public const Keys WARRIOR_SHIFT_BERSERKER_RAGE = Keys.D4;
 
-        public const Keys WARRIOR_SHIFT_RETALIATION_KEY = Keys.D1;
-        public const Keys WARRIOR_SHIFT_BERSERKER_RAGE_MACRO = Keys.D2;
-        public const Keys WARRIOR_SHIFT_CLEAVE_MACRO = Keys.D4;
-        public const Keys WARRIOR_SHIFT_HEALING_TRINKET = Keys.D7;
-        public const Keys WARRIOR_SHIFT_EAT_FOOD_KEY = Keys.D0;
+        /*
+         * 5 Dmg
+#showtooltip [mod:shift] Execute; Mortal Strike
+/cast [nomod] Mortal Strike
+/cast [mod:shift] Execute
+        */
+        public const Keys WARRIOR_MORTALSTRIKE_BLOODTHIRST = Keys.D5;
+        public const Keys WARRIOR_SHIFT_EXECUTE = Keys.D5;
+
+        /*
+         * 6 Rend
+#showtooltip [mod:shift] Execute; Mortal Strike
+/cast [nomod] Mortal Strike
+/cast [mod:shift] Execute
+        */
+        public const Keys WARRIOR_REND = Keys.D6;
+        public const Keys WARRIOR_SHIFT_OVERPOWER = Keys.D6;
+
+        /*
+         * 7 shit
+#showtooltip [mod:shift] Retaliation; Retaliation
+/cast [nomod] Retaliation
+/cast [mod:shift] Retaliation
+        */
+        public const Keys WARRIOR_SHIFT_RETALIATION_KEY = Keys.D7;
+
         #endregion
 
         #region Shaman
