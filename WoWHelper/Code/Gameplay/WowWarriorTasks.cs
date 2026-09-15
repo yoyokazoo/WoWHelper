@@ -174,8 +174,7 @@ namespace WoWHelper
 
             if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
-                await WowInput.PressKey(WowInput.WARRIOR_CHARGE);
-                return true;
+                return await FaceAndChargeTarget();
             }
             else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
@@ -197,8 +196,7 @@ namespace WoWHelper
 
             if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
-                await TurnABitToTheLeftTask();
-                await WowInput.PressKey(WowInput.WARRIOR_CHARGE);
+                await FaceAndChargeTarget();
             }
             else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
@@ -210,6 +208,13 @@ namespace WoWHelper
             }
 
             return WarriorCanEngageTarget(classState);
+        }
+
+        public async Task<bool> FaceAndChargeTarget()
+        {
+            await TurnToFaceTargetMarkerTask();
+            await WowInput.PressKey(WowInput.WARRIOR_CHARGE);
+            return true;
         }
 
         // Replaces the old shared CanEngageTarget() for the Warrior case --
