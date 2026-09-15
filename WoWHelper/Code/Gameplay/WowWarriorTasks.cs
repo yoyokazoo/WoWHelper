@@ -102,11 +102,17 @@ namespace WoWHelper
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_SHIFT_OVERPOWER);
                 }
-                else if (WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST)
+                else if (WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD && 
+                    WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST &&
+                    WorldState.PlayerLevel >= 24)
                 {
                     await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_EXECUTE);
                 }
-                else if (!classState.TargetHasRend && !WorldState.IsTargetBleedImmune && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
+                else if (!classState.TargetHasRend && 
+                    !WorldState.IsTargetBleedImmune && 
+                    WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && 
+                    WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST &&
+                    WorldState.PlayerLevel >= 4)
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_REND);
                 }
@@ -197,7 +203,7 @@ namespace WoWHelper
             {
                 if (!classState.WaitingToShoot)
                 {
-                    await TurnABitToTheLeftTask();
+                    await TurnToFaceTargetMarkerTask();
                     await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_SHOOT);
                 }
             }

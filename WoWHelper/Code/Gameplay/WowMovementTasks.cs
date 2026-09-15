@@ -411,25 +411,33 @@ namespace WoWHelper
             float? bearing = GetTargetMarkerBearingDegrees();
             if (bearing == null)
             {
+                Console.WriteLine("DEBUG TurnToFaceTargetMarkerTask: no marker found, can't turn -- returning false");
                 return false;
             }
 
             int turnMillis = (int)((Math.Abs(bearing.Value) / 360f) * FULL_ROTATION_MILLIS);
             Keys turnKey = bearing.Value > 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
 
+            Console.WriteLine($"DEBUG TurnToFaceTargetMarkerTask: bearing {bearing.Value:0.0} degrees -> holding {turnKey} for {turnMillis}ms");
+
             Keyboard.KeyDown(turnKey);
             await Task.Delay(turnMillis);
             Keyboard.KeyUp(turnKey);
 
             float? verifyBearing = GetTargetMarkerBearingDegrees();
-            return verifyBearing != null && Math.Abs(verifyBearing.Value) <= TARGET_FACING_CONE_DEGREES / 2f;
+            bool success = verifyBearing != null && Math.Abs(verifyBearing.Value) <= TARGET_FACING_CONE_DEGREES / 2f;
+            Console.WriteLine(verifyBearing == null
+                ? "DEBUG TurnToFaceTargetMarkerTask: post-turn verification found no marker -- returning false"
+                : $"DEBUG TurnToFaceTargetMarkerTask: post-turn bearing {verifyBearing.Value:0.0} degrees (cone +/-{TARGET_FACING_CONE_DEGREES / 2f:0.0}) -> success={success}");
+
+            return success;
         }
 
         // How close WowScreenConfiguration.DistanceFromTarget has to read before
         // WalkIntoMeleeRangeTask below considers itself close enough -- some slop above the
         // literal 0.0 "right in front of the player" calibration point, since we don't need
         // pixel-perfect precision, just close enough that melee abilities land.
-        private const float MELEE_RANGE_DISTANCE_THRESHOLD = 0.05f;
+        private const float MELEE_RANGE_DISTANCE_THRESHOLD = 0.01f;
 
         // How often WalkIntoMeleeRangeTask re-scans for the target marker while walking --
         // a full-screen capture (FindTargetMarkerOnScreen), so deliberately slower than
@@ -458,10 +466,14 @@ namespace WoWHelper
         // an off-center marker) before continuing to walk. Returns false (and stops walking)
         // if the marker is lost for too long, or if we time out without ever reading close
         // enough.
+        // TODO: This method doesn't really work yet
         public async Task<bool> WalkIntoMeleeRangeTask()
         {
             int consecutiveMisses = 0;
+            int iteration = 0;
             long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WALK_INTO_MELEE_RANGE_TIMEOUT_MILLIS;
+
+            Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: starting, timeout {WALK_INTO_MELEE_RANGE_TIMEOUT_MILLIS}ms");
 
             await StartWalkForwardTask();
 
@@ -469,10 +481,12 @@ namespace WoWHelper
             {
                 while (DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
                 {
+                    iteration++;
                     await UpdateWorldStateAsync();
 
                     if (WorldState.IsInMeleeRange)
                     {
+                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] WorldState.IsInMeleeRange -> success");
                         return true;
                     }
 
@@ -480,9 +494,10 @@ namespace WoWHelper
                     if (marker == null)
                     {
                         consecutiveMisses++;
+                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] no marker this scan (consecutiveMisses={consecutiveMisses}/{MAX_CONSECUTIVE_MARKER_MISSES})");
                         if (consecutiveMisses >= MAX_CONSECUTIVE_MARKER_MISSES)
                         {
-                            Console.WriteLine("WalkIntoMeleeRangeTask: lost the target marker, giving up");
+                            Console.WriteLine("DEBUG WalkIntoMeleeRangeTask: lost the target marker, giving up");
                             return false;
                         }
                     }
@@ -493,19 +508,23 @@ namespace WoWHelper
                         MostRecentTargetMarkerY = marker.Value.Y;
 
                         float bearing = GetBearingDegreesFromMarkerPosition(marker.Value);
+                        float distance = FarmingConfig.ScreenConfiguration.DistanceFromTarget(marker.Value);
+                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] marker={marker.Value} bearing={bearing:0.0} deg (cone +/-{TARGET_FACING_CONE_DEGREES / 2f:0.0}) distance={distance:0.000} (threshold {MELEE_RANGE_DISTANCE_THRESHOLD:0.000})");
+
                         if (Math.Abs(bearing) > TARGET_FACING_CONE_DEGREES / 2f)
                         {
                             // Target's no longer in front -- walking blind off this marker
                             // reading would just walk past/around it. Turn back onto it (its
                             // own fresh scan handles re-verifying) and pick this back up next
                             // iteration rather than trusting DistanceFromTarget here.
-                            Console.WriteLine($"WalkIntoMeleeRangeTask: target drifted out of front (bearing {bearing:0} degrees), re-facing");
+                            Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] target drifted out of front (bearing {bearing:0.0} degrees), re-facing");
                             await TurnToFaceTargetMarkerTask();
                             continue;
                         }
 
-                        if (FarmingConfig.ScreenConfiguration.DistanceFromTarget(marker.Value) <= MELEE_RANGE_DISTANCE_THRESHOLD)
+                        if (distance <= MELEE_RANGE_DISTANCE_THRESHOLD)
                         {
+                            Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] distance {distance:0.000} <= threshold -> success");
                             return true;
                         }
                     }
@@ -518,7 +537,7 @@ namespace WoWHelper
                 await EndWalkForwardTask();
             }
 
-            Console.WriteLine("WalkIntoMeleeRangeTask: timed out before getting close enough");
+            Console.WriteLine("DEBUG WalkIntoMeleeRangeTask: timed out before getting close enough");
             return false;
         }
 

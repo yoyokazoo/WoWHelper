@@ -334,6 +334,13 @@ namespace WoWHelper
                     //LootX = centroid.Value.X;
                     //LootY = centroid.Value.Y;
                 }
+
+                // TEMP DEBUG (WalkIntoMeleeRangeTask troubleshooting): confirm whether the
+                // marker is actually being found at all, and where -- remove once resolved.
+                Console.WriteLine(centroid == null
+                    ? $"DEBUG FindTargetMarkerOnScreen: marker NOT found (color {WowScreenConfiguration.TARGET_MARKER_COLOR}, resolution {resolution})"
+                    : $"DEBUG FindTargetMarkerOnScreen: marker found at {centroid.Value}");
+
                 return centroid;
             }
         }
