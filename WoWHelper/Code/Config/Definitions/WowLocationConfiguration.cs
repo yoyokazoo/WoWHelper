@@ -68,8 +68,6 @@ namespace WoWHelper.Code.WorldState
         public float DistanceTolerance { get; set; }
 
         public EngagementMethod EngageMethod { get; set; }
-        public bool UseRend { get; set; } // some mobs are immune to bleed
-        public bool PreemptFear { get; set; } // if fighting mobs that Fear, start each fight with Berserker Rage
         public int TooManyAttackersThreshold { get; set; } // how many mobs to panic at (sometimes mobs spawn tiny bugs or something that will get counted)
         public int LogoffLevel { get; set; } // Level to log off at (mostly for low level areas, or if we're going to be learning a spell that the bot will expect to know)
 

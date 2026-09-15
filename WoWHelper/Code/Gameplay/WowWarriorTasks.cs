@@ -85,7 +85,7 @@ namespace WoWHelper
                     startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
-                if (FarmingConfig.PreemptFear && !CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS))
+                if (WorldState.IsTargetFearCaster && !CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS))
                 {
                     await WarriorStartOfCombatBerserkerRage();
                     BerserkerRageTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
@@ -104,7 +104,7 @@ namespace WoWHelper
                 {
                     Keyboard.KeyPress(WowInput.WARRIOR_EXECUTE_KEY);
                 }
-                else if (FarmingConfig.UseRend && !classState.TargetHasRend && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
+                else if (!classState.TargetHasRend && !WorldState.IsTargetBleedImmune && WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
                 {
                     Keyboard.KeyPress(WowInput.WARRIOR_REND_KEY);
                 }

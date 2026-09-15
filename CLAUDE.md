@@ -71,7 +71,7 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1-R3 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning` |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R4 and R5-R6 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R2 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -226,8 +226,21 @@ current cast, `UnitCastingInfo("player") == "Skinning"` — Skinning is a
 regular cast-bar action, not a channel, and isn't cast via a normal
 spellbook ID the way e.g. `CanCurePoison`'s `IsSpellKnownByName()` match is);
 and R4 is the 4th "which supported class" bit, Warlock (see the `MultiBoolOne`
-B-byte note above for why it landed here instead of there); R5-8 and the G/B
-bytes are still reserved for the next class-agnostic bool.
+B-byte note above for why it landed here instead of there). R5 is
+`WowWorldState.IsTargetBleedImmune` (per-mob, from `BLEED_IMMUNE_MOB_NAMES`
+in `CreatureConfig.lua` — mobs not worth (re)applying Rend to) and R6 is
+`IsTargetFearCaster` (per-mob, from `FEAR_CASTER_MOB_NAMES` in
+`CreatureConfig.lua` — mobs worth opening with Berserker Rage against rather
+than reacting after the fact); both live here rather than in
+`ClassBoolOne`/Warrior's own slice because they're mob-identity facts, the
+same class as `IsTargetLongRangeCaster` above, even though only Warrior
+consumes either today (`WowWarriorTasks.cs`'s `WarriorCombatLoopTask` reads
+`WorldState.IsTargetBleedImmune` when deciding whether to Rend, and
+`WorldState.IsTargetFearCaster` when deciding whether to preemptively pop
+Berserker Rage) — this replaced an earlier, route-level `UseRend`/
+`PreemptFear` pair of booleans on `WowLocationConfiguration` that couldn't
+express "some mobs at this route bleed-immune/fear-cast, some don't." R7-8
+and the G/B bytes are still reserved for the next class-agnostic bool.
 `ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
@@ -409,8 +422,8 @@ of truth — edits should be made here, not in the WoW install directory.
   read their name lists from `CreatureConfig.lua`.
 - **`WarriorFunctions.lua`** / **`MageFunctions.lua`** / **`ShamanFunctions.lua`**
   / **`WarlockFunctions.lua`**
-  — that class's specific checks (e.g. `TargetHasRend`, `CanCastWhirlwind` for
-  Warrior; `ShouldWeSummonWater`, `IsFireblastCooledDown` for Mage;
+  — that class's specific checks (e.g. `TargetHasRend`, `CanCastMortalStrikeOrBloodthirst`
+  for Warrior; `ShouldWeSummonWater`, `IsFireblastCooledDown` for Mage;
   `ShouldCastRockbiterWeapon`, `CanCastEarthShock` for Shaman;
   `ShouldCastDemonArmor`/`ShouldSummonPet`/`ShouldCastImmolate`/
   `ShouldCastCorruption` for Warlock) plus a `GetXClassBoolOne/Two`/

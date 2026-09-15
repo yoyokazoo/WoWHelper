@@ -700,6 +700,37 @@ function IsTargetNatureImmune()
     return NATURE_IMMUNE_MOB_NAMES[name] == true
 end
 
+-- True if the current target is bleed-immune (per BLEED_IMMUNE_MOB_NAMES in
+-- CreatureConfig.lua) -- not worth (re)applying Rend to these.
+function IsTargetBleedImmune()
+    if not UnitExists("target") then
+        return false
+    end
+
+    local name = UnitName("target")
+    if not name then
+        return false
+    end
+
+    return BLEED_IMMUNE_MOB_NAMES[name] == true
+end
+
+-- True if the current target casts a Fear-type effect (per
+-- FEAR_CASTER_MOB_NAMES in CreatureConfig.lua) -- worth opening with
+-- Berserker Rage rather than reacting after the fact.
+function IsTargetFearCaster()
+    if not UnitExists("target") then
+        return false
+    end
+
+    local name = UnitName("target")
+    if not name then
+        return false
+    end
+
+    return FEAR_CASTER_MOB_NAMES[name] == true
+end
+
 -- True if the current target has a ranged attack whose range exceeds Earth
 -- Shock's (per LONG_RANGE_CASTER_MOB_NAMES in CreatureConfig.lua).
 function IsTargetLongRangeCaster()
@@ -793,8 +824,9 @@ function IsGlobalCooldownCooledDown()
     return remaining <= 0
 end
 
--- CanCastWhirlwind(), CanCastSweepingStrikes(), and
 -- CanCastMortalStrikeOrBloodthirst() moved to WarriorFunctions.lua.
+-- (CanCastWhirlwind()/CanCastSweepingStrikes() used to live there too --
+-- removed, see the GetWarriorClassBoolOne() comment in WarriorFunctions.lua.)
 -- CanCastEarthShock() moved to ShamanFunctions.lua.
 
 function GetFreeSlotsInBag(bag)
@@ -964,10 +996,14 @@ function GetMultiBoolOne()
 end
 
 -- R1 (IsTargetLongRangeCaster), R2 (IsLogoffMobSeen), R3
--- (IsCurrentlySkinning), and R4 (the 4th "which supported class" bit,
+-- (IsCurrentlySkinning), R4 (the 4th "which supported class" bit,
 -- Warlock -- see GetMultiBoolOne's B-byte comment above for why it landed
--- here instead of there) are the flags packed in here so far -- R5-R8 and
--- the G/B bytes are still fully reserved for future class-agnostic flags.
+-- here instead of there), R5 (IsTargetBleedImmune), and R6
+-- (IsTargetFearCaster) are the flags packed in here so far -- both mob-name
+-- lookups, same pattern as IsTargetLongRangeCaster/IsLogoffMobSeen above, so
+-- they live here (class-agnostic) rather than in a class's own ClassBool
+-- even though only Warrior consumes them today -- R7-R8 and the G/B bytes
+-- are still fully reserved for future class-agnostic flags.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()
@@ -976,7 +1012,10 @@ function GetMultiBoolTwo()
     local _, classFile = UnitClass("player")
     local boolR4 = (classFile == "WARLOCK")
 
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, false, false, false, false)
+    local boolR5 = IsTargetBleedImmune()
+    local boolR6 = IsTargetFearCaster()
+
+    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, false, false)
 
     return rByte/255.0, 0, 0
 end

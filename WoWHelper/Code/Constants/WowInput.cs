@@ -26,10 +26,14 @@ namespace WoWHelper.Code
 
         public const Keys WARRIOR_SHIFT_RETALIATION_KEY = Keys.D1;
         public const Keys WARRIOR_SHIFT_BERSERKER_RAGE_MACRO = Keys.D2;
-        public const Keys WARRIOR_SHIFT_WHIRLWIND_MACRO = Keys.D3;
+        // Not currently pressed anywhere -- Whirlwind's cooldown used to be tracked
+        // (WowWarriorClassState.WhirlwindCooledDown) but nothing ever consumed it, so both
+        // were removed. Re-add if Whirlwind gets wired into the multi-attacker rotation.
+        //public const Keys WARRIOR_SHIFT_WHIRLWIND_MACRO = Keys.D3;
         public const Keys WARRIOR_SHIFT_CLEAVE_MACRO = Keys.D4;
         //public const Keys WARRIOR_SHIFT_LOGOUT_MACRO = Keys.D5;
-        public const Keys WARRIOR_SHIFT_SHIELD_WALL = Keys.D6;
+        // Not currently pressed anywhere -- see WARRIOR_SHIFT_WHIRLWIND_MACRO above.
+        //public const Keys WARRIOR_SHIFT_SHIELD_WALL = Keys.D6;
         public const Keys WARRIOR_SHIFT_HEALING_TRINKET = Keys.D7;
         //public const Keys WARRIOR_SHIFT_TARGET_DUMMY = Keys.D8;
         //public const Keys WARRIOR_SHIFT_PETRIFICATION_FLASK = Keys.D9;

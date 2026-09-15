@@ -31,7 +31,6 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f,
             EngageMethod = EngagementMethod.Charge,
-            UseRend = false,
             TooManyAttackersThreshold = 3
         };
 
@@ -90,7 +89,6 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.05f,
             EngageMethod = EngagementMethod.Pull,
-            UseRend = true,
             TooManyAttackersThreshold = 4
         };
 
@@ -123,7 +121,6 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f,
             EngageMethod = EngagementMethod.Pull,
-            UseRend = false,
             TooManyAttackersThreshold = 4
         };
 

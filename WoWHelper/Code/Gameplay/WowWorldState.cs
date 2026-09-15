@@ -51,10 +51,15 @@ namespace WoWHelper
         public bool PlayerIsDiseased { get; private set; }
         public bool TargetRecentlyEvaded { get; private set; }
 
-        // Decoded from MultiBoolTwo's R byte, b1/b2/b3 (see GetMultiBoolTwo() in WoWFunctions.lua).
+        // Decoded from MultiBoolTwo's R byte, b1/b2/b3/b5/b6 (see GetMultiBoolTwo() in WoWFunctions.lua).
         public bool IsTargetLongRangeCaster { get; private set; }
         public bool LogoffMobSeen { get; private set; }
         public bool IsCurrentlySkinning { get; private set; }
+        // Mob-name-list lookups (BLEED_IMMUNE_MOB_NAMES/FEAR_CASTER_MOB_NAMES in
+        // CreatureConfig.lua), same pattern as IsTargetLongRangeCaster above -- class-agnostic
+        // even though only Warrior consumes them today (see WarriorCombatLoopTask).
+        public bool IsTargetBleedImmune { get; private set; }
+        public bool IsTargetFearCaster { get; private set; }
 
         // Which of the four bot-supported classes the player is playing, decoded from
         // MultiBoolOne's B byte (b2/b3/b4 -- see GetMultiBoolOne() in WoWFunctions.lua)
@@ -255,14 +260,15 @@ namespace WoWHelper
             IsTargetCasting = b8;
         }
 
-        // R1 (IsTargetLongRangeCaster), R2 (LogoffMobSeen), R3 (IsCurrentlySkinning), and
-        // R4 (the 4th "which supported class" bit, Warlock -- see PlayerClass) are the
-        // fields packed here so far -- R5-R8 and the G/B bytes are still reserved for
-        // future class-agnostic flags (see GetMultiBoolTwo() in WoWFunctions.lua).
+        // R1 (IsTargetLongRangeCaster), R2 (LogoffMobSeen), R3 (IsCurrentlySkinning),
+        // R4 (the 4th "which supported class" bit, Warlock -- see PlayerClass), R5
+        // (IsTargetBleedImmune), and R6 (IsTargetFearCaster) are the fields packed here
+        // so far -- R7-R8 and the G/B bytes are still reserved for future class-agnostic
+        // flags (see GetMultiBoolTwo() in WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
-            DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out _, out _, out _, out _);
+            DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out _, out _);
 
             IsTargetLongRangeCaster = r1;
             LogoffMobSeen = r2;
@@ -275,6 +281,9 @@ namespace WoWHelper
             {
                 PlayerClass = WowCombatConfiguration.Warlock;
             }
+
+            IsTargetBleedImmune = r5;
+            IsTargetFearCaster = r6;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

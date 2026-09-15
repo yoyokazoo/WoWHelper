@@ -49,3 +49,16 @@ LOGOFF_IF_SEEN_MOB_NAMES = {
     ["Suffering Highborne"] = true,
     ["Anguished Highborne"] = true,
 }
+
+-- Mobs immune (or effectively immune) to bleed effects -- not worth
+-- (re)applying Rend to these. Populate as encountered; starts empty since no
+-- specific mob has been confirmed immune yet.
+BLEED_IMMUNE_MOB_NAMES = {
+}
+
+-- Mobs that cast a Fear-type effect -- worth opening a fight against these
+-- with Berserker Rage (which grants Fear immunity) rather than reacting
+-- after the fact. Populate as encountered; starts empty since no specific
+-- mob has been confirmed to cast Fear yet.
+FEAR_CASTER_MOB_NAMES = {
+}
