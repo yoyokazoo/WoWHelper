@@ -130,11 +130,14 @@ namespace WoWHelper
                 }
                 else if (WorldState.AttackerCount <= 1) // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
                 {
-                    if (classState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
+                    if (classState.MortalStrikeOrBloodThirstCooledDown && 
+                        WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST &&
+                        WorldState.PlayerLevel >= 40)
                     {
                         await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
                     }
-                    else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
+                    else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST) || 
+                        (WorldState.PlayerLevel >= 40 && WorldState.ResourcePercent >= WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
                     {
                         // Heroic only if we have enough spare rage to bloodthirst right after
                         await WowInput.PressKey(WowInput.WARRIOR_HEROIC_STRIKE);
@@ -178,6 +181,9 @@ namespace WoWHelper
             await Task.Delay(0);
             EngageAttempts = 1;
             await TurnToFaceTargetMarkerTask();
+                await StartWalkForwardTask();
+                await Task.Delay(500);
+                await EndWalkForwardTask();
             return true;
         }
 
@@ -192,8 +198,9 @@ namespace WoWHelper
 
             if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge && WorldState.PlayerLevel < 4) // no charge yet
             {
-                await WalkIntoMeleeRangeTask();
                 await WowInput.PressKey(WowInput.START_ATTACK);
+                await WalkIntoMeleeRangeTask(classState);
+                //await WowInput.PressKey(WowInput.START_ATTACK);
             }
             else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
@@ -225,7 +232,14 @@ namespace WoWHelper
         {
             switch (FarmingConfig.EngageMethod)
             {
-                case WowLocationConfiguration.EngagementMethod.Charge: return classState.CanChargeTarget;
+                case WowLocationConfiguration.EngagementMethod.Charge:
+                    {
+                        if (WorldState.PlayerLevel < 4 && classState.CanChargeTarget)
+                        {
+                            return FindTargetMarkerOnScreen() != null;
+                        }
+                        return classState.CanChargeTarget;
+                    }
                 case WowLocationConfiguration.EngagementMethod.Pull: return classState.CanShootTarget;
                 default: throw new System.NotImplementedException(
                     $"{nameof(WarriorCanEngageTarget)}: EngageMethod \"{FarmingConfig.EngageMethod}\" (from location " +

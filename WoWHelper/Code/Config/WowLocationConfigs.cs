@@ -762,14 +762,18 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 12
         };
 
+        /*
+/target Clattering
+/target Dire
+/target Clattering
+
+            */
         public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration
         {
             Title = "Durotar Boar Razor Hill Loop (Level 6+)",
             MinimumLevel = 6,
             Zone = WowZone.Durotar,
 
-            // /target Dire
-            // /target Clattering
             Waypoints = new List<Vector2>
             {
                 new Vector2(51.82f, 66.99f),
@@ -797,7 +801,7 @@ namespace WoWHelper.Code.WorldState
                 //new Vector2(52.09f, 65.87f),
                 new Vector2(52.44f, 64.81f),
             },
-            EngageMethod = EngagementMethod.Pull,
+            EngageMethod = EngagementMethod.Charge,
             LogoffLevel = 10,
         };
 
@@ -818,8 +822,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(43.88f, 56.90f),
                 new Vector2(45.27f, 57.40f),
             },
-            EngageMethod = EngagementMethod.Pull,
-            TooManyAttackersThreshold = 3,
+            EngageMethod = EngagementMethod.Charge,
             LogoffLevel = 7,
         };
 

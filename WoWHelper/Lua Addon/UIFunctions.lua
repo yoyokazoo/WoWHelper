@@ -332,8 +332,6 @@ function InitializeIndicators()
     table.insert(numIndicators, facingYNum.update)
     table.insert(numIndicators, attackers.update)
 
-    --local inRangeBox = CreateIndicator(YoyokazooUIFrame, "InRange", IsInMeleeRangeColor, 0)
-    -- IsAttackingColor
     local inRangeBox = CreateIndicator(YoyokazooUIFrame, "InRange", IsAttackingColor, 0)
     local inCombatBox = CreateIndicator(YoyokazooUIFrame, "InCombat", IsInCombatColor, 1)
     local canChargeTarget = CreateIndicator(YoyokazooUIFrame, "CanChargeTarget", CanChargeTargetColor, 2)

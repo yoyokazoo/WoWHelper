@@ -1,13 +1,3 @@
-function IsInMeleeRange()
-    if UnitExists("target") and UnitCanAttack("player", "target") then
-        -- 3 = "duel / inspect / trade" distance, roughly 5 yards (melee-ish)
-        if CheckInteractDistance("target", 3) then
-            return true
-        end
-    end
-    return false
-end
-
 function IsInCombat()
     return UnitAffectingCombat("player")
 end
@@ -970,7 +960,9 @@ function GetMultiBoolOne()
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
 
     local boolG1 = HasUnseenWhisper()
-    local boolG2 = IsInMeleeRange()
+    local boolG2 = false -- reserved, previously IsInMeleeRange() -- removed, CheckInteractDistance
+                          -- proved unreliable; WalkIntoMeleeRangeTask (WowMovementTasks.cs) now
+                          -- relies on WorldState.IsInCombat plus the target-marker bearing instead
     local boolG3 = IsPlayerCasting()
     local boolG4 = AreEnemyNameplatesTurnedOn()
     local boolG5 = CurrentTargetInCombatWithUs()
@@ -1101,10 +1093,6 @@ end
 
 function IsAttackingColor()
     return GetColorFromSingleBool(IsAttacking())
-end
-
-function IsInMeleeRangeColor()
-    return GetColorFromSingleBool(IsInMeleeRange())
 end
 
 function IsInCombatColor()

@@ -433,12 +433,6 @@ namespace WoWHelper
             return success;
         }
 
-        // How close WowScreenConfiguration.DistanceFromTarget has to read before
-        // WalkIntoMeleeRangeTask below considers itself close enough -- some slop above the
-        // literal 0.0 "right in front of the player" calibration point, since we don't need
-        // pixel-perfect precision, just close enough that melee abilities land.
-        private const float MELEE_RANGE_DISTANCE_THRESHOLD = 0.01f;
-
         // How often WalkIntoMeleeRangeTask re-scans for the target marker while walking --
         // a full-screen capture (FindTargetMarkerOnScreen), so deliberately slower than
         // WorldState's own throttled pixel-row capture cadence.
@@ -447,31 +441,45 @@ namespace WoWHelper
         // How many consecutive scans are allowed to come back empty (marker briefly occluded
         // by terrain/other mobs, or a frame UIFunctions.lua hasn't repainted yet) before
         // WalkIntoMeleeRangeTask gives up, rather than aborting on the very first miss.
-        private const int MAX_CONSECUTIVE_MARKER_MISSES = 5;
+        private const int MAX_CONSECUTIVE_MARKER_MISSES = 1;
 
         // Overall safety cap so a target that's unreachable (stuck on terrain, behind an
-        // obstacle DistanceFromTarget can't see around) doesn't walk forever -- same class of
-        // guard as PathfindingLoopTask's maxTargetChecks above.
+        // obstacle we can't see around) doesn't walk forever -- same class of guard as
+        // PathfindingLoopTask's maxTargetChecks above.
         private const int WALK_INTO_MELEE_RANGE_TIMEOUT_MILLIS = 15000;
 
-        // Walks straight forward until either WorldState.IsInMeleeRange (authoritative --
-        // CheckInteractDistance via the Lua addon) or the target-marker distance estimate
-        // (WowScreenConfiguration.DistanceFromTarget) says we're close enough, whichever comes
-        // first. Caller must already be facing the target on entry (see
-        // TurnToFaceTargetMarkerTask) -- DistanceFromTarget's calibration assumes the marker
-        // is dead-ahead. Since every loop iteration already re-scans for the marker anyway
-        // (to feed DistanceFromTarget), that same scan doubles as a check for whether the
-        // target has since drifted out of TARGET_FACING_CONE_DEGREES -- if so, this re-turns
-        // via TurnToFaceTargetMarkerTask (rather than trusting a stale distance reading against
-        // an off-center marker) before continuing to walk. Returns false (and stops walking)
-        // if the marker is lost for too long, or if we time out without ever reading close
-        // enough.
-        // TODO: This method doesn't really work yet
-        public async Task<bool> WalkIntoMeleeRangeTask()
+        // Walks straight forward until WorldState.IsInCombat says we've engaged (starting
+        // auto-attack is the only reliable "we made it" signal now -- the addon's
+        // CheckInteractDistance-based IsInMeleeRange was tried and removed, it didn't
+        // reliably reflect actual melee range). Caller must already be facing the target on
+        // entry (see TurnToFaceTargetMarkerTask). No per-resolution calibration is needed here
+        // (contrast the old, now-removed WowScreenConfiguration.DistanceFromTarget, which
+        // needed a measured TargetMarkerNearY/FarY pixel pair per resolution):
+        // GetBearingDegreesFromMarkerPosition already gives us the line from screen center to
+        // the marker, and that's all we need -- |bearing| <= 90 means the marker is above
+        // center (in front of us, camera pitched straight down), |bearing| > 90 means it's
+        // below center (behind us). Its shrinking magnitude as we close the gap is a "getting
+        // closer" signal (logged for now, not gated on).
+        //
+        // Since every loop iteration already re-scans for the marker anyway (for the bearing),
+        // that same scan doubles as two drift checks, cheapest/coarsest first:
+        //   1. Did the marker just flip from in-front to behind since the last scan? At close
+        //      range the marker's angular speed around us is huge for a small step forward, so
+        //      a single 200ms scan gap can jump straight over the fine cone check below without
+        //      ever registering as "drifted" by it. When that happens we've walked past/into
+        //      the target -- stop walking, re-face it dead-on, then resume, rather than
+        //      continuing to walk forward on a heading that's now backwards.
+        //   2. Otherwise, has it drifted outside the finer TARGET_FACING_CONE_DEGREES cone?
+        //      If so, re-turn via TurnToFaceTargetMarkerTask (without stopping the walk --
+        //      this is normal gradual drift, not an overshoot) before continuing.
+        // Returns false (and stops walking) if the marker is lost for too long, or if we time
+        // out without ever entering combat.
+        public async Task<bool> WalkIntoMeleeRangeTask(WowClassState classState)
         {
             int consecutiveMisses = 0;
             int iteration = 0;
             long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WALK_INTO_MELEE_RANGE_TIMEOUT_MILLIS;
+            bool? wasInFrontOfPlayer = null;
 
             Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: starting, timeout {WALK_INTO_MELEE_RANGE_TIMEOUT_MILLIS}ms");
 
@@ -484,10 +492,16 @@ namespace WoWHelper
                     iteration++;
                     await UpdateWorldStateAsync();
 
-                    if (WorldState.IsInMeleeRange)
+                    if (WorldState.IsInCombat)
                     {
-                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] WorldState.IsInMeleeRange -> success");
+                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] WorldState.IsInCombat -> success");
                         return true;
+                    }
+
+                    if (ClassState is WowWarriorClassState warr && !warr.CanChargeTarget)
+                    {
+                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] !ClassState.CanChargeTarget -> success");
+                        return false;
                     }
 
                     var marker = FindTargetMarkerOnScreen();
@@ -508,24 +522,31 @@ namespace WoWHelper
                         MostRecentTargetMarkerY = marker.Value.Y;
 
                         float bearing = GetBearingDegreesFromMarkerPosition(marker.Value);
-                        float distance = FarmingConfig.ScreenConfiguration.DistanceFromTarget(marker.Value);
-                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] marker={marker.Value} bearing={bearing:0.0} deg (cone +/-{TARGET_FACING_CONE_DEGREES / 2f:0.0}) distance={distance:0.000} (threshold {MELEE_RANGE_DISTANCE_THRESHOLD:0.000})");
+                        float verticalOffset = marker.Value.Y - (FarmingConfig.ScreenConfiguration.Resolution.Height / 2f);
+                        bool isInFrontOfPlayer = Math.Abs(bearing) <= 90f;
+                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] marker={marker.Value} bearing={bearing:0.0} deg (cone +/-{TARGET_FACING_CONE_DEGREES / 2f:0.0}) verticalOffset={verticalOffset:0.0}px (shrinking magnitude = closer) inFront={isInFrontOfPlayer}");
 
-                        if (Math.Abs(bearing) > TARGET_FACING_CONE_DEGREES / 2f)
+                        if (wasInFrontOfPlayer == true && !isInFrontOfPlayer)
                         {
-                            // Target's no longer in front -- walking blind off this marker
-                            // reading would just walk past/around it. Turn back onto it (its
-                            // own fresh scan handles re-verifying) and pick this back up next
-                            // iteration rather than trusting DistanceFromTarget here.
-                            Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] target drifted out of front (bearing {bearing:0.0} degrees), re-facing");
+                            Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] target went from in front to behind, stopping to re-face");
+                            await EndWalkForwardTask();
                             await TurnToFaceTargetMarkerTask();
+                            await StartWalkForwardTask();
+                            wasInFrontOfPlayer = null;
+                            await Task.Delay(TARGET_MARKER_SCAN_INTERVAL_MILLIS);
                             continue;
                         }
 
-                        if (distance <= MELEE_RANGE_DISTANCE_THRESHOLD)
+                        wasInFrontOfPlayer = isInFrontOfPlayer;
+
+                        if (Math.Abs(bearing) > TARGET_FACING_CONE_DEGREES / 2f)
                         {
-                            Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] distance {distance:0.000} <= threshold -> success");
-                            return true;
+                            // Target's drifted out of the fine facing cone but not all the way
+                            // behind us -- ordinary gradual drift, so just re-turn without
+                            // interrupting the walk.
+                            Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] target drifted out of front (bearing {bearing:0.0} degrees), re-facing");
+                            await TurnToFaceTargetMarkerTask();
+                            continue;
                         }
                     }
 

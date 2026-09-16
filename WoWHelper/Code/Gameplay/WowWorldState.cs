@@ -38,7 +38,6 @@ namespace WoWHelper
         public bool BagsAreFull { get; private set; }
         public bool IsPlayerPetrified { get; private set; }
         public bool HasUnseenWhisper { get; private set; }
-        public bool IsInMeleeRange { get; private set; }
         public bool IsCurrentlyCasting { get; private set; }
         public bool EnemyNameplatesAreTurnedOn { get; private set; }
         public bool CurrentTargetInCombatWithUs { get; private set; }
@@ -238,7 +237,8 @@ namespace WoWHelper
             IsPlayerPetrified = r8;
 
             HasUnseenWhisper = g1;
-            IsInMeleeRange = g2;
+            // g2 reserved -- previously IsInMeleeRange, removed (see WoWFunctions.lua's
+            // GetMultiBoolOne comment).
             IsCurrentlyCasting = g3;
             EnemyNameplatesAreTurnedOn = g4;
             CurrentTargetInCombatWithUs = g5;

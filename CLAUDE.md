@@ -438,20 +438,31 @@ of truth — edits should be made here, not in the WoW install directory.
   (`WowMovementTasks.cs`) turn to face it (bearing math itself lives in the
   pure `GetBearingDegreesFromMarkerPosition(Point)`, so it can run against an
   already-known marker position without a second full-screen scan), and
-  `WowScreenConfiguration.DistanceFromTarget` linearly interpolates the
-  marker's Y coordinate between `TargetMarkerNearY` (melee range, 0.0) and
-  `TargetMarkerFarY` (calibrated max distance, 1.0) into a distance estimate
-  — assumes the marker is dead-ahead (only Y, not X, is used), and is only
-  calibrated for 1920x1080 so far. `WalkIntoMeleeRangeTask`
-  (`WowMovementTasks.cs`) walks straight forward until either
-  `WorldState.IsInMeleeRange` (authoritative) or that distance estimate reads
-  close enough, whichever comes first, caching the last-found marker position
-  in `WowPlayer.MostRecentTargetMarkerX`/`MostRecentTargetMarkerY`. It reuses
-  the marker scan it already does each iteration (for `DistanceFromTarget`)
-  to also check the target hasn't drifted outside `TARGET_FACING_CONE_DEGREES`
-  — if it has, it re-runs `TurnToFaceTargetMarkerTask` before trusting
-  `DistanceFromTarget` again, rather than walking blind off a stale heading.
-  None of this is tuned against live testing yet.
+  needs no per-resolution calibration (an earlier version,
+  `WowScreenConfiguration.DistanceFromTarget`, linearly interpolated the
+  marker's Y coordinate between a measured near/far pixel pair and was
+  removed): `|bearing| <= 90` means the marker is above screen center (in
+  front of the player), `|bearing| > 90` means below (behind), and its
+  shrinking magnitude while walking forward is the "getting closer" signal.
+  `WalkIntoMeleeRangeTask` (`WowMovementTasks.cs`) walks straight forward
+  until `WorldState.IsInCombat` reads true (starting auto-attack is the only
+  "we made it" signal trusted to actually stop the walk — an earlier
+  `IsInMeleeRange` bool, decoded from a `CheckInteractDistance` check in the
+  addon, didn't reliably reflect real melee range and was removed; the
+  `MultiBoolOne` G-byte bit it used is reserved again, see
+  `GetMultiBoolOne()` in `WoWFunctions.lua`), caching the last-found marker
+  position in `WowPlayer.MostRecentTargetMarkerX`/`MostRecentTargetMarkerY`.
+  It reuses
+  the marker scan it already does each iteration (for the bearing) for two
+  drift checks, coarsest first: if the marker has flipped from in-front to
+  behind since the last scan — at close range a small step forward swings the
+  marker's angle around us fast enough that a single scan gap can jump
+  straight over the cone check below — it stops walking, re-faces dead-on via
+  `TurnToFaceTargetMarkerTask`, and resumes, rather than continuing to walk
+  forward on a heading that's now backwards; otherwise, if it's merely
+  drifted outside the finer `TARGET_FACING_CONE_DEGREES` cone (ordinary
+  gradual drift), it re-turns via `TurnToFaceTargetMarkerTask` without
+  interrupting the walk. None of this is tuned against live testing yet.
 - **`Config/`** — per-location farming routes/waypoints
   (`WowLocationConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
