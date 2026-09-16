@@ -38,7 +38,7 @@ namespace WoWHelper
                 }
                 else if (ShamanShouldCastLightningShield(classState))
                 {
-                    Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
+                    await WowInput.PressKey(WowInput.SHAMAN_LIGHTNING_SHIELD);
                     continue;
                 }
 
@@ -92,13 +92,13 @@ namespace WoWHelper
                 {
                     Console.WriteLine($"Trying to Earth Shock!");
                     await WaitForGlobalCooldownTask();
-                    Keyboard.KeyPress(WowInput.SHAMAN_EARTH_SHOCK);
+                    await WowInput.PressKey(WowInput.SHAMAN_EARTH_SHOCK);
                 }
                 else if (ShamanShouldCastFrostShock(classState))
                 {
                     Console.WriteLine($"Trying to Frost Shock!");
                     await WaitForGlobalCooldownTask();
-                    Keyboard.KeyPress(WowInput.SHAMAN_FROST_SHOCK);
+                    await WowInput.PressKey(WowInput.SHAMAN_FROST_SHOCK);
                 }
                 else if (ShamanShouldCastCureDisease(classState))
                 {
@@ -110,12 +110,12 @@ namespace WoWHelper
                 {
                     Console.WriteLine($"Trying to Cure Poison!");
                     await WaitForGlobalCooldownTask();
-                    Keyboard.KeyPress(WowInput.SHAMAN_CURE_POISON);
+                    await WowInput.PressKey(WowInput.SHAMAN_CURE_POISON);
                 }
                 else// if (WorldState.AttackerCount <= 1)
                 {
                     // we should already be attacking
-                    //Keyboard.KeyPress(WowInput.SHAMAN_ATTACK);
+                    //await WowInput.PressKey(WowInput.SHAMAN_ATTACK);
                 }
 
                 if (WorldState.IsTargetLongRangeCaster && WorldState.TooFarAway && !hasWalkedTowardsLongRangeCaster)
@@ -251,7 +251,7 @@ namespace WoWHelper
         {
             if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
             {
-                Keyboard.KeyPress(WowInput.EAT_FOOD);
+                await WowInput.PressKey(WowInput.EAT_FOOD);
             }
 
             // water??
@@ -277,7 +277,7 @@ namespace WoWHelper
             if (ShamanShouldCastCurePoison(classState))
             {
                 await WaitForGlobalCooldownTask();
-                Keyboard.KeyPress(WowInput.SHAMAN_CURE_POISON);
+                await WowInput.PressKey(WowInput.SHAMAN_CURE_POISON);
             }
 
             if (ShamanShouldCastCureDisease(classState))
@@ -299,7 +299,7 @@ namespace WoWHelper
                 if (ShamanShouldCastLightningShield(classState))
                 {
                     await WaitForGlobalCooldownTask();
-                    Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_SHIELD);
+                    await WowInput.PressKey(WowInput.SHAMAN_LIGHTNING_SHIELD);
                     buffed = true;
                 }
 
@@ -338,7 +338,7 @@ namespace WoWHelper
         {
             EngageAttempts++;
 
-            if (AbandonUnreachableEngageTarget())
+            if (await AbandonUnreachableEngageTarget())
             {
                 return false;
             }
@@ -366,7 +366,7 @@ namespace WoWHelper
                 }
                 else
                 {
-                    Keyboard.KeyPress(WowInput.SHAMAN_LIGHTNING_BOLT);
+                    await WowInput.PressKey(WowInput.SHAMAN_LIGHTNING_BOLT);
                 }
 
                 await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
@@ -377,7 +377,7 @@ namespace WoWHelper
         }
 
         // Replaces the old shared CanEngageTarget() for the Shaman case --
-        // CanSpellcastPullTarget is shared with Mage under the same name but
+        // CanSpellcastPullTarget is shared with Warlock under the same name but
         // each class gets its own ClassState type, so each also gets its own
         // thin CanEngageTarget wrapper. Shaman always pulls with a spell
         // regardless of FarmingConfig.EngageMethod (Charge/Pull only matters for
@@ -402,7 +402,7 @@ namespace WoWHelper
 
                 // Figure out what to do here.  War stomp? Magma Totem? War stomp -> ghost wolf -> run to safety?
                 // Stoneskin totem for now
-                //Keyboard.KeyPress(WowInput.THROW_DYNAMITE);
+                //await WowInput.PressKey(WowInput.THROW_DYNAMITE);
                 await WaitForGlobalCooldownTask();
                 await ThrowDynamiteTask(forceThrow: true);
 

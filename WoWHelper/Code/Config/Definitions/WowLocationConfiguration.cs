@@ -25,6 +25,7 @@ namespace WoWHelper.Code.WorldState
         Silithus = 12,
         Azshara = 13,
         Winterspring = 14,
+        TirisfalGlades = 15,
 
         Unknown = 255, // current zone doesn't match any known entry
     }
@@ -45,15 +46,15 @@ namespace WoWHelper.Code.WorldState
         }
 
         // Only distinguishes the one thing that actually varies by class: Warriors either
-        // charge in or pull at range (bow/gun); Mages and Shamans always pull with a spell
-        // regardless of what this says (MageCanEngageTarget/ShamanCanEngageTarget ignore
-        // it entirely -- see WowMageTasks.cs/WowShamanTasks.cs). Used to have a third,
+        // charge in or pull at range (bow/gun); Shaman/Warlock always pull with a spell
+        // regardless of what this says (ShamanCanEngageTarget/WarlockCanEngageTarget ignore
+        // it entirely -- see WowShamanTasks.cs/WowWarlockTasks.cs). Used to have a third,
         // redundant Spellcast value alongside Shoot; collapsed since both meant "not a
         // melee gap-closer" and only Warrior's dispatch ever cared about the distinction.
         public enum EngagementMethod
         {
             Charge, // melee gap-closer (Warrior only)
-            Pull // shoot bow/gun (Warrior) or cast a pull spell -- frostbolt, lightning bolt, etc. (Mage/Shaman)
+            Pull // shoot bow/gun (Warrior) or cast a pull spell -- lightning bolt, shadow bolt, etc. (Shaman/Warlock)
         }
 
         // Human-readable name, including the minimum level, e.g. "Durotar Imps (Level 4+)".
@@ -74,8 +75,6 @@ namespace WoWHelper.Code.WorldState
         public List<string> ExpectedMobNames { get; set; }
 
         public EngagementMethod EngageMethod { get; set; }
-        public bool UseRend { get; set; } // some mobs are immune to bleed
-        public bool PreemptFear { get; set; } // if fighting mobs that Fear, start each fight with Berserker Rage
         public int TooManyAttackersThreshold { get; set; } // how many mobs to panic at (sometimes mobs spawn tiny bugs or something that will get counted)
         public int LogoffLevel { get; set; } // Level to log off at (mostly for low level areas, or if we're going to be learning a spell that the bot will expect to know)
 

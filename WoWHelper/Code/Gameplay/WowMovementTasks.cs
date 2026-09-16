@@ -1,5 +1,6 @@
 ﻿using InputManager;
 using System;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -57,21 +58,21 @@ namespace WoWHelper
 
                     if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.TAB)
                     {
-                        Keyboard.KeyPress(WowInput.TAB_TARGET);
+                        await WowInput.PressKey(WowInput.TAB_TARGET);
                     }
                     else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
                     {
-                        Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
+                        await WowInput.PressKey(WowInput.FIND_TARGET_MACRO);
                     }
                     else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
                     {
                         if (targetChecks % 2 == 0)
                         {
-                            Keyboard.KeyPress(WowInput.TAB_TARGET);
+                            await WowInput.PressKey(WowInput.TAB_TARGET);
                         }
                         else
                         {
-                            Keyboard.KeyPress(WowInput.FIND_TARGET_MACRO);
+                            await WowInput.PressKey(WowInput.FIND_TARGET_MACRO);
                         }
                     }
 
@@ -81,14 +82,14 @@ namespace WoWHelper
                 if (!CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
                 {
                     LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    Keyboard.KeyPress(WowInput.JUMP);
+                    await WowInput.PressKey(WowInput.JUMP);
                 }
 
                 if (WorldState.IsInCombat)
                 {
                     await EndWalkForwardTask();
                     Console.WriteLine($"Entered combat during pathfinding, clearing target");
-                    Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
+                    await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
 
                     return false;
                 }
@@ -362,8 +363,8 @@ namespace WoWHelper
         // once within half this, i.e. +/-15 degrees of dead-ahead.
         private const float TARGET_FACING_CONE_DEGREES = 30f;
 
-        // Signed bearing in degrees from the player's own screen position to the target
-        // marker (see WowPlayer.FindTargetMarkerOnScreen / UIFunctions.lua's target-marker
+        // Signed bearing in degrees from the player's own screen position to a target marker
+        // position (see WowPlayer.FindTargetMarkerOnScreen / UIFunctions.lua's target-marker
         // section): 0 = dead ahead, positive = turn right by that many degrees, negative =
         // turn left. There is no addon-legal way to read a target's actual position/bearing
         // in this client (UnitPosition, C_Map.GetPlayerMapPosition, and even nameplate frame
@@ -371,24 +372,29 @@ namespace WoWHelper
         // position relative to screen center: since the player is run with the camera pitched
         // straight down, screen "up" (Y above center) is forward, and the vector from screen
         // center to the marker IS the bearing, via atan2 -- X left/right of center becomes
-        // left/right of facing, Y above/below center becomes in-front-of/behind. Returns null
-        // if the marker isn't currently visible on screen.
-        private float? GetTargetMarkerBearingDegrees()
+        // left/right of facing, Y above/below center becomes in-front-of/behind. Pure function
+        // of an already-known marker position -- takes a Point rather than scanning itself, so
+        // callers that already have a fresh marker (e.g. WalkIntoMeleeRangeTask, mid-loop)
+        // don't need a second full-screen capture just to also get a bearing out of it.
+        private float GetBearingDegreesFromMarkerPosition(Point markerPosition)
         {
-            var marker = FindTargetMarkerOnScreen();
-            if (marker == null)
-            {
-                return null;
-            }
-
             var resolution = FarmingConfig.ScreenConfiguration.Resolution;
-            float dx = marker.Value.X - (resolution.Width / 2f);
-            float dy = marker.Value.Y - (resolution.Height / 2f);
+            float dx = markerPosition.X - (resolution.Width / 2f);
+            float dy = markerPosition.Y - (resolution.Height / 2f);
 
             // atan2(dx, -dy): 0 degrees when dx=0 and the marker is above center (straight
             // ahead); increases toward +90 as the marker moves right of center, toward +/-180
             // as it approaches directly behind, and toward -90 as it moves left of center.
             return (float)(Math.Atan2(dx, -dy) * 180.0 / Math.PI);
+        }
+
+        // Scans for the target marker and returns its bearing (see
+        // GetBearingDegreesFromMarkerPosition), or null if the marker isn't currently visible
+        // on screen.
+        private float? GetTargetMarkerBearingDegrees()
+        {
+            var marker = FindTargetMarkerOnScreen();
+            return marker == null ? (float?)null : GetBearingDegreesFromMarkerPosition(marker.Value);
         }
 
         // Turns to (roughly) face the current target: scans once for the target marker,
@@ -405,18 +411,134 @@ namespace WoWHelper
             float? bearing = GetTargetMarkerBearingDegrees();
             if (bearing == null)
             {
+                Console.WriteLine("DEBUG TurnToFaceTargetMarkerTask: no marker found, can't turn -- returning false");
                 return false;
             }
 
             int turnMillis = (int)((Math.Abs(bearing.Value) / 360f) * FULL_ROTATION_MILLIS);
             Keys turnKey = bearing.Value > 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
 
+            Console.WriteLine($"DEBUG TurnToFaceTargetMarkerTask: bearing {bearing.Value:0.0} degrees -> holding {turnKey} for {turnMillis}ms");
+
             Keyboard.KeyDown(turnKey);
             await Task.Delay(turnMillis);
             Keyboard.KeyUp(turnKey);
 
             float? verifyBearing = GetTargetMarkerBearingDegrees();
-            return verifyBearing != null && Math.Abs(verifyBearing.Value) <= TARGET_FACING_CONE_DEGREES / 2f;
+            bool success = verifyBearing != null && Math.Abs(verifyBearing.Value) <= TARGET_FACING_CONE_DEGREES / 2f;
+            Console.WriteLine(verifyBearing == null
+                ? "DEBUG TurnToFaceTargetMarkerTask: post-turn verification found no marker -- returning false"
+                : $"DEBUG TurnToFaceTargetMarkerTask: post-turn bearing {verifyBearing.Value:0.0} degrees (cone +/-{TARGET_FACING_CONE_DEGREES / 2f:0.0}) -> success={success}");
+
+            return success;
+        }
+
+        // How close WowScreenConfiguration.DistanceFromTarget has to read before
+        // WalkIntoMeleeRangeTask below considers itself close enough -- some slop above the
+        // literal 0.0 "right in front of the player" calibration point, since we don't need
+        // pixel-perfect precision, just close enough that melee abilities land.
+        private const float MELEE_RANGE_DISTANCE_THRESHOLD = 0.01f;
+
+        // How often WalkIntoMeleeRangeTask re-scans for the target marker while walking --
+        // a full-screen capture (FindTargetMarkerOnScreen), so deliberately slower than
+        // WorldState's own throttled pixel-row capture cadence.
+        private const int TARGET_MARKER_SCAN_INTERVAL_MILLIS = 200;
+
+        // How many consecutive scans are allowed to come back empty (marker briefly occluded
+        // by terrain/other mobs, or a frame UIFunctions.lua hasn't repainted yet) before
+        // WalkIntoMeleeRangeTask gives up, rather than aborting on the very first miss.
+        private const int MAX_CONSECUTIVE_MARKER_MISSES = 5;
+
+        // Overall safety cap so a target that's unreachable (stuck on terrain, behind an
+        // obstacle DistanceFromTarget can't see around) doesn't walk forever -- same class of
+        // guard as PathfindingLoopTask's maxTargetChecks above.
+        private const int WALK_INTO_MELEE_RANGE_TIMEOUT_MILLIS = 15000;
+
+        // Walks straight forward until either WorldState.IsInMeleeRange (authoritative --
+        // CheckInteractDistance via the Lua addon) or the target-marker distance estimate
+        // (WowScreenConfiguration.DistanceFromTarget) says we're close enough, whichever comes
+        // first. Caller must already be facing the target on entry (see
+        // TurnToFaceTargetMarkerTask) -- DistanceFromTarget's calibration assumes the marker
+        // is dead-ahead. Since every loop iteration already re-scans for the marker anyway
+        // (to feed DistanceFromTarget), that same scan doubles as a check for whether the
+        // target has since drifted out of TARGET_FACING_CONE_DEGREES -- if so, this re-turns
+        // via TurnToFaceTargetMarkerTask (rather than trusting a stale distance reading against
+        // an off-center marker) before continuing to walk. Returns false (and stops walking)
+        // if the marker is lost for too long, or if we time out without ever reading close
+        // enough.
+        // TODO: This method doesn't really work yet
+        public async Task<bool> WalkIntoMeleeRangeTask()
+        {
+            int consecutiveMisses = 0;
+            int iteration = 0;
+            long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WALK_INTO_MELEE_RANGE_TIMEOUT_MILLIS;
+
+            Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: starting, timeout {WALK_INTO_MELEE_RANGE_TIMEOUT_MILLIS}ms");
+
+            await StartWalkForwardTask();
+
+            try
+            {
+                while (DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
+                {
+                    iteration++;
+                    await UpdateWorldStateAsync();
+
+                    if (WorldState.IsInMeleeRange)
+                    {
+                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] WorldState.IsInMeleeRange -> success");
+                        return true;
+                    }
+
+                    var marker = FindTargetMarkerOnScreen();
+                    if (marker == null)
+                    {
+                        consecutiveMisses++;
+                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] no marker this scan (consecutiveMisses={consecutiveMisses}/{MAX_CONSECUTIVE_MARKER_MISSES})");
+                        if (consecutiveMisses >= MAX_CONSECUTIVE_MARKER_MISSES)
+                        {
+                            Console.WriteLine("DEBUG WalkIntoMeleeRangeTask: lost the target marker, giving up");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        consecutiveMisses = 0;
+                        MostRecentTargetMarkerX = marker.Value.X;
+                        MostRecentTargetMarkerY = marker.Value.Y;
+
+                        float bearing = GetBearingDegreesFromMarkerPosition(marker.Value);
+                        float distance = FarmingConfig.ScreenConfiguration.DistanceFromTarget(marker.Value);
+                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] marker={marker.Value} bearing={bearing:0.0} deg (cone +/-{TARGET_FACING_CONE_DEGREES / 2f:0.0}) distance={distance:0.000} (threshold {MELEE_RANGE_DISTANCE_THRESHOLD:0.000})");
+
+                        if (Math.Abs(bearing) > TARGET_FACING_CONE_DEGREES / 2f)
+                        {
+                            // Target's no longer in front -- walking blind off this marker
+                            // reading would just walk past/around it. Turn back onto it (its
+                            // own fresh scan handles re-verifying) and pick this back up next
+                            // iteration rather than trusting DistanceFromTarget here.
+                            Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] target drifted out of front (bearing {bearing:0.0} degrees), re-facing");
+                            await TurnToFaceTargetMarkerTask();
+                            continue;
+                        }
+
+                        if (distance <= MELEE_RANGE_DISTANCE_THRESHOLD)
+                        {
+                            Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] distance {distance:0.000} <= threshold -> success");
+                            return true;
+                        }
+                    }
+
+                    await Task.Delay(TARGET_MARKER_SCAN_INTERVAL_MILLIS);
+                }
+            }
+            finally
+            {
+                await EndWalkForwardTask();
+            }
+
+            Console.WriteLine("DEBUG WalkIntoMeleeRangeTask: timed out before getting close enough");
+            return false;
         }
 
         public async Task<bool> StartWalkForwardTask()
@@ -506,9 +628,25 @@ namespace WoWHelper
 
         public async Task<bool> AvoidObstacleByJumping()
         {
-            Keyboard.KeyPress(WowInput.JUMP);
+            await WowInput.PressKey(WowInput.JUMP);
             await Task.Delay(1000);
-            Keyboard.KeyPress(WowInput.JUMP);
+            await WowInput.PressKey(WowInput.JUMP);
+
+            return true;
+        }
+
+        public async Task<bool> KeyUpMovementKeys()
+        {
+            Keyboard.KeyUp(WowInput.MOVE_FORWARD);
+            Keyboard.KeyUp(WowInput.MOVE_BACK);
+            Keyboard.KeyUp(WowInput.TURN_LEFT);
+            Keyboard.KeyUp(WowInput.TURN_RIGHT);
+            Keyboard.KeyUp(WowInput.JUMP);
+            Keyboard.KeyUp(WowInput.STRAFE_LEFT);
+            Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
+            Keyboard.KeyUp(WowInput.LatestShiftKey);
+            Keyboard.KeyUp(Keys.LShiftKey);
+            await Task.Delay(0);
 
             return true;
         }

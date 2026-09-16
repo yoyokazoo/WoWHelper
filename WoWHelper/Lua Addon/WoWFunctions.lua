@@ -199,9 +199,9 @@ end
 
 -- CanChargeTarget() and CanShootTarget() moved to WarriorFunctions.lua.
 
--- Shared between Mage and Shaman (branches internally below), so it stays
--- here rather than moving to a single class file -- see the note atop
--- MageFunctions.lua/ShamanFunctions.lua about why it isn't split further.
+-- Shared between Shaman and Warlock (branches internally below), so it
+-- stays here rather than moving to a single class file -- see the note atop
+-- ShamanFunctions.lua/WarlockFunctions.lua about why it isn't split further.
 function CanSpellcastPullTarget()
     if not ShouldWeAttackTarget() then
         return false
@@ -213,14 +213,10 @@ function CanSpellcastPullTarget()
 
     if classFile == "SHAMAN" then
         spellId = 403 -- Lightning Bolt (Rank 1)
+    elseif classFile == "WARLOCK" then
+        spellId = 686 -- Shadow Bolt (Rank 1), known from level 1 -- TODO: verify in-game
     else
-        -- Mage logic
-        -- Frostbolt (Rank 1) learned at level 4
-        if UnitLevel("player") < 4 then
-            spellId = 133 -- Fireball (Rank 1)
-        else
-            spellId = 116 -- Frostbolt (Rank 1)
-        end
+        return false
     end
 
     -- Goes on cooldown as soon as casting starts, so range check is sufficient
@@ -330,6 +326,7 @@ local ZONE_NAME_TO_ID = {
     ["Silithus"] = 12,
     ["Azshara"] = 13,
     ["Winterspring"] = 14,
+    ["Tirisfal Glades"] = 15,
 }
 
 -- 255 = current zone isn't one of the known farming zones on the decoding
@@ -615,15 +612,6 @@ function AreWeLowOnAmmo()
     return ammoCount < 2
 end
 
--- Level 1 Conjured Water, 5350
--- Level 5 Conjured Fresh Water, 2288
--- Level 15 Conjured Purified Water, 2136
--- Level 25 Conjured Spring Water, 3772
--- Level 35 Conjured Mineral Water, 8077
--- Level 45 Conjured Sparkling Water, 8078
--- Level 55 Conjured Crystal Water, 8079
--- ShouldWeSummonWater() and ShouldWeSummonFood() moved to MageFunctions.lua.
-
 function TargetHasDebuffSpellId(debuffSpellId)
   for i = 1, 40 do
     local _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("target", i)
@@ -717,6 +705,37 @@ function IsTargetNatureImmune()
     return NATURE_IMMUNE_MOB_NAMES[name] == true
 end
 
+-- True if the current target is bleed-immune (per BLEED_IMMUNE_MOB_NAMES in
+-- CreatureConfig.lua) -- not worth (re)applying Rend to these.
+function IsTargetBleedImmune()
+    if not UnitExists("target") then
+        return false
+    end
+
+    local name = UnitName("target")
+    if not name then
+        return false
+    end
+
+    return BLEED_IMMUNE_MOB_NAMES[name] == true
+end
+
+-- True if the current target casts a Fear-type effect (per
+-- FEAR_CASTER_MOB_NAMES in CreatureConfig.lua) -- worth opening with
+-- Berserker Rage rather than reacting after the fact.
+function IsTargetFearCaster()
+    if not UnitExists("target") then
+        return false
+    end
+
+    local name = UnitName("target")
+    if not name then
+        return false
+    end
+
+    return FEAR_CASTER_MOB_NAMES[name] == true
+end
+
 -- True if the current target has a ranged attack whose range exceeds Earth
 -- Shock's (per LONG_RANGE_CASTER_MOB_NAMES in CreatureConfig.lua).
 function IsTargetLongRangeCaster()
@@ -782,18 +801,19 @@ function IsGlobalCooldownCooledDown()
     -- as "on cooldown" long after the GCD itself clears, so it's not a safe pick here).
     --
     -- Confirmed via testing: Shaman (Lightning Bolt Rank 1, same spell ID CanSpellcastPullTarget()
-    -- already uses above). NOT yet confirmed via testing: Mage (Fireball Rank 1, known from
-    -- level 1 per CanSpellcastPullTarget()'s own comment, no cooldown beyond GCD) and Warrior
-    -- (Heroic Strike, known from level 1, rage-gated with no cooldown beyond GCD -- already
-    -- referenced by name in WarriorFunctions.lua). Verify these the same way Shaman was (debug
-    -- log around a cast, watch GCDCooledDown flip false->true) before trusting them.
+    -- already uses above). NOT yet confirmed via testing: Warrior (Heroic Strike, known from
+    -- level 1, rage-gated with no cooldown beyond GCD -- already referenced by name in
+    -- WarriorFunctions.lua), and Warlock (Shadow Bolt Rank 1, same spell ID
+    -- CanSpellcastPullTarget() uses above, known from level 1, no cooldown beyond GCD). Verify
+    -- these the same way Shaman was (debug log around a cast, watch GCDCooledDown flip
+    -- false->true) before trusting them.
     local probeSpell = GCD_SPELL_ID
     if classFile == "SHAMAN" then
         probeSpell = 403 -- Lightning Bolt (Rank 1)
-    elseif classFile == "MAGE" then
-        probeSpell = 133 -- Fireball (Rank 1)
     elseif classFile == "WARRIOR" then
         probeSpell = "Heroic Strike" -- UNTESTED
+    elseif classFile == "WARLOCK" then
+        probeSpell = 686 -- Shadow Bolt (Rank 1) -- UNTESTED
     end
 
     local start, duration = GetSpellCooldown(probeSpell)
@@ -806,8 +826,9 @@ function IsGlobalCooldownCooledDown()
     return remaining <= 0
 end
 
--- CanCastWhirlwind(), CanCastSweepingStrikes(), and
 -- CanCastMortalStrikeOrBloodthirst() moved to WarriorFunctions.lua.
+-- (CanCastWhirlwind()/CanCastSweepingStrikes() used to live there too --
+-- removed, see the GetWarriorClassBoolOne() comment in WarriorFunctions.lua.)
 -- CanCastEarthShock() moved to ShamanFunctions.lua.
 
 function GetFreeSlotsInBag(bag)
@@ -926,16 +947,16 @@ end
 
 -- Class-specific fields (Battle Shout, Rend, Frost Armor, Rockbiter, etc.)
 -- moved to GetClassBoolOne/Two (see the dispatchers further down and
--- GetXClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
--- ShamanFunctions.lua) -- those are used instead of these now. All
+-- GetXClassBoolOne/Two in WarriorFunctions.lua/ShamanFunctions.lua/
+-- WarlockFunctions.lua) -- those are used instead of these now. All
 -- class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G are both fully
--- packed, and the B byte carries HasRecentTargetEvade() (b1), which of the
--- three supported classes the player is playing (b2 Warrior, b3 Mage,
--- b4 Shaman -- exactly one true, used to auto-detect the player's class
--- instead of it being hardcoded), and
+-- packed, and the B byte carries HasRecentTargetEvade() (b1), two of the
+-- three supported classes the player might be playing (b2 Warrior, b4
+-- Shaman -- b3 is reserved/unused, previously Mage, removed along with Mage
+-- support; the 3rd class, Warlock, didn't fit once this byte was already
+-- full, so it lives in GetMultiBoolTwo's R4 instead -- see there), and
 -- IsPlayerPoisoned/IsPlayerDiseased/IsTargetNatureImmune/IsTargetCasting
--- (b5-b8), which fully packs the byte. MultiBoolTwo is left fully reserved
--- as clean room to grow into, instead of needing a 3rd pixel.
+-- (b5-b8), which fully packs the byte.
 function GetMultiBoolOne()
     local boolR1 = IsAttacking()
     local boolR2 = AreWeLowOnHealthPotions()
@@ -963,7 +984,7 @@ function GetMultiBoolOne()
 
     local _, classFile = UnitClass("player")
     local boolB2 = (classFile == "WARRIOR")
-    local boolB3 = (classFile == "MAGE")
+    local boolB3 = false -- reserved, previously (classFile == "MAGE")
     local boolB4 = (classFile == "SHAMAN")
 
     local boolB5 = IsPlayerPoisoned()
@@ -977,22 +998,39 @@ function GetMultiBoolOne()
 end
 
 -- R1 (IsTargetLongRangeCaster), R2 (IsLogoffMobSeen), R3 (IsCurrentlySkinning),
--- R4 (IsLogoutOnLowDynamiteEnabled), R5 (IsLogoutOnFullBagsEnabled), and R6
--- (HasDesiredWorldBuff) are the flags packed in here so far -- R7-R8 and the G/B
--- bytes are still fully reserved for future class-agnostic flags. R4/R5/R6 are
--- run-specific settings toggled live in-game via the /yyconfig menu
--- (YoyokazooUI.lua) rather than live game-state queries like the others here.
+-- R4 (the 4th "which supported class" bit, Warlock -- see GetMultiBoolOne's
+-- B-byte comment above for why it landed here instead of there), R5
+-- (IsTargetBleedImmune), and R6 (IsTargetFearCaster) are the flags packed
+-- into the R byte so far -- both mob-name lookups, same pattern as
+-- IsTargetLongRangeCaster/IsLogoffMobSeen above, so they live here
+-- (class-agnostic) rather than in a class's own ClassBool even though only
+-- Warrior consumes them today -- R7-R8 are still reserved. G1
+-- (IsLogoutOnLowDynamiteEnabled), G2 (IsLogoutOnFullBagsEnabled), and G3
+-- (HasDesiredWorldBuff) are packed into the previously-unused G byte instead
+-- of continuing into R7/R8 -- run-specific settings toggled live in-game via
+-- the /yyconfig menu (YoyokazooUI.lua) rather than live game-state queries
+-- like everything else in this row. G4-G8 and the B byte are still fully
+-- reserved for future class-agnostic flags.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()
     local boolR3 = IsCurrentlySkinning()
-    local boolR4 = IsLogoutOnLowDynamiteEnabled()
-    local boolR5 = IsLogoutOnFullBagsEnabled()
-    local boolR6 = HasDesiredWorldBuff()
+
+    local _, classFile = UnitClass("player")
+    local boolR4 = (classFile == "WARLOCK")
+
+    local boolR5 = IsTargetBleedImmune()
+    local boolR6 = IsTargetFearCaster()
 
     local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, false, false)
 
-    return rByte/255.0, 0, 0
+    local boolG1 = IsLogoutOnLowDynamiteEnabled()
+    local boolG2 = IsLogoutOnFullBagsEnabled()
+    local boolG3 = HasDesiredWorldBuff()
+
+    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, false, false, false, false, false)
+
+    return rByte/255.0, gByte/255.0, 0
 end
 
 function GetMultiIntOne()
@@ -1015,19 +1053,19 @@ end
 -- ClassBool/ClassInt dispatchers -- the class-specific counterpart to
 -- GetMultiBoolOne/Two/GetMultiIntOne/Two above. Each checks the player's
 -- class once and delegates to that class's own populate function (see
--- GetWarriorClassBoolOne/Two, GetMageClassBoolOne/Two, and
--- GetShamanClassBoolOne/Two in WarriorFunctions.lua/MageFunctions.lua/
--- ShamanFunctions.lua). Unsupported/unrecognized classes get all-zero.
+-- GetWarriorClassBoolOne/Two, GetShamanClassBoolOne/Two, and
+-- GetWarlockClassBoolOne/Two in WarriorFunctions.lua/ShamanFunctions.lua/
+-- WarlockFunctions.lua). Unsupported/unrecognized classes get all-zero.
 ------------------------------------------------------------
 function GetClassBoolOne()
     local _, classFile = UnitClass("player")
 
     if classFile == "WARRIOR" then
         return GetWarriorClassBoolOne()
-    elseif classFile == "MAGE" then
-        return GetMageClassBoolOne()
     elseif classFile == "SHAMAN" then
         return GetShamanClassBoolOne()
+    elseif classFile == "WARLOCK" then
+        return GetWarlockClassBoolOne()
     end
 
     return 0, 0, 0
@@ -1038,10 +1076,10 @@ function GetClassBoolTwo()
 
     if classFile == "WARRIOR" then
         return GetWarriorClassBoolTwo()
-    elseif classFile == "MAGE" then
-        return GetMageClassBoolTwo()
     elseif classFile == "SHAMAN" then
         return GetShamanClassBoolTwo()
+    elseif classFile == "WARLOCK" then
+        return GetWarlockClassBoolTwo()
     end
 
     return 0, 0, 0
@@ -1052,10 +1090,10 @@ function GetClassIntOne()
 
     if classFile == "WARRIOR" then
         return GetWarriorClassIntOne()
-    elseif classFile == "MAGE" then
-        return GetMageClassIntOne()
     elseif classFile == "SHAMAN" then
         return GetShamanClassIntOne()
+    elseif classFile == "WARLOCK" then
+        return GetWarlockClassIntOne()
     end
 
     return 0, 0, 0

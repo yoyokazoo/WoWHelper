@@ -32,7 +32,6 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f,
             EngageMethod = EngagementMethod.Charge,
-            UseRend = false,
             TooManyAttackersThreshold = 3
         };
 
@@ -92,7 +91,6 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.05f,
             EngageMethod = EngagementMethod.Pull,
-            UseRend = true,
             TooManyAttackersThreshold = 4
         };
 
@@ -125,7 +123,6 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f,
             EngageMethod = EngagementMethod.Pull,
-            UseRend = false,
             TooManyAttackersThreshold = 4
         };
 
@@ -916,6 +913,63 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 6,
         };
 
+        /*
+/target Decrepit
+/target Greater
+/target Rotting
+/target Ravaged
+        */
+        public static readonly WowLocationConfiguration LEVEL_7_TIRISFAL_ZOMBIES = new WowLocationConfiguration
+        {
+            Title = "Tirisfal Zombies (Level 7+)",
+            MinimumLevel = 6,
+            Zone = WowZone.TirisfalGlades,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(55.43f, 51.36f),
+                new Vector2(54.76f, 50.26f),
+                new Vector2(53.97f, 49.84f),
+                new Vector2(53.69f, 51.11f),
+                new Vector2(53.01f, 50.36f),
+                new Vector2(52.21f, 49.69f),
+                new Vector2(51.10f, 51.23f),
+                new Vector2(51.52f, 53.00f),
+                new Vector2(51.81f, 53.65f),
+                new Vector2(53.19f, 52.08f),
+                new Vector2(54.55f, 52.90f),
+                new Vector2(56.45f, 53.12f),
+                new Vector2(56.34f, 51.48f),
+            },
+            EngageMethod = EngagementMethod.Pull,
+            LogoffLevel = 10,
+        };
+
+        /*
+/target Mangy
+/target Ragged
+        */
+        public static readonly WowLocationConfiguration LEVEL_4_TIRISFAL_ANIMALS = new WowLocationConfiguration
+        {
+            Title = "Tirisfal Bats and Wolves (Level 4+)",
+            MinimumLevel = 4,
+            Zone = WowZone.TirisfalGlades,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(36.99f, 56.80f),
+                new Vector2(37.66f, 58.31f),
+                new Vector2(37.39f, 60.60f),
+                new Vector2(35.67f, 61.43f),
+                new Vector2(34.89f, 61.68f),
+                new Vector2(35.33f, 59.87f),
+                new Vector2(34.60f, 58.76f),
+                new Vector2(36.14f, 57.73f),
+            },
+            EngageMethod = EngagementMethod.Pull,
+            LogoffLevel = 7,
+        };
+
         public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
         {
             Title = "Mulgore Plainstriders (Level 1+)",
@@ -936,14 +990,16 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 4,
         };
 
+        /*
+/target Mottled
+/target Scorpid
+        */
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
         {
             Title = "Durotar Boars and Scorpions (Level 1+)",
             MinimumLevel = 1,
             Zone = WowZone.Durotar,
 
-            // /target Mottled
-            // /target Scorpid
             Waypoints = new List<Vector2>
             { 
                 new Vector2(44.19f, 66.23f),
@@ -954,8 +1010,34 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.29f, 62.22f),
                 new Vector2(45.49f, 64.54f),
             },
+            EngageMethod = EngagementMethod.Charge,
+            LogoffLevel = 4,
+        };
+
+        /*
+/target Young
+/target Duskbat
+/target Mindless
+/target Wretched
+/target Rattlecage
+        */
+        public static readonly WowLocationConfiguration LEVEL_1_TIRISFAL_UNDEAD = new WowLocationConfiguration
+        {
+            Title = "Tirisfal Zombies (Level 1+)",
+            MinimumLevel = 1,
+            Zone = WowZone.TirisfalGlades,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(31.51f, 63.69f),
+                new Vector2(30.16f, 63.75f),
+                new Vector2(29.95f, 61.80f),
+                new Vector2(30.81f, 61.16f),
+                new Vector2(32.20f, 60.61f),
+                new Vector2(32.41f, 61.90f),
+                new Vector2(31.90f, 62.98f),
+            },
             EngageMethod = EngagementMethod.Pull,
-            TooManyAttackersThreshold = 2,
             LogoffLevel = 4,
         };
 
@@ -995,14 +1077,17 @@ namespace WoWHelper.Code.WorldState
             LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS,
             LEVEL_11_DUROTAR_COAST_WAYPOINTS,
             LEVEL_9_DUROTAR_SKULL_ROCK_COAST_WAYPOINTS,
+            LEVEL_7_TIRISFAL_ZOMBIES,
             LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
             LEVEL_4_DUROTAR_IMPS,
             LEVEL_10_MULGORE_MIXED_BEASTS,
             LEVEL_8_MULGORE_MIXED_BEASTS,
             LEVEL_6_MULGORE_BATTLEBOARS,
             LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
+            LEVEL_4_TIRISFAL_ANIMALS,
             LEVEL_1_MULGORE_PLAINSTRIDERS,
             LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
+            LEVEL_1_TIRISFAL_UNDEAD,
         };
     }
 }

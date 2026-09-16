@@ -11,77 +11,67 @@ namespace WoWHelper.Code
 
         #region Warrior
         // Warrior Input
-        //public const Keys WARRIOR_FIND_TARGET_MACRO = Keys.D1;
-        public const Keys WARRIOR_CHARGE_KEY = Keys.D2;
-        public const Keys WARRIOR_MORTALSTRIKE_BLOODTHIRST_MACRO = Keys.D3;
-        public const Keys WARRIOR_HEROIC_STRIKE_KEY = Keys.D4;
-        //public const Keys WARRIOR_DYNAMITE_KEY = Keys.D5;
-        //public const Keys WARRIOR_HEALING_POTION_KEY = Keys.D6;
-        public const Keys WARRIOR_BATTLE_SHOUT_KEY = Keys.D7;
-        public const Keys WARRIOR_SHOOT_MACRO = Keys.D8;
-        public const Keys WARRIOR_OVERPOWER_KEY = Keys.D9;
-        public const Keys WARRIOR_CLEAR_TARGET_MACRO = Keys.D0;
-        public const Keys WARRIOR_REND_KEY = Keys.OemMinus;
-        public const Keys WARRIOR_EXECUTE_KEY = Keys.Oemplus;
-
-        public const Keys WARRIOR_SHIFT_RETALIATION_KEY = Keys.D1;
-        public const Keys WARRIOR_SHIFT_BERSERKER_RAGE_MACRO = Keys.D2;
-        public const Keys WARRIOR_SHIFT_WHIRLWIND_MACRO = Keys.D3;
-        public const Keys WARRIOR_SHIFT_CLEAVE_MACRO = Keys.D4;
-        //public const Keys WARRIOR_SHIFT_LOGOUT_MACRO = Keys.D5;
-        public const Keys WARRIOR_SHIFT_SHIELD_WALL = Keys.D6;
-        public const Keys WARRIOR_SHIFT_HEALING_TRINKET = Keys.D7;
-        //public const Keys WARRIOR_SHIFT_TARGET_DUMMY = Keys.D8;
-        //public const Keys WARRIOR_SHIFT_PETRIFICATION_FLASK = Keys.D9;
-        public const Keys WARRIOR_SHIFT_EAT_FOOD_KEY = Keys.D0;
-        #endregion
-
-        #region Mage
-        // Mage Input
-
-        public const Keys MAGE_WAND = Keys.D1;
-        public const Keys MAGE_SHIFT_1 = Keys.D1;
-
-        public const Keys MAGE_FROSTBOLT = Keys.D2;
-        public const Keys MAGE_SHIFT_2 = Keys.D2;
-
-        public const Keys MAGE_FIREBLAST = Keys.D3;
-        public const Keys MAGE_SHIFT_CONE_OF_COLD = Keys.D3;
-
-        public const Keys MAGE_ARCANE_EXPLOSION = Keys.D4;
-        public const Keys MAGE_SHIFT_4 = Keys.D4;
-
-        public const Keys MAGE_5 = Keys.D5;
-        public const Keys MAGE_SHIFT_5 = Keys.D5;
 
         /*
-#showtooltip [mod:shift] Arcane Intellect; Frost Armor
-/cast [nomod] Frost Armor
-/stopmacro [nomod]
-/cleartarget
-/cast Arcane Intellect
+         * 2 Pull
+#showtooltip [mod:shift] Shoot; Charge
+/cast [nomod] Charge
+/cast [mod:shift] Shoot
         */
-        public const Keys MAGE_FROST_ARMOR = Keys.D6;
-        public const Keys MAGE_SHIFT_ARCANE_INTELLECT = Keys.D6;
+        public const Keys WARRIOR_CHARGE = Keys.D2;
+        public const Keys WARRIOR_SHIFT_SHOOT = Keys.D2;
 
         /*
-#showtooltip [mod:shift] Conjure Food; Conjure Water
-/cast [nomod] Conjure Water
-/cast [mod:shift] Conjure Food
+         * 3 H/C
+#showtooltip [mod:shift] Cleave; Heroic Strike
+/cast [nomod] Heroic Strike
+/cast [mod:shift] Cleave
         */
-        public const Keys MAGE_CONJURE_WATER = Keys.D7;
-        public const Keys MAGE_SHIFT_CONJURE_FOOD = Keys.D7;
+        public const Keys WARRIOR_HEROIC_STRIKE = Keys.D3;
+        public const Keys WARRIOR_SHIFT_CLEAVE = Keys.D3;
 
+        /*
+         * 4 Buff
+#showtooltip [mod:shift] Berserker Rage; Battle Shout
+/cast [nomod] Battle Shout
+/cast [mod:shift] Berserker Rage
+        */
+        public const Keys WARRIOR_BATTLE_SHOUT = Keys.D4;
+        // TODO: add stance dancing to macros??
+        public const Keys WARRIOR_SHIFT_BERSERKER_RAGE = Keys.D4;
 
+        /*
+         * 5 Dmg
+#showtooltip [mod:shift] Execute; Mortal Strike
+/cast [nomod] Mortal Strike
+/cast [mod:shift] Execute
+        */
+        public const Keys WARRIOR_MORTALSTRIKE_BLOODTHIRST = Keys.D5;
+        public const Keys WARRIOR_SHIFT_EXECUTE = Keys.D5;
+
+        /*
+         * 6 Rend
+#showtooltip [mod:shift] Execute; Mortal Strike
+/cast [nomod] Mortal Strike
+/cast [mod:shift] Execute
+        */
+        public const Keys WARRIOR_REND = Keys.D6;
+        public const Keys WARRIOR_SHIFT_OVERPOWER = Keys.D6;
+
+        /*
+         * 7 shit
+#showtooltip [mod:shift] Retaliation; Retaliation
+/cast [nomod] Retaliation
+/cast [mod:shift] Retaliation
+        */
+        public const Keys WARRIOR_SHIFT_RETALIATION_KEY = Keys.D7;
 
         #endregion
 
         #region Shaman
 
         /*
-         * 2 Bolt (pull). Rank 1 does exactly as much damage as top rank against a
-         * nature-immune target -- zero -- so pull with Rank 1 in that case to avoid
-         * wasting mana on a full-rank cast that can't land any damage either way.
+         * 2 Bolt
 #showtooltip [mod:shift] Lightning Bolt(Rank 1); Lightning Bolt
 /cast [nomod] Lightning Bolt
 /cast [mod:shift] Lightning Bolt(Rank 1)
@@ -126,6 +116,39 @@ namespace WoWHelper.Code
 
         public const Keys SHAMAN_7 = Keys.D7;
         public const Keys SHAMAN_SHIFT_7 = Keys.D7;
+
+        #endregion
+
+        #region Warlock
+        // TODO: define Warlock keybinds/macros here once the rotation is designed,
+        // same pattern as the Warrior/Shaman regions above (a const Keys per
+        // in-game keybind/macro slot, referenced from WowWarlockTasks.cs).
+
+        /*
+         * 2 Bolt
+#showtooltip Shadow Bolt
+/cast Shadow Bolt
+        */
+        public const Keys WARLOCK_SHADOW_BOLT = Keys.D2;
+        public const Keys WARLOCK_SHIFT_2 = Keys.D2;
+
+        /*
+         * 3 Dot
+#showtooltip [mod:shift] Immolate; Corruption
+/use [nomod] Corruption
+/use [mod:shift] Immolate
+         */
+        public const Keys WARLOCK_CORRUPTION = Keys.D3;
+        public const Keys WARLOCK_SHIFT_IMMOLATE = Keys.D3;
+
+        /*
+         * 4 Buff
+#showtooltip [mod:shift] Demon Skin; Summon Imp
+/use [nomod] Summon Imp
+/use [mod:shift] Demon Skin
+        */
+        public const Keys WARLOCK_SUMMON_PET = Keys.D4;
+        public const Keys WARLOCK_SHIFT_DEMON_ARMOR = Keys.D4;
 
         #endregion
 
@@ -206,6 +229,12 @@ namespace WoWHelper.Code
         #endregion
 
         #region Shift/Alt Handling
+
+        public static async Task PressKey(Keys key)
+        {
+            Keyboard.KeyPress(key);
+            await Task.Delay(10);
+        }
 
         // For when we exit the program with ESC, make sure we don't have any lingering keys pressed down
         public static Keys LatestShiftKey;

@@ -51,7 +51,7 @@ end
 -- different farming setup, so these intentionally don't carry over to other characters on
 -- the same account/computer.
 if YoyokazooUIDB.logoutOnLowDynamite == nil then
-    YoyokazooUIDB.logoutOnLowDynamite = true
+    YoyokazooUIDB.logoutOnLowDynamite = false
 end
 if YoyokazooUIDB.logoutOnFullBags == nil then
     YoyokazooUIDB.logoutOnFullBags = false
@@ -68,14 +68,14 @@ end
 -- Which world buff HasDesiredWorldBuff() (WoWFunctions.lua) checks for -- selectable via the
 -- /yyconfig "Desired world buff" selector below instead of being hardcoded. Defaults to Ony's
 -- Rallying Cry. See WORLD_BUFF_CHOICES (WoWFunctions.lua) for the full list. Read by
--- GetMultiBoolTwo() into MultiBoolTwo's R6, decoded on the C# side into
+-- GetMultiBoolTwo() into MultiBoolTwo's G3, decoded on the C# side into
 -- WowWorldState.HasDesiredWorldBuff, consumed by WaitForWorldBuffThenLogoffTask
 -- (WowManagementTasks.cs).
 if YoyokazooUIDB.desiredWorldBuffId == nil then
     YoyokazooUIDB.desiredWorldBuffId = "ony"
 end
 
--- Read by GetMultiBoolTwo() (WoWFunctions.lua) to pack these into MultiBoolTwo's R4/R5,
+-- Read by GetMultiBoolTwo() (WoWFunctions.lua) to pack these into MultiBoolTwo's G1/G2,
 -- decoded on the C# side into WowWorldState.LogoutOnLowDynamiteEnabled/
 -- LogoutOnFullBagsEnabled.
 function IsLogoutOnLowDynamiteEnabled()

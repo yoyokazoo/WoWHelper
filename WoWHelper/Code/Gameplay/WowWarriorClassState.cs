@@ -13,9 +13,7 @@ namespace WoWHelper
         public bool WaitingToShoot { get; private set; }
         public bool HeroicStrikeQueued { get; private set; }
         public bool OverpowerUsable { get; private set; }
-        public bool WhirlwindCooledDown { get; private set; }
 
-        public bool SweepingStrikesCooledDown { get; private set; }
         public bool MortalStrikeOrBloodThirstCooledDown { get; private set; }
 
         public override void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig)
@@ -33,9 +31,10 @@ namespace WoWHelper
             WaitingToShoot = r5;
             HeroicStrikeQueued = r6;
             OverpowerUsable = r7;
-            WhirlwindCooledDown = r8;
+            // r8 reserved (previously WhirlwindCooledDown -- removed, nothing consumed it;
+            // see the GetWarriorClassBoolOne() comment in WarriorFunctions.lua).
 
-            SweepingStrikesCooledDown = g1;
+            // g1 reserved (previously SweepingStrikesCooledDown -- removed, same reason as r8).
             MortalStrikeOrBloodThirstCooledDown = g2;
             // g3-g8, ClassBoolTwo, and ClassIntOne currently reserved/unused for Warrior.
         }

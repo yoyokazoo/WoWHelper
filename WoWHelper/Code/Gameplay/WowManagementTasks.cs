@@ -26,6 +26,24 @@ namespace WoWHelper
             return !WorldState.OnLoginScreen;
         }
 
+        public async Task<bool> RecoverFromLostWindowFocusTask()
+        {
+            SlackHelper.SendMessageToChannel("Lost focus on WoWClassic window! Refocusing...");
+            await FocusOnWindowTask();
+
+            Mouse.Move(FarmingConfig.ScreenConfiguration.LootDefaultX, FarmingConfig.ScreenConfiguration.LootDefaultX);
+            Mouse.PressButton(Mouse.MouseKeys.Left);
+
+            await Task.Delay(300);
+
+            await KeyUpMovementKeys();
+
+            LogoutTriggered = true;
+            LogoutReason = "Lost window focus";
+
+            return true;
+        }
+
         public async Task<bool> EveryWorldStateUpdateTasks()
         {
             // ping + refocus if something stole foreground focus from WoW -- every task
@@ -33,14 +51,46 @@ namespace WoWHelper
             // actually receiving our keyboard/mouse input.  Excluded during
             // WAITING_TO_FOCUS_ON_WINDOW, the startup state before WoW has ever been
             // focused in the first place -- same exclusion the disconnect check below uses.
+            // Reads the OS's own notion of the foreground window, not anything decoded off
+            // WorldState's pixel row, so (unlike everything past the OnLoginScreen gate
+            // below) it's safe to run regardless of whether the addon is rendering yet.
             if (CurrentPlayerState != PlayerState.WAITING_TO_FOCUS_ON_WINDOW)
             {
                 IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
                 if (wowHandle != IntPtr.Zero && ScreenCapture.GetForegroundWindow() != wowHandle)
                 {
-                    SlackHelper.SendMessageToChannel("Lost focus on WoWClassic window! Refocusing...");
-                    await FocusOnWindowTask();
+                    await RecoverFromLostWindowFocusTask();
                 }
+            }
+
+            // ping if logged out (still needs testing.  they changed login screen??)
+            // The one check in this method that legitimately needs to run while
+            // WorldState.OnLoginScreen is true -- it's specifically watching for that flag's
+            // OWN transition (not-on-login-screen -> on-login-screen), so it has to sit
+            // before the "everything past here needs a real row" gate below rather than
+            // behind it.
+            if (!PreviousWorldState.OnLoginScreen &&
+                WorldState.OnLoginScreen &&
+                !LogoutTriggered &&
+                CurrentPlayerState != PlayerState.WAITING_TO_FOCUS_ON_WINDOW)
+            {
+                SlackHelper.SendMessageToChannel($"DISCONNECT?? Unexpectedly found self on logout screen");
+            }
+
+            // Everything below reads WorldState fields decoded off the addon's pixel row.
+            // WowWorldState.UpdateFromBitmap decodes that row unconditionally every capture,
+            // but its own comment admits the row is garbage whenever the addon isn't actually
+            // rendering it yet -- and OnLoginScreen IS that "isn't rendering yet" signal, true
+            // not just on the literal login/character-select screen but also during the
+            // startup window before/while focusing the WoW window. One gate here instead of
+            // repeating !WorldState.OnLoginScreen on every check below -- a garbage read
+            // anywhere past this point (a false LogoffMobSeen, a bogus PlayerClass, a
+            // coincidentally-low PlayerHpPercent feeding the Petri Alt+F4 check, etc.) could
+            // otherwise trigger real actions (logout, alt+f4, alerts) before the addon ever
+            // painted a real row.
+            if (WorldState.OnLoginScreen)
+            {
+                return true;
             }
 
             // Resolve CombatConfiguration/ClassState as soon as the addon gives us a real
@@ -48,7 +98,7 @@ namespace WoWHelper
             // see WowConfigResolutionTasks.ResolveCombatConfiguration for why (short version:
             // this task runs every tick, including ones before that state ever gets a chance
             // to run, e.g. the bot started while already mid-combat). No-ops quietly once
-            // resolved or while the addon isn't rendering a real row yet.
+            // resolved.
             ResolveCombatConfiguration();
 
             // don't drown
@@ -60,15 +110,6 @@ namespace WoWHelper
             // ping if unseen message -- shared with WaitForWorldBuffThenLogoffTask, which
             // polls WorldState in its own loop rather than going through this method.
             AlertOnUnseenWhisper();
-
-            // ping if logged out (still needs testing.  they changed login screen??)
-            if (!PreviousWorldState.OnLoginScreen && 
-                WorldState.OnLoginScreen && 
-                !LogoutTriggered && 
-                CurrentPlayerState != PlayerState.WAITING_TO_FOCUS_ON_WINDOW)
-            {
-                SlackHelper.SendMessageToChannel($"DISCONNECT?? Unexpectedly found self on logout screen");
-            }
 
             // ping on level up. Guarded on LocationConfiguration being resolved -- this task
             // runs every tick, including the handful before RESOLVE_FARMING_CONFIGURATION has
@@ -178,7 +219,7 @@ namespace WoWHelper
                 LogoutReason = $"Low on Health Potions";
             }
             // EngageMethod.Pull now covers both Warrior's ranged bow/gun pull (which needs
-            // ammo) and Mage/Shaman's spell pull (which never does -- and would otherwise
+            // ammo) and Shaman's spell pull (which never does -- and would otherwise
             // always read as "low on ammo", since a caster's ammo slot is just empty, not
             // merely low). Only Warrior can actually run out of ammo, so gate on class too.
             else if (WorldState.LowOnAmmo &&
@@ -278,7 +319,7 @@ namespace WoWHelper
         {
             Console.WriteLine($"Starting logout: {LogoutReason}");
             await Task.Delay(0);
-            Keyboard.KeyPress(WowInput.LOGOUT_MACRO);
+            await WowInput.PressKey(WowInput.LOGOUT_MACRO);
             return true;
         }
 
@@ -300,7 +341,26 @@ namespace WoWHelper
         {
             Mouse.Move(LootX, LootY);
             Mouse.PressButton(Mouse.MouseKeys.Right);
-            await WaitUnlessInCombatTask(3000);
+
+            // Give the client a moment to register the right-click and start the Skinning
+            // cast bar, then check WorldState.IsCurrentlySkinning (see UIFunctions.lua's
+            // pixel row / WoWFunctions.lua's IsCurrentlySkinning()) -- if it never started
+            // (e.g. the corpse wasn't actually skinnable, or the click missed), there's
+            // nothing to wait out, so return immediately instead of sitting through the
+            // rest of the old flat 3000ms wait. UpdateWorldState() (not the Async variant)
+            // since we just want an immediate re-capture here, not another throttled wait
+            // on top of the 200ms we already did.
+            await Task.Delay(200);
+            UpdateWorldState();
+
+            if (WorldState.IsCurrentlySkinning)
+            {
+                // Skinning is actually in progress -- wait out the rest of its ~3s cast.
+                // WaitUnlessInCombatTask keeps this interruptible if a mob aggroes mid-skin,
+                // same protection the old flat wait had.
+                await WaitUnlessInCombatTask(2800);
+            }
+
             return true;
         }
 
@@ -329,7 +389,7 @@ namespace WoWHelper
             Mouse.PressButton(Mouse.MouseKeys.Left);
             await Task.Delay(200);
 
-            Keyboard.KeyPress(System.Windows.Forms.Keys.D2);
+            await WowInput.PressKey(System.Windows.Forms.Keys.D2);
             await Task.Delay(200);
 
             Mouse.Move(290, 350);
@@ -337,9 +397,9 @@ namespace WoWHelper
             Mouse.PressButton(Mouse.MouseKeys.Left);
             await Task.Delay(200);
 
-            Keyboard.KeyPress(System.Windows.Forms.Keys.D1);
+            await WowInput.PressKey(System.Windows.Forms.Keys.D1);
             await Task.Delay(200);
-            Keyboard.KeyPress(System.Windows.Forms.Keys.D0);
+            await WowInput.PressKey(System.Windows.Forms.Keys.D0);
             await Task.Delay(200);
 
             return true;

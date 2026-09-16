@@ -71,7 +71,7 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — only R1-R6 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff` |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G3 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -195,12 +195,19 @@ the exact tick the miss fired. Consumed by `MeleeMakeSureWeAreAttackingEnemyTask
 (`WowCommonCombatTasks.cs`) as part of its "this target is stuck, back off/clear
 it" checks.
 
-Bits 2-4 carry which of the three bot-supported classes the player is playing
-— exactly one of `PlayerIsWarrior`/`PlayerIsMage`/`PlayerIsShaman` is true,
-from a plain `UnitClass("player")` check in `GetMultiBoolOne()`
-(`WoWFunctions.lua`). C# decodes these into `WowWorldState.PlayerClass`
-(nullable `WowCombatConfiguration` — null if none of the three bits are set,
-i.e. an unsupported class or the addon isn't rendering a real row yet), which
+Bits 2 and 4 carry two of the three bot-supported classes the player might be
+playing — exactly one of `PlayerIsWarrior`/`PlayerIsShaman` is true, from a
+plain `UnitClass("player")` check in `GetMultiBoolOne()` (`WoWFunctions.lua`).
+(Bit 3 is reserved/unused — previously `PlayerIsMage`, removed along with
+Mage support; not reused, to avoid confusing anything that expects the old
+bit meaning.) The 3rd class, Warlock, didn't fit here — this byte was
+already fully packed (b1-b8) by the time Warlock support was added — so its
+bit lives in `MultiBoolTwo`'s R4 instead (see the "Reserved-but-not-in-the-row"
+paragraph below); `WowWorldState.UpdateMultiBoolTwo` overrides `PlayerClass`
+to `Warlock` there rather than duplicating the "exactly one true" logic
+across two bytes. C# decodes these into `WowWorldState.PlayerClass` (nullable
+`WowCombatConfiguration` — null if none of the four bits are set, i.e. an
+unsupported class or the addon isn't rendering a real row yet), which
 `WowPlayer.ResolveFarmingConfigurationTask` uses to set
 `FarmingConfig.CombatConfiguration` automatically at startup — see "Automatic
 farming-config resolution" below.
@@ -237,9 +244,27 @@ regardless of player state, same as the level-up check there), and bit 3 is
 current cast, `UnitCastingInfo("player") == "Skinning"` — Skinning is a
 regular cast-bar action, not a channel, and isn't cast via a normal
 spellbook ID the way e.g. `CanCurePoison`'s `IsSpellKnownByName()` match is);
-bit 4 is `WowWorldState.LogoutOnLowDynamiteEnabled` and bit 5 is
-`WowWorldState.LogoutOnFullBagsEnabled` — unlike every other bit in this row,
-these two aren't live game-state queries at all. They're run-specific
+and R4 is the 4th "which supported class" bit, Warlock (see the `MultiBoolOne`
+B-byte note above for why it landed here instead of there). R5 is
+`WowWorldState.IsTargetBleedImmune` (per-mob, from `BLEED_IMMUNE_MOB_NAMES`
+in `CreatureConfig.lua` — mobs not worth (re)applying Rend to) and R6 is
+`IsTargetFearCaster` (per-mob, from `FEAR_CASTER_MOB_NAMES` in
+`CreatureConfig.lua` — mobs worth opening with Berserker Rage against rather
+than reacting after the fact); both live here rather than in
+`ClassBoolOne`/Warrior's own slice because they're mob-identity facts, the
+same class as `IsTargetLongRangeCaster` above, even though only Warrior
+consumes either today (`WowWarriorTasks.cs`'s `WarriorCombatLoopTask` reads
+`WorldState.IsTargetBleedImmune` when deciding whether to Rend, and
+`WorldState.IsTargetFearCaster` when deciding whether to preemptively pop
+Berserker Rage) — this replaced an earlier, route-level `UseRend`/
+`PreemptFear` pair of booleans on `WowLocationConfiguration` that couldn't
+express "some mobs at this route bleed-immune/fear-cast, some don't." R7-8
+are still reserved.
+
+G1 is `WowWorldState.LogoutOnLowDynamiteEnabled` and G2 is
+`WowWorldState.LogoutOnFullBagsEnabled` — packed into the previously-unused G
+byte rather than continuing into R7/R8, since (unlike every other bit in this
+row) these two aren't live game-state queries at all. They're run-specific
 settings toggled in-game via the addon's `/yyconfig` menu
 (`CreateSettingsMenu()` in `UIFunctions.lua`, wired up in `YoyokazooUI.lua`),
 saved into `YoyokazooUIDB.logoutOnLowDynamite`/`logoutOnFullBags`
@@ -249,8 +274,7 @@ saved into `YoyokazooUIDB.logoutOnLowDynamite`/`logoutOnFullBags`
 replaced hardcoding the equivalent `LogoutOnLowDynamite`/`LogoutOnFullBags`
 booleans on the C# side's `WowManagementConfiguration` — see
 `WowManagementTasks.SetLogoutVariablesTask()`, the only reader of
-`WowWorldState.LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`. R7-8
-and the G/B bytes are still reserved for the next class-agnostic bool.
+`WowWorldState.LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`.
 The `/yyconfig` menu also has a "Dynamite item" row, letting which
 dynamite-tier item `AreWeLowOnDynamite()` (`WoWFunctions.lua`) checks the bag
 count of be picked from `DYNAMITE_ITEM_CHOICES` at runtime instead of being
@@ -261,8 +285,8 @@ shape (`type = "selector"`, a cycling button through `choices`) alongside its
 original checkboxes — see that function's own comment in `UIFunctions.lua`
 for the option-table shapes it accepts.
 
-Bit 6 is `WowWorldState.HasDesiredWorldBuff` — same "run-specific setting, not
-a plain game-state query" deal as bits 4/5: which world buff it checks for
+G3 is `WowWorldState.HasDesiredWorldBuff` — same "run-specific setting, not
+a plain game-state query" deal as G1/G2: which world buff it checks for
 (Ony's Rallying Cry, Rend's Warchief's Blessing, or ZG's Spirit of Zandalar)
 is chosen via the `/yyconfig` menu's "Desired world buff" row, another
 `type = "selector"` entry cycling through `WORLD_BUFF_CHOICES`
@@ -276,7 +300,8 @@ idle (tapping strafe-left/strafe-right every
 `WowPlayerConstants.WORLD_BUFF_WAIT_MILLIS` to dodge WoW's AFK kick) until
 this bit comes true, then Slack-alerts and logs out. Wired up to the
 `AdHocTest` button (`WowPlayer.AdHocTestTask()`) for now rather than a
-dedicated `PlayerState`.
+dedicated `PlayerState`. G4-G8 and the B byte are still reserved for the
+next class-agnostic bool.
 `ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
@@ -304,24 +329,40 @@ read as wrong flag), it won't fail loudly.
 Rockbiter, etc.) live only in `ClassBoolOne`, never in `MultiBoolOne/Two`.
 `GetClassBoolOne/Two`/`GetClassIntOne` (in `WoWFunctions.lua`) check
 `UnitClass("player")` and delegate to that class's own populate function
-(`GetWarriorClassBoolOne` in `WarriorFunctions.lua`, `GetMageClassBoolOne` in
-`MageFunctions.lua`, `GetShamanClassBoolOne` in `ShamanFunctions.lua`) — so
-the *same* pixel/bit position means something different depending on which
-class is playing. On the C# side, `WowPlayer.ClassState` (a `WowClassState`
-subtype — see the C# architecture section) decodes the matching bits,
-selected once from `FarmingConfig.CombatConfiguration` — itself auto-set at
-startup from the player's detected class (see "Automatic farming-config
-resolution" below), not hardcoded. Note
+(`GetWarriorClassBoolOne` in `WarriorFunctions.lua`, `GetShamanClassBoolOne`
+in `ShamanFunctions.lua`, `GetWarlockClassBoolOne` in `WarlockFunctions.lua`)
+— so the *same* pixel/bit position means something different depending on
+which class is playing. On the C# side, `WowPlayer.ClassState` (a
+`WowClassState` subtype — see the C# architecture section) decodes the
+matching bits, selected once from `FarmingConfig.CombatConfiguration` —
+itself auto-set at startup from the player's detected class (see "Automatic
+farming-config resolution" below), not hardcoded. Note
 `CanSpellcastPullTarget()` stays in `WoWFunctions.lua` rather than being
-split into the class files — it's shared between Mage and Shaman under the
-same name, and duplicating that name into both class files would collide
-(last-loaded file wins silently, since addon globals are one flat namespace).
-The C#-side mirror of that same constraint: `CanEngageTarget()` in
-`WowPlayerCombatConfig.cs` is a thin class-dispatching wrapper for
+split into the class files — it's shared between Shaman and Warlock under
+the same name, and duplicating that name into multiple class files would
+collide (last-loaded file wins silently, since addon globals are one flat
+namespace). The C#-side mirror of that same constraint: `CanEngageTarget()`
+in `WowPlayerCombatConfig.cs` is a thin class-dispatching wrapper for
 class-agnostic callers (e.g. `WowMovementTasks.PathfindingLoopTask`), while
-`WarriorCanEngageTarget`/`MageCanEngageTarget`/`ShamanCanEngageTarget` (one
-per `Wow*Tasks.cs`) hold the real per-class logic and take that class's
-typed `ClassState` directly.
+`WarriorCanEngageTarget`/`ShamanCanEngageTarget`/`WarlockCanEngageTarget`
+(one per `Wow*Tasks.cs`) hold the real per-class
+logic and take that class's typed `ClassState` directly. **Warlock is a
+work in progress**, filled in incrementally the same way Shaman was — so far
+`WowWarlockClassState` decodes ClassBoolOne's R1 (`CanSpellcastPullTarget`,
+Shadow Bolt), R2 (`ShouldCastDemonArmor`, true when neither Demon Skin nor
+Demon Armor is active — only one of those two differently-named buffs is
+ever up at a time, so `ShouldCastDemonArmor()` in `WarlockFunctions.lua`
+checks for either), R3 (`ShouldSummonPet`, true once the player knows at
+least Summon Imp -- the level-1 pet spell, gating whether a pet can be
+summoned at all yet -- and doesn't currently have a living pet out), and R4/R5
+(`ShouldCastImmolate`/`ShouldCastCorruption`, true when the player knows that
+spell and the target doesn't already have that DoT on it -- same
+name-matched-against-`TargetHasDebuffSpellName()` pattern Shaman's
+`ShouldCastFlameShock`/`TargetHasFlameShock` use); R6-R8, `ClassBoolTwo`, and
+`ClassIntOne` are still fully reserved. The rest of the dispatch wiring (enum
+value, `CreateClassState`, all six
+`WowPlayerCombatConfig.cs` switches, the `MultiBoolTwo` R4 class-detect bit)
+is also in place.
 
 The `Screen.PrimaryScreen.Bounds`-based per-resolution config in
 `WowFarmingConfiguration` still selects a `WowScreenConfiguration`, but that
@@ -348,10 +389,11 @@ of truth — edits should be made here, not in the WoW install directory.
   `PreviousWorldState` + `WorldState` pair each tick to detect edge-triggered
   events (leveled up, logged out unexpectedly, new whisper, etc.).
 - **`Gameplay/WowClassState.cs`** (abstract) / **`WowWarriorClassState.cs`** /
-  **`WowMageClassState.cs`** / **`WowShamanClassState.cs`** — the
+  **`WowShamanClassState.cs`** /
+  **`WowWarlockClassState.cs`** (stub — see "Class split" above) — the
   class-specific counterpart to `WowWorldState`. `ClassBool`/`ClassInt` pixels
   mean something different per class, so rather than one flat object with
-  every class's fields (where nothing would stop e.g. Mage code from reading
+  every class's fields (where nothing would stop e.g. Shaman code from reading
   a Warrior-only field and silently getting stale data), each class gets its
   own concrete subtype exposing *only* its own fields — a wrong-class field
   reference is a compile error, not a runtime surprise. `WowPlayer.ClassState`
@@ -364,14 +406,16 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`Gameplay/Wow*Tasks.cs`** — behavior/task implementations grouped by
   concern: `WowMovementTasks` (pathfinding/turning/strafing/jumping),
   `WowCommonCombatTasks` (shared combat logic), `WowWarriorTasks` /
-  `WowMageTasks` / `WowShamanTasks` (class-specific rotations, selected via
-  `WowCombatConfiguration`), `WowManagementTasks` (logout conditions, low
+  `WowShamanTasks` / `WowWarlockTasks` (class-specific
+  rotations, selected via `WowCombatConfiguration` — `WowWarlockTasks` is
+  currently a stub, every entry point throws `NotImplementedException`),
+  `WowManagementTasks` (logout conditions, low
   supplies, trade window handling, Slack alerts, the `WaitForWorldBuffThenLogoffTask()`
-  world-buff-waiting loop — see the `MultiBoolTwo` bit 6 note in the
+  world-buff-waiting loop — see the `MultiBoolTwo` G3 note in the
   color-encoding contract above). The class-specific task
   files' entry points (dispatched from `WowPlayerCombatConfig.cs`) take their
   own class's `WowClassState` subtype as a **method parameter**, not read off
-  `this` — so a Mage-only field is unreachable from inside a Warrior method's
+  `this` — so a Shaman-only field is unreachable from inside a Warrior method's
   scope, not just absent on some shared type. `WowPlayerCombatConfig.cs`
   casts `ClassState` to the right concrete type at each dispatch call site;
   if that cast ever fails, `ClassState` and `CombatConfiguration` have gone
@@ -380,6 +424,34 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`Gameplay/WowPathfinding.cs`** — pure-math helpers for waypoint following
   (facing/turn-direction math, angle tolerance that tightens near a waypoint,
   lateral-distance-from-path calc). No side effects, unit-testable.
+- **Target-marker screen tracking** (`WowPlayer.FindTargetMarkerOnScreen`,
+  `WowMovementTasks.cs`) — there's no addon-legal way to read a target's
+  actual position/bearing/distance in this client (`UnitPosition`,
+  `C_Map.GetPlayerMapPosition`, and nameplate frame measurement are all
+  confirmed blocked), so `UIFunctions.lua` paints a sentinel-colored marker
+  (`WowScreenConfiguration.TARGET_MARKER_COLOR`) onto the current target's
+  nameplate, found via a full-screen pixel search (`FindTargetMarkerOnScreen`
+  — a separate, full-resolution capture, not the small fixed-position pixel
+  row `WorldState` normally reads). With the bot run camera-pitched straight
+  down, the marker's position relative to screen center IS bearing/distance:
+  `GetTargetMarkerBearingDegrees`/`TurnToFaceTargetMarkerTask`
+  (`WowMovementTasks.cs`) turn to face it (bearing math itself lives in the
+  pure `GetBearingDegreesFromMarkerPosition(Point)`, so it can run against an
+  already-known marker position without a second full-screen scan), and
+  `WowScreenConfiguration.DistanceFromTarget` linearly interpolates the
+  marker's Y coordinate between `TargetMarkerNearY` (melee range, 0.0) and
+  `TargetMarkerFarY` (calibrated max distance, 1.0) into a distance estimate
+  — assumes the marker is dead-ahead (only Y, not X, is used), and is only
+  calibrated for 1920x1080 so far. `WalkIntoMeleeRangeTask`
+  (`WowMovementTasks.cs`) walks straight forward until either
+  `WorldState.IsInMeleeRange` (authoritative) or that distance estimate reads
+  close enough, whichever comes first, caching the last-found marker position
+  in `WowPlayer.MostRecentTargetMarkerX`/`MostRecentTargetMarkerY`. It reuses
+  the marker scan it already does each iteration (for `DistanceFromTarget`)
+  to also check the target hasn't drifted outside `TARGET_FACING_CONE_DEGREES`
+  — if it has, it re-runs `TurnToFaceTargetMarkerTask` before trusting
+  `DistanceFromTarget` again, rather than walking blind off a stale heading.
+  None of this is tuned against live testing yet.
 - **`Config/`** — per-location farming routes/waypoints
   (`WowLocationConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
@@ -387,7 +459,7 @@ of truth — edits should be made here, not in the WoW install directory.
   (`WowScreenConfigs.cs`), management/alert toggles
   (`WowManagementConfigs.cs` — logout-on-low-dynamite/logout-on-full-bags used
   to live here too; they're now run-specific, toggled live via the addon's
-  `/yyconfig` menu instead — see the `MultiBoolTwo` R4/R5 note in the
+  `/yyconfig` menu instead — see the `MultiBoolTwo` G1/G2 note in the
   color-encoding contract above), the farming profile
   (`WowFarmingConfigs.cs` — now only `ManagementConfiguration`;
   `LocationConfiguration`/`CombatConfiguration` are resolved at runtime, not
@@ -432,8 +504,8 @@ of truth — edits should be made here, not in the WoW install directory.
 
 - **`YoyokazooUI.toc`** — addon manifest/load order. Loads
   `MathFunctions.lua` → `CreatureConfig.lua` → `WoWFunctions.lua` →
-  `WarriorFunctions.lua` → `MageFunctions.lua` → `ShamanFunctions.lua` →
-  `UIFunctions.lua` → `YoyokazooUI.lua`. Load order doesn't actually matter
+  `WarriorFunctions.lua` → `ShamanFunctions.lua` →
+  `WarlockFunctions.lua` → `UIFunctions.lua` → `YoyokazooUI.lua`. Load order doesn't actually matter
   for correctness here (everything is a plain global function/table,
   resolved at call time, and nothing calls any of these before
   `PLAYER_ENTERING_WORLD`, well after every file has finished loading) —
@@ -454,13 +526,36 @@ of truth — edits should be made here, not in the WoW install directory.
   (class-specific dispatchers — see "Class split" above). The
   `IsTargetCasterMob`/`IsTargetRunnerMob`/`IsTargetFireImmune` checks here
   read their name lists from `CreatureConfig.lua`.
-- **`WarriorFunctions.lua`** / **`MageFunctions.lua`** / **`ShamanFunctions.lua`**
-  — that class's specific checks (e.g. `TargetHasRend`, `CanCastWhirlwind` for
-  Warrior; `ShouldWeSummonWater`, `IsFireblastCooledDown` for Mage;
-  `ShouldCastRockbiterWeapon`, `CanCastEarthShock` for Shaman) plus a
-  `GetXClassBoolOne/Two`/`GetXClassIntOne` set that packs that class's state
-  into the ClassBool/ClassInt pixels. Split out of `WoWFunctions.lua` to keep
-  class-specific logic physically separated as more classes/fields get added.
+- **`WarriorFunctions.lua`** / **`ShamanFunctions.lua`**
+  / **`WarlockFunctions.lua`**
+  — that class's specific checks (e.g. `TargetHasRend`, `CanCastMortalStrikeOrBloodthirst`
+  for Warrior;
+  `ShouldCastRockbiterWeapon`, `CanCastEarthShock` for Shaman;
+  `ShouldCastDemonArmor`/`ShouldSummonPet`/`ShouldCastImmolate`/
+  `ShouldCastCorruption` for Warlock) plus a `GetXClassBoolOne/Two`/
+  `GetXClassIntOne` set that packs that class's state into the ClassBool/
+  ClassInt pixels. Split out of `WoWFunctions.lua` to keep class-specific
+  logic physically separated as more classes/fields get added. (Mage support
+  — `MageFunctions.lua`/`WowMageClassState.cs`/`WowMageTasks.cs` — was
+  removed: the rotation never got working, and enough else has changed since
+  that it wasn't worth carrying forward. Re-add if it gets revisited; nothing
+  else was built to depend on Mage-specific behavior.)
+  `WarlockFunctions.lua` is a work in progress — `GetWarlockClassBoolOne`
+  packs `CanSpellcastPullTarget()` (shared, from `WoWFunctions.lua`),
+  `ShouldCastDemonArmor()` (checks `HasBuffNamed("Demon Skin")`/
+  `HasBuffNamed("Demon Armor")` — only one is ever active — and
+  `IsSpellKnownByName()` for either, the same name-matching pattern
+  `CanCurePoison`/`CanCureDisease` use in `ShamanFunctions.lua`, since
+  Demon Skin/Demon Armor are different spell IDs at different ranks),
+  `ShouldSummonPet()` (`IsSpellKnownByName("Summon Imp")` gating whether a
+  pet can be summoned at all yet, plus `UnitExists("pet")`/
+  `UnitIsDeadOrGhost("pet")` to catch both "no pet out" and "pet died"), and
+  `ShouldCastImmolate()`/`ShouldCastCorruption()` (each
+  `IsSpellKnownByName()` plus `TargetHasDebuffSpellName()` — both
+  `WoWFunctions.lua` — to check the player knows the spell and the target
+  doesn't already have that DoT, same pattern
+  `ShouldCastFlameShock()`/`TargetHasFlameShock()` use for Shaman);
+  `GetWarlockClassBoolTwo`/`GetWarlockClassIntOne` are still all-zero.
 - **`UIFunctions.lua`** — builds the on-screen indicator frame/swatches and
   encodes values/booleans into the colors the C# side decodes
   (`EncodeFloatToColor` and friends). Two rendering paths coexist, both fed

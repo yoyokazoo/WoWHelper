@@ -24,7 +24,8 @@
       "Bash(powershell.exe -NoProfile -Command \"Get-ChildItem 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelperUnitTests\\\\Tests\\\\' -Recurse | Select-Object FullName\" 2>&1)",
       "Bash(powershell.exe -NoProfile -Command \"Get-Content 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelperUnitTests\\\\Tests\\\\Shared\\\\UnitTestBase.cs'\" 2>&1)",
       "Bash(powershell.exe -NoProfile -Command \"Select-String -Path 'C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelperUnitTests\\\\Tests\\\\WorldStateTests\\\\WowTradeTests.cs' -Pattern '^using'\" 2>&1)",
-      "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelper.sln\" /p:Configuration=Debug /verbosity:minimal)"
+      "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\\\Users\\\\peter\\\\source\\\\repos\\\\yoyokazoo\\\\WoWHelper\\\\WoWHelper.sln\" /p:Configuration=Debug /verbosity:minimal)",
+      "Bash(xargs grep -l \"enum WowCombatConfiguration\")"
     ]
   }
 }

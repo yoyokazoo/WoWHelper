@@ -6,9 +6,10 @@
 -- the dispatchers in WoWFunctions.lua and GetShamanClassBoolOne/Two below).
 --
 -- Note: CanSpellcastPullTarget() stays in WoWFunctions.lua -- it's shared
--- between Mage and Shaman (branches internally on class), and giving it the
--- same name here and in MageFunctions.lua would collide (last file loaded
--- in the .toc silently wins, since addon globals are one flat namespace).
+-- between Shaman and Warlock (branches internally on class), and giving it
+-- the same name here and in WarlockFunctions.lua would collide (last file
+-- loaded in the .toc silently wins, since addon globals are one flat
+-- namespace).
 ------------------------------------------------------------
 
 function HasRockbiterWeaponMainHand()

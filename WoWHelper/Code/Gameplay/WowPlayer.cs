@@ -37,6 +37,11 @@ namespace WoWHelper
         public long HealthPotionTime { get; private set; }
         public long HealingTrinketTime { get; private set; } // and Diamond Flask
         public long BerserkerRageTime { get; private set; }
+        // Warlock DoTs -- see WarlockShouldCastImmolate/WarlockShouldCastCorruption in
+        // WowWarlockTasks.cs, which suppress re-casting a DoT within
+        // WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS of these.
+        public long ImmolateCastTime { get; private set; }
+        public long CorruptionCastTime { get; private set; }
         public long NextUpdateTime { get; private set; }
 
         public bool FullBagsAlertSent { get; private set; }
@@ -45,6 +50,15 @@ namespace WoWHelper
 
         public int LootX { get; private set; }
         public int LootY { get; private set; }
+
+        // Last position FindTargetMarkerOnScreen() actually found the target marker at --
+        // set by WowMovementTasks.WalkIntoMeleeRangeTask() each time a scan succeeds. Null
+        // until the first successful scan (or if none has succeeded yet this attempt).
+        // Nullable rather than defaulting to 0,0 like LootX/Y above -- unlike loot's "default
+        // to screen center" fallback, there's no sane default screen position for "target not
+        // found," so callers need to be able to tell the difference.
+        public int? MostRecentTargetMarkerX { get; private set; }
+        public int? MostRecentTargetMarkerY { get; private set; }
 
         public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }
@@ -97,8 +111,8 @@ namespace WoWHelper
             switch (combatConfiguration)
             {
                 case WowCombatConfiguration.Warrior: return new WowWarriorClassState();
-                case WowCombatConfiguration.Mage: return new WowMageClassState();
                 case WowCombatConfiguration.Shaman: return new WowShamanClassState();
+                case WowCombatConfiguration.Warlock: return new WowWarlockClassState();
                 default: throw new System.NotImplementedException(
                     $"{nameof(CreateClassState)}: no ClassState implemented for CombatConfiguration \"{combatConfiguration}\" -- " +
                     $"this should only be called with a resolved (non-Unknown) CombatConfiguration.");
@@ -320,6 +334,13 @@ namespace WoWHelper
                     //LootX = centroid.Value.X;
                     //LootY = centroid.Value.Y;
                 }
+
+                // TEMP DEBUG (WalkIntoMeleeRangeTask troubleshooting): confirm whether the
+                // marker is actually being found at all, and where -- remove once resolved.
+                Console.WriteLine(centroid == null
+                    ? $"DEBUG FindTargetMarkerOnScreen: marker NOT found (color {WowScreenConfiguration.TARGET_MARKER_COLOR}, resolution {resolution})"
+                    : $"DEBUG FindTargetMarkerOnScreen: marker found at {centroid.Value}");
+
                 return centroid;
             }
         }
@@ -431,14 +452,15 @@ namespace WoWHelper
                 // TODO: if on login screen all other values will be messed up
                 if (!WorldState.OnLoginScreen && WorldState.IsInCombat)
                 {
-                    // Mage/Shaman always pull with a spell regardless of FarmingConfig.EngageMethod
+                    // Shaman always pulls with a spell regardless of FarmingConfig.EngageMethod
                     // (Charge/Pull only distinguishes Warrior's two options -- see the enum's own
                     // comment on WowLocationConfiguration.cs), so checking CombatConfiguration here
-                    // instead of EngageMethod covers both classes without needing to know which
-                    // location we're on.
+                    // instead of EngageMethod covers it without needing to know which location
+                    // we're on. (Warlock also always pulls with a spell but isn't checked here --
+                    // pre-existing gap from before Warlock support was added, not touched by the
+                    // Mage removal that dropped the Mage half of this check.)
                     if (CurrentPlayerState == PlayerState.CONTINUE_TO_TRY_TO_ENGAGE &&
-                        (FarmingConfig.CombatConfiguration == WowCombatConfiguration.Mage ||
-                         FarmingConfig.CombatConfiguration == WowCombatConfiguration.Shaman) &&
+                        FarmingConfig.CombatConfiguration == WowCombatConfiguration.Shaman &&
                         WorldState.ResourcePercent < 100)
                     {
                         // We likely just cast a spell that hasn't yet hit the target.  Wait a little bit so it does,
@@ -448,7 +470,7 @@ namespace WoWHelper
                     }
                     Console.WriteLine($"In combat unexpectedly ({CurrentPlayerState}), switching to PlayerState.IN_CORE_COMBAT_LOOP");
                     CurrentPlayerState = PlayerState.IN_CORE_COMBAT_LOOP;
-                    //Keyboard.KeyPress(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
+                    //await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
                 }
 
                 await EveryWorldStateUpdateTasks();

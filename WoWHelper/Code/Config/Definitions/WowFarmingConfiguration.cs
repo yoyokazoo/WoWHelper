@@ -15,8 +15,11 @@ namespace WoWHelper.Code.Gameplay
         // silently behaving like Warrior.
         Unknown = -1,
         Warrior = 0,
-        Mage = 1,
+        // 1 (Mage) retired -- Mage support was removed (never got the rotation working,
+        // and a lot has changed elsewhere since). Not reused, to avoid confusing anything
+        // that might have logged/persisted the old numeric value.
         Shaman = 2,
+        Warlock = 3,
     }
 
     public class WowFarmingConfiguration
@@ -37,17 +40,11 @@ namespace WoWHelper.Code.Gameplay
         // the addon's /yyconfig menu instead of this hardcoded config.
 
         public EngagementMethod EngageMethod => LocationConfiguration.EngageMethod;
-        // Warrior-only, read from inside WarriorCombatLoopTask's rotation. Still NREs if
-        // LocationConfiguration is null (e.g. bot started mid-combat, before
-        // RESOLVE_FARMING_CONFIGURATION got a chance to run -- see
-        // WowConfigResolutionTasks.cs) -- not worth a fallback for now like
-        // TooManyAttackersThreshold below, since there's no obviously-safe default for a
-        // route-specific tactical choice.
-        public bool UseRend => LocationConfiguration.UseRend;
-        public bool PreemptFear => LocationConfiguration.PreemptFear;
         // Falls back to 3 (the same default WowLocationConfiguration's own constructor
-        // uses) when LocationConfiguration is null, rather than NRE-ing mid-combat -- see
-        // UseRend/PreemptFear above for the same scenario, left unguarded for now.
+        // uses) when LocationConfiguration is null, rather than NRE-ing mid-combat (e.g. bot
+        // started mid-combat, before RESOLVE_FARMING_CONFIGURATION got a chance to run --
+        // see WowConfigResolutionTasks.cs) -- unlike EngageMethod above, which has no
+        // obviously-safe default for a route-specific tactical choice and is left unguarded.
         public int TooManyAttackersThreshold => LocationConfiguration?.TooManyAttackersThreshold ?? 3;
         public int LogoffLevel => LocationConfiguration.LogoffLevel;
 
