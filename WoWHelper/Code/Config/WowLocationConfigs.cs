@@ -720,7 +720,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(36.30f, 53.50f)
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Pull,
+            EngageMethod = EngagementMethod.Charge,
             LogoffLevel = 14
         };
 
@@ -758,7 +758,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(54.90f, 18.83f),
                 new Vector2(53.57f, 17.68f)
             },
-            EngageMethod = EngagementMethod.Pull,
+            EngageMethod = EngagementMethod.Charge,
             LogoffLevel = 12
         };
 

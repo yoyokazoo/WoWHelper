@@ -137,7 +137,7 @@ namespace WoWHelper
                         await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
                     }
                     else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST) || 
-                        (WorldState.PlayerLevel >= 40 && WorldState.ResourcePercent >= WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
+                        (WorldState.PlayerLevel < 40 && WorldState.ResourcePercent >= WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
                     {
                         // Heroic only if we have enough spare rage to bloodthirst right after
                         await WowInput.PressKey(WowInput.WARRIOR_HEROIC_STRIKE);

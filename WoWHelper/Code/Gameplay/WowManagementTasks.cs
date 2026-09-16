@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using WindowsGameAutomationTools.Images;
@@ -119,7 +120,21 @@ namespace WoWHelper
             {
                 if (FarmingConfig.AlertOnUnreadWhisper)
                 {
-                    SlackHelper.SendMessageToChannel($"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!");
+                    string levelUpMessage = $"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!";
+
+                    // Newly-unlocked routes only (MinimumLevel exactly matches the level just
+                    // reached) -- a config that was already eligible before this level-up isn't
+                    // "new" news, so it's left out to keep the message short.
+                    List<string> newlyEligibleConfigTitles = WowLocationConfigs.ALL_LOCATIONS
+                        .Where(config => config.MinimumLevel == WorldState.PlayerLevel)
+                        .Select(config => config.Title)
+                        .ToList();
+                    if (newlyEligibleConfigTitles.Count > 0)
+                    {
+                        levelUpMessage += $" Newly eligible route(s): {string.Join(", ", newlyEligibleConfigTitles)}";
+                    }
+
+                    SlackHelper.SendMessageToChannel(levelUpMessage);
                 }
                 if (FarmingConfig.LogoffLevel == WorldState.PlayerLevel)
                 {
