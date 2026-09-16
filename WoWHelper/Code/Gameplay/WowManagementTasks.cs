@@ -57,13 +57,9 @@ namespace WoWHelper
                 await GetOutOfWater();
             }
 
-            // ping if unseen message
-            if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState.Initialized && !PreviousWorldState.HasUnseenWhisper && WorldState.HasUnseenWhisper)
-            {
-                _ = SlackFileUploadWorkaround.UploadScreenshotToChannelAsync(
-                    title: "Unseen Whisper!",
-                    cropRegion: FarmingConfig.ScreenConfiguration.SlackScreenshotCropRegion);
-            }
+            // ping if unseen message -- shared with WaitForWorldBuffThenLogoffTask, which
+            // polls WorldState in its own loop rather than going through this method.
+            AlertOnUnseenWhisper();
 
             // ping if logged out (still needs testing.  they changed login screen??)
             if (!PreviousWorldState.OnLoginScreen && 
@@ -111,6 +107,21 @@ namespace WoWHelper
             }
 
             return true;
+        }
+
+        // Edge-triggered Slack screenshot the first tick a new whisper shows up. Pulled out
+        // of EveryWorldStateUpdateTasks so WaitForWorldBuffThenLogoffTask -- which sits in
+        // its own polling loop and never runs EveryWorldStateUpdateTasks -- can alert on
+        // whispers too. Reads the PreviousWorldState/WorldState pair, so it has to be called
+        // once per UpdateWorldStateAsync tick or whisper edges get missed.
+        public void AlertOnUnseenWhisper()
+        {
+            if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState.Initialized && !PreviousWorldState.HasUnseenWhisper && WorldState.HasUnseenWhisper)
+            {
+                _ = SlackFileUploadWorkaround.UploadScreenshotToChannelAsync(
+                    title: "Unseen Whisper!",
+                    cropRegion: FarmingConfig.ScreenConfiguration.SlackScreenshotCropRegion);
+            }
         }
 
         public async Task<bool> SetLogoutVariablesTask()
@@ -221,11 +232,15 @@ namespace WoWHelper
         // in WowCommonCombatTasks.cs) so the buff is noticed the moment it lands instead of
         // only at the end of the wait, then taps strafe-left/strafe-right briefly to reset
         // WoW's AFK kick timer before waiting again. Once the buff is seen, sends a Slack
-        // alert and logs out.
+        // alert and logs out. Also runs AlertOnUnseenWhisper() on every poll -- this loop
+        // deliberately doesn't go through EveryWorldStateUpdateTasks (nothing else in there
+        // applies while parked in a city waiting for a buff), but sitting idle for a long
+        // stretch is exactly when a whisper is most likely to show up and want a ping.
         public async Task<bool> WaitForWorldBuffThenLogoffTask()
         {
             Console.WriteLine("Waiting for desired world buff...");
             await UpdateWorldStateAsync();
+            AlertOnUnseenWhisper();
 
             while (!WorldState.HasDesiredWorldBuff)
             {
@@ -233,6 +248,7 @@ namespace WoWHelper
                 while (!WorldState.HasDesiredWorldBuff && DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
                 {
                     await UpdateWorldStateAsync();
+                    AlertOnUnseenWhisper();
                 }
 
                 if (WorldState.HasDesiredWorldBuff)
