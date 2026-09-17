@@ -666,17 +666,18 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 21,
         };
 
+        /*
+/target Fleeting
+/target Zhevra
+/target Sunscale
+             */
         public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Barrens Entrance (Level 13+)",
             MinimumLevel = 13,
             Zone = WowZone.TheBarrens,
 
-            /*
-/target Fleeting
-/target Zhevra
-/target Sunscale
-             */
+            
             Waypoints = new List<Vector2>
             {
                 new Vector2(55.00f, 21.13f),

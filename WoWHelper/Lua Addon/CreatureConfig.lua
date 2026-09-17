@@ -19,6 +19,7 @@ CASTER_MOB_NAMES = {
 -- stop them running off).
 RUNNER_MOB_NAMES = {
     ["Bloodfury Harpy"] = true,
+    ["Fleeting Plainstrider"] = true,
 }
 
 -- Mobs immune (or effectively immune) to fire damage/effects.

@@ -108,11 +108,7 @@ namespace WoWHelper
                 {
                     await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_EXECUTE);
                 }
-                else if (!classState.TargetHasRend && 
-                    !WorldState.IsTargetBleedImmune && 
-                    WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD && 
-                    WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST &&
-                    WorldState.PlayerLevel >= 4)
+                else if (ShouldCastRend(classState))
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_REND);
                 }
@@ -147,6 +143,24 @@ namespace WoWHelper
             } while (WorldState.IsInCombat);
 
             return true;
+        }
+
+        // Bleed-immune targets never get Rend, regardless of anything else. Otherwise, Rend
+        // once the level requirement is met, we can afford it, and the target isn't already
+        // bled, but only if it's worth the rage: either high enough HP that Rend's DoT will
+        // have time to tick, or a runner mob -- those flee at low HP, so Rend's damage-over-time
+        // keeps ticking (and helps finish it off) even after it breaks line of sight/melee range.
+        public bool ShouldCastRend(WowWarriorClassState classState)
+        {
+            if (WorldState.IsTargetBleedImmune)
+            {
+                return false;
+            }
+
+            return WorldState.PlayerLevel >= 4 &&
+                WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST &&
+                !classState.TargetHasRend &&
+                (WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD || WorldState.IsTargetRunnerMob);
         }
 
         public async Task<bool> WarriorStartBattleReadyRecoverTask(WowWarriorClassState classState)
