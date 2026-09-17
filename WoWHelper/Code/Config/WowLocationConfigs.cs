@@ -716,8 +716,8 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(36.28f, 39.20f),
                 new Vector2(36.57f, 43.56f),
                 new Vector2(36.60f, 47.55f),
-                new Vector2(36.65f, 51.08f),
-                new Vector2(36.30f, 53.50f)
+                //new Vector2(36.65f, 51.08f),
+                //new Vector2(36.30f, 53.50f)
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             EngageMethod = EngagementMethod.Charge,

@@ -152,8 +152,9 @@ end
 -- are piped to the C# side the same way every other bit of state in this addon
 -- is -- packed into GetMultiBoolTwo() (WoWFunctions.lua) and read back as a
 -- color -- but that's not a requirement of this menu itself: the "Dynamite
--- item" selector below is Lua-only (only AreWeLowOnDynamite(), WoWFunctions.lua,
--- ever needs it), and isn't piped to C# at all.
+-- item"/"Healing potion" selectors below are Lua-only (only
+-- AreWeLowOnDynamite()/AreWeLowOnHealthPotions(), WoWFunctions.lua, ever need
+-- them), and aren't piped to C# at all.
 --
 -- options: array of either
 --   { label = "...", get = function() end, set = function(bool) end }               -- checkbox (default)

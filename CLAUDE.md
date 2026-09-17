@@ -283,7 +283,17 @@ hardcoded — saved into `YoyokazooUIDB.dynamiteItemId`, read via
 and never reaches the C# side. This is `CreateSettingsMenu()`'s second option
 shape (`type = "selector"`, a cycling button through `choices`) alongside its
 original checkboxes — see that function's own comment in `UIFunctions.lua`
-for the option-table shapes it accepts.
+for the option-table shapes it accepts. The menu has a matching "Healing
+potion" row, same selector shape, letting which healing-potion-tier item
+`AreWeLowOnHealthPotions()` (`WoWFunctions.lua`) checks the bag count of be
+picked from `HEALING_POTION_ITEM_CHOICES` at runtime instead of being
+auto-selected — saved into `YoyokazooUIDB.healingPotionItemId`, read via
+`GetHealingPotionItemId()`; also Lua-only, same as the Dynamite item
+selector. This replaced an earlier version of `AreWeLowOnHealthPotions()`
+that auto-picked the highest tier whose min level was <= the player's
+current level, which meant a full stack of a lower (still-owned, but no
+longer being drunk) tier could mask actually being low on the tier the
+player was currently using.
 
 G3 is `WowWorldState.HasDesiredWorldBuff` — same "run-specific setting, not
 a plain game-state query" deal as G1/G2: which world buff it checks for
@@ -293,8 +303,9 @@ is chosen via the `/yyconfig` menu's "Desired world buff" row, another
 (`WoWFunctions.lua`) — saved into `YoyokazooUIDB.desiredWorldBuffId`, read via
 `GetDesiredWorldBuffId()`, and matched against the player's actual buffs by
 `HasDesiredWorldBuff()` (`WoWFunctions.lua`, via the existing `HasBuffNamed()`
-helper). Unlike the "Dynamite item" selector, this one *does* reach the C#
-side — it's packed into `GetMultiBoolTwo()` like the two booleans above.
+helper). Unlike the "Dynamite item"/"Healing potion" selectors, this one
+*does* reach the C# side — it's packed into `GetMultiBoolTwo()` like the two
+booleans above.
 Consumed by `WowManagementTasks.WaitForWorldBuffThenLogoffTask()`: loops
 idle (tapping strafe-left/strafe-right every
 `WowPlayerConstants.WORLD_BUFF_WAIT_MILLIS` to dodge WoW's AFK kick) until

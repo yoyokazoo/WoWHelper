@@ -541,38 +541,24 @@ function CurrentTargetInCombatWithUs()
     return UnitIsUnit("targettarget", "player")
 end
 
+-- Known healing-potion tiers, selectable via the /yyconfig "Healing potion" selector
+-- (YoyokazooUI.lua/UIFunctions.lua) instead of being auto-picked from player level.
+-- GetHealingPotionItemId() (YoyokazooUI.lua) returns whichever one is currently
+-- selected, defaulting to Major Healing Potion (13446) -- this used to auto-select
+-- the highest tier whose minLevel <= player level, which meant a full stack of a
+-- lower (still-owned) tier could mask actually being low on the one the player was
+-- currently drinking; a manual selector, same as the Dynamite item one, sidesteps
+-- that entirely.
+HEALING_POTION_ITEM_CHOICES = {
+    { id = 858,   label = "Lesser Healing Potion" },
+    { id = 929,   label = "Healing Potion" },
+    { id = 1710,  label = "Greater Healing Potion" },
+    { id = 3928,  label = "Superior Healing Potion" },
+    { id = 13446, label = "Major Healing Potion" },
+}
+
 function AreWeLowOnHealthPotions()
-    local level = UnitLevel("player")
-    -- who cares before 10
-    if level < 10 then
-        return false
-    end
-
-    -- Tier table: each entry is { minLevel, itemId, name (comment only) }.
-    -- Order from lowest to highest tier so index math is straightforward.
-    local tiers = {
-        { 3,  858,   "lesser healing potion" },
-        { 12, 929,   "healing potion" },
-        { 21, 1710,  "greater healing potion" },
-        { 35, 3928,  "superior healing potion" },
-        { 45, 13446, "major healing potion" },
-    }
-
-    -- Find which tier the player should be using (highest tier whose
-    -- minLevel <= player level).
-    local currentTierIndex = 1
-    for i, tier in ipairs(tiers) do
-        if level >= tier[1] then
-            currentTierIndex = i
-        end
-    end
-
-    -- Only the current tier counts -- used to also accept one tier lower as fallback
-    -- stock, but that let a full stack of the previous (weaker) potion mask actually
-    -- being low on the one the player should be drinking, so that fallback was removed.
-    local currentId = tiers[currentTierIndex][2]
-
-    local count = GetItemCount(currentId, false)
+    local count = GetItemCount(GetHealingPotionItemId(), false)
     return count < 2
 end
 

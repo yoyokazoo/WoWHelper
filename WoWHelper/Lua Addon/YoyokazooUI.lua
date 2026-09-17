@@ -65,6 +65,14 @@ if YoyokazooUIDB.dynamiteItemId == nil then
     YoyokazooUIDB.dynamiteItemId = 18641
 end
 
+-- Which healing-potion-tier item AreWeLowOnHealthPotions() (WoWFunctions.lua) checks
+-- the bag count of -- selectable via the /yyconfig "Healing potion" selector below
+-- instead of being auto-picked from player level. Defaults to Major Healing Potion
+-- (13446). See HEALING_POTION_ITEM_CHOICES (WoWFunctions.lua) for the full list.
+if YoyokazooUIDB.healingPotionItemId == nil then
+    YoyokazooUIDB.healingPotionItemId = 13446
+end
+
 -- Which world buff HasDesiredWorldBuff() (WoWFunctions.lua) checks for -- selectable via the
 -- /yyconfig "Desired world buff" selector below instead of being hardcoded. Defaults to Ony's
 -- Rallying Cry. See WORLD_BUFF_CHOICES (WoWFunctions.lua) for the full list. Read by
@@ -110,6 +118,20 @@ function GetDynamiteItemId()
         print("YoyokazooUI: dynamiteItemId was invalid (" .. tostring(itemId) .. "), resetting to default (Dense Dynamite, 18641).")
         itemId = 18641
         YoyokazooUIDB.dynamiteItemId = itemId
+    end
+    return itemId
+end
+
+-- Read by AreWeLowOnHealthPotions() (WoWFunctions.lua). Not piped to the C# side at
+-- all -- same as GetDynamiteItemId() above, only the Lua side needs it, where the
+-- actual bag-count check happens. Same defensive re-default/repair as
+-- GetDynamiteItemId() too, for the same reason.
+function GetHealingPotionItemId()
+    local itemId = YoyokazooUIDB.healingPotionItemId
+    if type(itemId) ~= "number" then
+        print("YoyokazooUI: healingPotionItemId was invalid (" .. tostring(itemId) .. "), resetting to default (Major Healing Potion, 13446).")
+        itemId = 13446
+        YoyokazooUIDB.healingPotionItemId = itemId
     end
     return itemId
 end
@@ -322,9 +344,9 @@ SlashCmdList["YYDEBUG"] = function()
 end
 
 -- /yyconfig toggles the run-specific settings menu (CreateSettingsMenu(), UIFunctions.lua)
--- -- "log out on low dynamite"/"log out on full bags"/"dynamite item"/"desired world buff"
--- for now, more can be added to the options list below as they come up. Built once, lazily,
--- on first use rather than
+-- -- "log out on low dynamite"/"log out on full bags"/"dynamite item"/"healing potion"/
+-- "desired world buff" for now, more can be added to the options list below as they come
+-- up. Built once, lazily, on first use rather than
 -- unconditionally at load time like the debug frame above, since there's no reason to pay
 -- for it on a run that never opens the menu.
 local settingsMenu = nil
@@ -365,6 +387,24 @@ SlashCmdList["YYCONFIG"] = function()
                         end
                     end
                     print("YoyokazooUI: Dynamite item set to " .. chosenLabel .. " (saved).")
+                end,
+            },
+            {
+                label = "Healing potion",
+                type = "selector",
+                choices = HEALING_POTION_ITEM_CHOICES,
+                get = GetHealingPotionItemId,
+                set = function(id)
+                    YoyokazooUIDB.healingPotionItemId = id
+
+                    local chosenLabel = tostring(id)
+                    for _, choice in ipairs(HEALING_POTION_ITEM_CHOICES) do
+                        if choice.id == id then
+                            chosenLabel = choice.label
+                            break
+                        end
+                    end
+                    print("YoyokazooUI: Healing potion set to " .. chosenLabel .. " (saved).")
                 end,
             },
             {
