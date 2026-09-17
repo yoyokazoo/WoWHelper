@@ -635,19 +635,20 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 25,
         };
 
-        public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WowLocationConfiguration
-        {
-            Title = "Northern Barrens (Level 17+)",
-            MinimumLevel = 17,
-            Zone = WowZone.TheBarrens,
-
-            /*
+        /*
 /target Zhevra
 /target Savannah
 /target Hecklefang
 /target Ornery
 /target Sunscale
             */
+        public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WowLocationConfiguration
+        {
+            Title = "Northern Barrens (Level 17+)",
+            MinimumLevel = 17,
+            Zone = WowZone.TheBarrens,
+
+            
             Waypoints = new List<Vector2>
             {
                 new Vector2(47.30f, 13.91f),
