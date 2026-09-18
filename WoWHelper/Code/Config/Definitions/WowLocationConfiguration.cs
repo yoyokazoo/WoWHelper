@@ -60,9 +60,10 @@ namespace WoWHelper.Code.WorldState
         // Human-readable name, including the minimum level, e.g. "Durotar Imps (Level 4+)".
         public string Title { get; set; }
         public int MinimumLevel { get; set; } // for validation -- character should be at least this level before starting
+        public int MaximumLevel { get; set; } // Level to log off at
         public WowZone Zone { get; set; } // for validation -- character should be in this zone before starting
 
-        public List<Vector2> Waypoints { get; set; }
+        public EngagementMethod EngageMethod { get; set; }
         public WaypointTraversalMethod TraversalMethod { get; set; }
         public WaypointTargetFindMethod TargetFindMethod { get; set; }
         public float DistanceTolerance { get; set; }
@@ -74,9 +75,10 @@ namespace WoWHelper.Code.WorldState
         // name substrings for a target-cycling macro, not a complete/exact roster.
         public List<string> ExpectedMobNames { get; set; }
 
-        public EngagementMethod EngageMethod { get; set; }
+        
         public int TooManyAttackersThreshold { get; set; } // how many mobs to panic at (sometimes mobs spawn tiny bugs or something that will get counted)
-        public int MaximumLevel { get; set; } // Level to log off at
+        
+        public List<Vector2> Waypoints { get; set; }
 
         public WowLocationConfiguration()
         {
