@@ -14,9 +14,7 @@ namespace WoWHelper.Code.WorldState
             Title = "Silithus Rumblers (Level 58+)",
             MinimumLevel = 58,
             Zone = WowZone.Silithus,
-            EngageMethod = EngagementMethod.Charge,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f,
             ExpectedMobNames = new List<string> { "Desert Rumbler" },
 
@@ -46,9 +44,6 @@ namespace WoWHelper.Code.WorldState
             Title = "Winterspring Yetis (Level 57+)",
             MinimumLevel = 57,
             Zone = WowZone.Winterspring,
-            EngageMethod = EngagementMethod.Charge,
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f,
 
             Waypoints = new List<Vector2>
@@ -80,8 +75,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 56,
             Zone = WowZone.WesternPlaguelands,
             EngageMethod = EngagementMethod.Pull,
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f,
 
             Waypoints = new List<Vector2>
@@ -113,9 +106,6 @@ namespace WoWHelper.Code.WorldState
             Title = "Winterspring Lake (Level 56+)",
             MinimumLevel = 56,
             Zone = WowZone.Winterspring,
-            EngageMethod = EngagementMethod.Charge,
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -147,9 +137,7 @@ namespace WoWHelper.Code.WorldState
             Title = "Azshara (Level 53+)",
             MinimumLevel = 53,
             Zone = WowZone.Azshara,
-            EngageMethod = EngagementMethod.Charge,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -179,9 +167,7 @@ namespace WoWHelper.Code.WorldState
             Title = "North Felwood (Level 53+)",
             MinimumLevel = 53,
             Zone = WowZone.Felwood,
-            EngageMethod = EngagementMethod.Charge,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -216,9 +202,6 @@ namespace WoWHelper.Code.WorldState
             Title = "South Felwood (Level 51+)",
             MinimumLevel = 50,
             Zone = WowZone.Felwood,
-            EngageMethod = EngagementMethod.Charge,
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -269,9 +252,6 @@ namespace WoWHelper.Code.WorldState
             Title = "Feralas Hippogryphs (Level 48+)",
             MinimumLevel = 46,
             Zone = WowZone.Feralas,
-            EngageMethod = EngagementMethod.Charge,
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -301,10 +281,7 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 41,
             MaximumLevel = 48,
             Zone = WowZone.Tanaris,
-            EngageMethod = EngagementMethod.Charge,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f,
 
             Waypoints = new List<Vector2>
             {
@@ -337,8 +314,6 @@ namespace WoWHelper.Code.WorldState
             Zone = WowZone.Desolace,
             EngageMethod = EngagementMethod.Pull,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f,
 
             Waypoints = new List<Vector2>
             {
@@ -385,10 +360,8 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 34,
             MaximumLevel = 38,
             Zone = WowZone.ThousandNeedles,
-            EngageMethod = EngagementMethod.Charge,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
-            DistanceTolerance = 0.2f,
 
             Waypoints = new List<Vector2>
             {
@@ -421,8 +394,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 26,
             MaximumLevel = 30,
             Zone = WowZone.StonetalonMountains,
-            EngageMethod = EngagementMethod.Charge,
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -445,7 +416,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 29,
             MaximumLevel = 35,
             Zone = WowZone.HillsbradFoothills,
-            EngageMethod = EngagementMethod.Charge,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.3f,
@@ -478,8 +448,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 24,
             MaximumLevel = 28,
             Zone = WowZone.StonetalonMountains,
-            EngageMethod = EngagementMethod.Charge,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
 
             Waypoints = new List<Vector2>
             {
@@ -509,7 +477,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 20,
             MaximumLevel = 25,
             Zone = WowZone.Ashenvale,
-            EngageMethod = EngagementMethod.Charge,
 
             Waypoints = new List<Vector2>
             {
@@ -560,7 +527,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 17,
             MaximumLevel = 21,
             Zone = WowZone.TheBarrens,
-            EngageMethod = EngagementMethod.Charge,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
 
             Waypoints = new List<Vector2>
@@ -589,7 +555,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 13,
             MaximumLevel = 18,
             Zone = WowZone.TheBarrens,
-            EngageMethod = EngagementMethod.Charge,
 
             Waypoints = new List<Vector2>
             {
@@ -616,7 +581,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 11,
             MaximumLevel = 14,
             Zone = WowZone.Durotar,
-            EngageMethod = EngagementMethod.Charge,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
 
             Waypoints = new List<Vector2>
@@ -652,7 +616,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 9,
             MaximumLevel = 12,
             Zone = WowZone.Durotar,
-            EngageMethod = EngagementMethod.Charge,
 
             Waypoints = new List<Vector2>
             {
@@ -689,7 +652,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 6,
             MaximumLevel = 10,
             Zone = WowZone.Durotar,
-            EngageMethod = EngagementMethod.Charge,
 
             Waypoints = new List<Vector2>
             {
@@ -730,7 +692,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 4,
             MaximumLevel = 7,
             Zone = WowZone.Durotar,
-            EngageMethod = EngagementMethod.Charge,
 
             Waypoints = new List<Vector2>
             {
@@ -753,7 +714,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 1,
             MaximumLevel = 4,
             Zone = WowZone.Durotar,
-            EngageMethod = EngagementMethod.Charge,
 
             Waypoints = new List<Vector2>
             {
@@ -830,7 +790,6 @@ namespace WoWHelper.Code.WorldState
             MaximumLevel = 8,
             Zone = WowZone.Mulgore,
             EngageMethod = EngagementMethod.Pull,
-            TraversalMethod = WaypointTraversalMethod.LINEAR,
 
             Waypoints = new List<Vector2>
             {
