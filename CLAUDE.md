@@ -498,6 +498,17 @@ of truth — edits should be made here, not in the WoW install directory.
   drifted outside the finer `TARGET_FACING_CONE_DEGREES` cone (ordinary
   gradual drift), it re-turns via `TurnToFaceTargetMarkerTask` without
   interrupting the walk. None of this is tuned against live testing yet.
+  `PathfindingLoopTask` also uses the marker while walking the waypoint route:
+  once every `PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS` (1s — a full
+  screen capture, so deliberately slower than the 200ms cadence above) it
+  checks whether the marker is on screen while `CanEngageTarget()` is false
+  (i.e. we have a target, but it's out of range of our pull), and if so calls
+  `WalkTowardsTargetMarkerTask`: stop route-walking, `TurnToFaceTargetMarkerTask`,
+  then walk straight forward for at most `WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS`
+  (2s) or until `CanEngageTarget() || IsInCombat || LogoutTriggered` — the same
+  early-exit the pathfinding loop itself uses, re-checked by the caller right
+  after. Unlike `WalkIntoMeleeRangeTask` it's a short nudge, not a commit; if
+  the target's still out of range the next periodic scan just tries again.
 - **`Config/`** — per-location farming routes/waypoints
   (`WowLocationConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic

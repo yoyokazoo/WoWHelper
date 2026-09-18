@@ -25,6 +25,7 @@ namespace WoWHelper
             bool stationaryWiggleAttemptedTwice = false;
             bool stationaryAlertSent = false;
             long lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            long lastTargetMarkerScanTime = 0;
             LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
             // Anchor point for stuck detection -- see the MEANINGFUL_LOCATION_CHANGE_AMOUNT
@@ -164,6 +165,35 @@ namespace WoWHelper
                     await EndWalkForwardTask();
                     // return true if we can charge/shoot, false if we're already in combat
                     return !WorldState.IsInCombat;
+                }
+
+                // We've got a target (its marker is on screen) but CanEngageTarget() just said
+                // no -- most likely it's simply out of range of whatever our pull ability is.
+                // Rather than keep walking the waypoint route and hope it wanders closer, face
+                // it and walk towards it for a bit. Throttled to a full-screen capture every
+                // PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS since FindTargetMarkerOnScreen
+                // is far more expensive than the pixel-row read WorldState does each tick.
+                if (!CurrentTimeInsideDuration(lastTargetMarkerScanTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS))
+                {
+                    lastTargetMarkerScanTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+                    if (FindTargetMarkerOnScreen() != null)
+                    {
+                        await WalkTowardsTargetMarkerTask();
+
+                        // Same early exit as above -- WalkTowardsTargetMarkerTask stops on any of
+                        // these, but it's the outer loop's job to actually return on them.
+                        if (CanEngageTarget() || WorldState.IsInCombat || LogoutTriggered)
+                        {
+                            await EndWalkForwardTask();
+                            return !WorldState.IsInCombat;
+                        }
+
+                        // Facing/position have changed out from under the waypoint logic; go
+                        // back to the top so it re-evaluates against a fresh WorldState rather
+                        // than acting on the one from before we walked.
+                        continue;
+                    }
                 }
 
                 switch (CurrentPathfindingState)
@@ -559,6 +589,66 @@ namespace WoWHelper
             }
 
             Console.WriteLine("DEBUG WalkIntoMeleeRangeTask: timed out before getting close enough");
+            return false;
+        }
+
+        // How often PathfindingLoopTask checks whether the target marker is on screen while
+        // walking the waypoint route. Much slower than TARGET_MARKER_SCAN_INTERVAL_MILLIS
+        // above: that one runs while we're already committed to closing on a target, this
+        // one runs on every ordinary pathfinding tick where there usually isn't a target at
+        // all, and each scan is a full-screen capture.
+        private const int PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS = 1000;
+
+        // Longest WalkTowardsTargetMarkerTask keeps walking before handing control back to
+        // PathfindingLoopTask. Deliberately short -- this isn't WalkIntoMeleeRangeTask's
+        // "commit until we're in combat" walk, just a nudge to get an out-of-range target
+        // into range. If that isn't enough, the next periodic scan will try again.
+        private const int WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS = 2000;
+
+        // PathfindingLoopTask's "we have a target on screen but can't engage it yet" step:
+        // stop route-walking, turn to face the target marker, then walk straight at it for up
+        // to WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS, or until any of PathfindingLoopTask's own
+        // exit conditions (CanEngageTarget / IsInCombat / LogoutTriggered) comes true --
+        // whichever is first. Doesn't return on those itself; the caller re-checks them and
+        // decides what to return. Always releases the movement keys before returning.
+        public async Task<bool> WalkTowardsTargetMarkerTask()
+        {
+            // Stop the route walk (and any strafing) so the turn below is clean.
+            await EndWalkForwardTask();
+
+            if (!await TurnToFaceTargetMarkerTask())
+            {
+                // Marker vanished, or we're still not facing it after the turn -- walking
+                // forward now would just be walking in some random direction.
+                Console.WriteLine("DEBUG WalkTowardsTargetMarkerTask: couldn't face the target marker, not walking");
+                return false;
+            }
+
+            long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS;
+            Console.WriteLine($"DEBUG WalkTowardsTargetMarkerTask: facing target, walking towards it for up to {WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS}ms");
+
+            await StartWalkForwardTask();
+
+            try
+            {
+                while (DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
+                {
+                    await UpdateWorldStateAsync();
+                    await EveryWorldStateUpdateTasks();
+
+                    if (CanEngageTarget() || WorldState.IsInCombat || LogoutTriggered)
+                    {
+                        Console.WriteLine($"DEBUG WalkTowardsTargetMarkerTask: stopping early (CanEngageTarget={CanEngageTarget()}, IsInCombat={WorldState.IsInCombat}, LogoutTriggered={LogoutTriggered})");
+                        return true;
+                    }
+                }
+            }
+            finally
+            {
+                await EndWalkForwardTask();
+            }
+
+            Console.WriteLine("DEBUG WalkTowardsTargetMarkerTask: hit the time limit, handing back to pathfinding");
             return false;
         }
 

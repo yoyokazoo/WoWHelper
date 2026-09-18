@@ -42,12 +42,12 @@ namespace WoWHelper.Code
 
         /*
          * 5 Dmg
-#showtooltip [mod:shift] Execute; Mortal Strike
+#showtooltip [mod:shift] Sunder Armor; Mortal Strike
 /cast [nomod] Mortal Strike
-/cast [mod:shift] Execute
+/cast [mod:shift] Sunder Armor
         */
         public const Keys WARRIOR_MORTALSTRIKE_BLOODTHIRST = Keys.D5;
-        public const Keys WARRIOR_SHIFT_EXECUTE = Keys.D5;
+        public const Keys WARRIOR_SHIFT_SUNDER_ARMOR = Keys.D5;
 
         /*
          * 6 Rend
@@ -60,11 +60,12 @@ namespace WoWHelper.Code
 
         /*
          * 7 shit
-#showtooltip [mod:shift] Retaliation; Retaliation
-/cast [nomod] Retaliation
+#showtooltip [mod:shift] Retaliation; Execute
+/cast [nomod] Execute
 /cast [mod:shift] Retaliation
         */
-        public const Keys WARRIOR_SHIFT_RETALIATION_KEY = Keys.D7;
+        public const Keys WARRIOR_EXECUTE = Keys.D7;
+        public const Keys WARRIOR_SHIFT_RETALIATION = Keys.D7;
 
         #endregion
 

@@ -46,7 +46,7 @@ namespace WoWHelper
 
                     // cast retaliation once GCD is cooled down
                     await WaitForGlobalCooldownTask();
-                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION_KEY);
+                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION);
 
                     tooManyAttackersActionsTaken = true;
 
@@ -101,7 +101,7 @@ namespace WoWHelper
                 }
                 else if (WarriorShouldCastExecute(classState))
                 {
-                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_EXECUTE);
+                    await WowInput.PressKey(WowInput.WARRIOR_EXECUTE);
                 }
                 else if (WarriorShouldCastRend(classState))
                 {
@@ -320,7 +320,7 @@ namespace WoWHelper
 
                 // cast retaliation once GCD is cooled down
                 await WaitForGlobalCooldownTask();
-                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION_KEY);
+                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION);
 
                 LogoutReason = "Got into a Retaliation situation, logging off for safety";
                 LogoutTriggered = true;

@@ -437,10 +437,10 @@ namespace WoWHelper.Code.WorldState
 /target Antlered
 /target Sap
         */
-        public static readonly WowLocationConfiguration LEVEL_24_STONETALON_WAYPOINTS = new WowLocationConfiguration
+        public static readonly WowLocationConfiguration LEVEL_23_STONETALON_WAYPOINTS = new WowLocationConfiguration
         {
-            Title = "Stonetalon Mountains (Level 24+)",
-            MinimumLevel = 24,
+            Title = "Stonetalon Mountains (Level 23+)",
+            MinimumLevel = 23,
             MaximumLevel = 28,
             Zone = WowZone.StonetalonMountains,
 
@@ -940,7 +940,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_34_SHIMMERING_FLATS_WAYPOINTS,
             LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS,
             LEVEL_26_STONETALON_CHARRED_FOREST_WAYPOINTS,
-            LEVEL_24_STONETALON_WAYPOINTS,
+            LEVEL_23_STONETALON_WAYPOINTS,
             LEVEL_20_ZORAMGAR_WAYPOINTS,
             LEVEL_17_NORTHERN_BARRENS_WAYPOINTS,
             LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS,
