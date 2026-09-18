@@ -77,6 +77,16 @@ namespace WoWHelper
         // WowManagementTasks.WaitForWorldBuffThenLogoffTask().
         public bool HasDesiredWorldBuff { get; private set; }
 
+        // Decoded from MultiBoolTwo's G byte, b4. Unlike LogoutOnLowDynamiteEnabled/
+        // LogoutOnFullBagsEnabled/HasDesiredWorldBuff above, this is a live game-state query
+        // (same category as the R-byte flags), not a /yyconfig setting -- it just landed in G
+        // because the R byte was already fully packed. True once HasHighLatency()
+        // (WoWFunctions.lua) has seen 10 consecutive per-second latency samples all above
+        // 300ms (10 sustained seconds). Consumed by
+        // WowManagementTasks.EveryWorldStateUpdateTasks(), same "spot it once, trigger
+        // logout" pattern as LogoffMobSeen above.
+        public bool HighLatency { get; private set; }
+
         // Which of the three bot-supported classes the player is playing, decoded from
         // MultiBoolOne's B byte (b2/b4 -- see GetMultiBoolOne() in WoWFunctions.lua) for
         // Warrior/Shaman, plus MultiBoolTwo's R4 (see UpdateMultiBoolTwo below) for
@@ -303,11 +313,12 @@ namespace WoWHelper
             IsTargetBleedImmune = r5;
             IsTargetFearCaster = r6;
 
-            DecodeByte(color.G, out var g1, out var g2, out var g3, out _, out _, out _, out _, out _);
+            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out _, out _, out _, out _);
 
             LogoutOnLowDynamiteEnabled = g1;
             LogoutOnFullBagsEnabled = g2;
             HasDesiredWorldBuff = g3;
+            HighLatency = g4;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

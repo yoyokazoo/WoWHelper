@@ -71,7 +71,7 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G3 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff` |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G4 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -311,8 +311,27 @@ idle (tapping strafe-left/strafe-right every
 `WowPlayerConstants.WORLD_BUFF_WAIT_MILLIS` to dodge WoW's AFK kick) until
 this bit comes true, then Slack-alerts and logs out. Wired up to the
 `AdHocTest` button (`WowPlayer.AdHocTestTask()`) for now rather than a
-dedicated `PlayerState`. G4-G8 and the B byte are still reserved for the
-next class-agnostic bool.
+dedicated `PlayerState`.
+
+G4 is `WowWorldState.HighLatency` — unlike G1-G3 above, this is back to being
+a plain live game-state query (same category as the R-byte flags), not a
+`/yyconfig` setting; it just landed in G because the R byte was already
+fully packed by the time it was added. `HasHighLatency()` (`WoWFunctions.lua`)
+samples `GetNetStats()`'s `latencyHome` (the player's own connection to their
+realm's datacenter, not `latencyWorld`'s Blizzard-internal server-hop
+latency) once every `LATENCY_CHECK_INTERVAL_SECONDS` (1s) rather than on the
+row's ~50ms redraw cadence, since latency doesn't change anywhere near that
+fast — sampling on the redraw cadence would just recount the same stale
+reading. It counts consecutive over-threshold samples
+(`LATENCY_HIGH_THRESHOLD_MS`, 300) and returns true once
+`LATENCY_HIGH_CYCLE_COUNT` (10) in a row have all been high — 10 cycles * 1s
+= 10 sustained seconds — resetting to 0 (and back to false) the moment a
+sample comes in under threshold, since nothing needs it to stay latched once
+seen: `WowManagementTasks.EveryWorldStateUpdateTasks()` reads it with the
+same one-shot `WorldState.HighLatency && !LogoutTriggered` pattern
+`LogoffMobSeen` uses above (Slack-alerts and sets `LogoutTriggered`/
+`LogoutReason` on the first tick it sees it true). G5-G8 and the B byte are
+still reserved for the next class-agnostic bool.
 `ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,

@@ -154,6 +154,16 @@ namespace WoWHelper
                 SlackHelper.SendMessageToChannel($"Logging out, Logoff-if-seen mob spotted!");
             }
 
+            // Bail if latency's been sustained above 300ms for 10 straight cycles (10
+            // seconds -- see HasHighLatency() in WoWFunctions.lua for the cycle/threshold
+            // constants). Same "spot it once, trigger logout" pattern as LogoffMobSeen above.
+            if (WorldState.HighLatency && !LogoutTriggered)
+            {
+                LogoutTriggered = true;
+                LogoutReason = "High latency sustained for 10+ seconds (see HasHighLatency() in WoWFunctions.lua)";
+                SlackHelper.SendMessageToChannel($"Logging out, high latency detected!");
+            }
+
             // If we're about to die, petri alt+f4
             if (WorldState.PlayerHpPercent <= WowPlayerConstants.PETRI_ALTF4_HP_THRESHOLD && WorldState.PlayerLevel >= WowGameplayConstants.PETRIFICATION_FLASK_LEVEL)
             {

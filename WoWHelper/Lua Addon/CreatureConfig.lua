@@ -21,6 +21,7 @@ RUNNER_MOB_NAMES = {
     ["Bloodfury Harpy"] = true,
     ["Fleeting Plainstrider"] = true,
     ["Ornery Plainstrider"] = true,
+    ["Ghostpaw Runner"] = true,
 }
 
 -- Mobs immune (or effectively immune) to fire damage/effects.

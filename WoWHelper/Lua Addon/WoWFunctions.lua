@@ -857,6 +857,40 @@ function AreBagsFull()
     return cachedBagsFull
 end
 
+-- True once LATENCY_HIGH_CYCLE_COUNT consecutive latency samples, one taken every
+-- LATENCY_CHECK_INTERVAL_SECONDS, have all read above LATENCY_HIGH_THRESHOLD_MS -- i.e.
+-- LATENCY_HIGH_CYCLE_COUNT * LATENCY_CHECK_INTERVAL_SECONDS = 10 sustained seconds of bad
+-- latency. Same interval-cached pattern as AreBagsFull() above, for the same reason:
+-- GetNetStats()'s latencyHome value doesn't change anywhere near the ~50ms pixel-row poll
+-- cadence, so sampling on that cadence would just recount the same stale reading. Uses
+-- latencyHome (the player's own connection to their realm's datacenter) rather than
+-- latencyWorld (Blizzard's internal server-hop latency, noisy for reasons outside the
+-- player's own connection). Not latched -- a streak that breaks resets the count to 0 and
+-- this goes back to false; nothing needs it to stay true once WowManagementTasks.cs's own
+-- LogoutTriggered (C#) latches on the first tick it sees this true.
+local LATENCY_CHECK_INTERVAL_SECONDS = 1
+local LATENCY_HIGH_THRESHOLD_MS = 300
+local LATENCY_HIGH_CYCLE_COUNT = 10
+
+local lastLatencyCheckTime = nil
+local consecutiveHighLatencyCycles = 0
+
+function HasHighLatency()
+    local now = GetTime()
+    if not lastLatencyCheckTime or (now - lastLatencyCheckTime) >= LATENCY_CHECK_INTERVAL_SECONDS then
+        lastLatencyCheckTime = now
+
+        local _, _, latencyHome = GetNetStats()
+        if latencyHome > LATENCY_HIGH_THRESHOLD_MS then
+            consecutiveHighLatencyCycles = consecutiveHighLatencyCycles + 1
+        else
+            consecutiveHighLatencyCycles = 0
+        end
+    end
+
+    return consecutiveHighLatencyCycles >= LATENCY_HIGH_CYCLE_COUNT
+end
+
 function IsPlayerPetrified()
     for i = 1, 40 do
         local name = UnitAura("player", i)
@@ -987,8 +1021,10 @@ end
 -- (HasDesiredWorldBuff) are packed into the previously-unused G byte instead
 -- of continuing into R7/R8 -- run-specific settings toggled live in-game via
 -- the /yyconfig menu (YoyokazooUI.lua) rather than live game-state queries
--- like everything else in this row. G4-G8 and the B byte are still fully
--- reserved for future class-agnostic flags.
+-- like everything else in this row. G4 (HasHighLatency(), see there) is back
+-- to being a live game-state query, same category as the R byte -- it just
+-- landed in G because the R byte was already full by the time it was added.
+-- G5-G8 and the B byte are still fully reserved for future class-agnostic flags.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()
@@ -1005,8 +1041,9 @@ function GetMultiBoolTwo()
     local boolG1 = IsLogoutOnLowDynamiteEnabled()
     local boolG2 = IsLogoutOnFullBagsEnabled()
     local boolG3 = HasDesiredWorldBuff()
+    local boolG4 = HasHighLatency()
 
-    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, false, false, false, false, false)
+    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, false, false, false, false)
 
     return rByte/255.0, gByte/255.0, 0
 end
