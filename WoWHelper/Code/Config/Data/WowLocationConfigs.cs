@@ -9,6 +9,9 @@ namespace WoWHelper.Code.WorldState
     {
         #region Levels 50-60
 
+        /*
+/target Desert Rumbler
+        */
         public static readonly WowLocationConfiguration LEVEL_58_SILITHUS_RUMBLERS = new WowLocationConfiguration
         {
             Title = "Silithus Rumblers (Level 58+)",
@@ -30,15 +33,13 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(22.50f, 14.59f),
                 new Vector2(21.30f, 15.79f),
                 new Vector2(22.04f, 17.74f),
-                //new Vector2(22.92f, 17.88f),
+                //new Vector2(22.92f, 17.88f), // too close to air elementals for comfort
             },
         };
 
         /*
 /target Ice Thistle
         */
-        // Water elementals spawn here during invasion, bot will log off if they are seen.
-        // Supposedly they only show up once every 48 hours or so
         public static readonly WowLocationConfiguration LEVEL_57_WINTERSPRING_YETIS = new WowLocationConfiguration
         {
             Title = "Winterspring Yetis (Level 57+)",
@@ -59,7 +60,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(66.92f, 45.41f),
                 new Vector2(67.09f, 44.50f),
                 new Vector2(66.06f, 43.82f),
-                //new Vector2(66.43f, 38.86f),
                 new Vector2(65.87f, 41.89f),
                 new Vector2(65.09f, 40.48f),
             },
@@ -132,6 +132,9 @@ namespace WoWHelper.Code.WorldState
         /*
 /target Legashi
         */
+        // Legashi Hellcallers stand still and cast.  Only use this camp if you have handling
+        // for LongRangeCasters set up (Earth shock, etc.)
+        // FWIW I was getting stuck on geometry a lot at this specific one, so probably only run supervised
         public static readonly WowLocationConfiguration LEVEL_53_ASZHARA_SATYR_CIRCLE = new WowLocationConfiguration
         {
             Title = "Azshara (Level 53+)",
@@ -197,9 +200,9 @@ namespace WoWHelper.Code.WorldState
 /target Felpaw
 /target Warpwood
         */
-        public static readonly WowLocationConfiguration LEVEL_51_FELWOOD_SOUTH = new WowLocationConfiguration
+        public static readonly WowLocationConfiguration LEVEL_50_FELWOOD_SOUTH = new WowLocationConfiguration
         {
-            Title = "South Felwood (Level 51+)",
+            Title = "South Felwood (Level 50+)",
             MinimumLevel = 50,
             Zone = WowZone.Felwood,
             DistanceTolerance = 0.06f,
@@ -247,9 +250,9 @@ namespace WoWHelper.Code.WorldState
 /target Wandering
 /target Frayfeather
         */
-        public static readonly WowLocationConfiguration LEVEL_48_FERALAS_HIPPOGRYPHS = new WowLocationConfiguration
+        public static readonly WowLocationConfiguration LEVEL_46_FERALAS_HIPPOGRYPHS = new WowLocationConfiguration
         {
-            Title = "Feralas Hippogryphs (Level 48+)",
+            Title = "Feralas Hippogryphs (Level 46+)",
             MinimumLevel = 46,
             Zone = WowZone.Feralas,
             DistanceTolerance = 0.06f,
@@ -275,6 +278,9 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        /*
+/target Steeljaw
+        */
         public static readonly WowLocationConfiguration LEVEL_42_TANARIS_TURTLES = new WowLocationConfiguration
         {
             Title = "Tanaris Turtles (Level 42+)",
@@ -308,7 +314,7 @@ namespace WoWHelper.Code.WorldState
         */
         public static readonly WowLocationConfiguration LEVEL_37_KODO_GRAVEYARD = new WowLocationConfiguration
         {
-            Title = "Kodo Graveyard, Desolace (Level 37+)", // zone inferred from name/coords, please confirm
+            Title = "Kodo Graveyard, Desolace (Level 36+)",
             MinimumLevel = 36,
             MaximumLevel = 43,
             Zone = WowZone.Desolace,
@@ -335,16 +341,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(46.59f, 60.81f),
                 new Vector2(46.70f, 59.10f),
                 new Vector2(47.12f, 57.79f),
-
-                /*
-                 * frequent double packs this way
-                 * new Vector2(50.17f, 57.92f),
-                    new Vector2(49.45f, 58.84f),
-                    new Vector2(49.31f, 59.66f),
-                    new Vector2(48.09f, 60.46f),
-                    new Vector2(47.00f, 60.92f),
-                    new Vector2(47.64f, 58.37f),
-                 * */
             },
         };
 
@@ -354,6 +350,8 @@ namespace WoWHelper.Code.WorldState
 /target Saltstone
 /target Sparkleshell
         */
+        // TODO: add logoff if seen for the elite mob that pats here
+        // TODO: add "No Path Available" charge handling so you don't get stuck on the ship
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
@@ -361,7 +359,6 @@ namespace WoWHelper.Code.WorldState
             MaximumLevel = 38,
             Zone = WowZone.ThousandNeedles,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
 
             Waypoints = new List<Vector2>
             {
@@ -374,8 +371,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(83.00f, 54.67f),
                 new Vector2(82.92f, 54.00f),
                 new Vector2(84.13f, 56.00f),
-                //new Vector2(86.87f, 58.05f),
-                //new Vector2(87.96f, 61.20f),
             },
         };
 
@@ -384,32 +379,8 @@ namespace WoWHelper.Code.WorldState
         #region Levels 20-30
 
         /*
-/target Rogue
-/target Blackened
-/target Bloodfury
+/target Snapjaw
         */
-        public static readonly WowLocationConfiguration LEVEL_27_STONETALON_CHARRED_FOREST_WAYPOINTS = new WowLocationConfiguration
-        {
-            Title = "North Stonetalon (Level 27+)",
-            MinimumLevel = 26,
-            MaximumLevel = 30,
-            Zone = WowZone.StonetalonMountains,
-
-            Waypoints = new List<Vector2>
-            {
-                new Vector2(37.13f, 46.76f),
-                new Vector2(37.82f, 48.43f),
-                new Vector2(37.62f, 50.48f),
-                new Vector2(37.58f, 51.35f),
-                new Vector2(36.36f, 53.21f),
-                new Vector2(35.28f, 54.04f),
-                new Vector2(35.47f, 51.74f),
-                new Vector2(36.22f, 50.04f),
-                new Vector2(36.07f, 49.98f),
-                new Vector2(35.79f, 47.97f),
-            },
-        };
-
         public static readonly WowLocationConfiguration LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Hillsbrad River (Level 29+)",
@@ -432,9 +403,33 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(67.71f, 35.17f),
                 new Vector2(65.68f, 38.19f),
                 new Vector2(64.12f, 40.35f),
-                // under bridge, get stuck too often to be worth it
-                //new Vector2(62.49f, 42.11f),
-                //new Vector2(61.55f, 42.71f),
+            },
+        };
+
+        /*
+/target Rogue
+/target Blackened
+/target Bloodfury
+        */
+        public static readonly WowLocationConfiguration LEVEL_26_STONETALON_CHARRED_FOREST_WAYPOINTS = new WowLocationConfiguration
+        {
+            Title = "North Stonetalon (Level 26+)",
+            MinimumLevel = 26,
+            MaximumLevel = 30,
+            Zone = WowZone.StonetalonMountains,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(37.13f, 46.76f),
+                new Vector2(37.82f, 48.43f),
+                new Vector2(37.62f, 50.48f),
+                new Vector2(37.58f, 51.35f),
+                new Vector2(36.36f, 53.21f),
+                new Vector2(35.28f, 54.04f),
+                new Vector2(35.47f, 51.74f),
+                new Vector2(36.22f, 50.04f),
+                new Vector2(36.07f, 49.98f),
+                new Vector2(35.79f, 47.97f),
             },
         };
 
@@ -471,9 +466,9 @@ namespace WoWHelper.Code.WorldState
 /target Wild
 /target Ghostpaw
         */
-        public static readonly WowLocationConfiguration LEVEL_21_ZORAMGAR_WAYPOINTS = new WowLocationConfiguration
+        public static readonly WowLocationConfiguration LEVEL_20_ZORAMGAR_WAYPOINTS = new WowLocationConfiguration
         {
-            Title = "Zoram'gar, Ashenvale (Level 21+)",
+            Title = "Zoram'gar, Ashenvale (Level 20+)",
             MinimumLevel = 20,
             MaximumLevel = 25,
             Zone = WowZone.Ashenvale,
@@ -585,7 +580,6 @@ namespace WoWHelper.Code.WorldState
 
             Waypoints = new List<Vector2>
             {
-                //new Vector2(38.13f, 16.10f),
                 new Vector2(37.52f, 22.80f),
                 new Vector2(37.47f, 24.77f),
                 new Vector2(37.07f, 27.55f),
@@ -595,8 +589,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(36.28f, 39.20f),
                 new Vector2(36.57f, 43.56f),
                 new Vector2(36.60f, 47.55f),
-                //new Vector2(36.65f, 51.08f),
-                //new Vector2(36.30f, 53.50f)
             },
         };
 
@@ -642,7 +634,6 @@ namespace WoWHelper.Code.WorldState
         };
 
         /*
-/target Clattering
 /target Dire
 /target Clattering
         */
@@ -656,8 +647,6 @@ namespace WoWHelper.Code.WorldState
             Waypoints = new List<Vector2>
             {
                 new Vector2(51.82f, 66.99f),
-                //new Vector2(53.86f, 67.21f),
-                //new Vector2(54.40f, 64.83f),
                 new Vector2(53.14f, 66.34f),
                 new Vector2(53.31f, 63.53f),
                 new Vector2(54.53f, 61.59f),
@@ -676,8 +665,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(52.69f, 57.70f),
                 new Vector2(53.28f, 60.76f),
                 new Vector2(53.22f, 62.94f),
-                //new Vector2(51.30f, 63.76f),
-                //new Vector2(52.09f, 65.87f),
                 new Vector2(52.44f, 64.81f),
             },
         };
@@ -742,7 +729,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 10,
             MaximumLevel = 13,
             Zone = WowZone.Mulgore,
-            EngageMethod = EngagementMethod.Pull,
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
 
             Waypoints = new List<Vector2>
@@ -757,7 +743,7 @@ namespace WoWHelper.Code.WorldState
         };
 
         /*
-/target Battleboar
+//TODO
         */
         public static readonly WowLocationConfiguration LEVEL_8_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
         {
@@ -765,7 +751,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 8,
             MaximumLevel = 10,
             Zone = WowZone.Mulgore,
-            EngageMethod = EngagementMethod.Pull,
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
 
             Waypoints = new List<Vector2>
@@ -789,7 +774,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 6,
             MaximumLevel = 8,
             Zone = WowZone.Mulgore,
-            EngageMethod = EngagementMethod.Pull,
 
             Waypoints = new List<Vector2>
             {
@@ -812,7 +796,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 4,
             MaximumLevel = 6,
             Zone = WowZone.Mulgore,
-            EngageMethod = EngagementMethod.Pull,
 
             Waypoints = new List<Vector2>
             {
@@ -835,7 +818,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 1,
             MaximumLevel = 4,
             Zone = WowZone.Mulgore,
-            EngageMethod = EngagementMethod.Pull,
 
             Waypoints = new List<Vector2>
             {
@@ -857,13 +839,12 @@ namespace WoWHelper.Code.WorldState
 /target Rotting
 /target Ravaged
         */
-        public static readonly WowLocationConfiguration LEVEL_7_TIRISFAL_ZOMBIES = new WowLocationConfiguration
+        public static readonly WowLocationConfiguration LEVEL_6_TIRISFAL_ZOMBIES = new WowLocationConfiguration
         {
-            Title = "Tirisfal Zombies (Level 7+)",
+            Title = "Tirisfal Zombies (Level 6+)",
             MinimumLevel = 6,
             MaximumLevel = 10,
             Zone = WowZone.TirisfalGlades,
-            EngageMethod = EngagementMethod.Pull,
 
             Waypoints = new List<Vector2>
             {
@@ -893,7 +874,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 4,
             MaximumLevel = 7,
             Zone = WowZone.TirisfalGlades,
-            EngageMethod = EngagementMethod.Pull,
 
             Waypoints = new List<Vector2>
             {
@@ -921,7 +901,6 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 1,
             MaximumLevel = 4,
             Zone = WowZone.TirisfalGlades,
-            EngageMethod = EngagementMethod.Pull,
 
             Waypoints = new List<Vector2>
             {
@@ -954,20 +933,20 @@ namespace WoWHelper.Code.WorldState
             LEVEL_55_WINTERSPRING_LAKE,
             LEVEL_53_ASZHARA_SATYR_CIRCLE,
             LEVEL_53_NORTH_FELWOOD,
-            LEVEL_51_FELWOOD_SOUTH,
-            LEVEL_48_FERALAS_HIPPOGRYPHS,
+            LEVEL_50_FELWOOD_SOUTH,
+            LEVEL_46_FERALAS_HIPPOGRYPHS,
             LEVEL_42_TANARIS_TURTLES,
             LEVEL_37_KODO_GRAVEYARD,
             LEVEL_34_SHIMMERING_FLATS_WAYPOINTS,
             LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS,
-            LEVEL_27_STONETALON_CHARRED_FOREST_WAYPOINTS,
+            LEVEL_26_STONETALON_CHARRED_FOREST_WAYPOINTS,
             LEVEL_24_STONETALON_WAYPOINTS,
-            LEVEL_21_ZORAMGAR_WAYPOINTS,
+            LEVEL_20_ZORAMGAR_WAYPOINTS,
             LEVEL_17_NORTHERN_BARRENS_WAYPOINTS,
             LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS,
             LEVEL_11_DUROTAR_COAST_WAYPOINTS,
             LEVEL_9_DUROTAR_SKULL_ROCK_COAST_WAYPOINTS,
-            LEVEL_7_TIRISFAL_ZOMBIES,
+            LEVEL_6_TIRISFAL_ZOMBIES,
             LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
             LEVEL_4_DUROTAR_IMPS,
             LEVEL_10_MULGORE_MIXED_BEASTS,
