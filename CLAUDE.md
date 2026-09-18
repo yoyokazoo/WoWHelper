@@ -128,9 +128,11 @@ Only `NATURE_IMMUNE_MOB_NAMES` is mirrored so far; mirror more of
 needs them. An empty/unset `ExpectedMobNames` makes
 `AllMobsInZoneAreNatureImmune()` return `false` rather than vacuously `true`.
 
-**Automatic farming-config resolution:** `WowFarmingConfigs.CURRENT_CONFIG`
-only sets `ManagementConfiguration` now — `LocationConfiguration` and
-`CombatConfiguration` are no longer hardcoded there. Both start out
+**Automatic farming-config resolution:** `WowFarmingConfigs.CURRENT_CONFIG` is
+just `new WowFarmingConfiguration()` now — `LocationConfiguration` and
+`CombatConfiguration` are no longer hardcoded there (there's no
+`ManagementConfiguration` anymore either — see the `Config/` bullet in the
+C# architecture section above). Both start out
 `null`/`WowCombatConfiguration.Unknown` (see `WowFarmingConfiguration`'s
 constructor) and get resolved by two independent mechanisms in
 `WowConfigResolutionTasks.cs`, deliberately split apart (they used to be one
@@ -497,15 +499,21 @@ of truth — edits should be made here, not in the WoW install directory.
   (`WowLocationConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
   farming-config resolution" above), per-resolution screen pixel maps
-  (`WowScreenConfigs.cs`), management/alert toggles
-  (`WowManagementConfigs.cs` — logout-on-low-dynamite/logout-on-full-bags used
-  to live here too; they're now run-specific, toggled live via the addon's
-  `/yyconfig` menu instead — see the `MultiBoolTwo` G1/G2 note in the
-  color-encoding contract above), the farming profile
-  (`WowFarmingConfigs.cs` — now only `ManagementConfiguration`;
+  (`WowScreenConfigs.cs`), and the farming profile (`WowFarmingConfigs.cs` —
+  just `CURRENT_CONFIG = new WowFarmingConfiguration()`;
   `LocationConfiguration`/`CombatConfiguration` are resolved at runtime, not
-  set here). `Config/Definitions/` holds the POCOs these configs are
-  instances of. Each `WowLocationConfiguration` carries a `Title`
+  set here). There's no management/alert-toggle config anymore —
+  `WowManagementConfiguration`/`WowManagementConfigs.cs` were removed;
+  `AlertOnPotionUsed`/`AlertOnFullBags`/`AlertOnUnreadWhisper` always fired
+  true in the only profile that was ever used, so those Slack alerts
+  (`WowCommonCombatTasks.UseHealingPotionTask`,
+  `WowManagementTasks.AlertOnUnseenWhisper`/`SetLogoutVariablesTask`) now
+  just always fire unconditionally. Logout-on-low-dynamite/logout-on-full-bags
+  never lived there to begin with — those are run-specific, toggled live via
+  the addon's `/yyconfig` menu instead — see the `MultiBoolTwo` G1/G2 note in
+  the color-encoding contract above. `Config/Definitions/` holds the POCOs
+  these configs are instances of. Each `WowLocationConfiguration` carries a
+  `Title`
   (human-readable, includes the minimum level), `MinimumLevel`, and `Zone`
   (`WowZone` enum, `WowLocationConfiguration.cs`) — see the zone ID
   note in the color-encoding contract above for how `Zone` ties to

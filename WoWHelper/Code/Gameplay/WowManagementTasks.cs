@@ -118,24 +118,22 @@ namespace WoWHelper
             // FarmingConfig.LogoffLevel (a LocationConfiguration passthrough) isn't safe to read.
             if (FarmingConfig.LocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
             {
-                if (FarmingConfig.AlertOnUnreadWhisper)
+                string levelUpMessage = $"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!";
+
+                // Newly-unlocked routes only (MinimumLevel exactly matches the level just
+                // reached) -- a config that was already eligible before this level-up isn't
+                // "new" news, so it's left out to keep the message short.
+                List<string> newlyEligibleConfigTitles = WowLocationConfigs.ALL_LOCATIONS
+                    .Where(config => config.MinimumLevel == WorldState.PlayerLevel)
+                    .Select(config => config.Title)
+                    .ToList();
+                if (newlyEligibleConfigTitles.Count > 0)
                 {
-                    string levelUpMessage = $"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!";
-
-                    // Newly-unlocked routes only (MinimumLevel exactly matches the level just
-                    // reached) -- a config that was already eligible before this level-up isn't
-                    // "new" news, so it's left out to keep the message short.
-                    List<string> newlyEligibleConfigTitles = WowLocationConfigs.ALL_LOCATIONS
-                        .Where(config => config.MinimumLevel == WorldState.PlayerLevel)
-                        .Select(config => config.Title)
-                        .ToList();
-                    if (newlyEligibleConfigTitles.Count > 0)
-                    {
-                        levelUpMessage += $" Newly eligible route(s): {string.Join(", ", newlyEligibleConfigTitles)}";
-                    }
-
-                    SlackHelper.SendMessageToChannel(levelUpMessage);
+                    levelUpMessage += $" Newly eligible route(s): {string.Join(", ", newlyEligibleConfigTitles)}";
                 }
+
+                SlackHelper.SendMessageToChannel(levelUpMessage);
+
                 if (FarmingConfig.LogoffLevel == WorldState.PlayerLevel)
                 {
                     LogoutTriggered = true;
@@ -182,7 +180,7 @@ namespace WoWHelper
         // once per UpdateWorldStateAsync tick or whisper edges get missed.
         public void AlertOnUnseenWhisper()
         {
-            if (FarmingConfig.AlertOnUnreadWhisper && PreviousWorldState.Initialized && !PreviousWorldState.HasUnseenWhisper && WorldState.HasUnseenWhisper)
+            if (PreviousWorldState.Initialized && !PreviousWorldState.HasUnseenWhisper && WorldState.HasUnseenWhisper)
             {
                 _ = SlackFileUploadWorkaround.UploadScreenshotToChannelAsync(
                     title: "Unseen Whisper!",
@@ -230,8 +228,7 @@ namespace WoWHelper
                 LogoutReason = $"Too far from this route's waypoints (closest is {closestWaypointDistance:0.00}, allowed {WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT:0.00})";
             }
             // LogoutOnLowDynamiteEnabled is toggled live in-game via the addon's
-            // /yyconfig menu (YoyokazooUI.lua), not hardcoded in WowManagementConfiguration
-            // -- see WowWorldState.LogoutOnLowDynamiteEnabled.
+            // /yyconfig menu (YoyokazooUI.lua) -- see WowWorldState.LogoutOnLowDynamiteEnabled.
             else if (WorldState.LogoutOnLowDynamiteEnabled && WorldState.LowOnDynamite)
             {
                 LogoutTriggered = true;
@@ -264,8 +261,7 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = $"Failed to engage target after {WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS} loops.  Something wrong?";
             }
-            // Same deal as LogoutOnLowDynamiteEnabled above -- toggled live via /yyconfig,
-            // not hardcoded in WowManagementConfiguration.
+            // Same deal as LogoutOnLowDynamiteEnabled above -- toggled live via /yyconfig.
             else if (WorldState.LogoutOnFullBagsEnabled && WorldState.BagsAreFull)
             {
                 LogoutTriggered = true;
@@ -278,7 +274,7 @@ namespace WoWHelper
             }
 
             // also send once-per-session alerts here
-            if (FarmingConfig.AlertOnFullBags && !FullBagsAlertSent && WorldState.BagsAreFull)
+            if (!FullBagsAlertSent && WorldState.BagsAreFull)
             {
                 SlackHelper.SendMessageToChannel($"Bags are full!");
                 FullBagsAlertSent = true;

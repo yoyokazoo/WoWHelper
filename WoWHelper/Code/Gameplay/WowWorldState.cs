@@ -65,8 +65,8 @@ namespace WoWHelper
         // previously-unused G byte instead). Run-specific settings toggled live
         // in-game via the addon's /yyconfig menu (YoyokazooUIDB.logoutOnLowDynamite/
         // logoutOnFullBags, IsLogoutOnLowDynamiteEnabled()/IsLogoutOnFullBagsEnabled() in
-        // YoyokazooUI.lua) rather than hardcoded on the C# WowManagementConfiguration side --
-        // see WowManagementTasks.SetLogoutVariablesTask(), the only reader of these.
+        // YoyokazooUI.lua) rather than hardcoded on the C# side -- see
+        // WowManagementTasks.SetLogoutVariablesTask(), the only reader of these.
         public bool LogoutOnLowDynamiteEnabled { get; private set; }
         public bool LogoutOnFullBagsEnabled { get; private set; }
 

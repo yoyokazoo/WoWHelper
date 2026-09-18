@@ -1,6 +1,5 @@
 ﻿using System.Windows.Forms;
 using WoWHelper.Code.Config;
-using WoWHelper.Code.Config.Definitions;
 using WoWHelper.Code.WorldState;
 using static WoWHelper.Code.WorldState.WowLocationConfiguration;
 
@@ -29,15 +28,15 @@ namespace WoWHelper.Code.Gameplay
         public WowLocationConfiguration LocationConfiguration { get; set; }
         public WowCombatConfiguration CombatConfiguration { get; set; }
 
-        public WowManagementConfiguration ManagementConfiguration { get; set; }
         public WowScreenConfiguration ScreenConfiguration { get; set; }
 
-        public bool AlertOnPotionUsed => ManagementConfiguration.AlertOnPotionUsed;
-        public bool AlertOnFullBags => ManagementConfiguration.AlertOnFullBags;
-        public bool AlertOnUnreadWhisper => ManagementConfiguration.AlertOnUnreadWhisper;
         // LogoutOnFullBags/LogoutOnLowDynamite are no longer here -- see
         // WowWorldState.LogoutOnFullBagsEnabled/LogoutOnLowDynamiteEnabled, set live via
-        // the addon's /yyconfig menu instead of this hardcoded config.
+        // the addon's /yyconfig menu instead of this hardcoded config. AlertOnPotionUsed/
+        // AlertOnFullBags/AlertOnUnreadWhisper (formerly WowManagementConfiguration, removed)
+        // are gone too -- every profile that ever existed set all three true, so the alerts
+        // now just always fire (see WowCommonCombatTasks.UseHealingPotionTask and
+        // WowManagementTasks.AlertOnUnseenWhisper/SetLogoutVariablesTask).
 
         public EngagementMethod EngageMethod => LocationConfiguration.EngageMethod;
         public int LogoffLevel => LocationConfiguration.MaximumLevel;
