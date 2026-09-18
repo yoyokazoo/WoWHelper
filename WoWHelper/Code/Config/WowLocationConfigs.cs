@@ -71,32 +71,6 @@ namespace WoWHelper.Code.WorldState
             EngageMethod = EngagementMethod.Charge
         };
 
-        public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL = new WowLocationConfiguration
-        {
-            Title = "Dalton's Tears Backside, Western Plaguelands (Level 56+)",
-            MinimumLevel = 56,
-            Zone = WowZone.WesternPlaguelands,
-
-            Waypoints = new List<Vector2>
-            {
-                new Vector2(48.41f, 51.75f),
-                new Vector2(48.72f, 50.66f),
-                new Vector2(48.49f, 49.79f),
-                new Vector2(47.96f, 49.01f),
-                new Vector2(47.38f, 48.65f),
-                new Vector2(46.41f, 48.94f),
-                new Vector2(45.86f, 49.10f),
-                new Vector2(45.38f, 49.72f),
-                new Vector2(45.04f, 50.33f),
-                new Vector2(44.67f, 51.01f),
-            },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.05f,
-            EngageMethod = EngagementMethod.Pull,
-            TooManyAttackersThreshold = 4
-        };
-
         /*
 /target Blighted
 /target Rotting
@@ -323,26 +297,6 @@ namespace WoWHelper.Code.WorldState
             EngageMethod = EngagementMethod.Charge
         };
 
-        public static readonly WowLocationConfiguration TANARIS_TEST_PATHFINDING = new WowLocationConfiguration
-        {
-            Title = "Tanaris Test Pathfinding", // not a real farming route, no level requirement
-            MinimumLevel = 0,
-            Zone = WowZone.Tanaris,
-
-            Waypoints = new List<Vector2>
-            {
-                new Vector2(68.42f, 34.13f),
-                new Vector2(67.07f, 34.12f),
-                new Vector2(67.16f, 34.75f),
-                new Vector2(67.02f, 35.20f),
-                new Vector2(67.81f, 35.26f),
-            },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f,
-            EngageMethod = EngagementMethod.Charge
-        };
-
         public static readonly WowLocationConfiguration LEVEL_42_TANARIS_TURTLES = new WowLocationConfiguration
         {
             Title = "Tanaris Turtles (Level 42+)",
@@ -427,7 +381,7 @@ namespace WoWHelper.Code.WorldState
 /target Saltstone
 /target Sparkleshell
             */
-        public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE = new WowLocationConfiguration
+        public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
             MinimumLevel = 34,
@@ -454,75 +408,9 @@ namespace WoWHelper.Code.WorldState
             EngageMethod = EngagementMethod.Charge
         };
 
-        public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
-        {
-            Title = "Shimmering Flats, Thousand Needles (Level 34+)",
-            MinimumLevel = 34,
-            Zone = WowZone.ThousandNeedles,
-
-            Waypoints = new List<Vector2>
-            {
-                new Vector2(81.79f, 52.12f),
-                new Vector2(82.08f, 53.51f),
-                new Vector2(81.60f, 55.03f),
-                new Vector2(82.47f, 56.14f),
-                new Vector2(83.00f, 54.67f),
-                new Vector2(84.03f, 54.25f),
-                new Vector2(85.73f, 56.59f),
-                new Vector2(86.87f, 58.05f),
-                new Vector2(87.96f, 61.20f),
-            },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
-            EngageMethod = EngagementMethod.Charge,
-            DistanceTolerance = 0.2f
-        };
-
         #endregion
 
         #region Levels 20-30 
-
-        // Don't recommend this one without WBs
-        public static readonly WowLocationConfiguration LEVEL_27_NORTH_ASHENVALE_WAYPOINTS = new WowLocationConfiguration
-        {
-            Title = "North Ashenvale (Level 27+)",
-            MinimumLevel = 27,
-            Zone = WowZone.Ashenvale,
-
-            /*
-/target Elder
-/target Ghostpaw
-/target Withered
-/target Crazed
-            */
-            Waypoints = new List<Vector2>
-            {
-                new Vector2(60.43f, 39.81f),
-                new Vector2(60.05f, 38.56f),
-                new Vector2(58.47f, 37.08f),
-                new Vector2(58.70f, 35.47f),
-                new Vector2(57.98f, 34.11f),
-                new Vector2(57.83f, 33.64f),
-                new Vector2(57.50f, 31.07f),
-                /*
-                 * West side was dangerous last time I ran it (a few 3 mob pulls), let's try just running north and south on the east side
-                new Vector2(56.00f, 31.00f),
-                new Vector2(55.79f, 32.64f),
-                new Vector2(54.88f, 32.73f),
-                new Vector2(55.34f, 34.93f),
-                new Vector2(56.54f, 36.72f),
-                new Vector2(57.42f, 37.99f),
-                new Vector2(57.30f, 40.60f),
-                new Vector2(56.36f, 41.26f),
-                new Vector2(57.53f, 41.97f),
-                new Vector2(58.87f, 41.32f),
-                new Vector2(59.55f, 39.57f),
-                */
-            },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Charge,
-            TooManyAttackersThreshold = 3,
-        };
 
         public static readonly WowLocationConfiguration LEVEL_27_STONETALON_CHARRED_FOREST_WAYPOINTS = new WowLocationConfiguration
         {
@@ -1096,13 +984,9 @@ namespace WoWHelper.Code.WorldState
         // in the class, after every field it references -- C# runs static field
         // initializers in declaration order, so this list would silently collect nulls if
         // it were declared before them.
-        //
-        // Intentionally excluded: TANARIS_TEST_PATHFINDING -- not a real farming route (its
-        // own comment says so), MinimumLevel 0 with no waypoint-adjacent mobs to fight.
         public static readonly List<WowLocationConfiguration> ALL_LOCATIONS = new List<WowLocationConfiguration>
         {
             LEVEL_58_SILITHUS_RUMBLERS,
-            //LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL,
             LEVEL_57_WINTERSPRING_YETIS,
             LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
             LEVEL_55_WINTERSPRING_LAKE,
@@ -1112,10 +996,8 @@ namespace WoWHelper.Code.WorldState
             LEVEL_48_FERALAS_HIPPOGRYPHS,
             LEVEL_42_TANARIS_TURTLES,
             LEVEL_37_KODO_GRAVEYARD,
-            LEVEL_34_SHIMMERING_FLATS_WAYPOINTS_ALTERNATE,
-            //LEVEL_34_SHIMMERING_FLATS_WAYPOINTS,
+            LEVEL_34_SHIMMERING_FLATS_WAYPOINTS,
             LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS,
-            LEVEL_27_NORTH_ASHENVALE_WAYPOINTS,
             LEVEL_27_STONETALON_CHARRED_FOREST_WAYPOINTS,
             LEVEL_24_STONETALON_WAYPOINTS,
             LEVEL_21_ZORAMGAR_WAYPOINTS,
