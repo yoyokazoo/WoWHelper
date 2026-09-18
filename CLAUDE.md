@@ -593,8 +593,12 @@ of truth — edits should be made here, not in the WoW install directory.
   read their name lists from `CreatureConfig.lua`.
 - **`WarriorFunctions.lua`** / **`ShamanFunctions.lua`**
   / **`WarlockFunctions.lua`**
-  — that class's specific checks (e.g. `TargetHasRend`, `CanCastMortalStrikeOrBloodthirst`
-  for Warrior;
+  — that class's specific checks (e.g. `TargetHasRend`, `CanCastMortalStrikeOrBloodthirst`,
+  `TargetHasSunderArmor`/`KnowsSunderArmor` — ClassBoolOne G5/G6, feeding
+  `WarriorShouldCastSunderArmor` in `WowWarriorTasks.cs`, which applies exactly
+  one Sunder per target (any stack at all counts, it's a bool not a count)
+  right after Battle Shout/Overpower/Execute in the rotation priority — for
+  Warrior;
   `ShouldCastRockbiterWeapon`, `CanCastEarthShock` for Shaman;
   `ShouldCastDemonArmor`/`ShouldSummonPet`/`ShouldCastImmolate`/
   `ShouldCastCorruption` for Warlock) plus a `GetXClassBoolOne/Two`/

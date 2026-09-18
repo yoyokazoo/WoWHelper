@@ -22,6 +22,9 @@
         public const int PETRI_ALTF4_HP_THRESHOLD = 20;
 
         public const int REND_HP_THRESHOLD = 75;
+        // Below this the mob's dying soon enough that a Sunder's armor reduction won't pay
+        // for its rage -- same reasoning as REND_HP_THRESHOLD above.
+        public const int SUNDER_ARMOR_HP_THRESHOLD = 75;
 
         // How many simultaneous attackers to panic at (sometimes mobs spawn tiny bugs or
         // something that will get counted) -- used to be per-WowLocationConfiguration, but

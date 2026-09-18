@@ -103,6 +103,10 @@ namespace WoWHelper
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_EXECUTE);
                 }
+                else if (WarriorShouldCastSunderArmor(classState))
+                {
+                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_SUNDER_ARMOR);
+                }
                 else if (WarriorShouldCastRend(classState))
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_REND);
@@ -162,6 +166,19 @@ namespace WoWHelper
             return classState.KnowsExecute &&
                 WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD &&
                 WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST;
+        }
+
+        // One Sunder Armor per target, and only while it's still worth it: a single stack's
+        // armor reduction pays for its rage over the rest of a full-HP fight, but not on a mob
+        // that's already mostly dead. TargetHasSunderArmor is "any stack at all", so this
+        // deliberately never builds past the first one -- that rage is better spent on
+        // Mortal Strike/Bloodthirst/Heroic Strike further down the priority list.
+        public bool WarriorShouldCastSunderArmor(WowWarriorClassState classState)
+        {
+            return classState.KnowsSunderArmor &&
+                !classState.TargetHasSunderArmor &&
+                WorldState.TargetHpPercent >= WowPlayerConstants.SUNDER_ARMOR_HP_THRESHOLD &&
+                WorldState.ResourcePercent >= WowGameplayConstants.SUNDER_ARMOR_RAGE_COST;
         }
 
         // Bleed-immune targets never get Rend, regardless of anything else. Otherwise, Rend

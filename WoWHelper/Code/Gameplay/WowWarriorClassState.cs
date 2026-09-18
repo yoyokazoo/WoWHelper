@@ -19,6 +19,8 @@ namespace WoWHelper
         public bool MortalStrikeOrBloodThirstCooledDown { get; private set; }
         public bool KnowsMortalStrikeOrBloodthirst { get; private set; }
         public bool KnowsCharge { get; private set; }
+        public bool TargetHasSunderArmor { get; private set; }
+        public bool KnowsSunderArmor { get; private set; }
 
         public override void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig)
         {
@@ -51,7 +53,12 @@ namespace WoWHelper
             // "PlayerLevel >= 4" check in WowWarriorTasks.cs's
             // WarriorFaceCorrectDirectionToEngageTask/WarriorCanEngageTarget.
             KnowsCharge = g4;
-            // g5-g8, ClassBoolTwo, and ClassIntOne currently reserved/unused for Warrior.
+            // Any stack of Sunder Armor on the target at all (anyone's), not a stack count --
+            // WowWarriorTasks.WarriorShouldCastSunderArmor only wants one application on
+            // the target, not a full 5-stack.
+            TargetHasSunderArmor = g5;
+            KnowsSunderArmor = g6;
+            // g7-g8, ClassBoolTwo, and ClassIntOne currently reserved/unused for Warrior.
         }
     }
 }

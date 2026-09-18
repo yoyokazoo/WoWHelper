@@ -8,6 +8,7 @@
         public const int REND_RAGE_COST = 10;
         public const int OVERPOWER_RAGE_COST = 5;
         public const int EXECUTE_RAGE_COST = 15;
+        public const int SUNDER_ARMOR_RAGE_COST = 15;
 
         public const int SWEEPING_STRIKES_RAGE_COST = 30;
         public const int WHIRLWIND_RAGE_COST = 25;

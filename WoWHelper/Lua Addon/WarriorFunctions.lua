@@ -108,12 +108,29 @@ function KnowsMortalStrikeOrBloodthirst()
     return IsSpellKnownByName("Mortal Strike") or IsSpellKnownByName("Bloodthirst")
 end
 
+-- Same idea as KnowsRend() above, replacing a hardcoded "PlayerLevel >= 10"
+-- gate (Sunder Armor's normal training level). Only one rank is ever known
+-- at a time, but it's still name-matched since the rank's spell ID changes.
+function KnowsSunderArmor()
+    return IsSpellKnownByName("Sunder Armor")
+end
+
+-- Whether the target already has at least one stack of Sunder Armor on it
+-- (anyone's -- another warrior's stack counts too, the armor reduction is the
+-- same). Name-matched for the same reason TargetHasRend() is: 5 ranks, 5
+-- spell IDs. Only "any stack at all" matters to the C# side, which just wants
+-- one application on the target, not a full 5-stack -- so this is a bool,
+-- not the stack count.
+function TargetHasSunderArmor()
+    return TargetHasDebuffSpellName("Sunder Armor")
+end
+
 ------------------------------------------------------------
 -- Packs Warrior-specific state into the ClassBool/ClassInt pixels. Called
 -- via the GetClassBoolOne/Two/GetClassIntOne dispatchers in WoWFunctions.lua
 -- once UnitClass("player") resolves to WARRIOR, and read on the C# side by
--- WowWarriorClassState.UpdateFromBitmap. G5-G8 are reserved (previously
--- R8/G1/G4 were too -- see the "whether we know it" spell checks above,
+-- WowWarriorClassState.UpdateFromBitmap. G7-G8 are reserved (previously
+-- R8/G1/G4/G5/G6 were too -- see the "whether we know it" spell checks above,
 -- added there once PlayerLevel-based training gates on the C# side were
 -- replaced with real spellbook checks -- and previously CanCastWhirlwind()/
 -- CanCastSweepingStrikes() -- removed since nothing ever consumed the
@@ -137,8 +154,8 @@ function GetWarriorClassBoolOne()
     local boolG2 = CanCastMortalStrikeOrBloodthirst()
     local boolG3 = KnowsMortalStrikeOrBloodthirst()
     local boolG4 = KnowsCharge()
-    local boolG5 = false
-    local boolG6 = false
+    local boolG5 = TargetHasSunderArmor()
+    local boolG6 = KnowsSunderArmor()
     local boolG7 = false
     local boolG8 = false
 
