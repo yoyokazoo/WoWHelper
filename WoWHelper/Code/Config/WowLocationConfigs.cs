@@ -591,16 +591,17 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
         };
 
+        /*
+/target Wild
+/target Ghostpaw
+        */
         public static readonly WowLocationConfiguration LEVEL_21_ZORAMGAR_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Zoram'gar, Ashenvale (Level 21+)",
             MinimumLevel = 20,
             Zone = WowZone.Ashenvale,
-
-            /*
-/target Wild
-/target Ghostpaw
-            */
+            EngageMethod = EngagementMethod.Charge,
+            LogoffLevel = 25,
             Waypoints = new List<Vector2>
             {
                 new Vector2(16.67f, 28.15f),
@@ -630,9 +631,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(18.08f, 31.35f),
                 new Vector2(17.68f, 30.43f),
                 new Vector2(16.72f, 29.32f),
-            },
-            EngageMethod = EngagementMethod.Pull,
-            LogoffLevel = 25,
+            }
         };
 
         /*
@@ -663,7 +662,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(42.24f, 20.87f)
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Pull,
+            EngageMethod = EngagementMethod.Charge,
             LogoffLevel = 21,
         };
 
