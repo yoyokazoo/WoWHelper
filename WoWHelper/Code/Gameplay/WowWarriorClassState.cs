@@ -11,7 +11,12 @@ namespace WoWHelper
         public bool CanChargeTarget { get; private set; }
         public bool CanShootTarget { get; private set; }
         public bool WaitingToShoot { get; private set; }
-        public bool HeroicStrikeQueued { get; private set; }
+        // Heroic Strike OR Cleave is currently queued for the next swing (Lua's
+        // IsAnyNextSwingSpellQueued -- only one on-next-swing ability can be queued at a
+        // time, so one bit covers both). Gates WarriorShouldCastHeroicStrike/Cleave so the
+        // rotation doesn't keep re-pressing an already-queued next-swing ability every tick
+        // until the swing actually lands.
+        public bool NextSwingSpellQueued { get; private set; }
         public bool OverpowerUsable { get; private set; }
         public bool KnowsRend { get; private set; }
 
@@ -35,7 +40,7 @@ namespace WoWHelper
             CanChargeTarget = r3;
             CanShootTarget = r4;
             WaitingToShoot = r5;
-            HeroicStrikeQueued = r6;
+            NextSwingSpellQueued = r6;
             OverpowerUsable = r7;
             // Whether Rend is actually trained yet -- replaces a hardcoded
             // "PlayerLevel >= 4" check in WowWarriorTasks.WarriorShouldCastRend.

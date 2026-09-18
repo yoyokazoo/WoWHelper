@@ -597,7 +597,7 @@ namespace WoWHelper
         // above: that one runs while we're already committed to closing on a target, this
         // one runs on every ordinary pathfinding tick where there usually isn't a target at
         // all, and each scan is a full-screen capture.
-        private const int PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS = 1000;
+        private const int PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS = 2000;
 
         // Longest WalkTowardsTargetMarkerTask keeps walking before handing control back to
         // PathfindingLoopTask. Deliberately short -- this isn't WalkIntoMeleeRangeTask's

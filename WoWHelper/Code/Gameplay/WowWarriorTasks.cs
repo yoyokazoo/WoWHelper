@@ -117,7 +117,7 @@ namespace WoWHelper
                     {
                         await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
                     }
-                    else if (WarriorShouldCastCleave())
+                    else if (WarriorShouldCastCleave(classState))
                     {
                         await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_CLEAVE);
                     }
@@ -213,16 +213,25 @@ namespace WoWHelper
                 WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST;
         }
 
-        // Cleave only if we have enough spare rage to bloodthirst right after.
-        public bool WarriorShouldCastCleave()
+        // Cleave only if nothing's already queued for the next swing (pressing it again
+        // would just be a wasted keypress until the swing lands) and we have enough spare
+        // rage to bloodthirst right after.
+        public bool WarriorShouldCastCleave(WowWarriorClassState classState)
         {
-            return WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST);
+            return !classState.NextSwingSpellQueued &&
+                WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST);
         }
 
-        // Heroic only if we have enough spare rage to bloodthirst right after, unless we
-        // haven't trained Mortal Strike/Bloodthirst yet and can't cast it at all.
+        // Heroic only if nothing's already queued for the next swing (see Cleave above), and
+        // we have enough spare rage to bloodthirst right after, unless we haven't trained
+        // Mortal Strike/Bloodthirst yet and can't cast it at all.
         public bool WarriorShouldCastHeroicStrike(WowWarriorClassState classState)
         {
+            if (classState.NextSwingSpellQueued)
+            {
+                return false;
+            }
+
             return WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST) ||
                 (!classState.KnowsMortalStrikeOrBloodthirst && WorldState.ResourcePercent >= WowGameplayConstants.HEROIC_STRIKE_RAGE_COST);
         }
