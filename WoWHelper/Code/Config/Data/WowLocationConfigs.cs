@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Numerics;
 using WoWHelper.Code.Gameplay;
 using static WoWHelper.Code.WorldState.WowLocationConfiguration;
@@ -14,6 +14,10 @@ namespace WoWHelper.Code.WorldState
             Title = "Silithus Rumblers (Level 58+)",
             MinimumLevel = 58,
             Zone = WowZone.Silithus,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.1f,
             ExpectedMobNames = new List<string> { "Desert Rumbler" },
 
             Waypoints = new List<Vector2>
@@ -30,10 +34,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(22.04f, 17.74f),
                 //new Vector2(22.92f, 17.88f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.1f,
-            EngageMethod = EngagementMethod.Charge,
         };
 
         /*
@@ -46,6 +46,10 @@ namespace WoWHelper.Code.WorldState
             Title = "Winterspring Yetis (Level 57+)",
             MinimumLevel = 57,
             Zone = WowZone.Winterspring,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.1f,
 
             Waypoints = new List<Vector2>
             {
@@ -64,10 +68,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(65.87f, 41.89f),
                 new Vector2(65.09f, 40.48f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.1f,
-            EngageMethod = EngagementMethod.Charge
         };
 
         /*
@@ -79,6 +79,10 @@ namespace WoWHelper.Code.WorldState
             Title = "Dalton's Tears Frontside, Western Plaguelands (Level 56+)",
             MinimumLevel = 56,
             Zone = WowZone.WesternPlaguelands,
+            EngageMethod = EngagementMethod.Pull,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.1f,
 
             Waypoints = new List<Vector2>
             {
@@ -95,10 +99,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(46.3875f, 55.335f),
                 new Vector2(45.96f, 56.01f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.1f,
-            EngageMethod = EngagementMethod.Pull,
         };
 
         /*
@@ -113,6 +113,10 @@ namespace WoWHelper.Code.WorldState
             Title = "Winterspring Lake (Level 56+)",
             MinimumLevel = 56,
             Zone = WowZone.Winterspring,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
             {
@@ -133,10 +137,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(54.28f, 42.10f),
                 new Vector2(53.96f, 40.54f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f,
-            EngageMethod = EngagementMethod.Charge
         };
 
         /*
@@ -147,6 +147,10 @@ namespace WoWHelper.Code.WorldState
             Title = "Azshara (Level 53+)",
             MinimumLevel = 53,
             Zone = WowZone.Azshara,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
             {
@@ -162,10 +166,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(52.22f, 18.27f),
                 new Vector2(51.39f, 19.74f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f,
-            EngageMethod = EngagementMethod.Charge
         };
 
         /*
@@ -173,12 +173,16 @@ namespace WoWHelper.Code.WorldState
 /target Angerclaw
 /target Warpwood
 /target Felpaw
-            */
+        */
         public static readonly WowLocationConfiguration LEVEL_53_NORTH_FELWOOD = new WowLocationConfiguration
         {
             Title = "North Felwood (Level 53+)",
             MinimumLevel = 53,
             Zone = WowZone.Felwood,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
             {
@@ -198,10 +202,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(54.30f, 26.32f),
                 new Vector2(53.57f, 28.18f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f,
-            EngageMethod = EngagementMethod.Charge
         };
 
         /*
@@ -210,12 +210,16 @@ namespace WoWHelper.Code.WorldState
 /target Warpwood
 /target Felpaw
 /target Warpwood
-            */
+        */
         public static readonly WowLocationConfiguration LEVEL_51_FELWOOD_SOUTH = new WowLocationConfiguration
         {
             Title = "South Felwood (Level 51+)",
             MinimumLevel = 50,
             Zone = WowZone.Felwood,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
             {
@@ -248,10 +252,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(49.23f, 82.05f),
                 new Vector2(50.47f, 81.94f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f,
-            EngageMethod = EngagementMethod.Charge
         };
 
         #endregion
@@ -263,12 +263,16 @@ namespace WoWHelper.Code.WorldState
 /target Cursed
 /target Wandering
 /target Frayfeather
-            */
+        */
         public static readonly WowLocationConfiguration LEVEL_48_FERALAS_HIPPOGRYPHS = new WowLocationConfiguration
         {
             Title = "Feralas Hippogryphs (Level 48+)",
             MinimumLevel = 46,
             Zone = WowZone.Feralas,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
             {
@@ -289,10 +293,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(55.49f, 66.57f),
                 new Vector2(55.00f, 65.00f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f,
-            EngageMethod = EngagementMethod.Charge
         };
 
         public static readonly WowLocationConfiguration LEVEL_42_TANARIS_TURTLES = new WowLocationConfiguration
@@ -301,6 +301,10 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 41,
             MaximumLevel = 48,
             Zone = WowZone.Tanaris,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.2f,
 
             Waypoints = new List<Vector2>
             {
@@ -313,10 +317,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(67.86f, 35.27f),
                 new Vector2(68.54f, 34.02f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f,
-            EngageMethod = EngagementMethod.Charge
         };
 
         #endregion
@@ -328,13 +328,17 @@ namespace WoWHelper.Code.WorldState
 /target Dying
 /target Ancient
 /target Carrion
-            */
+        */
         public static readonly WowLocationConfiguration LEVEL_37_KODO_GRAVEYARD = new WowLocationConfiguration
         {
             Title = "Kodo Graveyard, Desolace (Level 37+)", // zone inferred from name/coords, please confirm
             MinimumLevel = 36,
             MaximumLevel = 43,
             Zone = WowZone.Desolace,
+            EngageMethod = EngagementMethod.Pull,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
+            DistanceTolerance = 0.2f,
 
             Waypoints = new List<Vector2>
             {
@@ -367,10 +371,6 @@ namespace WoWHelper.Code.WorldState
                     new Vector2(47.64f, 58.37f),
                  * */
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f,
-            EngageMethod = EngagementMethod.Pull
         };
 
         /*
@@ -378,13 +378,17 @@ namespace WoWHelper.Code.WorldState
 /target Swirling
 /target Saltstone
 /target Sparkleshell
-            */
+        */
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
             MinimumLevel = 34,
             MaximumLevel = 38,
             Zone = WowZone.ThousandNeedles,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
+            DistanceTolerance = 0.2f,
 
             Waypoints = new List<Vector2>
             {
@@ -400,28 +404,26 @@ namespace WoWHelper.Code.WorldState
                 //new Vector2(86.87f, 58.05f),
                 //new Vector2(87.96f, 61.20f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
-            DistanceTolerance = 0.2f,
-            EngageMethod = EngagementMethod.Charge
         };
 
         #endregion
 
-        #region Levels 20-30 
+        #region Levels 20-30
 
+        /*
+/target Rogue
+/target Blackened
+/target Bloodfury
+        */
         public static readonly WowLocationConfiguration LEVEL_27_STONETALON_CHARRED_FOREST_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "North Stonetalon (Level 27+)",
             MinimumLevel = 26,
             MaximumLevel = 30,
             Zone = WowZone.StonetalonMountains,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
 
-            /*
-/target Rogue
-/target Blackened
-/target Bloodfury
-            */
             Waypoints = new List<Vector2>
             {
                 new Vector2(37.13f, 46.76f),
@@ -435,8 +437,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(36.07f, 49.98f),
                 new Vector2(35.79f, 47.97f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            EngageMethod = EngagementMethod.Charge,
         };
 
         public static readonly WowLocationConfiguration LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS = new WowLocationConfiguration
@@ -445,6 +445,10 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 29,
             MaximumLevel = 35,
             Zone = WowZone.HillsbradFoothills,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
+            DistanceTolerance = 0.3f,
 
             Waypoints = new List<Vector2>
             {
@@ -462,23 +466,21 @@ namespace WoWHelper.Code.WorldState
                 //new Vector2(62.49f, 42.11f),
                 //new Vector2(61.55f, 42.71f),
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
-            DistanceTolerance = 0.3f,
-            EngageMethod = EngagementMethod.Charge,
         };
 
+        /*
+/target Antlered
+/target Sap
+        */
         public static readonly WowLocationConfiguration LEVEL_24_STONETALON_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Stonetalon Mountains (Level 24+)",
             MinimumLevel = 24,
             MaximumLevel = 28,
             Zone = WowZone.StonetalonMountains,
+            EngageMethod = EngagementMethod.Charge,
+            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
 
-            /*
-/target Antlered
-/target Sap
-            */
             Waypoints = new List<Vector2>
             {
                 new Vector2(44.43f, 19.01f),
@@ -495,8 +497,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.19f, 22.95f),
                 new Vector2(44.71f, 20.78f),
             },
-            EngageMethod = EngagementMethod.Charge,
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
         };
 
         /*
@@ -507,9 +507,10 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Zoram'gar, Ashenvale (Level 21+)",
             MinimumLevel = 20,
+            MaximumLevel = 25,
             Zone = WowZone.Ashenvale,
             EngageMethod = EngagementMethod.Charge,
-            MaximumLevel = 25,
+
             Waypoints = new List<Vector2>
             {
                 new Vector2(16.67f, 28.15f),
@@ -539,7 +540,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(18.08f, 31.35f),
                 new Vector2(17.68f, 30.43f),
                 new Vector2(16.72f, 29.32f),
-            }
+            },
         };
 
         #endregion
@@ -552,14 +553,16 @@ namespace WoWHelper.Code.WorldState
 /target Hecklefang
 /target Ornery
 /target Sunscale
-            */
+        */
         public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Northern Barrens (Level 17+)",
             MinimumLevel = 17,
+            MaximumLevel = 21,
             Zone = WowZone.TheBarrens,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
 
-            
             Waypoints = new List<Vector2>
             {
                 new Vector2(47.30f, 13.91f),
@@ -573,23 +576,21 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(43.27f, 20.00f),
                 new Vector2(42.24f, 20.87f)
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Charge,
-            MaximumLevel = 21,
         };
 
         /*
 /target Fleeting
 /target Zhevra
 /target Sunscale
-             */
+        */
         public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Barrens Entrance (Level 13+)",
             MinimumLevel = 13,
+            MaximumLevel = 18,
             Zone = WowZone.TheBarrens,
+            EngageMethod = EngagementMethod.Charge,
 
-            
             Waypoints = new List<Vector2>
             {
                 new Vector2(55.00f, 21.13f),
@@ -601,24 +602,25 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(56.29f, 22.47f),
                 new Vector2(56.60f, 22.00f)
             },
-            EngageMethod = EngagementMethod.Charge,
-            MaximumLevel = 18,
         };
 
-        public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration
-        {
-            Title = "Durotar Coast (Level 11+)",
-            MinimumLevel = 11,
-            Zone = WowZone.Durotar,
-
-            /*
+        /*
 /target Venom
 /target Elder
 /target Blood
 /target Corrupted
-            */
+        */
+        public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration
+        {
+            Title = "Durotar Coast (Level 11+)",
+            MinimumLevel = 11,
+            MaximumLevel = 14,
+            Zone = WowZone.Durotar,
+            EngageMethod = EngagementMethod.Charge,
+            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+
             Waypoints = new List<Vector2>
-            { 
+            {
                 //new Vector2(38.13f, 16.10f),
                 new Vector2(37.52f, 22.80f),
                 new Vector2(37.47f, 24.77f),
@@ -632,29 +634,28 @@ namespace WoWHelper.Code.WorldState
                 //new Vector2(36.65f, 51.08f),
                 //new Vector2(36.30f, 53.50f)
             },
-            TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Charge,
-            MaximumLevel = 14
         };
 
         #endregion
 
         #region Levels 1-10 Durotar
 
-        public static readonly WowLocationConfiguration LEVEL_9_DUROTAR_SKULL_ROCK_COAST_WAYPOINTS = new WowLocationConfiguration
-        {
-            Title = "Durotar Skull Rock Coast (Level 9+)",
-            MinimumLevel = 9,
-            Zone = WowZone.Durotar,
-
-            /*
+        /*
 /target Elder
 /target Venom
 /target Armored
 /target Blood
-            */
+        */
+        public static readonly WowLocationConfiguration LEVEL_9_DUROTAR_SKULL_ROCK_COAST_WAYPOINTS = new WowLocationConfiguration
+        {
+            Title = "Durotar Skull Rock Coast (Level 9+)",
+            MinimumLevel = 9,
+            MaximumLevel = 12,
+            Zone = WowZone.Durotar,
+            EngageMethod = EngagementMethod.Charge,
+
             Waypoints = new List<Vector2>
-            { 
+            {
                 new Vector2(52.93f, 17.36f),
                 new Vector2(54.78f, 18.67f),
                 new Vector2(55.12f, 19.66f),
@@ -675,21 +676,20 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(54.90f, 18.83f),
                 new Vector2(53.57f, 17.68f)
             },
-            EngageMethod = EngagementMethod.Charge,
-            MaximumLevel = 12
         };
 
         /*
 /target Clattering
 /target Dire
 /target Clattering
-
-            */
+        */
         public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration
         {
             Title = "Durotar Boar Razor Hill Loop (Level 6+)",
             MinimumLevel = 6,
+            MaximumLevel = 10,
             Zone = WowZone.Durotar,
+            EngageMethod = EngagementMethod.Charge,
 
             Waypoints = new List<Vector2>
             {
@@ -718,18 +718,20 @@ namespace WoWHelper.Code.WorldState
                 //new Vector2(52.09f, 65.87f),
                 new Vector2(52.44f, 64.81f),
             },
-            EngageMethod = EngagementMethod.Charge,
-            MaximumLevel = 10,
         };
 
+        /*
+/target Scorpid
+/target Vile
+        */
         public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration
         {
             Title = "Durotar Imps (Level 4+)",
             MinimumLevel = 4,
+            MaximumLevel = 7,
             Zone = WowZone.Durotar,
+            EngageMethod = EngagementMethod.Charge,
 
-            // /target Scorpid
-            // /target Vile
             Waypoints = new List<Vector2>
             {
                 new Vector2(46.78f, 57.33f),
@@ -739,8 +741,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(43.88f, 56.90f),
                 new Vector2(45.27f, 57.40f),
             },
-            EngageMethod = EngagementMethod.Charge,
-            MaximumLevel = 7,
         };
 
         /*
@@ -751,7 +751,9 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Durotar Boars and Scorpions (Level 1+)",
             MinimumLevel = 1,
+            MaximumLevel = 4,
             Zone = WowZone.Durotar,
+            EngageMethod = EngagementMethod.Charge,
 
             Waypoints = new List<Vector2>
             {
@@ -763,24 +765,26 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.29f, 62.22f),
                 new Vector2(45.49f, 64.54f),
             },
-            EngageMethod = EngagementMethod.Charge,
-            MaximumLevel = 4,
         };
 
         #endregion
 
         #region Levels 1-10 Mulgore
 
-
+        /*
+/target Swoop
+/target Flatland
+/target Prairie
+        */
         public static readonly WowLocationConfiguration LEVEL_10_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
         {
             Title = "Mulgore Mixed Beasts (Level 10+)",
             MinimumLevel = 10,
+            MaximumLevel = 13,
             Zone = WowZone.Mulgore,
+            EngageMethod = EngagementMethod.Pull,
+            TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
 
-            // /target Swoop
-            // /target Flatland
-            // /target Prairie
             Waypoints = new List<Vector2>
             {
                 new Vector2(49.82f, 40.08f),
@@ -790,18 +794,20 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(52.07f, 37.26f),
                 new Vector2(51.60f, 39.78f),
             },
-            TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
-            EngageMethod = EngagementMethod.Pull,
-            MaximumLevel = 13,
         };
 
+        /*
+/target Battleboar
+        */
         public static readonly WowLocationConfiguration LEVEL_8_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
         {
             Title = "Mulgore Mixed Beasts (Level 8+)",
             MinimumLevel = 8,
+            MaximumLevel = 10,
             Zone = WowZone.Mulgore,
+            EngageMethod = EngagementMethod.Pull,
+            TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
 
-            // /target Battleboar
             Waypoints = new List<Vector2>
             {
                 new Vector2(43.44f, 66.44f),
@@ -812,18 +818,20 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(40.00f, 65.46f),
                 new Vector2(41.77f, 65.69f),
             },
-            TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
-            EngageMethod = EngagementMethod.Pull,
-            MaximumLevel = 10,
         };
 
+        /*
+/target Battleboar
+        */
         public static readonly WowLocationConfiguration LEVEL_6_MULGORE_BATTLEBOARS = new WowLocationConfiguration
         {
             Title = "Mulgore Battleboars (Level 6+)",
             MinimumLevel = 6,
+            MaximumLevel = 8,
             Zone = WowZone.Mulgore,
+            EngageMethod = EngagementMethod.Pull,
+            TraversalMethod = WaypointTraversalMethod.LINEAR,
 
-            // /target Battleboar
             Waypoints = new List<Vector2>
             {
                 new Vector2(55.20f, 75.76f),
@@ -834,18 +842,19 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(58.30f, 88.36f),
                 new Vector2(59.84f, 88.61f),
             },
-            TraversalMethod = WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Pull,
-            MaximumLevel = 8,
         };
 
+        /*
+/target Mountain
+        */
         public static readonly WowLocationConfiguration LEVEL_4_MULGORE_MOUNTAIN_COUGARS = new WowLocationConfiguration
         {
             Title = "Mulgore Mountain Cougars (Level 4+)",
             MinimumLevel = 4,
+            MaximumLevel = 6,
             Zone = WowZone.Mulgore,
+            EngageMethod = EngagementMethod.Pull,
 
-            // /target Mountain
             Waypoints = new List<Vector2>
             {
                 new Vector2(46.54f, 88.68f),
@@ -856,17 +865,19 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(42.75f, 86.92f),
                 new Vector2(43.54f, 88.74f),
             },
-            EngageMethod = EngagementMethod.Pull,
-            MaximumLevel = 6,
         };
 
+        /*
+/target Plains
+        */
         public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
         {
             Title = "Mulgore Plainstriders (Level 1+)",
             MinimumLevel = 1,
+            MaximumLevel = 4,
             Zone = WowZone.Mulgore,
+            EngageMethod = EngagementMethod.Pull,
 
-            // /target Plains
             Waypoints = new List<Vector2>
             {
                 new Vector2(46.26f, 76.52f),
@@ -875,8 +886,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(49.42f, 80.53f),
                 new Vector2(46.44f, 78.21f),
             },
-            EngageMethod = EngagementMethod.Pull,
-            MaximumLevel = 4,
         };
 
         #endregion
@@ -893,7 +902,9 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Tirisfal Zombies (Level 7+)",
             MinimumLevel = 6,
+            MaximumLevel = 10,
             Zone = WowZone.TirisfalGlades,
+            EngageMethod = EngagementMethod.Pull,
 
             Waypoints = new List<Vector2>
             {
@@ -911,8 +922,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(56.45f, 53.12f),
                 new Vector2(56.34f, 51.48f),
             },
-            EngageMethod = EngagementMethod.Pull,
-            MaximumLevel = 10,
         };
 
         /*
@@ -923,7 +932,9 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Tirisfal Bats and Wolves (Level 4+)",
             MinimumLevel = 4,
+            MaximumLevel = 7,
             Zone = WowZone.TirisfalGlades,
+            EngageMethod = EngagementMethod.Pull,
 
             Waypoints = new List<Vector2>
             {
@@ -936,8 +947,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(34.60f, 58.76f),
                 new Vector2(36.14f, 57.73f),
             },
-            EngageMethod = EngagementMethod.Pull,
-            MaximumLevel = 7,
         };
 
         /*
@@ -951,7 +960,9 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Tirisfal Zombies (Level 1+)",
             MinimumLevel = 1,
+            MaximumLevel = 4,
             Zone = WowZone.TirisfalGlades,
+            EngageMethod = EngagementMethod.Pull,
 
             Waypoints = new List<Vector2>
             {
@@ -963,8 +974,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(32.41f, 61.90f),
                 new Vector2(31.90f, 62.98f),
             },
-            EngageMethod = EngagementMethod.Pull,
-            MaximumLevel = 4,
         };
 
         #endregion
