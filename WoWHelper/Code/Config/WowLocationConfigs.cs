@@ -65,7 +65,8 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.1f
+            DistanceTolerance = 0.1f,
+            EngageMethod = EngagementMethod.Charge
         };
 
         public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_BACKSIDE_WPL = new WowLocationConfiguration
@@ -160,7 +161,8 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f
+            DistanceTolerance = 0.06f,
+            EngageMethod = EngagementMethod.Charge
         };
 
         /*
@@ -188,7 +190,8 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f
+            DistanceTolerance = 0.06f,
+            EngageMethod = EngagementMethod.Charge
         };
 
         /*
@@ -223,7 +226,8 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f
+            DistanceTolerance = 0.06f,
+            EngageMethod = EngagementMethod.Charge
         };
 
         /*
@@ -272,7 +276,8 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f
+            DistanceTolerance = 0.06f,
+            EngageMethod = EngagementMethod.Charge
         };
 
         /*
@@ -308,7 +313,8 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f
+            DistanceTolerance = 0.06f,
+            EngageMethod = EngagementMethod.Charge
         };
 
         public static readonly WowLocationConfiguration TANARIS_TEST_PATHFINDING = new WowLocationConfiguration
@@ -327,7 +333,8 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.06f
+            DistanceTolerance = 0.06f,
+            EngageMethod = EngagementMethod.Charge
         };
 
         public static readonly WowLocationConfiguration LEVEL_42_TANARIS_TURTLES = new WowLocationConfiguration
@@ -350,7 +357,8 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
-            DistanceTolerance = 0.2f
+            DistanceTolerance = 0.2f,
+            EngageMethod = EngagementMethod.Charge
         };
 
         /*
@@ -433,7 +441,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.2f,
-            EngageMethod = EngagementMethod.Pull
+            EngageMethod = EngagementMethod.Charge
         };
 
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
@@ -456,6 +464,7 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
+            EngageMethod = EngagementMethod.Charge,
             DistanceTolerance = 0.2f
         };
 
@@ -497,7 +506,7 @@ namespace WoWHelper.Code.WorldState
                 */
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Pull,
+            EngageMethod = EngagementMethod.Charge,
             TooManyAttackersThreshold = 3,
         };
 
@@ -527,7 +536,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(35.79f, 47.97f),
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
-            EngageMethod = EngagementMethod.Pull,
+            EngageMethod = EngagementMethod.Charge,
             TooManyAttackersThreshold = 3,
         };
 
@@ -557,7 +566,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.3f,
-            EngageMethod = EngagementMethod.Pull,
+            EngageMethod = EngagementMethod.Charge,
         };
 
         public static readonly WowLocationConfiguration LEVEL_24_STONETALON_WAYPOINTS = new WowLocationConfiguration
@@ -587,7 +596,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.19f, 22.95f),
                 new Vector2(44.71f, 20.78f),
             },
-            EngageMethod = EngagementMethod.Pull,
+            EngageMethod = EngagementMethod.Charge,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
         };
 
@@ -631,7 +640,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(17.68f, 30.43f),
                 new Vector2(16.72f, 29.32f),
             },
-            EngageMethod = EngagementMethod.Pull,
+            EngageMethod = EngagementMethod.Charge,
             LogoffLevel = 25,
         };
 
@@ -662,7 +671,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(42.24f, 20.87f)
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            EngageMethod = EngagementMethod.Pull,
+            EngageMethod = EngagementMethod.Charge,
             LogoffLevel = 21,
         };
 
@@ -689,7 +698,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(56.29f, 22.47f),
                 new Vector2(56.60f, 22.00f)
             },
-            EngageMethod = EngagementMethod.Pull,
+            EngageMethod = EngagementMethod.Charge,
             LogoffLevel = 18,
         };
 
