@@ -136,16 +136,16 @@
   <ItemGroup>
     <Compile Include="Code\Config\Definitions\WowScreenConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowManagementConfiguration.cs" />
-    <Compile Include="Code\Config\WowFarmingConfigs.cs" />
-    <Compile Include="Code\Config\WowScreenConfigs.cs" />
-    <Compile Include="Code\Config\WowManagementConfigs.cs" />
+    <Compile Include="Code\Config\Data\WowFarmingConfigs.cs" />
+    <Compile Include="Code\Config\Data\WowScreenConfigs.cs" />
+    <Compile Include="Code\Config\Data\WowManagementConfigs.cs" />
     <Compile Include="Code\Constants\WowGameplayConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerStates.cs" />
     <Compile Include="Code\Config\Definitions\WowFarmingConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowLocationConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\CreatureConfig.cs" />
-    <Compile Include="Code\Config\WowLocationConfigs.cs" />
+    <Compile Include="Code\Config\Data\WowLocationConfigs.cs" />
     <Compile Include="Code\Gameplay\WowCommonCombatTasks.cs" />
     <Compile Include="Code\Gameplay\WowConfigResolutionTasks.cs" />
     <Compile Include="Code\Gameplay\WowManagementTasks.cs" />

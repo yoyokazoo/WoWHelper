@@ -83,10 +83,7 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WaypointTargetFindMethod.ALTERNATE;
             DistanceTolerance = 0.2f;
 
-            // Pull is the right default for nearly every location -- Charge only matters
-            // for Warrior, and only at the handful of locations that specifically call for
-            // gap-closing in rather than pulling at range/with a spell.
-            EngageMethod = EngagementMethod.Pull;
+            EngageMethod = EngagementMethod.Charge;
 
             MaximumLevel = 61;
 
