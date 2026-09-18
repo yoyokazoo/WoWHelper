@@ -100,7 +100,7 @@ namespace WoWHelper
                 }
                 else if (classState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
                 {
-                    await WowInput.PressKey(WowInput.WARRIOR_SHIFT_OVERPOWER);
+                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_OVERPOWER);
                 }
                 else if (WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD && 
                     WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST &&
