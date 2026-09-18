@@ -76,7 +76,7 @@ namespace WoWHelper.Code.WorldState
 
         public EngagementMethod EngageMethod { get; set; }
         public int TooManyAttackersThreshold { get; set; } // how many mobs to panic at (sometimes mobs spawn tiny bugs or something that will get counted)
-        public int LogoffLevel { get; set; } // Level to log off at (mostly for low level areas, or if we're going to be learning a spell that the bot will expect to know)
+        public int MaximumLevel { get; set; } // Level to log off at
 
         public WowLocationConfiguration()
         {
@@ -90,7 +90,7 @@ namespace WoWHelper.Code.WorldState
             // gap-closing in rather than pulling at range/with a spell.
             EngageMethod = EngagementMethod.Pull;
 
-            LogoffLevel = 61;
+            MaximumLevel = 61;
 
             // Default to Unknown, not the implicit Durotar (enum value 0) -- a config that
             // forgets to set Zone should fail loudly/obviously, not silently claim Durotar.

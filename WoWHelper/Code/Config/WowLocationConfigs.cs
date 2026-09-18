@@ -301,7 +301,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Tanaris Turtles (Level 42+)",
             MinimumLevel = 41,
-            LogoffLevel = 48,
+            MaximumLevel = 48,
             Zone = WowZone.Tanaris,
 
             Waypoints = new List<Vector2>
@@ -335,7 +335,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Kodo Graveyard, Desolace (Level 37+)", // zone inferred from name/coords, please confirm
             MinimumLevel = 36,
-            LogoffLevel = 43,
+            MaximumLevel = 43,
             Zone = WowZone.Desolace,
 
             Waypoints = new List<Vector2>
@@ -385,7 +385,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
             MinimumLevel = 34,
-            LogoffLevel = 38,
+            MaximumLevel = 38,
             Zone = WowZone.ThousandNeedles,
 
             Waypoints = new List<Vector2>
@@ -416,7 +416,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "North Stonetalon (Level 27+)",
             MinimumLevel = 26,
-            LogoffLevel = 30,
+            MaximumLevel = 30,
             Zone = WowZone.StonetalonMountains,
 
             /*
@@ -446,7 +446,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Hillsbrad River (Level 29+)",
             MinimumLevel = 29,
-            LogoffLevel = 35,
+            MaximumLevel = 35,
             Zone = WowZone.HillsbradFoothills,
 
             Waypoints = new List<Vector2>
@@ -475,7 +475,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "Stonetalon Mountains (Level 24+)",
             MinimumLevel = 24,
-            LogoffLevel = 28,
+            MaximumLevel = 28,
             Zone = WowZone.StonetalonMountains,
 
             /*
@@ -512,7 +512,7 @@ namespace WoWHelper.Code.WorldState
             MinimumLevel = 20,
             Zone = WowZone.Ashenvale,
             EngageMethod = EngagementMethod.Charge,
-            LogoffLevel = 25,
+            MaximumLevel = 25,
             Waypoints = new List<Vector2>
             {
                 new Vector2(16.67f, 28.15f),
@@ -578,7 +578,7 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             EngageMethod = EngagementMethod.Charge,
-            LogoffLevel = 21,
+            MaximumLevel = 21,
         };
 
         /*
@@ -605,7 +605,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(56.60f, 22.00f)
             },
             EngageMethod = EngagementMethod.Charge,
-            LogoffLevel = 18,
+            MaximumLevel = 18,
         };
 
         public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST_WAYPOINTS = new WowLocationConfiguration
@@ -637,7 +637,7 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             EngageMethod = EngagementMethod.Charge,
-            LogoffLevel = 14
+            MaximumLevel = 14
         };
 
         #endregion
@@ -679,7 +679,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(53.57f, 17.68f)
             },
             EngageMethod = EngagementMethod.Charge,
-            LogoffLevel = 12
+            MaximumLevel = 12
         };
 
         /*
@@ -722,7 +722,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(52.44f, 64.81f),
             },
             EngageMethod = EngagementMethod.Charge,
-            LogoffLevel = 10,
+            MaximumLevel = 10,
         };
 
         public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration
@@ -743,7 +743,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(45.27f, 57.40f),
             },
             EngageMethod = EngagementMethod.Charge,
-            LogoffLevel = 7,
+            MaximumLevel = 7,
         };
 
         /*
@@ -767,7 +767,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(45.49f, 64.54f),
             },
             EngageMethod = EngagementMethod.Charge,
-            LogoffLevel = 4,
+            MaximumLevel = 4,
         };
 
         #endregion
@@ -796,7 +796,7 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
             EngageMethod = EngagementMethod.Pull,
             TooManyAttackersThreshold = 4,
-            LogoffLevel = 13,
+            MaximumLevel = 13,
         };
 
         public static readonly WowLocationConfiguration LEVEL_8_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
@@ -818,7 +818,7 @@ namespace WoWHelper.Code.WorldState
             },
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
             EngageMethod = EngagementMethod.Pull,
-            LogoffLevel = 10,
+            MaximumLevel = 10,
         };
 
         public static readonly WowLocationConfiguration LEVEL_6_MULGORE_BATTLEBOARS = new WowLocationConfiguration
@@ -840,7 +840,7 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WaypointTraversalMethod.LINEAR,
             EngageMethod = EngagementMethod.Pull,
-            LogoffLevel = 8,
+            MaximumLevel = 8,
         };
 
         public static readonly WowLocationConfiguration LEVEL_4_MULGORE_MOUNTAIN_COUGARS = new WowLocationConfiguration
@@ -862,7 +862,7 @@ namespace WoWHelper.Code.WorldState
             },
             EngageMethod = EngagementMethod.Pull,
             TooManyAttackersThreshold = 2,
-            LogoffLevel = 6,
+            MaximumLevel = 6,
         };
 
         public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
@@ -882,7 +882,7 @@ namespace WoWHelper.Code.WorldState
             },
             EngageMethod = EngagementMethod.Pull,
             TooManyAttackersThreshold = 2,
-            LogoffLevel = 4,
+            MaximumLevel = 4,
         };
 
         #endregion
@@ -918,7 +918,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(56.34f, 51.48f),
             },
             EngageMethod = EngagementMethod.Pull,
-            LogoffLevel = 10,
+            MaximumLevel = 10,
         };
 
         /*
@@ -943,7 +943,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(36.14f, 57.73f),
             },
             EngageMethod = EngagementMethod.Pull,
-            LogoffLevel = 7,
+            MaximumLevel = 7,
         };
 
         /*
@@ -970,7 +970,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(31.90f, 62.98f),
             },
             EngageMethod = EngagementMethod.Pull,
-            LogoffLevel = 4,
+            MaximumLevel = 4,
         };
 
         #endregion

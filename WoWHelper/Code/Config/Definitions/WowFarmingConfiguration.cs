@@ -46,7 +46,7 @@ namespace WoWHelper.Code.Gameplay
         // see WowConfigResolutionTasks.cs) -- unlike EngageMethod above, which has no
         // obviously-safe default for a route-specific tactical choice and is left unguarded.
         public int TooManyAttackersThreshold => LocationConfiguration?.TooManyAttackersThreshold ?? 3;
-        public int LogoffLevel => LocationConfiguration.LogoffLevel;
+        public int LogoffLevel => LocationConfiguration.MaximumLevel;
 
         public WowFarmingConfiguration()
         {
