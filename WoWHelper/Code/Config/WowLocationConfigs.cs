@@ -7,6 +7,8 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowLocationConfigs
     {
+        #region Levels 50-60
+
         public static readonly WowLocationConfiguration LEVEL_58_SILITHUS_RUMBLERS = new WowLocationConfiguration
         {
             Title = "Silithus Rumblers (Level 58+)",
@@ -280,6 +282,10 @@ namespace WoWHelper.Code.WorldState
             EngageMethod = EngagementMethod.Charge
         };
 
+        #endregion
+
+        #region Levels 40-50
+
         /*
 /target Ironfur
 /target Cursed
@@ -360,6 +366,10 @@ namespace WoWHelper.Code.WorldState
             DistanceTolerance = 0.2f,
             EngageMethod = EngagementMethod.Charge
         };
+
+        #endregion
+
+        #region Levels 30-40
 
         /*
 /target Aged
@@ -467,6 +477,10 @@ namespace WoWHelper.Code.WorldState
             EngageMethod = EngagementMethod.Charge,
             DistanceTolerance = 0.2f
         };
+
+        #endregion
+
+        #region Levels 20-30 
 
         // Don't recommend this one without WBs
         public static readonly WowLocationConfiguration LEVEL_27_NORTH_ASHENVALE_WAYPOINTS = new WowLocationConfiguration
@@ -643,6 +657,10 @@ namespace WoWHelper.Code.WorldState
             }
         };
 
+        #endregion
+
+        #region Levels 10-20
+
         /*
 /target Zhevra
 /target Savannah
@@ -733,6 +751,10 @@ namespace WoWHelper.Code.WorldState
             EngageMethod = EngagementMethod.Charge,
             LogoffLevel = 14
         };
+
+        #endregion
+
+        #region Levels 1-10 Durotar
 
         public static readonly WowLocationConfiguration LEVEL_9_DUROTAR_SKULL_ROCK_COAST_WAYPOINTS = new WowLocationConfiguration
         {
@@ -836,6 +858,35 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 7,
         };
 
+        /*
+/target Mottled
+/target Scorpid
+        */
+        public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
+        {
+            Title = "Durotar Boars and Scorpions (Level 1+)",
+            MinimumLevel = 1,
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(44.19f, 66.23f),
+                new Vector2(43.31f, 64.90f),
+                new Vector2(41.03f, 64.58f),
+                new Vector2(41.22f, 63.01f),
+                new Vector2(42.96f, 62.43f),
+                new Vector2(44.29f, 62.22f),
+                new Vector2(45.49f, 64.54f),
+            },
+            EngageMethod = EngagementMethod.Charge,
+            LogoffLevel = 4,
+        };
+
+        #endregion
+
+        #region Levels 1-10 Mulgore
+
+
         public static readonly WowLocationConfiguration LEVEL_10_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
         {
             Title = "Mulgore Mixed Beasts (Level 10+)",
@@ -926,6 +977,30 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 6,
         };
 
+        public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
+        {
+            Title = "Mulgore Plainstriders (Level 1+)",
+            MinimumLevel = 1,
+            Zone = WowZone.Mulgore,
+
+            // /target Plains
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(46.26f, 76.52f),
+                new Vector2(48.83f, 76.44f),
+                new Vector2(51.83f, 75.29f),
+                new Vector2(49.42f, 80.53f),
+                new Vector2(46.44f, 78.21f),
+            },
+            EngageMethod = EngagementMethod.Pull,
+            TooManyAttackersThreshold = 2,
+            LogoffLevel = 4,
+        };
+
+        #endregion
+
+        #region Levels 1-10 Tirisfal
+
         /*
 /target Decrepit
 /target Greater
@@ -983,50 +1058,6 @@ namespace WoWHelper.Code.WorldState
             LogoffLevel = 7,
         };
 
-        public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
-        {
-            Title = "Mulgore Plainstriders (Level 1+)",
-            MinimumLevel = 1,
-            Zone = WowZone.Mulgore,
-
-            // /target Plains
-            Waypoints = new List<Vector2>
-            {
-                new Vector2(46.26f, 76.52f),
-                new Vector2(48.83f, 76.44f),
-                new Vector2(51.83f, 75.29f),
-                new Vector2(49.42f, 80.53f),
-                new Vector2(46.44f, 78.21f),
-            },
-            EngageMethod = EngagementMethod.Pull,
-            TooManyAttackersThreshold = 2,
-            LogoffLevel = 4,
-        };
-
-        /*
-/target Mottled
-/target Scorpid
-        */
-        public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
-        {
-            Title = "Durotar Boars and Scorpions (Level 1+)",
-            MinimumLevel = 1,
-            Zone = WowZone.Durotar,
-
-            Waypoints = new List<Vector2>
-            { 
-                new Vector2(44.19f, 66.23f),
-                new Vector2(43.31f, 64.90f),
-                new Vector2(41.03f, 64.58f),
-                new Vector2(41.22f, 63.01f),
-                new Vector2(42.96f, 62.43f),
-                new Vector2(44.29f, 62.22f),
-                new Vector2(45.49f, 64.54f),
-            },
-            EngageMethod = EngagementMethod.Charge,
-            LogoffLevel = 4,
-        };
-
         /*
 /target Young
 /target Duskbat
@@ -1053,6 +1084,8 @@ namespace WoWHelper.Code.WorldState
             EngageMethod = EngagementMethod.Pull,
             LogoffLevel = 4,
         };
+
+        #endregion
 
         // Every location config eligible for WowPlayer.ResolveFarmingConfigurationTask's
         // automatic startup selection (matched by player level/zone/waypoint-proximity --
