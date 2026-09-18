@@ -128,13 +128,16 @@ Only `NATURE_IMMUNE_MOB_NAMES` is mirrored so far; mirror more of
 needs them. An empty/unset `ExpectedMobNames` makes
 `AllMobsInZoneAreNatureImmune()` return `false` rather than vacuously `true`.
 
-**Automatic farming-config resolution:** `WowFarmingConfigs.CURRENT_CONFIG` is
-just `new WowFarmingConfiguration()` now — `LocationConfiguration` and
-`CombatConfiguration` are no longer hardcoded there (there's no
-`ManagementConfiguration` anymore either — see the `Config/` bullet in the
-C# architecture section above). Both start out
-`null`/`WowCombatConfiguration.Unknown` (see `WowFarmingConfiguration`'s
-constructor) and get resolved by two independent mechanisms in
+**Automatic farming-config resolution:** there's no static "current config"
+singleton anymore -- `WowFarmingConfigs.cs`/`CURRENT_CONFIG` were removed;
+`WowPlayer`'s constructor builds its own `FarmingConfig` directly
+(`new WowFarmingConfiguration { ScreenConfiguration = screenConfiguration }`)
+instead of pulling a shared static instance (there's no `ManagementConfiguration`
+anymore either — see the `Config/` bullet in the C# architecture section
+above). `LocationConfiguration` and `CombatConfiguration` are never hardcoded
+there; both start out `null`/`WowCombatConfiguration.Unknown` (see
+`WowFarmingConfiguration`'s constructor) and get resolved by two independent
+mechanisms in
 `WowConfigResolutionTasks.cs`, deliberately split apart (they used to be one
 method run only from `PlayerState.RESOLVE_FARMING_CONFIGURATION`) because
 that state can be skipped entirely — see below:
@@ -498,11 +501,13 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`Config/`** — per-location farming routes/waypoints
   (`WowLocationConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
-  farming-config resolution" above), per-resolution screen pixel maps
-  (`WowScreenConfigs.cs`), and the farming profile (`WowFarmingConfigs.cs` —
-  just `CURRENT_CONFIG = new WowFarmingConfiguration()`;
-  `LocationConfiguration`/`CombatConfiguration` are resolved at runtime, not
-  set here). There's no management/alert-toggle config anymore —
+  farming-config resolution" above) and per-resolution screen pixel maps
+  (`WowScreenConfigs.cs`). There's no separate farming-profile config file
+  anymore either — `WowFarmingConfigs.cs`/`CURRENT_CONFIG` were removed;
+  `WowPlayer` builds its own `FarmingConfig` (a `WowFarmingConfiguration`)
+  directly in its constructor instead, with `LocationConfiguration`/
+  `CombatConfiguration` resolved at runtime, not set on any static instance.
+  There's no management/alert-toggle config anymore either —
   `WowManagementConfiguration`/`WowManagementConfigs.cs` were removed;
   `AlertOnPotionUsed`/`AlertOnFullBags`/`AlertOnUnreadWhisper` always fired
   true in the only profile that was ever used, so those Slack alerts

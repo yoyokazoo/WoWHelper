@@ -42,8 +42,9 @@ end
 
 -- Run-specific settings, toggled live via the /yyconfig menu below instead of being
 -- hardcoded in the C# side's WowManagementConfiguration. Defaults here match what
--- WowManagementConfigs.FULL_BABYSIT (the only profile CURRENT_CONFIG actually uses) used
--- to hardcode, before these moved here.
+-- WowManagementConfigs.FULL_BABYSIT (the only profile the old CURRENT_CONFIG ever used)
+-- used to hardcode, before these moved here. Both WowManagementConfiguration and
+-- CURRENT_CONFIG have since been removed from the C# side entirely.
 --
 -- Stored in YoyokazooUIDB, i.e. SavedVariablesPerCharacter (see YoyokazooUI.toc) -- a
 -- plain local file under this WoW install's WTF folder, written to disk on logout/reload,

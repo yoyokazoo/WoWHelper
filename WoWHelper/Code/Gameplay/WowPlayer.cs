@@ -10,7 +10,6 @@ using System.Windows.Forms;
 using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
-using WoWHelper.Code.Constants;
 using WoWHelper.Code.Gameplay;
 using WoWHelper.Code.WorldState;
 using static WoWHelper.Code.Gameplay.WowFarmingConfiguration;
@@ -84,7 +83,10 @@ namespace WoWHelper
 
         public WowFarmingConfiguration FarmingConfig { get; private set; }
 
-        public WowPlayer() : this(WowFarmingConfigs.CURRENT_CONFIG.ScreenConfiguration)
+        // WowFarmingConfiguration's own constructor auto-detects the current screen
+        // resolution -- used here just to get that default before the real
+        // FarmingConfig instance below is built for this WowPlayer.
+        public WowPlayer() : this(new WowFarmingConfiguration().ScreenConfiguration)
         {
         }
 
@@ -95,8 +97,10 @@ namespace WoWHelper
             CurrentWaypointIndex = -1;
             WaypointTraversalDirection = 1;
 
-            FarmingConfig = WowFarmingConfigs.CURRENT_CONFIG;
-            FarmingConfig.ScreenConfiguration = screenConfiguration;
+            FarmingConfig = new WowFarmingConfiguration
+            {
+                ScreenConfiguration = screenConfiguration
+            };
 
             PreviousWorldState = new WowWorldState(screenConfiguration);
             WorldState = new WowWorldState(screenConfiguration);

@@ -135,7 +135,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Code\Config\Definitions\WowScreenConfiguration.cs" />
-    <Compile Include="Code\Config\Data\WowFarmingConfigs.cs" />
     <Compile Include="Code\Config\Data\WowScreenConfigs.cs" />
     <Compile Include="Code\Constants\WowGameplayConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerConstants.cs" />
