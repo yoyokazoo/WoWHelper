@@ -40,15 +40,12 @@ namespace WoWHelper
                 }
 
                 // Just in case, if for some reason things are going really poorly, try to pop retal regardless
-                if (!tooManyAttackersActionsTaken && WorldState.PlayerHpPercent <= WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD)
+                if (!tooManyAttackersActionsTaken && WarriorShouldEmergencyRetaliate())
                 {
                     SlackHelper.SendMessageToChannel($"{WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD}% Retal popped, not sure what went wrong!");
 
                     // cast retaliation once GCD is cooled down
-                    while (!WorldState.GCDCooledDown)
-                    {
-                        await UpdateWorldStateAsync();
-                    }
+                    await WaitForGlobalCooldownTask();
                     await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION_KEY);
 
                     tooManyAttackersActionsTaken = true;
@@ -87,55 +84,48 @@ namespace WoWHelper
                     startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
-                if (WorldState.IsTargetFearCaster && !CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS))
+                if (WarriorShouldOpenWithBerserkerRage())
                 {
                     await WarriorStartOfCombatBerserkerRage();
                     BerserkerRageTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
 
                 // Finally, if we've made it this far, do standard combat actions
-                if (!classState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
+                if (WarriorShouldCastBattleShout(classState))
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT);
                 }
-                else if (classState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
+                else if (WarriorShouldCastOverpower(classState))
                 {
                     await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_OVERPOWER);
                 }
-                else if (WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD && 
-                    WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST &&
-                    WorldState.PlayerLevel >= 24)
+                else if (WarriorShouldCastExecute(classState))
                 {
                     await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_EXECUTE);
                 }
-                else if (ShouldCastRend(classState))
+                else if (WarriorShouldCastRend(classState))
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_REND);
                 }
                 else if (WorldState.AttackerCount > 1)
                 {
-                    if (classState.MortalStrikeOrBloodThirstCooledDown && WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
+                    if (WarriorShouldCastMortalStrikeOrBloodthirst(classState))
                     {
                         await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
                     }
-                    else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST))
+                    else if (WarriorShouldCastCleave())
                     {
-                        // Cleave only if we have enough spare rage to bloodthirst right after
                         await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_CLEAVE);
                     }
                 }
                 else if (WorldState.AttackerCount <= 1) // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
                 {
-                    if (classState.MortalStrikeOrBloodThirstCooledDown && 
-                        WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST &&
-                        WorldState.PlayerLevel >= 40)
+                    if (WarriorShouldCastMortalStrikeOrBloodthirst(classState))
                     {
                         await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
                     }
-                    else if (WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST) || 
-                        (WorldState.PlayerLevel < 40 && WorldState.ResourcePercent >= WowGameplayConstants.HEROIC_STRIKE_RAGE_COST))
+                    else if (WarriorShouldCastHeroicStrike(classState))
                     {
-                        // Heroic only if we have enough spare rage to bloodthirst right after
                         await WowInput.PressKey(WowInput.WARRIOR_HEROIC_STRIKE);
                     }
                     // TODO: Actually split out Heroic Strike and cast if we have really surplus rage
@@ -145,22 +135,79 @@ namespace WoWHelper
             return true;
         }
 
+        // Just in case, if for some reason things are going really poorly, try to pop retal regardless.
+        public bool WarriorShouldEmergencyRetaliate()
+        {
+            return WorldState.PlayerHpPercent <= WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD;
+        }
+
+        // Fear-casters are worth opening on preemptively, rather than reacting once feared.
+        public bool WarriorShouldOpenWithBerserkerRage()
+        {
+            return WorldState.IsTargetFearCaster && !CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS);
+        }
+
+        public bool WarriorShouldCastBattleShout(WowWarriorClassState classState)
+        {
+            return !classState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST;
+        }
+
+        public bool WarriorShouldCastOverpower(WowWarriorClassState classState)
+        {
+            return classState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST;
+        }
+
+        public bool WarriorShouldCastExecute(WowWarriorClassState classState)
+        {
+            return classState.KnowsExecute &&
+                WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD &&
+                WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST;
+        }
+
         // Bleed-immune targets never get Rend, regardless of anything else. Otherwise, Rend
-        // once the level requirement is met, we can afford it, and the target isn't already
-        // bled, but only if it's worth the rage: either high enough HP that Rend's DoT will
-        // have time to tick, or a runner mob -- those flee at low HP, so Rend's damage-over-time
+        // once it's actually trained, we can afford it, and the target isn't already bled,
+        // but only if it's worth the rage: either high enough HP that Rend's DoT will have
+        // time to tick, or a runner mob -- those flee at low HP, so Rend's damage-over-time
         // keeps ticking (and helps finish it off) even after it breaks line of sight/melee range.
-        public bool ShouldCastRend(WowWarriorClassState classState)
+        public bool WarriorShouldCastRend(WowWarriorClassState classState)
         {
             if (WorldState.IsTargetBleedImmune)
             {
                 return false;
             }
 
-            return WorldState.PlayerLevel >= 4 &&
+            return classState.KnowsRend &&
                 WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST &&
                 !classState.TargetHasRend &&
                 (WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD || WorldState.IsTargetRunnerMob);
+        }
+
+        // classState.MortalStrikeOrBloodThirstCooledDown alone isn't a safe usability check --
+        // it's decoded from a Lua cooldown query that reads ready for a spell the player hasn't
+        // even trained yet (see KnowsMortalStrikeOrBloodthirst()'s comment in
+        // WarriorFunctions.lua) -- so KnowsMortalStrikeOrBloodthirst has to gate it too. Used
+        // for both the multi- and single-attacker branches below -- those used to differ (only
+        // the single-attacker one had a "PlayerLevel >= 40" gate), but replacing that with the
+        // real trained-or-not check makes both branches' gating identical.
+        public bool WarriorShouldCastMortalStrikeOrBloodthirst(WowWarriorClassState classState)
+        {
+            return classState.KnowsMortalStrikeOrBloodthirst &&
+                classState.MortalStrikeOrBloodThirstCooledDown &&
+                WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST;
+        }
+
+        // Cleave only if we have enough spare rage to bloodthirst right after.
+        public bool WarriorShouldCastCleave()
+        {
+            return WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST);
+        }
+
+        // Heroic only if we have enough spare rage to bloodthirst right after, unless we
+        // haven't trained Mortal Strike/Bloodthirst yet and can't cast it at all.
+        public bool WarriorShouldCastHeroicStrike(WowWarriorClassState classState)
+        {
+            return WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST) ||
+                (!classState.KnowsMortalStrikeOrBloodthirst && WorldState.ResourcePercent >= WowGameplayConstants.HEROIC_STRIKE_RAGE_COST);
         }
 
         public async Task<bool> WarriorStartBattleReadyRecoverTask(WowWarriorClassState classState)
@@ -210,7 +257,7 @@ namespace WoWHelper
                 return false;
             }
 
-            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge && WorldState.PlayerLevel < 4) // no charge yet
+            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge && !classState.KnowsCharge) // no charge yet
             {
                 await WowInput.PressKey(WowInput.START_ATTACK);
                 await WalkIntoMeleeRangeTask(classState);
@@ -248,7 +295,7 @@ namespace WoWHelper
             {
                 case WowLocationConfiguration.EngagementMethod.Charge:
                     {
-                        if (WorldState.PlayerLevel < 4 && classState.CanChargeTarget)
+                        if (!classState.KnowsCharge && classState.CanChargeTarget)
                         {
                             return FindTargetMarkerOnScreen() != null;
                         }
@@ -272,10 +319,7 @@ namespace WoWHelper
                 SlackHelper.SendMessageToChannel($"TOO MANY ATTACKERS HELP");
 
                 // cast retaliation once GCD is cooled down
-                while (!WorldState.GCDCooledDown)
-                {
-                    await UpdateWorldStateAsync();
-                }
+                await WaitForGlobalCooldownTask();
                 await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION_KEY);
 
                 LogoutReason = "Got into a Retaliation situation, logging off for safety";

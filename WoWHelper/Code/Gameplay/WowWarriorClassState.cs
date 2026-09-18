@@ -13,8 +13,12 @@ namespace WoWHelper
         public bool WaitingToShoot { get; private set; }
         public bool HeroicStrikeQueued { get; private set; }
         public bool OverpowerUsable { get; private set; }
+        public bool KnowsRend { get; private set; }
 
+        public bool KnowsExecute { get; private set; }
         public bool MortalStrikeOrBloodThirstCooledDown { get; private set; }
+        public bool KnowsMortalStrikeOrBloodthirst { get; private set; }
+        public bool KnowsCharge { get; private set; }
 
         public override void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig)
         {
@@ -31,12 +35,23 @@ namespace WoWHelper
             WaitingToShoot = r5;
             HeroicStrikeQueued = r6;
             OverpowerUsable = r7;
-            // r8 reserved (previously WhirlwindCooledDown -- removed, nothing consumed it;
-            // see the GetWarriorClassBoolOne() comment in WarriorFunctions.lua).
+            // Whether Rend is actually trained yet -- replaces a hardcoded
+            // "PlayerLevel >= 4" check in WowWarriorTasks.WarriorShouldCastRend.
+            KnowsRend = r8;
 
-            // g1 reserved (previously SweepingStrikesCooledDown -- removed, same reason as r8).
+            // Whether Execute is actually trained yet -- replaces a hardcoded
+            // "PlayerLevel >= 24" check in WowWarriorTasks.WarriorShouldCastExecute.
+            KnowsExecute = g1;
             MortalStrikeOrBloodThirstCooledDown = g2;
-            // g3-g8, ClassBoolTwo, and ClassIntOne currently reserved/unused for Warrior.
+            // Whether Mortal Strike/Bloodthirst is actually trained yet -- replaces a
+            // hardcoded "PlayerLevel >= 40" check in WowWarriorTasks.cs's
+            // WarriorShouldCastMortalStrikeOrBloodthirst/WarriorShouldCastHeroicStrike.
+            KnowsMortalStrikeOrBloodthirst = g3;
+            // Whether Charge is actually trained yet -- replaces a hardcoded
+            // "PlayerLevel >= 4" check in WowWarriorTasks.cs's
+            // WarriorFaceCorrectDirectionToEngageTask/WarriorCanEngageTarget.
+            KnowsCharge = g4;
+            // g5-g8, ClassBoolTwo, and ClassIntOne currently reserved/unused for Warrior.
         }
     }
 }
