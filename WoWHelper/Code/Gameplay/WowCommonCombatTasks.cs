@@ -89,8 +89,11 @@ namespace WoWHelper
             bool invalidTarget = WorldState.InvalidTarget;
             bool outOfRange = WorldState.OutOfRange;
             bool notInLineOfSight = WorldState.NotInLineOfSight;
+            bool noPathAvailable = WorldState.NoPathAvailable;
+            // Both toasts get the same handling below -- see WowWorldState.TargetUnreachable.
+            bool targetUnreachable = WorldState.TargetUnreachable;
 
-            Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}, notInLineOfSight {notInLineOfSight}, targetIsEvading {targetIsEvading}");
+            Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}, notInLineOfSight {notInLineOfSight}, noPathAvailable {noPathAvailable}, targetIsEvading {targetIsEvading}");
 
             if (facingWrongWay || targetNeedsToBeInFront || targetIsEvading)
             {
@@ -117,7 +120,7 @@ namespace WoWHelper
                 }
             }
 
-            if (notInLineOfSight)
+            if (targetUnreachable)
             {
                 await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO);
             }
@@ -128,13 +131,14 @@ namespace WoWHelper
                 await WowInput.PressKey(WowInput.START_ATTACK);
             }
 
-            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || targetIsEvading || invalidTarget || outOfRange || notInLineOfSight;
+            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || targetIsEvading || invalidTarget || outOfRange || targetUnreachable;
         }
 
         // Called from each class's *FaceCorrectDirectionToEngageTask (the CONTINUE_TO_TRY_TO_ENGAGE
         // loop body, i.e. before we've ever landed a hit) right before attempting to pull. If the
-        // target we tab/macro-picked isn't actually reachable (WorldState.NotInLineOfSight -- e.g.
-        // it's leashed on the far side of terrain), that flag alone can stay true indefinitely, so
+        // target we tab/macro-picked isn't actually reachable (WorldState.TargetUnreachable, i.e.
+        // either the "not in line of sight" or "no path available" toast -- e.g. it's leashed on
+        // the far side of terrain), that flag alone can stay true indefinitely, so
         // the class-specific CanEngageTarget() readiness check (which only reflects cooldown/GCD,
         // not reachability) would otherwise keep returning true forever and the engage loop would
         // never fall through to CHECK_FOR_LOGOUT to re-evaluate anything (see EngageAttempts /
@@ -145,12 +149,12 @@ namespace WoWHelper
         // LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS.
         public async Task<bool> AbandonUnreachableEngageTarget()
         {
-            if (!WorldState.NotInLineOfSight)
+            if (!WorldState.TargetUnreachable)
             {
                 return false;
             }
 
-            Console.WriteLine("Target not in line of sight while trying to engage -- clearing target and suppressing retarget for a bit");
+            Console.WriteLine($"Target unreachable while trying to engage (notInLineOfSight {WorldState.NotInLineOfSight}, noPathAvailable {WorldState.NoPathAvailable}) -- clearing target and suppressing retarget for a bit");
             await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO);
             LastLineOfSightBailoutTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             return true;

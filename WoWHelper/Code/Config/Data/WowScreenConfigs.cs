@@ -94,6 +94,13 @@ namespace WoWHelper.Code.Config
                     new ColorPosition(1631, 220, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
+            NoPathAvailablePositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(1610, 216, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1637, 226, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1657, 231, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                }),
+
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
                     new ColorPosition(1568, 173, WowScreenConfiguration.BREATH_BAR_COLOR_ONE),
@@ -157,6 +164,15 @@ namespace WoWHelper.Code.Config
                 }),
 
             NotInLineOfSightPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                }),
+
+            // Not captured for this resolution yet -- (0,0) placeholders, same as
+            // NotInLineOfSightPositions above, so it just never matches.
+            NoPathAvailablePositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
                     new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
@@ -252,6 +268,15 @@ namespace WoWHelper.Code.Config
                     new ColorPosition(843, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(857, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(872, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                }),
+
+            // Not captured for this resolution yet -- (0,0) placeholders, same as
+            // 2560x1600's NotInLineOfSightPositions, so it just never matches.
+            NoPathAvailablePositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+                {
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>

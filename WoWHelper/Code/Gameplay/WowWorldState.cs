@@ -111,6 +111,16 @@ namespace WoWHelper
         // (see NotInLineOfSightPositions on WowScreenConfiguration) -- always false on
         // resolutions that haven't had their positions captured yet.
         public bool NotInLineOfSight { get; private set; }
+        // "No path available" red toast -- the pathing-failure sibling of NotInLineOfSight
+        // (e.g. Charge can't route to the target). Also 3440x1440-only so far, see
+        // NoPathAvailablePositions.
+        public bool NoPathAvailable { get; private set; }
+        // Either toast means the same thing for our purposes: the target we picked can't be
+        // reached from where we're standing, so give up on it (see
+        // AbandonUnreachableEngageTarget / MeleeMakeSureWeAreAttackingEnemyTask in
+        // WowCommonCombatTasks.cs). Consumers should read this rather than either flag alone
+        // so both toasts always get identical handling.
+        public bool TargetUnreachable => NotInLineOfSight || NoPathAvailable;
         public bool OnLoginScreen { get; private set; }
         public bool Underwater { get; private set; }
 
@@ -347,6 +357,7 @@ namespace WoWHelper
             InvalidTarget = MatchesErrorTextColor(bmp, ScreenConfig.InvalidTargetPositions);
             OutOfRange = MatchesErrorTextColor(bmp, ScreenConfig.OutOfRangePositions);
             NotInLineOfSight = MatchesErrorTextColor(bmp, ScreenConfig.NotInLineOfSightPositions);
+            NoPathAvailable = MatchesErrorTextColor(bmp, ScreenConfig.NoPathAvailablePositions);
         }
 
         // Index 0 of the pixel row is a fixed sentinel the addon paints, exactly

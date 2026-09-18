@@ -21,7 +21,7 @@
         public const int EMERGENCY_HP_THRESHOLD = 35;
         public const int PETRI_ALTF4_HP_THRESHOLD = 20;
 
-        public const int REND_HP_THRESHOLD = 75;
+        public const int REND_HP_THRESHOLD = 60;
         // Below this the mob's dying soon enough that a Sunder's armor reduction won't pay
         // for its rage -- same reasoning as REND_HP_THRESHOLD above.
         public const int SUNDER_ARMOR_HP_THRESHOLD = 75;
@@ -34,8 +34,9 @@
 
         public const int ENGAGE_ROTATION_ATTEMPTS = 60;
 
-        // After bailing out of an engage attempt because the target was not in line of
-        // sight (WorldState.NotInLineOfSight), suppress re-acquiring any target for this
+        // After bailing out of an engage attempt because the target was unreachable
+        // (WorldState.TargetUnreachable -- "not in line of sight" or "no path available"),
+        // suppress re-acquiring any target for this
         // long. Without this, PathfindingLoopTask's TAB_TARGET/FIND_TARGET_MACRO press
         // would immediately re-select the same unreachable mob (it's still the nearest/
         // next-in-tab-order target) and the bot would spin in the same stuck loop one

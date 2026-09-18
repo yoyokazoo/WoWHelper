@@ -131,5 +131,28 @@ namespace WoWHelperUnitTests
 
             Assert.AreEqual(expected, Player.WorldState.NotInLineOfSight);
         }
+
+        [TestMethod]
+        [DataRow(false, "..\\..\\Source Images\\3440los.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\3440nopath.bmp")]
+        public void VerifyNoPathAvailable(bool expected, string fileName)
+        {
+            LoadPlayer(fileName);
+
+            Assert.AreEqual(expected, Player.WorldState.NoPathAvailable);
+        }
+
+        // Either toast should read as "unreachable" -- the two consumers in
+        // WowCommonCombatTasks.cs go through this rather than either flag alone.
+        [TestMethod]
+        [DataRow(false, "..\\..\\Source Images\\2560toofar.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\3440los.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\3440nopath.bmp")]
+        public void VerifyTargetUnreachable(bool expected, string fileName)
+        {
+            LoadPlayer(fileName);
+
+            Assert.AreEqual(expected, Player.WorldState.TargetUnreachable);
+        }
     }
 }

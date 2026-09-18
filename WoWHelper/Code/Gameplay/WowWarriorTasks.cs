@@ -84,6 +84,12 @@ namespace WoWHelper
                     startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
                 }
 
+                // TODO: so we don't spam, something like this?
+                //if (!WorldState.GCDCooledDown)
+                //{
+                //    continue;
+                //}
+
                 if (WarriorShouldOpenWithBerserkerRage())
                 {
                     await WarriorStartOfCombatBerserkerRage();

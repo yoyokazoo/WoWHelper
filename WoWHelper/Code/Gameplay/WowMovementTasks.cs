@@ -46,7 +46,7 @@ namespace WoWHelper
                 await EveryWorldStateUpdateTasks();
 
                 // Suppressed for a bit after an engage attempt bailed out due to
-                // WorldState.NotInLineOfSight (see AbandonUnreachableEngageTarget in
+                // WorldState.TargetUnreachable (see AbandonUnreachableEngageTarget in
                 // WowCommonCombatTasks.cs) -- otherwise we'd immediately TAB/macro right back
                 // onto the same unreachable target we just cleared. Keep walking the route
                 // during the suppression window instead of standing still trying to retarget.
