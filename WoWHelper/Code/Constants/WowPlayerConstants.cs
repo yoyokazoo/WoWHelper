@@ -18,10 +18,16 @@
         public const int EAT_FOOD_HP_THRESHOLD = 80;
         public const int DRINK_WATER_MP_THRESHOLD = 80;
 
-        public const int OH_SHIT_RETAL_HP_THRESHOLD = 35;
+        public const int EMERGENCY_HP_THRESHOLD = 35;
         public const int PETRI_ALTF4_HP_THRESHOLD = 20;
 
         public const int REND_HP_THRESHOLD = 75;
+
+        // How many simultaneous attackers to panic at (sometimes mobs spawn tiny bugs or
+        // something that will get counted) -- used to be per-WowLocationConfiguration, but
+        // every route used either the same default or a value close enough to it that a
+        // single shared threshold was simpler than per-route tuning.
+        public const int TOO_MANY_ATTACKERS_THRESHOLD = 3;
 
         public const int ENGAGE_ROTATION_ATTEMPTS = 60;
 

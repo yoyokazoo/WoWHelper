@@ -75,9 +75,6 @@ namespace WoWHelper.Code.WorldState
         // name substrings for a target-cycling macro, not a complete/exact roster.
         public List<string> ExpectedMobNames { get; set; }
 
-        
-        public int TooManyAttackersThreshold { get; set; } // how many mobs to panic at (sometimes mobs spawn tiny bugs or something that will get counted)
-        
         public List<Vector2> Waypoints { get; set; }
 
         public WowLocationConfiguration()
@@ -85,7 +82,6 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WaypointTraversalMethod.CIRCULAR;
             TargetFindMethod = WaypointTargetFindMethod.ALTERNATE;
             DistanceTolerance = 0.2f;
-            TooManyAttackersThreshold = 3;
 
             // Pull is the right default for nearly every location -- Charge only matters
             // for Warrior, and only at the handful of locations that specifically call for

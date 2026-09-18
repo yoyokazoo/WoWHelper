@@ -42,7 +42,7 @@ namespace WoWHelper
                 // Just in case, if for some reason things are going really poorly, try to pop retal regardless
                 if (!tooManyAttackersActionsTaken && WarriorShouldEmergencyRetaliate())
                 {
-                    SlackHelper.SendMessageToChannel($"{WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD}% Retal popped, not sure what went wrong!");
+                    SlackHelper.SendMessageToChannel($"{WowPlayerConstants.EMERGENCY_HP_THRESHOLD}% Retal popped, not sure what went wrong!");
 
                     // cast retaliation once GCD is cooled down
                     await WaitForGlobalCooldownTask();
@@ -50,7 +50,7 @@ namespace WoWHelper
 
                     tooManyAttackersActionsTaken = true;
 
-                    LogoutReason = $"Got down to {WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD}% somehow";
+                    LogoutReason = $"Got down to {WowPlayerConstants.EMERGENCY_HP_THRESHOLD}% somehow";
                     LogoutTriggered = true;
 
                     continue;
@@ -138,7 +138,7 @@ namespace WoWHelper
         // Just in case, if for some reason things are going really poorly, try to pop retal regardless.
         public bool WarriorShouldEmergencyRetaliate()
         {
-            return WorldState.PlayerHpPercent <= WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD;
+            return WorldState.PlayerHpPercent <= WowPlayerConstants.EMERGENCY_HP_THRESHOLD;
         }
 
         // Fear-casters are worth opening on preemptively, rather than reacting once feared.
@@ -312,7 +312,7 @@ namespace WoWHelper
 
         public async Task<bool> WarriorTooManyAttackersTask()
         {
-            bool tooManyAttackers = WorldState.AttackerCount >= FarmingConfig.TooManyAttackersThreshold;
+            bool tooManyAttackers = WorldState.AttackerCount >= WowPlayerConstants.TOO_MANY_ATTACKERS_THRESHOLD;
 
             if (tooManyAttackers)
             {

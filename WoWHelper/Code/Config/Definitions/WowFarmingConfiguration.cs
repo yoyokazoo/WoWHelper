@@ -40,12 +40,6 @@ namespace WoWHelper.Code.Gameplay
         // the addon's /yyconfig menu instead of this hardcoded config.
 
         public EngagementMethod EngageMethod => LocationConfiguration.EngageMethod;
-        // Falls back to 3 (the same default WowLocationConfiguration's own constructor
-        // uses) when LocationConfiguration is null, rather than NRE-ing mid-combat (e.g. bot
-        // started mid-combat, before RESOLVE_FARMING_CONFIGURATION got a chance to run --
-        // see WowConfigResolutionTasks.cs) -- unlike EngageMethod above, which has no
-        // obviously-safe default for a route-specific tactical choice and is left unguarded.
-        public int TooManyAttackersThreshold => LocationConfiguration?.TooManyAttackersThreshold ?? 3;
         public int LogoffLevel => LocationConfiguration.MaximumLevel;
 
         public WowFarmingConfiguration()

@@ -34,7 +34,6 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f,
             EngageMethod = EngagementMethod.Charge,
-            TooManyAttackersThreshold = 3
         };
 
         /*
@@ -100,7 +99,6 @@ namespace WoWHelper.Code.WorldState
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE,
             DistanceTolerance = 0.1f,
             EngageMethod = EngagementMethod.Pull,
-            TooManyAttackersThreshold = 4
         };
 
         /*
@@ -439,7 +437,6 @@ namespace WoWHelper.Code.WorldState
             },
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR,
             EngageMethod = EngagementMethod.Charge,
-            TooManyAttackersThreshold = 3,
         };
 
         public static readonly WowLocationConfiguration LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS = new WowLocationConfiguration
@@ -795,7 +792,6 @@ namespace WoWHelper.Code.WorldState
             },
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
             EngageMethod = EngagementMethod.Pull,
-            TooManyAttackersThreshold = 4,
             MaximumLevel = 13,
         };
 
@@ -861,7 +857,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(43.54f, 88.74f),
             },
             EngageMethod = EngagementMethod.Pull,
-            TooManyAttackersThreshold = 2,
             MaximumLevel = 6,
         };
 
@@ -881,7 +876,6 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(46.44f, 78.21f),
             },
             EngageMethod = EngagementMethod.Pull,
-            TooManyAttackersThreshold = 2,
             MaximumLevel = 4,
         };
 

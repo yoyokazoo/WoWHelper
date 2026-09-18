@@ -249,8 +249,8 @@ namespace WoWHelper
         public async Task<bool> WarlockEmergencyTask()
         {
             await Task.Delay(0);
-            bool tooManyAttackers = WorldState.AttackerCount >= FarmingConfig.TooManyAttackersThreshold;
-            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowPlayerConstants.OH_SHIT_RETAL_HP_THRESHOLD;
+            bool tooManyAttackers = WorldState.AttackerCount >= WowPlayerConstants.TOO_MANY_ATTACKERS_THRESHOLD;
+            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowPlayerConstants.EMERGENCY_HP_THRESHOLD;
 
             if (tooManyAttackers || emergencyHpThreshold)
             //if(true)
