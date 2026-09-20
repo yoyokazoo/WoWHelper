@@ -41,6 +41,12 @@ namespace WoWHelper.Code.Gameplay
         public EngagementMethod EngageMethod => LocationConfiguration.EngageMethod;
         public int LogoffLevel => LocationConfiguration.MaximumLevel;
 
+        // Null-guarded, unlike the two above: this one is read from inside the combat loop
+        // (via TurnToFaceTargetMarkerTask), which the "already in combat" short-circuit can
+        // reach with LocationConfiguration still unresolved -- fall back to the on-foot
+        // (camera straight down) behavior in that case rather than throwing.
+        public bool IsWaterZone => LocationConfiguration?.IsWaterZone ?? false;
+
         public WowFarmingConfiguration()
         {
             // LocationConfiguration stays null and CombatConfiguration stays Unknown until

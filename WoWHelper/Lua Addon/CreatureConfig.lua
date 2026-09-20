@@ -60,6 +60,7 @@ LOGOFF_IF_SEEN_MOB_NAMES = {
 -- (re)applying Rend to these. Populate as encountered; starts empty since no
 -- specific mob has been confirmed immune yet.
 BLEED_IMMUNE_MOB_NAMES = {
+    ["Rogue Flame Spirit"] = true,
 }
 
 -- Mobs that cast a Fear-type effect -- worth opening a fight against these

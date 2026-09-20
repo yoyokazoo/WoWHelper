@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Numerics;
 using WoWHelper.Code.Gameplay;
 using static WoWHelper.Code.WorldState.WowLocationConfiguration;
@@ -172,6 +172,7 @@ namespace WoWHelper.Code.WorldState
             Zone = WowZone.Felwood,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             DistanceTolerance = 0.06f,
+            ChaseOutOfRangeTargets = false, // too much geometry to get hung up on off the path
 
             Waypoints = new List<Vector2>
             {
@@ -351,7 +352,6 @@ namespace WoWHelper.Code.WorldState
 /target Sparkleshell
         */
         // TODO: add logoff if seen for the elite mob that pats here
-        // TODO: add "No Path Available" charge handling so you don't get stuck on the ship
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
@@ -359,6 +359,7 @@ namespace WoWHelper.Code.WorldState
             MaximumLevel = 38,
             Zone = WowZone.ThousandNeedles,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            ChaseOutOfRangeTargets = false, // the ship wreck here is easy to get stuck on
 
             Waypoints = new List<Vector2>
             {
@@ -388,6 +389,7 @@ namespace WoWHelper.Code.WorldState
             MaximumLevel = 35,
             Zone = WowZone.HillsbradFoothills,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
+            IsWaterZone = true, // swimming the river -- camera can't be straight down here
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.3f,
 
@@ -415,7 +417,7 @@ namespace WoWHelper.Code.WorldState
         {
             Title = "North Stonetalon (Level 26+)",
             MinimumLevel = 26,
-            MaximumLevel = 30,
+            MaximumLevel = 29,
             Zone = WowZone.StonetalonMountains,
 
             Waypoints = new List<Vector2>

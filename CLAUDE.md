@@ -509,6 +509,44 @@ of truth — edits should be made here, not in the WoW install directory.
   early-exit the pathfinding loop itself uses, re-checked by the caller right
   after. Unlike `WalkIntoMeleeRangeTask` it's a short nudge, not a commit; if
   the target's still out of range the next periodic scan just tries again.
+  The addon never paints the marker on a target tapped by someone outside the
+  group (`UnitIsTapDenied`, checked in `ShouldMarkCurrentTarget()` on
+  target/nameplate events plus a 0.1s `OnUpdate` re-check for tags that land
+  after targeting), specifically so this chase can't run after someone else's
+  kill — a tapped mob is also "not engageable," which is indistinguishable
+  from "out of range" on the C# side.
+  Per-route opt-out: `WowLocationConfiguration.ChaseOutOfRangeTargets`
+  (default `true`, set in the constructor) — `false` skips the scan and the
+  chase entirely, for routes where straying off the waypoints risks getting
+  hung up on geometry or wandering into something dangerous (currently
+  `LEVEL_53_NORTH_FELWOOD` and `LEVEL_34_SHIMMERING_FLATS_WAYPOINTS`).
+  **Water routes** (`WowLocationConfiguration.IsWaterZone`, default `false`;
+  read through the null-guarded `WowFarmingConfiguration.IsWaterZone`, since
+  the combat loop can reach this with `LocationConfiguration` still
+  unresolved — currently only `LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS`): the
+  straight-down camera all of the above assumes isn't possible while
+  swimming — "walk forward" swims in the direction the camera points, so
+  straight down would swim to the bottom — so those routes run with the
+  camera pitched (mostly) forward, and the marker's screen position means
+  something different: only its *horizontal* offset from center says
+  anything about facing, its vertical offset is distance/depth (not
+  in-front-vs-behind), anything behind the player is simply off screen, and
+  the pixel→degrees mapping is a perspective projection whose scale depends
+  on unreadable camera FOV/pitch. So in water: the out-of-range chase above
+  is skipped entirely (same as `ChaseOutOfRangeTargets = false`);
+  `TurnToFaceTargetMarkerTask` dispatches to
+  `TurnToFaceTargetMarkerInWaterTask`, which replaces the one computed
+  `FULL_ROTATION_MILLIS`-based hold with guess-and-check — if no marker is
+  visible, sweep right in `WATER_SWEEP_STEP_MILLIS` chunks (up to one full
+  rotation) until it appears, then turn towards it in proportional,
+  clamped steps (`WATER_TURN_STEP_*`), re-scanning after each, until its
+  horizontal offset is inside a deliberately wider band
+  (`WATER_FACING_TOLERANCE_FRACTION_OF_HEIGHT`, a fraction of screen
+  *height* because WoW's vertical FOV is fixed and the horizontal one
+  widens with aspect ratio); and `WalkIntoMeleeRangeTask` skips its
+  in-front-to-behind flip check and uses the mode-aware
+  `IsFacingTargetMarker(Point)` for its drift check. None of the water
+  constants are tuned against live testing yet.
 - **`Config/`** — per-location farming routes/waypoints
   (`WowLocationConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
@@ -530,10 +568,11 @@ of truth — edits should be made here, not in the WoW install directory.
   the color-encoding contract above. `Config/Definitions/` holds the POCOs
   these configs are instances of. Each `WowLocationConfiguration` carries a
   `Title`
-  (human-readable, includes the minimum level), `MinimumLevel`, and `Zone`
+  (human-readable, includes the minimum level), `MinimumLevel`, `Zone`
   (`WowZone` enum, `WowLocationConfiguration.cs`) — see the zone ID
   note in the color-encoding contract above for how `Zone` ties to
-  `WowWorldState.CurrentZone` — plus `ExpectedMobNames` and the
+  `WowWorldState.CurrentZone` — and `IsWaterZone` (see the water-routes note
+  in the target-marker section above), plus `ExpectedMobNames` and the
   `AllMobsInZoneAreNatureImmune()` helper built on it; see "Expected mob
   roster" above. `Config/Definitions/CreatureConfig.cs` is the C# mirror of
   the Lua addon's `CreatureConfig.lua` name lists that `ExpectedMobNames`

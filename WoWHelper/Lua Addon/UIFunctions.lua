@@ -708,9 +708,10 @@ YoyokazooUIDB = YoyokazooUIDB or {}
 -- Marked only on the CURRENT target (PLAYER_TARGET_CHANGED, plus
 -- NAME_PLATE_UNIT_ADDED for a target whose plate wasn't already visible at
 -- the moment it became the target) -- not every nameplate, unlike an
--- earlier prototype -- to keep the search unambiguous. Old markers on a
--- previous target are left in place (harmless clutter, the color only
--- matters while actively searching for the CURRENT target).
+-- earlier prototype -- to keep the search unambiguous, and only if that
+-- target isn't tapped by someone else (see ShouldMarkCurrentTarget below).
+-- Old markers on a previous target are left in place (harmless clutter, the
+-- color only matters while actively searching for the CURRENT target).
 --------------------------------------------------
 local NAMEPLATE_MARKER_SIZE = 12
 local NAMEPLATE_MARKER_COLOR = { 1, 0, 1 } -- magenta -- keep in sync with
@@ -755,26 +756,40 @@ local function AddTargetMarker(plate)
     currentlyShownMarker = plate.wowHelperTargetMarker
 end
 
+local function HideCurrentMarker()
+    if currentlyShownMarker then
+        currentlyShownMarker:Hide()
+        currentlyShownMarker = nil
+    end
+end
+
+-- A target tagged by someone outside our group gets no marker at all. The
+-- C# side's PathfindingLoopTask treats "marker on screen but CanEngageTarget
+-- is false" as "target's just out of range, walk towards it" -- a tapped mob
+-- also reads as not-engageable, so without this the bot would chase after
+-- someone else's kill. Nothing else that uses the marker (walking into
+-- melee range, in-combat re-facing) ever runs against a tap-denied target,
+-- so hiding it here can't starve those.
+local function ShouldMarkCurrentTarget()
+    return UnitExists("target") and not UnitIsTapDenied("target")
+end
+
 local function MarkCurrentTargetPlate()
-    if not UnitExists("target") then
-        if currentlyShownMarker then
-            currentlyShownMarker:Hide()
-            currentlyShownMarker = nil
-        end
+    if not ShouldMarkCurrentTarget() then
+        HideCurrentMarker()
         return
     end
     local plate = C_NamePlate and C_NamePlate.GetNamePlateForUnit and C_NamePlate.GetNamePlateForUnit("target")
     if plate then
         AddTargetMarker(plate)
-    elseif currentlyShownMarker then
+    else
         -- The new target exists but doesn't have a nameplate yet (e.g. too
         -- far away) -- hide the PREVIOUS target's marker immediately rather
         -- than leaving it lingering on the wrong unit until this target's
         -- plate eventually appears via NAME_PLATE_UNIT_ADDED, which also
         -- calls this function and will show the right marker once that
         -- happens.
-        currentlyShownMarker:Hide()
-        currentlyShownMarker = nil
+        HideCurrentMarker()
     end
 end
 
@@ -786,5 +801,24 @@ targetMarkerFrame:SetScript("OnEvent", function(self, event, unit)
         MarkCurrentTargetPlate()
     elseif event == "NAME_PLATE_UNIT_ADDED" and UnitIsUnit(unit, "target") then
         MarkCurrentTargetPlate()
+    end
+end)
+
+-- The events above only fire when the target or its nameplate changes, but
+-- the tap-denied check in ShouldMarkCurrentTarget() can flip on an
+-- already-marked target (someone else tags the mob while we're walking
+-- towards it). Rather than depend on exactly which UNIT_* event the client
+-- fires for a tap change on the "target" token, just poll: if the marker's
+-- showing on a target we shouldn't be marking anymore, drop it. Cheap (a
+-- couple of unit queries) and far slower than the pixel row's own redraw.
+local TARGET_MARKER_RECHECK_INTERVAL = 0.1
+local targetMarkerRecheckElapsed = 0
+targetMarkerFrame:SetScript("OnUpdate", function(self, elapsed)
+    targetMarkerRecheckElapsed = targetMarkerRecheckElapsed + elapsed
+    if targetMarkerRecheckElapsed < TARGET_MARKER_RECHECK_INTERVAL then return end
+    targetMarkerRecheckElapsed = 0
+
+    if currentlyShownMarker and not ShouldMarkCurrentTarget() then
+        HideCurrentMarker()
     end
 end)

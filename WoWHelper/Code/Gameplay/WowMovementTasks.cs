@@ -173,7 +173,15 @@ namespace WoWHelper
                 // it and walk towards it for a bit. Throttled to a full-screen capture every
                 // PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS since FindTargetMarkerOnScreen
                 // is far more expensive than the pixel-row read WorldState does each tick.
-                if (!CurrentTimeInsideDuration(lastTargetMarkerScanTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS))
+                // Skipped entirely (scan included) on routes that opt out via
+                // ChaseOutOfRangeTargets -- see that property's comment for why -- and on
+                // water routes (IsWaterZone): with the camera pitched forward there, the
+                // marker's vertical position is depth/distance, not in-front-vs-behind, so
+                // "walk straight at it" has no idea whether it's swimming towards the target
+                // or away from it.
+                if (FarmingConfig.LocationConfiguration.ChaseOutOfRangeTargets &&
+                    !FarmingConfig.IsWaterZone &&
+                    !CurrentTimeInsideDuration(lastTargetMarkerScanTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS))
                 {
                     lastTargetMarkerScanTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -436,8 +444,17 @@ namespace WoWHelper
         // (ShamanFaceCorrectDirectionToEngageTask's own retry loop).
         //
         // Not yet tuned against live testing -- see the "Approach ranged/caster mobs" plan.
+        //
+        // On water routes (FarmingConfig.IsWaterZone) none of the bearing math above holds,
+        // so this hands off to TurnToFaceTargetMarkerInWaterTask instead -- see the
+        // water-zone section below.
         public async Task<bool> TurnToFaceTargetMarkerTask()
         {
+            if (FarmingConfig.IsWaterZone)
+            {
+                return await TurnToFaceTargetMarkerInWaterTask();
+            }
+
             float? bearing = GetTargetMarkerBearingDegrees();
             if (bearing == null)
             {
@@ -461,6 +478,163 @@ namespace WoWHelper
                 : $"DEBUG TurnToFaceTargetMarkerTask: post-turn bearing {verifyBearing.Value:0.0} degrees (cone +/-{TARGET_FACING_CONE_DEGREES / 2f:0.0}) -> success={success}");
 
             return success;
+        }
+
+        // ---- Water-zone facing (WowLocationConfiguration.IsWaterZone) ----
+        //
+        // Everything above assumes the camera is pitched straight down -- that's what makes
+        // the marker's screen position a top-down map of bearing. That isn't an option while
+        // swimming: "walk forward" swims in the direction the camera points, so straight down
+        // would swim the character straight to the bottom. Water routes run with the camera
+        // pitched (mostly) forward instead, which changes what the marker's position means:
+        //   - Only the HORIZONTAL offset from screen center still says anything about facing
+        //     (left of center = turn left, right = turn right). The vertical offset is now
+        //     distance/depth -- a marker below center is a close target, not one behind us.
+        //   - Anything behind us, or too far off to the side, is simply off screen. So "no
+        //     marker" no longer means "no target"; it can just mean we're pointed the wrong
+        //     way, hence the sweep in TurnToFaceTargetMarkerInWaterTask.
+        //   - The pixel-offset -> degrees mapping is a perspective projection whose scale
+        //     depends on the camera FOV and pitch, neither of which we can read (and the
+        //     pitch drifts every time the camera gets bumped), so converting an offset into a
+        //     single timed turn-key hold the way TurnToFaceTargetMarkerTask does isn't
+        //     reliable here. The water version turns in small steps, re-scanning after each,
+        //     until the marker sits inside the tolerance band -- guess and check, not one
+        //     computed turn.
+        // None of the constants below are tuned against live testing yet.
+
+        // Half-width of the "facing" band, as a fraction of screen HEIGHT (not width): WoW
+        // keeps the vertical FOV fixed and widens the horizontal one with aspect ratio, so a
+        // given angle off dead-ahead covers the same fraction of screen height on any
+        // resolution, but a different fraction of width on an ultrawide vs 16:9. 0.3 * 1440
+        // = +/-432px at 3440x1440, very roughly +/-20 degrees. Deliberately wider than
+        // TARGET_FACING_CONE_DEGREES' +/-15: Classic's frontal-cone check for casts/charge is
+        // more forgiving than that, and every step tighter costs another turn+scan round trip.
+        private const float WATER_FACING_TOLERANCE_FRACTION_OF_HEIGHT = 0.3f;
+
+        // Turn-step sizing for the guess-and-check loop: each step holds the turn key for the
+        // marker's horizontal offset (as a fraction of half the screen height) times the
+        // scale, clamped to the min/max -- so a marker out near the screen edge gets a big
+        // step and one just outside the band a small nudge. The scale is a rough "half a
+        // screen-height of offset is worth about this much hold" guess; overshoot is bounded
+        // by the max and self-corrects on the next step anyway.
+        private const float WATER_TURN_STEP_SCALE_MILLIS = 200f;
+        private const int WATER_TURN_STEP_MIN_MILLIS = 40;
+        private const int WATER_TURN_STEP_MAX_MILLIS = 200;
+
+        // Cap on turn+scan steps per call before giving up (returning false, like the
+        // on-foot version does when its one verification scan misses the cone).
+        private const int WATER_TURN_MAX_STEPS = 8;
+
+        // Pause between releasing the turn key and re-scanning, so the capture reflects where
+        // the turn actually ended rather than a frame from mid-turn.
+        private const int WATER_TURN_SETTLE_MILLIS = 100;
+
+        // When the marker isn't on screen at all in a water zone: turn right this long, scan,
+        // repeat, up to one full rotation (FULL_ROTATION_MILLIS / this = 8 steps). ~45 degrees
+        // per step -- coarse enough to get all the way around quickly, fine enough that the
+        // target can't slip past between scans, since the camera's horizontal FOV is well
+        // over 45 degrees.
+        private const int WATER_SWEEP_STEP_MILLIS = 250;
+
+        // Signed horizontal offset of the marker from screen center, in pixels: negative =
+        // left of center, positive = right.
+        private float GetMarkerHorizontalOffsetPixels(Point markerPosition)
+        {
+            return markerPosition.X - (FarmingConfig.ScreenConfiguration.Resolution.Width / 2f);
+        }
+
+        private float WaterFacingTolerancePixels =>
+            FarmingConfig.ScreenConfiguration.Resolution.Height * WATER_FACING_TOLERANCE_FRACTION_OF_HEIGHT;
+
+        // Mode-aware "are we facing the marker" check, so callers that already have a fresh
+        // marker position (WalkIntoMeleeRangeTask) don't need to know which camera setup is
+        // in use: on foot it's the +/-TARGET_FACING_CONE_DEGREES/2 bearing cone, in water
+        // it's the horizontal band above.
+        private bool IsFacingTargetMarker(Point markerPosition)
+        {
+            if (FarmingConfig.IsWaterZone)
+            {
+                return Math.Abs(GetMarkerHorizontalOffsetPixels(markerPosition)) <= WaterFacingTolerancePixels;
+            }
+
+            return Math.Abs(GetBearingDegreesFromMarkerPosition(markerPosition)) <= TARGET_FACING_CONE_DEGREES / 2f;
+        }
+
+        // Holds a turn key for the given duration, then waits WATER_TURN_SETTLE_MILLIS so the
+        // next scan sees where the turn actually ended.
+        private async Task TurnStepTask(Keys turnKey, int millis)
+        {
+            Keyboard.KeyDown(turnKey);
+            await Task.Delay(millis);
+            Keyboard.KeyUp(turnKey);
+            await Task.Delay(WATER_TURN_SETTLE_MILLIS);
+        }
+
+        // Water-zone counterpart to TurnToFaceTargetMarkerTask (which dispatches here when
+        // FarmingConfig.IsWaterZone). Two phases:
+        //   1. Sweep: if the marker isn't on screen, turn right in WATER_SWEEP_STEP_MILLIS
+        //      chunks, scanning after each, until it shows up -- at most one full rotation.
+        //      Still no marker after that means there's genuinely nothing to face -> false.
+        //   2. Align: turn towards the marker in proportional steps (see the WATER_TURN_STEP_*
+        //      constants), re-scanning after each, until its horizontal offset is inside the
+        //      WATER_FACING_TOLERANCE band -> true. Losing the marker mid-align, or running
+        //      out of steps, -> false, leaving retries to the caller like the on-foot version.
+        public async Task<bool> TurnToFaceTargetMarkerInWaterTask()
+        {
+            Point? marker = FindTargetMarkerOnScreen();
+
+            if (marker == null)
+            {
+                int maxSweepSteps = (int)Math.Ceiling(FULL_ROTATION_MILLIS / WATER_SWEEP_STEP_MILLIS);
+                Console.WriteLine($"DEBUG TurnToFaceTargetMarkerInWaterTask: no marker on screen, sweeping right in {WATER_SWEEP_STEP_MILLIS}ms steps (up to {maxSweepSteps})");
+
+                for (int sweepStep = 1; sweepStep <= maxSweepSteps && marker == null; sweepStep++)
+                {
+                    await TurnStepTask(WowInput.TURN_RIGHT, WATER_SWEEP_STEP_MILLIS);
+                    marker = FindTargetMarkerOnScreen();
+                    Console.WriteLine($"DEBUG TurnToFaceTargetMarkerInWaterTask: sweep step {sweepStep}/{maxSweepSteps} -> marker={(marker == null ? "none" : marker.Value.ToString())}");
+                }
+
+                if (marker == null)
+                {
+                    Console.WriteLine("DEBUG TurnToFaceTargetMarkerInWaterTask: full sweep found no marker -- returning false");
+                    return false;
+                }
+            }
+
+            float halfHeight = FarmingConfig.ScreenConfiguration.Resolution.Height / 2f;
+
+            for (int step = 1; step <= WATER_TURN_MAX_STEPS; step++)
+            {
+                float offset = GetMarkerHorizontalOffsetPixels(marker.Value);
+
+                if (Math.Abs(offset) <= WaterFacingTolerancePixels)
+                {
+                    Console.WriteLine($"DEBUG TurnToFaceTargetMarkerInWaterTask: marker={marker.Value} horizontal offset {offset:0}px within +/-{WaterFacingTolerancePixels:0}px after {step - 1} step(s) -> success");
+                    return true;
+                }
+
+                int turnMillis = (int)Math.Min(WATER_TURN_STEP_MAX_MILLIS,
+                    Math.Max(WATER_TURN_STEP_MIN_MILLIS, (Math.Abs(offset) / halfHeight) * WATER_TURN_STEP_SCALE_MILLIS));
+                Keys turnKey = offset > 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
+
+                Console.WriteLine($"DEBUG TurnToFaceTargetMarkerInWaterTask: [{step}/{WATER_TURN_MAX_STEPS}] marker={marker.Value} horizontal offset {offset:0}px (band +/-{WaterFacingTolerancePixels:0}px) -> holding {turnKey} for {turnMillis}ms");
+
+                await TurnStepTask(turnKey, turnMillis);
+
+                marker = FindTargetMarkerOnScreen();
+                if (marker == null)
+                {
+                    // Off screen after a turn towards it? Most likely it moved (or the step
+                    // overshot by far more than expected). Don't sweep again from here -- the
+                    // caller's retry will, if it calls back in.
+                    Console.WriteLine("DEBUG TurnToFaceTargetMarkerInWaterTask: lost the marker mid-align -- returning false");
+                    return false;
+                }
+            }
+
+            Console.WriteLine($"DEBUG TurnToFaceTargetMarkerInWaterTask: still outside the band after {WATER_TURN_MAX_STEPS} steps -- returning false");
+            return false;
         }
 
         // How often WalkIntoMeleeRangeTask re-scans for the target marker while walking --
@@ -504,6 +678,11 @@ namespace WoWHelper
         //      this is normal gradual drift, not an overshoot) before continuing.
         // Returns false (and stops walking) if the marker is lost for too long, or if we time
         // out without ever entering combat.
+        //
+        // On water routes (FarmingConfig.IsWaterZone -- see the water-zone section above)
+        // check 1 is skipped entirely, since with the camera pitched forward the marker's
+        // vertical position means distance, not in-front-vs-behind; check 2 goes through the
+        // mode-aware IsFacingTargetMarker, so it uses the wider horizontal band there.
         public async Task<bool> WalkIntoMeleeRangeTask(WowClassState classState)
         {
             int consecutiveMisses = 0;
@@ -554,9 +733,9 @@ namespace WoWHelper
                         float bearing = GetBearingDegreesFromMarkerPosition(marker.Value);
                         float verticalOffset = marker.Value.Y - (FarmingConfig.ScreenConfiguration.Resolution.Height / 2f);
                         bool isInFrontOfPlayer = Math.Abs(bearing) <= 90f;
-                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] marker={marker.Value} bearing={bearing:0.0} deg (cone +/-{TARGET_FACING_CONE_DEGREES / 2f:0.0}) verticalOffset={verticalOffset:0.0}px (shrinking magnitude = closer) inFront={isInFrontOfPlayer}");
+                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] marker={marker.Value} bearing={bearing:0.0} deg (cone +/-{TARGET_FACING_CONE_DEGREES / 2f:0.0}) verticalOffset={verticalOffset:0.0}px (shrinking magnitude = closer) inFront={isInFrontOfPlayer} waterZone={FarmingConfig.IsWaterZone}");
 
-                        if (wasInFrontOfPlayer == true && !isInFrontOfPlayer)
+                        if (!FarmingConfig.IsWaterZone && wasInFrontOfPlayer == true && !isInFrontOfPlayer)
                         {
                             Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] target went from in front to behind, stopping to re-face");
                             await EndWalkForwardTask();
@@ -569,7 +748,7 @@ namespace WoWHelper
 
                         wasInFrontOfPlayer = isInFrontOfPlayer;
 
-                        if (Math.Abs(bearing) > TARGET_FACING_CONE_DEGREES / 2f)
+                        if (!IsFacingTargetMarker(marker.Value))
                         {
                             // Target's drifted out of the fine facing cone but not all the way
                             // behind us -- ordinary gradual drift, so just re-turn without
@@ -603,7 +782,7 @@ namespace WoWHelper
         // PathfindingLoopTask. Deliberately short -- this isn't WalkIntoMeleeRangeTask's
         // "commit until we're in combat" walk, just a nudge to get an out-of-range target
         // into range. If that isn't enough, the next periodic scan will try again.
-        private const int WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS = 2000;
+        private const int WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS = 4000;
 
         // PathfindingLoopTask's "we have a target on screen but can't engage it yet" step:
         // stop route-walking, turn to face the target marker, then walk straight at it for up
