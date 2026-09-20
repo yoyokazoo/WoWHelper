@@ -71,7 +71,7 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G4 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency` |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G5 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -335,8 +335,39 @@ sample comes in under threshold, since nothing needs it to stay latched once
 seen: `WowManagementTasks.EveryWorldStateUpdateTasks()` reads it with the
 same one-shot `WorldState.HighLatency && !LogoutTriggered` pattern
 `LogoffMobSeen` uses above (Slack-alerts and sets `LogoutTriggered`/
-`LogoutReason` on the first tick it sees it true). G5-G8 and the B byte are
-still reserved for the next class-agnostic bool.
+`LogoutReason` on the first tick it sees it true).
+
+G5 is `WowWorldState.CombatStalemate` — another live game-state query:
+"in combat, but nothing is actually happening." `IsCombatStalemate()`
+(`YoyokazooUI.lua`, next to the EVADE tracking it shares a
+`COMBAT_LOG_EVENT_UNFILTERED` handler with) stamps
+`lastCombatActivityTime` on `PLAYER_REGEN_DISABLED` (entering combat — so
+every fight starts its own clock; also seeded on `PLAYER_ENTERING_WORLD` if
+already in combat, for a `/reload` while stuck) and on any `*_DAMAGE`/
+`*_MISSED` combat-log subevent whose source or dest is the player or their
+pet — **except EVADE misses**, which are exactly what a stuck mob produces
+when swung at, so counting them would mask the case this exists for. True
+once that stamp is older than `COMBAT_STALEMATE_SECONDS` (30) while
+`UnitAffectingCombat("player")` is still true. The motivating case: aggroed
+by a mob that can't path to the player (player in water, mob stuck on the
+shore) — combat never drops, nothing ever hits, and the class combat loops
+(`while (WorldState.IsInCombat)`) spin forever. Because of that, the C#
+consumer in `EveryWorldStateUpdateTasks()` can't just set `LogoutTriggered`
+like `LogoffMobSeen`/`HighLatency` do (the logout states are only reachable
+once combat drops) — it sets it, Slack-alerts, presses the logout macro
+itself via `StartLogoutTask()`, and then polls for `OnLoginScreen` right
+there (up to `WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS`, 45s)
+before `Environment.Exit`, rather than returning to the combat loop — whose
+scoot-backwards/re-face handling would move the character and cancel the
+logout timer. Logging out in combat is fine here precisely because it's a
+stalemate: nothing's hitting us, so the timer runs uninterrupted. If the
+login screen never shows up (the mob reached us after all), it Slack-alerts
+and falls through; `LogoutTriggered` stays set, so the normal
+`CHECK_FOR_LOGOUT` path finishes the job once combat drops.
+`COMBAT_STALEMATE_DEBUG` (a local in
+`YoyokazooUI.lua`) prints every counted activity event, for checking
+in-game which subevents actually fire during a stalemate. G6-G8 and the B
+byte are still reserved for the next class-agnostic bool.
 `ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,

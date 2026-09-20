@@ -1024,7 +1024,10 @@ end
 -- like everything else in this row. G4 (HasHighLatency(), see there) is back
 -- to being a live game-state query, same category as the R byte -- it just
 -- landed in G because the R byte was already full by the time it was added.
--- G5-G8 and the B byte are still fully reserved for future class-agnostic flags.
+-- G5 (IsCombatStalemate(), YoyokazooUI.lua) is likewise a live game-state
+-- query -- in combat, but no damage/miss combat-log events involving us for
+-- COMBAT_STALEMATE_SECONDS, e.g. aggroed by a mob that can't path to us.
+-- G6-G8 and the B byte are still fully reserved for future class-agnostic flags.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()
@@ -1042,8 +1045,9 @@ function GetMultiBoolTwo()
     local boolG2 = IsLogoutOnFullBagsEnabled()
     local boolG3 = HasDesiredWorldBuff()
     local boolG4 = HasHighLatency()
+    local boolG5 = IsCombatStalemate()
 
-    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, false, false, false, false)
+    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, false, false, false)
 
     return rByte/255.0, gByte/255.0, 0
 end

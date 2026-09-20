@@ -12,13 +12,19 @@
         // to reset WoW's AFK kick timer and goes back to waiting.
         public const long WORLD_BUFF_WAIT_MILLIS = 5 * 60 * 1000; // 5 minutes
 
+        // How long the combat-stalemate branch in EveryWorldStateUpdateTasks
+        // (WowManagementTasks.cs) waits for the login screen after pressing logout before
+        // giving up and returning to the combat loop. Comfortably past WoW's 20-second
+        // logout timer.
+        public const long COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS = 45 * 1000;
+
         public const int STOP_RESTING_HP_THRESHOLD = 94;
         public const int STOP_RESTING_MP_THRESHOLD = 98;
 
         public const int EAT_FOOD_HP_THRESHOLD = 80;
         public const int DRINK_WATER_MP_THRESHOLD = 80;
 
-        public const int EMERGENCY_HP_THRESHOLD = 35;
+        public const int EMERGENCY_HP_THRESHOLD = 29;
         public const int PETRI_ALTF4_HP_THRESHOLD = 20;
 
         public const int REND_HP_THRESHOLD = 60;

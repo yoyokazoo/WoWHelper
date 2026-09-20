@@ -6,8 +6,17 @@
 -- the dispatchers in WoWFunctions.lua and GetWarriorClassBoolOne/Two below).
 ------------------------------------------------------------
 
+-- Overpower rank 1, 7384 (GetSpellCooldown is queried by name, so rank 1's ID
+-- covers every rank). Both halves are needed: IsUsableSpell only reports
+-- whether the spell's *conditions* are met -- enough rage, and the 5s
+-- "target dodged" proc window is open -- and says nothing about cooldown.
+-- Overpower's own 5s cooldown overlaps that window almost exactly, so
+-- without the cooldown check this read true for the whole cooldown after
+-- every use, and the C# rotation (WarriorShouldCastOverpower, second in
+-- priority) kept pressing it -- and skipping everything below it -- until the
+-- window closed. Same pairing Shaman's CanCastEarthShock() uses.
 function IsOverpowerUsable()
-    return IsSpellUsable(7384) -- Overpower rank 1
+    return SpellIsCooledDown(7384) and IsSpellUsable(7384)
 end
 
 -- Name-matched rather than a hardcoded spell ID -- Rend's 7 ranks (772,

@@ -87,6 +87,18 @@ namespace WoWHelper
         // logout" pattern as LogoffMobSeen above.
         public bool HighLatency { get; private set; }
 
+        // Decoded from MultiBoolTwo's G byte, b5. Live game-state query like HighLatency
+        // above. True once IsCombatStalemate() (YoyokazooUI.lua) has seen the player in
+        // combat for COMBAT_STALEMATE_SECONDS (30s) with no damage/miss combat-log event
+        // involving the player or their pet in that time (EVADE misses excluded) -- i.e.
+        // aggroed by something that can't reach us, e.g. a mob stuck on the shore while
+        // we're in the water, where combat never drops and nothing ever happens. Consumed
+        // by WowManagementTasks.EveryWorldStateUpdateTasks() -- which starts the logout
+        // itself and waits for the login screen there, rather than only setting
+        // LogoutTriggered like LogoffMobSeen/HighLatency, since the combat loop can't reach
+        // the logout states while combat never drops.
+        public bool CombatStalemate { get; private set; }
+
         // Which of the three bot-supported classes the player is playing, decoded from
         // MultiBoolOne's B byte (b2/b4 -- see GetMultiBoolOne() in WoWFunctions.lua) for
         // Warrior/Shaman, plus MultiBoolTwo's R4 (see UpdateMultiBoolTwo below) for
@@ -300,9 +312,10 @@ namespace WoWHelper
         // (IsTargetBleedImmune), and R6 (IsTargetFearCaster) are the fields packed into
         // the R byte so far -- R7-R8 are still reserved. G1 (LogoutOnLowDynamiteEnabled),
         // G2 (LogoutOnFullBagsEnabled), and G3 (HasDesiredWorldBuff) are packed into the
-        // previously-unused G byte instead of continuing into R7/R8 -- G4-G8 and the B
-        // byte are still reserved for future class-agnostic flags (see GetMultiBoolTwo()
-        // in WoWFunctions.lua).
+        // previously-unused G byte instead of continuing into R7/R8, followed by G4
+        // (HighLatency) and G5 (CombatStalemate) -- G6-G8 and the B byte are still
+        // reserved for future class-agnostic flags (see GetMultiBoolTwo() in
+        // WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
@@ -323,12 +336,13 @@ namespace WoWHelper
             IsTargetBleedImmune = r5;
             IsTargetFearCaster = r6;
 
-            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out _, out _, out _, out _);
+            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out _, out _, out _);
 
             LogoutOnLowDynamiteEnabled = g1;
             LogoutOnFullBagsEnabled = g2;
             HasDesiredWorldBuff = g3;
             HighLatency = g4;
+            CombatStalemate = g5;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

@@ -16,6 +16,26 @@ local lastWhisperTime = nil
 local EVADE_WINDOW_SECONDS = 3
 local lastEvadeTime = nil
 
+-- Combat-stalemate detection: we're in combat, but nobody is actually hitting
+-- anybody. The motivating case was getting aggroed by a mob that couldn't
+-- path to the player (player in water, mob stuck on the shore) -- combat never
+-- drops, the mob never swings, the bot never lands a hit, and the whole thing
+-- sat there for 5+ minutes. Tracked as "time of the last combat-log damage/
+-- miss event involving the player (or their pet)", re-stamped on entering
+-- combat so the clock starts fresh for every fight rather than carrying a
+-- stale timestamp over from the previous one. IsCombatStalemate() below is
+-- true once that's older than COMBAT_STALEMATE_SECONDS while still in combat;
+-- the C# side logs out on it (WowManagementTasks.EveryWorldStateUpdateTasks).
+-- EVADE misses deliberately do NOT count as activity -- they're exactly what
+-- a stuck mob produces when we swing at it, so counting them would mask the
+-- very case this exists for.
+local COMBAT_STALEMATE_SECONDS = 30
+local lastCombatActivityTime = nil
+-- Set true to print every combat-log event that counts as activity, for
+-- checking in-game which subevents actually fire during a stalemate.
+local COMBAT_STALEMATE_DEBUG = false
+local combatStalemateAnnounced = false
+
 -- PLAYER_ENTERING_WORLD fires on every loading screen, not just the initial login --
 -- zoning, taxis, death+release, and hearthing all re-fire it. InitializeIndicators()/
 -- InitializePixelRow() build a fresh set of frames/textures every time they're called
@@ -172,6 +192,7 @@ frame:RegisterEvent("PLAYER_XP_UPDATE")
 frame:RegisterEvent("PLAYER_LEVEL_UP")
 frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 frame:RegisterEvent("LOOT_BIND_CONFIRM")
+frame:RegisterEvent("PLAYER_REGEN_DISABLED")
 
 frame:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_WHISPER" then
@@ -213,8 +234,15 @@ frame:SetScript("OnEvent", function(self, event, ...)
         end
     end
 
+    -- Entering combat counts as combat activity: starts the stalemate clock
+    -- fresh for this fight (see COMBAT_STALEMATE_SECONDS above).
+    if event == "PLAYER_REGEN_DISABLED" then
+        lastCombatActivityTime = GetTime()
+        combatStalemateAnnounced = false
+    end
+
     if event == "COMBAT_LOG_EVENT_UNFILTERED" then
-        local _, subevent, _, sourceGUID, _, _, _, _, _, _, _, missType = CombatLogGetCurrentEventInfo()
+        local _, subevent, _, sourceGUID, _, _, _, destGUID, _, _, _, missType = CombatLogGetCurrentEventInfo()
 
         -- SWING_MISSED's missType is the 12th return value (grabbed directly above).
         -- SPELL_MISSED/RANGE_MISSED/SPELL_PERIODIC_MISSED have spellId/spellName/
@@ -228,9 +256,34 @@ frame:SetScript("OnEvent", function(self, event, ...)
         if missType == "EVADE" and sourceGUID == UnitGUID("player") then
             lastEvadeTime = GetTime()
         end
+
+        -- Any damage or (non-EVADE) miss to or from the player/pet means the
+        -- fight is actually happening -- see COMBAT_STALEMATE_SECONDS above.
+        -- Suffix match rather than an explicit list so SWING_/RANGE_/SPELL_/
+        -- SPELL_PERIODIC_/DAMAGE_SHIELD etc. are all covered.
+        local isDamageOrMiss = subevent:find("_DAMAGE$") or subevent:find("_MISSED$")
+        if isDamageOrMiss and missType ~= "EVADE" then
+            local playerGUID = UnitGUID("player")
+            local petGUID = UnitGUID("pet")
+            local involvesUs = sourceGUID == playerGUID or destGUID == playerGUID
+                or (petGUID and (sourceGUID == petGUID or destGUID == petGUID))
+            if involvesUs then
+                lastCombatActivityTime = GetTime()
+                if COMBAT_STALEMATE_DEBUG then
+                    print("YoyokazooUI combat activity: " .. tostring(subevent) .. " " .. tostring(missType))
+                end
+            end
+        end
     end
 
     if event == "PLAYER_ENTERING_WORLD" then
+        -- If we're already mid-combat when the addon loads (e.g. /reload while
+        -- stuck), PLAYER_REGEN_DISABLED already fired before we were listening --
+        -- start the stalemate clock from here instead so it can still trip.
+        if UnitAffectingCombat("player") and not lastCombatActivityTime then
+            lastCombatActivityTime = GetTime()
+        end
+
         xpTracker.startLevel = UnitLevel("player")
         xpTracker.startXP    = UnitXP("player")
         xpTracker.currentXP  = xpTracker.startXP
@@ -331,6 +384,30 @@ function HasRecentTargetEvade()
     end
 
     return (GetTime() - lastEvadeTime) <= EVADE_WINDOW_SECONDS
+end
+
+-- True once we've been in combat for COMBAT_STALEMATE_SECONDS with no damage/
+-- miss combat-log event involving us in that time -- i.e. aggroed by something
+-- that can't reach us (or that we can't reach). Goes false again the moment
+-- combat drops or a real hit lands. See the COMBAT_STALEMATE_SECONDS comment
+-- at the top of this file, and PLAYER_REGEN_DISABLED/COMBAT_LOG_EVENT_UNFILTERED
+-- handling above.
+function IsCombatStalemate()
+    if not UnitAffectingCombat("player") or not lastCombatActivityTime then
+        return false
+    end
+
+    local secondsSinceActivity = GetTime() - lastCombatActivityTime
+    local isStalemate = secondsSinceActivity > COMBAT_STALEMATE_SECONDS
+
+    -- One-shot chat line the first time it flips, so it's visible in-game
+    -- (and in the chat log) why the bot logged out.
+    if isStalemate and not combatStalemateAnnounced then
+        combatStalemateAnnounced = true
+        print(string.format("YoyokazooUI: combat stalemate -- in combat but no damage/miss events for %.0fs", secondsSinceActivity))
+    end
+
+    return isStalemate
 end
 
 -- /yydebug toggles the debug frame (InitializeIndicators()'s YoyokazooUIFrame,

@@ -162,6 +162,42 @@ namespace WoWHelper
                 SlackHelper.SendMessageToChannel($"Logging out, high latency detected!");
             }
 
+            // Bail if we've been in combat for 30+ seconds with nothing actually happening
+            // (no damage/miss events to or from us -- see IsCombatStalemate() in
+            // YoyokazooUI.lua). The motivating case: aggroed by a mob that can't path to us
+            // (e.g. we're in the water, it's stuck on the shore), which otherwise leaves the
+            // combat loop spinning indefinitely. Setting LogoutTriggered alone isn't enough
+            // here: the class combat loops run while IsInCombat and only reach
+            // CHECK_FOR_LOGOUT once combat drops -- which, in a stalemate, it never does. So
+            // start the logout right here and wait it out in this method rather than
+            // returning to the combat loop, whose scoot-backwards/re-face handling would
+            // move the character and cancel the logout timer. Logging out in combat is
+            // fine -- nothing's hitting us, so the timer runs uninterrupted.
+            if (WorldState.CombatStalemate && !LogoutTriggered)
+            {
+                LogoutTriggered = true;
+                LogoutReason = "Combat stalemate: in combat 30+ seconds with no damage dealt or taken -- unreachable mob? (see IsCombatStalemate() in YoyokazooUI.lua)";
+                SlackHelper.SendMessageToChannel($"Logging out, combat stalemate detected (in combat but nothing happening -- unreachable mob?)");
+                await StartLogoutTask();
+
+                long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS;
+                while (!WorldState.OnLoginScreen && DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
+                {
+                    await Task.Delay(500);
+                    await UpdateWorldStateAsync();
+                }
+
+                if (WorldState.OnLoginScreen)
+                {
+                    Console.WriteLine("Logged out after combat stalemate");
+                    Environment.Exit(0);
+                }
+
+                // Logout got cancelled (the mob reached us after all?). LogoutTriggered stays
+                // set, so the normal CHECK_FOR_LOGOUT path picks it up once combat drops.
+                SlackHelper.SendMessageToChannel($"Combat stalemate logout didn't complete within {WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS / 1000}s -- back to the combat loop, will log out after combat");
+            }
+
             // If we're about to die, petri alt+f4
             if (WorldState.PlayerHpPercent <= WowPlayerConstants.PETRI_ALTF4_HP_THRESHOLD && WorldState.PlayerLevel >= WowGameplayConstants.PETRIFICATION_FLASK_LEVEL)
             {
