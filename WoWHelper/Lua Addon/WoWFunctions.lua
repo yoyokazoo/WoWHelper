@@ -857,6 +857,79 @@ function AreBagsFull()
     return cachedBagsFull
 end
 
+-- Item names, beyond plain quality-0 (Poor/gray) junk, that are also worth
+-- auto-selling to an open merchant -- e.g. cooking/fishing byproducts that
+-- vendor for a few silver and are otherwise just dead bag space. Matched by
+-- name (via GetItemInfo(itemID), the same name the tooltip shows) rather
+-- than item ID -- unlike DYNAMITE_ITEM_CHOICES/HEALING_POTION_ITEM_CHOICES
+-- above, this is a short, manually-curated whitelist rather than a
+-- runtime-selectable /yyconfig choice, so there's no id-keyed selector UI
+-- to match against. Add more names here as they come up.
+AUTO_SELL_WHITELIST_ITEM_NAMES = {
+    "Tangy Clam Meat",
+}
+
+local function IsAutoSellWhitelistedByName(itemName)
+    if not itemName then
+        return false
+    end
+
+    for _, name in ipairs(AUTO_SELL_WHITELIST_ITEM_NAMES) do
+        if name == itemName then
+            return true
+        end
+    end
+
+    return false
+end
+
+-- Whether a single bag slot's item should be auto-sold to an open merchant:
+-- plain quality 0 (Poor/gray) junk, or a quality 1 (Common/white) item on
+-- AUTO_SELL_WHITELIST_ITEM_NAMES above. itemInfo is the table returned by
+-- C_Container.GetContainerItemInfo(bag, slot) (see GetFreeSlotsInBag() above
+-- for the same API) -- hasNoValue items (quest items, etc, which a vendor
+-- won't buy regardless of quality) are skipped even if gray. Not yet
+-- confirmed live against this client's actual itemInfo table shape -- if
+-- gray/whitelisted junk isn't getting queued, print(itemInfo) here first
+-- rather than guessing at the field names.
+function ShouldAutoSellItem(itemInfo)
+    if not itemInfo or itemInfo.hasNoValue then
+        return false
+    end
+
+    if itemInfo.quality == 0 then
+        return true
+    end
+
+    if itemInfo.quality == 1 then
+        return IsAutoSellWhitelistedByName(GetItemInfo(itemInfo.itemID))
+    end
+
+    return false
+end
+
+-- Scans bags 0-4 (backpack + equipped bags -- same range GetTotalFreeBagSlots()
+-- above uses) for everything ShouldAutoSellItem() flags, returning a flat list
+-- of { bag = ..., slot = ... } entries to sell. Doesn't sell anything itself --
+-- see the queued, one-per-tick sell loop in YoyokazooUI.lua's MERCHANT_SHOW
+-- handling (selling everything in a single loop iteration is known to
+-- silently drop some sells).
+function FindAutoSellQueue()
+    local queue = {}
+
+    for bag = 0, 4 do
+        local total = C_Container.GetContainerNumSlots(bag)
+        for slot = 1, total do
+            local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+            if ShouldAutoSellItem(itemInfo) then
+                table.insert(queue, { bag = bag, slot = slot })
+            end
+        end
+    end
+
+    return queue
+end
+
 -- True once LATENCY_HIGH_CYCLE_COUNT consecutive latency samples, one taken every
 -- LATENCY_CHECK_INTERVAL_SECONDS, have all read above LATENCY_HIGH_THRESHOLD_MS -- i.e.
 -- LATENCY_HIGH_CYCLE_COUNT * LATENCY_CHECK_INTERVAL_SECONDS = 10 sustained seconds of bad

@@ -660,7 +660,18 @@ of truth — edits should be made here, not in the WoW install directory.
   pixel populate functions) and `GetClassBoolOne/Two`/`GetClassIntOne`
   (class-specific dispatchers — see "Class split" above). The
   `IsTargetCasterMob`/`IsTargetRunnerMob`/`IsTargetFireImmune` checks here
-  read their name lists from `CreatureConfig.lua`.
+  read their name lists from `CreatureConfig.lua`. Also holds the
+  merchant-auto-sell logic: `AUTO_SELL_WHITELIST_ITEM_NAMES` (currently just
+  `"Tangy Clam Meat"`) is a short, manually-curated list of quality-1
+  (Common/white) item names worth selling despite not being gray junk —
+  matched by name (`GetItemInfo(itemID)`) rather than item ID, unlike
+  `DYNAMITE_ITEM_CHOICES`/`HEALING_POTION_ITEM_CHOICES` below, since this
+  isn't a runtime-selectable `/yyconfig` choice; `ShouldAutoSellItem(itemInfo)`
+  flags a single `C_Container.GetContainerItemInfo(bag, slot)` result — plain
+  quality 0 (Poor/gray) junk, or a whitelisted quality 1 item, skipping
+  anything `hasNoValue` (quest items, etc.) — and `FindAutoSellQueue()` scans
+  bags 0-4 for everything it flags, returning the `{ bag, slot }` list that
+  `YoyokazooUI.lua`'s `MERCHANT_SHOW` handler sells from (see below).
 - **`WarriorFunctions.lua`** / **`ShamanFunctions.lua`**
   / **`WarlockFunctions.lua`**
   — that class's specific checks (e.g. `TargetHasRend`, `CanCastMortalStrikeOrBloodthirst`,
@@ -751,6 +762,29 @@ of truth — edits should be made here, not in the WoW install directory.
   here, so there's no toggle/config for it — unlike the
   reference addon this was modeled on (KyrosKrane Sylvanblade's "Annoying
   Pop-up Remover"), which exposes it as a user-toggleable option.
+  Also auto-sells junk to an open merchant: on `MERCHANT_SHOW`, if the
+  `/yyconfig` "Auto-sell junk" checkbox (`YoyokazooUIDB.autoSellJunk`,
+  `IsAutoSellJunkEnabled()` — defaults **on**, unlike the logout toggles
+  above, since selling junk has no downside the way an unwanted auto-logout
+  would) is enabled, `WoWFunctions.lua`'s `FindAutoSellQueue()` builds the
+  list of bag slots to sell; if it's non-empty, `SellNextAutoSellQueueItem()`
+  sells one slot every `AUTO_SELL_TICK_SECONDS` (0.2s, via chained
+  `C_Timer.After` calls — `C_Container.UseContainerItem(bag, slot)` sells an
+  item only while a merchant window is open) and calls `CloseMerchant()` once
+  the queue is exhausted. If the queue was empty to begin with, the merchant
+  window is left open — nothing is closed. A generation counter
+  (`autoSellGeneration`, bumped on every `MERCHANT_SHOW` and
+  `MERCHANT_CLOSED`) is captured by each scheduled tick and checked before it
+  fires, so a chain from an earlier merchant visit (or one interrupted by the
+  window closing early) can never fire a stale sell on whatever's now open —
+  `UseContainerItem` on a closed merchant would use/equip the item instead of
+  selling it. This is Lua-only, like the "Dynamite item"/"Healing potion"
+  selectors — the bot doesn't need to know it happened, so nothing here
+  reaches the pixel row. Purely quality-based (0 = gray, always sold; 1 =
+  white, sold only if on `WoWFunctions.lua`'s `AUTO_SELL_WHITELIST_ITEM_NAMES`
+  whitelist) — not yet confirmed live against this client's actual
+  `C_Container.GetContainerItemInfo` table shape (`quality`/`hasNoValue`
+  field names), see the comment above `ShouldAutoSellItem()`.
 
 ## Tests (`WoWHelperUnitTests/`)
 
