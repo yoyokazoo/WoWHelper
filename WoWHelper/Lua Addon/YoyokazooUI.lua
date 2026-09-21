@@ -221,21 +221,56 @@ frame:RegisterEvent("MERCHANT_CLOSED")
 local AUTO_SELL_TICK_SECONDS = 0.2
 local autoSellGeneration = 0
 
-local function SellNextAutoSellQueueItem(queue, index, generation)
+-- MERCHANT_SHOW fires before Blizzard's own handler has necessarily called
+-- MerchantFrame:Show() -- confirmed live: the very first tick (index 1),
+-- called synchronously out of the MERCHANT_SHOW handler below, consistently
+-- saw MerchantFrame exists=true, shown=false, which killed the whole chain
+-- before it ever got to sell anything. Rather than assume any fixed number of
+-- frames is enough for Blizzard's handler to catch up (RunNextFrame's single-
+-- frame defer, used for LOOT_BIND_CONFIRM above, isn't a good match here --
+-- that was papering over a different kind of race), retry on a short timer,
+-- capped so a merchant window that genuinely never shows (window closed
+-- before it opened, some other addon interfering, etc.) doesn't retry
+-- forever.
+local MERCHANT_NOT_SHOWN_RETRY_SECONDS = 0.1
+local MERCHANT_NOT_SHOWN_MAX_RETRIES = 25 -- 25 * 0.1s = 2.5s max wait
+
+local function SellNextAutoSellQueueItem(queue, index, generation, notShownRetries)
+    notShownRetries = notShownRetries or 0
+
     if generation ~= autoSellGeneration then
+        AutoSellDebugPrint("tick " .. index .. " bailed: stale generation (queued under " ..
+            generation .. ", now " .. autoSellGeneration .. ")")
         return
     end
+
     if not (MerchantFrame and MerchantFrame:IsShown()) then
+        if notShownRetries >= MERCHANT_NOT_SHOWN_MAX_RETRIES then
+            AutoSellDebugPrint("tick " .. index .. " giving up: MerchantFrame never shown after " ..
+                notShownRetries .. " retries")
+            return
+        end
+
+        AutoSellDebugPrint("tick " .. index .. " not shown yet (exists=" ..
+            tostring(MerchantFrame ~= nil) .. ", shown=" ..
+            tostring(MerchantFrame and MerchantFrame:IsShown()) .. ") -- retry " ..
+            (notShownRetries + 1) .. "/" .. MERCHANT_NOT_SHOWN_MAX_RETRIES)
+        C_Timer.After(MERCHANT_NOT_SHOWN_RETRY_SECONDS, function()
+            SellNextAutoSellQueueItem(queue, index, generation, notShownRetries + 1)
+        end)
         return
     end
 
     if index > #queue then
         -- Everything queued at MERCHANT_SHOW time is sold -- close up.
+        AutoSellDebugPrint("queue exhausted (" .. #queue .. " sold) -- closing merchant")
         CloseMerchant()
         return
     end
 
     local entry = queue[index]
+    AutoSellDebugPrint("selling " .. index .. "/" .. #queue .. ": bag " .. entry.bag ..
+        " slot " .. entry.slot)
     C_Container.UseContainerItem(entry.bag, entry.slot)
 
     C_Timer.After(AUTO_SELL_TICK_SECONDS, function()
@@ -289,6 +324,10 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- this one.
         autoSellGeneration = autoSellGeneration + 1
 
+        AutoSellDebugPrint("MERCHANT_SHOW (generation " .. autoSellGeneration ..
+            "), autoSellJunk=" .. tostring(IsAutoSellJunkEnabled()) ..
+            ", MerchantFrame shown=" .. tostring(MerchantFrame and MerchantFrame:IsShown()))
+
         if IsAutoSellJunkEnabled() then
             local queue = FindAutoSellQueue()
             -- Only start the chain (and thus only auto-close afterwards) if
@@ -296,7 +335,11 @@ frame:SetScript("OnEvent", function(self, event, ...)
             -- the merchant window open exactly as the player left it.
             if #queue > 0 then
                 SellNextAutoSellQueueItem(queue, 1, autoSellGeneration)
+            else
+                AutoSellDebugPrint("nothing queued -- leaving the merchant window alone")
             end
+        else
+            AutoSellDebugPrint("auto-sell is OFF in /yyconfig -- doing nothing")
         end
     end
 
@@ -304,6 +347,8 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- Invalidate any in-flight sell chain -- see the comment above
         -- SellNextAutoSellQueueItem.
         autoSellGeneration = autoSellGeneration + 1
+        AutoSellDebugPrint("MERCHANT_CLOSED (generation now " .. autoSellGeneration ..
+            ") -- any in-flight sell chain is now stale")
     end
 
     -- Entering combat counts as combat activity: starts the stalemate clock
@@ -491,6 +536,32 @@ SlashCmdList["YYDEBUG"] = function()
     YoyokazooUIDB.debugFrameEnabled = not YoyokazooUIDB.debugFrameEnabled
     ApplyDebugFrameVisibility()
     print("YoyokazooUI: debug frame " .. (YoyokazooUIDB.debugFrameEnabled and "ON" or "OFF") .. " (saved).")
+end
+
+-- /yysell is a debug command for the auto-sell path (see AUTO_SELL_DEBUG in
+-- WoWFunctions.lua): it runs the same FindAutoSellQueue() bag scan the
+-- MERCHANT_SHOW handler runs, printing what it saw in every occupied slot and
+-- what it would sell -- but never sells anything. Usable anywhere, with no
+-- merchant open, so "does the scan find my junk?" can be answered separately
+-- from "does the selling work?". It also reports the pieces around the scan
+-- that can independently be wrong: the /yyconfig toggle, whether this addon's
+-- frame is actually registered for MERCHANT_SHOW, and whether the MerchantFrame
+-- is up right now.
+SLASH_YYSELL1 = "/yysell"
+SlashCmdList["YYSELL"] = function()
+    print("YoyokazooUI: auto-sell dry run --")
+    print("  autoSellJunk (/yyconfig) = " .. tostring(IsAutoSellJunkEnabled()))
+    print("  registered for MERCHANT_SHOW = " .. tostring(frame:IsEventRegistered("MERCHANT_SHOW")))
+    print("  MerchantFrame shown = " .. tostring(MerchantFrame and MerchantFrame:IsShown()))
+
+    -- Force the per-slot dumps on for this one scan even if AUTO_SELL_DEBUG is
+    -- off -- printing them is the entire point of asking for it by hand.
+    local wasDebug = AUTO_SELL_DEBUG
+    AUTO_SELL_DEBUG = true
+    local queue = FindAutoSellQueue()
+    AUTO_SELL_DEBUG = wasDebug
+
+    print("  would sell " .. #queue .. " slot(s) (nothing was sold)")
 end
 
 -- /yyconfig toggles the run-specific settings menu (CreateSettingsMenu(), UIFunctions.lua)

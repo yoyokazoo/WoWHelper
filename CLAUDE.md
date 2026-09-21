@@ -661,8 +661,11 @@ of truth — edits should be made here, not in the WoW install directory.
   (class-specific dispatchers — see "Class split" above). The
   `IsTargetCasterMob`/`IsTargetRunnerMob`/`IsTargetFireImmune` checks here
   read their name lists from `CreatureConfig.lua`. Also holds the
-  merchant-auto-sell logic: `AUTO_SELL_WHITELIST_ITEM_NAMES` (currently just
-  `"Tangy Clam Meat"`) is a short, manually-curated list of quality-1
+  merchant-auto-sell logic: `AUTO_SELL_WHITELIST_ITEM_NAMES` (currently
+  cooking/fishing byproducts — `"Tangy Clam Meat"`, `"Raw Bristle Whisker
+  Catfish"`, `"Turtle Meat"` — and skinning/leatherworking materials —
+  `"Light Leather"`, `"Medium Leather"`, `"Light Hide"`, `"Medium Hide"`,
+  `"Heavy Hide"`) is a short, manually-curated list of quality-1
   (Common/white) item names worth selling despite not being gray junk —
   matched by name (`GetItemInfo(itemID)`) rather than item ID, unlike
   `DYNAMITE_ITEM_CHOICES`/`HEALING_POTION_ITEM_CHOICES` below, since this
@@ -751,7 +754,10 @@ of truth — edits should be made here, not in the WoW install directory.
   each backed by its own `YoyokazooUIDB` field
   (`logoutOnLowDynamite`/`logoutOnFullBags`) read via
   `IsLogoutOnLowDynamiteEnabled()`/`IsLogoutOnFullBagsEnabled()` when
-  `GetMultiBoolTwo()` packs the pixel row. Also auto-confirms the bind-on-pickup loot popup: on
+  `GetMultiBoolTwo()` packs the pixel row; `/yysell` is a debug-only dry run
+  of the auto-sell bag scan (see the auto-sell paragraph below) that prints
+  what it would sell without selling anything, and works with no merchant
+  open. Also auto-confirms the bind-on-pickup loot popup: on
   `LOOT_BIND_CONFIRM` it hides Blizzard's `"LOOT_BIND"` StaticPopup (if
   already shown — our frame registers after the default UI's own handler)
   and calls `ConfirmLootSlot(lootSlot)` — the same action that popup's own
@@ -771,8 +777,16 @@ of truth — edits should be made here, not in the WoW install directory.
   sells one slot every `AUTO_SELL_TICK_SECONDS` (0.2s, via chained
   `C_Timer.After` calls — `C_Container.UseContainerItem(bag, slot)` sells an
   item only while a merchant window is open) and calls `CloseMerchant()` once
-  the queue is exhausted. If the queue was empty to begin with, the merchant
-  window is left open — nothing is closed. A generation counter
+  the queue is exhausted. `MERCHANT_SHOW` fires before Blizzard's own handler
+  has necessarily called `MerchantFrame:Show()` — confirmed live, the very
+  first tick consistently saw `MerchantFrame` exists but not yet shown, which
+  killed the chain before it ever sold anything — so each tick that finds
+  `MerchantFrame` not shown retries on a short timer
+  (`MERCHANT_NOT_SHOWN_RETRY_SECONDS`, 0.1s) rather than bailing outright,
+  capped at `MERCHANT_NOT_SHOWN_MAX_RETRIES` (25, ~2.5s) so a merchant window
+  that genuinely never shows doesn't retry forever. If the queue was empty to
+  begin with, the merchant window is left open — nothing is closed. A
+  generation counter
   (`autoSellGeneration`, bumped on every `MERCHANT_SHOW` and
   `MERCHANT_CLOSED`) is captured by each scheduled tick and checked before it
   fires, so a chain from an earlier merchant visit (or one interrupted by the
@@ -782,9 +796,22 @@ of truth — edits should be made here, not in the WoW install directory.
   selectors — the bot doesn't need to know it happened, so nothing here
   reaches the pixel row. Purely quality-based (0 = gray, always sold; 1 =
   white, sold only if on `WoWFunctions.lua`'s `AUTO_SELL_WHITELIST_ITEM_NAMES`
-  whitelist) — not yet confirmed live against this client's actual
+  whitelist) — the bag scan against this client's actual
   `C_Container.GetContainerItemInfo` table shape (`quality`/`hasNoValue`
-  field names), see the comment above `ShouldAutoSellItem()`.
+  field names) is confirmed live (see the comment above
+  `ShouldAutoSellItem()`); the root cause of auto-sell not doing anything was
+  the `MERCHANT_SHOW`-fires-before-`MerchantFrame:Show()` race described
+  above, not the bag scan itself, and the retry fix is now **confirmed
+  working live**. The whole path stays instrumented, off by default:
+  `AUTO_SELL_DEBUG` (a global in `WoWFunctions.lua`, currently **false**,
+  shared by both files rather than a per-file local like
+  `COMBAT_STALEMATE_DEBUG`) makes `AutoSellDebugPrint()` chat-print every
+  step — each occupied bag slot's raw itemInfo dumped key-by-key via
+  `AutoSellDescribeItemInfo()` (deliberately field-name-agnostic), each
+  queue/skip decision and its reason, the `MERCHANT_SHOW` handler's view of
+  the `/yyconfig` toggle and queue size, and each sell tick including any
+  not-shown retries or other guard it bailed on -- flip it back to `true` if
+  auto-sell needs debugging again.
 
 ## Tests (`WoWHelperUnitTests/`)
 
