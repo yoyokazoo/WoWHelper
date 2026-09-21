@@ -78,6 +78,15 @@ if YoyokazooUIDB.logoutOnFullBags == nil then
     YoyokazooUIDB.logoutOnFullBags = false
 end
 
+-- Auto-sell junk to an open merchant (see the MERCHANT_SHOW handling below) --
+-- defaults ON, unlike the two above, since selling gray/whitelisted junk has
+-- no downside the way an unwanted auto-logout would. Lua-only, like the
+-- dynamite item/healing potion selectors -- never piped to the C# side via
+-- GetMultiBoolTwo, since the bot doesn't need to know it happened.
+if YoyokazooUIDB.autoSellJunk == nil then
+    YoyokazooUIDB.autoSellJunk = true
+end
+
 -- Which dynamite-tier item AreWeLowOnDynamite() (WoWFunctions.lua) checks the bag
 -- count of -- selectable via the /yyconfig "Dynamite item" selector below instead
 -- of being hardcoded. Defaults to Dense Dynamite (18641), what it used to be
@@ -113,6 +122,10 @@ end
 
 function IsLogoutOnFullBagsEnabled()
     return YoyokazooUIDB.logoutOnFullBags
+end
+
+function IsAutoSellJunkEnabled()
+    return YoyokazooUIDB.autoSellJunk
 end
 
 -- Read by AreWeLowOnDynamite() (WoWFunctions.lua). Not piped to the C# side at
@@ -193,6 +206,42 @@ frame:RegisterEvent("PLAYER_LEVEL_UP")
 frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 frame:RegisterEvent("LOOT_BIND_CONFIRM")
 frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+frame:RegisterEvent("MERCHANT_SHOW")
+frame:RegisterEvent("MERCHANT_CLOSED")
+
+-- Auto-sell-junk (see the MERCHANT_SHOW/MERCHANT_CLOSED handling below):
+-- sells one queued slot every AUTO_SELL_TICK_SECONDS rather than looping
+-- through the whole queue in one go -- firing a burst of sells in a single
+-- frame is known to silently drop some of them. autoSellGeneration is bumped
+-- on every MERCHANT_SHOW and MERCHANT_CLOSED; each scheduled tick captures
+-- the generation it was queued under and bails if that's gone stale (the
+-- merchant closed, or a newer MERCHANT_SHOW superseded it) instead of
+-- calling UseContainerItem on a closed merchant, which would use/equip the
+-- item instead of selling it.
+local AUTO_SELL_TICK_SECONDS = 0.2
+local autoSellGeneration = 0
+
+local function SellNextAutoSellQueueItem(queue, index, generation)
+    if generation ~= autoSellGeneration then
+        return
+    end
+    if not (MerchantFrame and MerchantFrame:IsShown()) then
+        return
+    end
+
+    if index > #queue then
+        -- Everything queued at MERCHANT_SHOW time is sold -- close up.
+        CloseMerchant()
+        return
+    end
+
+    local entry = queue[index]
+    C_Container.UseContainerItem(entry.bag, entry.slot)
+
+    C_Timer.After(AUTO_SELL_TICK_SECONDS, function()
+        SellNextAutoSellQueueItem(queue, index + 1, generation)
+    end)
+end
 
 frame:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_WHISPER" then
@@ -232,6 +281,29 @@ frame:SetScript("OnEvent", function(self, event, ...)
             -- RunNextFrame rather than calling it inline.
             RunNextFrame(function() ConfirmLootSlot(lootSlot) end)
         end
+    end
+
+    if event == "MERCHANT_SHOW" then
+        -- New generation whether or not auto-sell is even enabled, so a
+        -- stray tick from an earlier merchant visit can never bleed into
+        -- this one.
+        autoSellGeneration = autoSellGeneration + 1
+
+        if IsAutoSellJunkEnabled() then
+            local queue = FindAutoSellQueue()
+            -- Only start the chain (and thus only auto-close afterwards) if
+            -- there's actually something to sell -- an empty queue leaves
+            -- the merchant window open exactly as the player left it.
+            if #queue > 0 then
+                SellNextAutoSellQueueItem(queue, 1, autoSellGeneration)
+            end
+        end
+    end
+
+    if event == "MERCHANT_CLOSED" then
+        -- Invalidate any in-flight sell chain -- see the comment above
+        -- SellNextAutoSellQueueItem.
+        autoSellGeneration = autoSellGeneration + 1
     end
 
     -- Entering combat counts as combat activity: starts the stalemate clock
@@ -422,8 +494,8 @@ SlashCmdList["YYDEBUG"] = function()
 end
 
 -- /yyconfig toggles the run-specific settings menu (CreateSettingsMenu(), UIFunctions.lua)
--- -- "log out on low dynamite"/"log out on full bags"/"dynamite item"/"healing potion"/
--- "desired world buff" for now, more can be added to the options list below as they come
+-- -- "log out on low dynamite"/"log out on full bags"/"auto-sell junk"/"dynamite item"/
+-- "healing potion"/"desired world buff" for now, more can be added to the options list below as they come
 -- up. Built once, lazily, on first use rather than
 -- unconditionally at load time like the debug frame above, since there's no reason to pay
 -- for it on a run that never opens the menu.
@@ -447,6 +519,14 @@ SlashCmdList["YYCONFIG"] = function()
                 set = function(value)
                     YoyokazooUIDB.logoutOnFullBags = value
                     print("YoyokazooUI: Log out on full bags " .. (value and "ON" or "OFF") .. " (saved).")
+                end,
+            },
+            {
+                label = "Auto-sell junk",
+                get = IsAutoSellJunkEnabled,
+                set = function(value)
+                    YoyokazooUIDB.autoSellJunk = value
+                    print("YoyokazooUI: Auto-sell junk " .. (value and "ON" or "OFF") .. " (saved).")
                 end,
             },
             {
