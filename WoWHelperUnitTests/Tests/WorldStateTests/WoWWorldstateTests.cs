@@ -135,6 +135,7 @@ namespace WoWHelperUnitTests
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\3440los.bmp")]
         [DataRow(true, "..\\..\\Source Images\\3440nopath.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\1920nopath.bmp")]
         public void VerifyNoPathAvailable(bool expected, string fileName)
         {
             LoadPlayer(fileName);
@@ -148,6 +149,7 @@ namespace WoWHelperUnitTests
         [DataRow(false, "..\\..\\Source Images\\2560toofar.bmp")]
         [DataRow(true, "..\\..\\Source Images\\3440los.bmp")]
         [DataRow(true, "..\\..\\Source Images\\3440nopath.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\1920nopath.bmp")]
         public void VerifyTargetUnreachable(bool expected, string fileName)
         {
             LoadPlayer(fileName);
