@@ -389,7 +389,6 @@ namespace WoWHelper.Code.WorldState
             MaximumLevel = 35,
             Zone = WowZone.HillsbradFoothills,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            IsWaterZone = true, // swimming the river -- camera can't be straight down here
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.3f,
 
