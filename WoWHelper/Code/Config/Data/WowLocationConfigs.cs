@@ -172,7 +172,7 @@ namespace WoWHelper.Code.WorldState
             Zone = WowZone.Felwood,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             DistanceTolerance = 0.06f,
-            ChaseOutOfRangeTargets = false, // too much geometry to get hung up on off the path
+            ChaseOutOfRangeTargets = false, // Tall cliffs nearby, can't risk it
 
             Waypoints = new List<Vector2>
             {
@@ -391,6 +391,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.3f,
+            ChaseOutOfRangeTargets = false, // elite dragon nearby if we get dragged too far
 
             Waypoints = new List<Vector2>
             {
