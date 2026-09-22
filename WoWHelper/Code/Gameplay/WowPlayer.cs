@@ -78,6 +78,14 @@ namespace WoWHelper
         public int CurrentWaypointIndex { get; private set; }
         public int WaypointTraversalDirection { get; private set; }
 
+        // Merchant-run detour state -- see WowMerchantConfiguration and
+        // WowMovementTasks.MerchantRunStepTask. Plain fields, same as the pathfinding state
+        // above, so a combat interruption mid-trip leaves them untouched and the trip resumes
+        // exactly where it left off once PathfindingLoopTask runs again.
+        public bool IsOnMerchantRun { get; private set; }
+        public MerchantRunPhase CurrentMerchantRunPhase { get; private set; }
+        public int CurrentMerchantWaypointIndex { get; private set; }
+
         public bool LogoutTriggered { get; private set; }
         public string LogoutReason { get; private set; }
         public Bitmap LogoutBitmap { get; private set; }
@@ -97,6 +105,10 @@ namespace WoWHelper
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
             WaypointTraversalDirection = 1;
+
+            IsOnMerchantRun = false;
+            CurrentMerchantRunPhase = MerchantRunPhase.WALKING_TO_MERCHANT;
+            CurrentMerchantWaypointIndex = 0;
 
             FarmingConfig = new WowFarmingConfiguration
             {

@@ -406,6 +406,21 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(65.68f, 38.19f),
                 new Vector2(64.12f, 40.35f),
             },
+
+            // TODO: stubbed -- confirm this is actually a vendor and tune the tight final
+            // approach point once tested live.
+            MerchantConfig = new WowMerchantConfiguration
+            {
+                Name = "Derak Nightfall",
+                Waypoints = new List<Vector2>
+                {
+                    new Vector2(67.82f, 17.99f), // must match Waypoints[2] above exactly
+                    new Vector2(66.43f, 18.23f),
+                    new Vector2(64.79f, 18.04f),
+                    new Vector2(63.26f, 17.25f),
+                    new Vector2(63.09f, 19.39f),
+                },
+            },
         };
 
         /*

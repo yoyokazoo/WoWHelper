@@ -141,6 +141,7 @@
     <Compile Include="Code\Constants\WowPlayerStates.cs" />
     <Compile Include="Code\Config\Definitions\WowFarmingConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowLocationConfiguration.cs" />
+    <Compile Include="Code\Config\Definitions\WowMerchantConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\CreatureConfig.cs" />
     <Compile Include="Code\Config\Data\WowLocationConfigs.cs" />
     <Compile Include="Code\Gameplay\WowCommonCombatTasks.cs" />

@@ -53,7 +53,7 @@ namespace WoWHelper
                 bool suppressedAfterLineOfSightBailout = CurrentTimeInsideDuration(
                     LastLineOfSightBailoutTime, WowPlayerConstants.LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS);
 
-                if (!suppressedAfterLineOfSightBailout && !CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
+                if (!IsOnMerchantRun && !suppressedAfterLineOfSightBailout && !CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -80,7 +80,7 @@ namespace WoWHelper
                     targetChecks++;
                 }
 
-                if (!CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
+                if (!IsOnMerchantRun && !CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
                 {
                     LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     await WowInput.PressKey(WowInput.JUMP);
@@ -95,7 +95,10 @@ namespace WoWHelper
                     return false;
                 }
 
-                if (CanEngageTarget())
+                // Skipped during a merchant run -- a residual/leftover target becoming
+                // engageable shouldn't hijack a sell trip into combat prep. Actual combat
+                // (WorldState.IsInCombat, checked above) still interrupts it normally.
+                if (!IsOnMerchantRun && CanEngageTarget())
                 {
                     await EndWalkForwardTask();
                     return true;
@@ -111,60 +114,100 @@ namespace WoWHelper
                 // real MEANINGFUL_LOCATION_CHANGE_AMOUNT of total distance from the anchor
                 // point means small back-and-forth wiggling while stuck doesn't count as
                 // having escaped.
-                float distanceFromStuckAnchor = Vector2.Distance(new Vector2(WorldState.MapX, WorldState.MapY), new Vector2(stuckX, stuckY));
-                if (distanceFromStuckAnchor >= MEANINGFUL_LOCATION_CHANGE_AMOUNT)
+                // Standing still during these two merchant-run phases is intentional (talking
+                // to the vendor / waiting for the addon's auto-sell to finish, not stuck on
+                // terrain) -- keep resetting the stuck anchor/clock instead of letting the
+                // escalation below fire (which would jump/back-off/strafe away from the vendor
+                // mid-interaction) or letting it go stale so WALKING_BACK_TO_ROUTE immediately
+                // thinks it's been stuck for however long the interaction took.
+                bool merchantRunIsStationaryByDesign = IsOnMerchantRun &&
+                    (CurrentMerchantRunPhase == MerchantRunPhase.INTERACTING_WITH_MERCHANT ||
+                     CurrentMerchantRunPhase == MerchantRunPhase.WAITING_FOR_AUTO_SELL);
+
+                if (merchantRunIsStationaryByDesign)
                 {
                     stuckX = WorldState.MapX;
                     stuckY = WorldState.MapY;
                     lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-
-                    // We made real progress -- if we get stuck again later in this same
-                    // PathfindingLoopTask call (a different obstacle further along the
-                    // route), give it the full jump -> wiggle -> wiggle -> alert escalation
-                    // again instead of leaving every step permanently "already attempted"
-                    // from this episode.
                     stationaryJumpAttemptedOnce = false;
                     stationaryWiggleAttemptedOnce = false;
                     stationaryWiggleAttemptedTwice = false;
                     stationaryAlertSent = false;
                 }
-
-                if (!stationaryJumpAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
+                else
                 {
-                    //Console.WriteLine($"Haven't moved in a while, stuck at {PreviousWorldState.MapX},{PreviousWorldState.MapY} headed to {FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex].X},{FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex].Y}");
-                    await AvoidObstacleByJumping();
-                    stationaryJumpAttemptedOnce = true;
+                    float distanceFromStuckAnchor = Vector2.Distance(new Vector2(WorldState.MapX, WorldState.MapY), new Vector2(stuckX, stuckY));
+                    if (distanceFromStuckAnchor >= MEANINGFUL_LOCATION_CHANGE_AMOUNT)
+                    {
+                        stuckX = WorldState.MapX;
+                        stuckY = WorldState.MapY;
+                        lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+                        // We made real progress -- if we get stuck again later in this same
+                        // PathfindingLoopTask call (a different obstacle further along the
+                        // route), give it the full jump -> wiggle -> wiggle -> alert escalation
+                        // again instead of leaving every step permanently "already attempted"
+                        // from this episode.
+                        stationaryJumpAttemptedOnce = false;
+                        stationaryWiggleAttemptedOnce = false;
+                        stationaryWiggleAttemptedTwice = false;
+                        stationaryAlertSent = false;
+                    }
+
+                    if (!stationaryJumpAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
+                    {
+                        //Console.WriteLine($"Haven't moved in a while, stuck at {PreviousWorldState.MapX},{PreviousWorldState.MapY} headed to {FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex].X},{FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex].Y}");
+                        await AvoidObstacleByJumping();
+                        stationaryJumpAttemptedOnce = true;
+                    }
+
+                    if (!stationaryWiggleAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
+                    {
+                        // first wiggle try left
+                        await AvoidObstacle(left: true);
+                        stationaryWiggleAttemptedOnce = true;
+                    }
+
+                    if (!stationaryWiggleAttemptedTwice && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE))
+                    {
+                        // second wiggle try right
+                        await AvoidObstacle(left: false);
+                        stationaryWiggleAttemptedTwice = true;
+                    }
+
+                    if (!stationaryAlertSent && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_ALERT))
+                    {
+                        //SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
+                        //stationaryAlertSent = true;
+                        LogoutTriggered = true;
+                        LogoutReason = "Stuck for a long time, couldn't wiggle out";
+                        await EndWalkForwardTask();
+                        return true;
+                    }
                 }
 
-                if (!stationaryWiggleAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
-                {
-                    // first wiggle try left
-                    await AvoidObstacle(left: true);
-                    stationaryWiggleAttemptedOnce = true;
-                }
-
-                if (!stationaryWiggleAttemptedTwice && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE))
-                {
-                    // second wiggle try right
-                    await AvoidObstacle(left: false);
-                    stationaryWiggleAttemptedTwice = true;
-                }
-
-                if (!stationaryAlertSent && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_ALERT))
-                {
-                    //SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
-                    //stationaryAlertSent = true;
-                    LogoutTriggered = true;
-                    LogoutReason = "Stuck for a long time, couldn't wiggle out";
-                    await EndWalkForwardTask();
-                    return true;
-                }
-
-                if (CanEngageTarget() || WorldState.IsInCombat || LogoutTriggered)
+                if ((!IsOnMerchantRun && CanEngageTarget()) || WorldState.IsInCombat || LogoutTriggered)
                 {
                     await EndWalkForwardTask();
                     // return true if we can charge/shoot, false if we're already in combat
                     return !WorldState.IsInCombat;
+                }
+
+                // A merchant run in progress hijacks the rest of this loop body -- no
+                // target-finding/out-of-range-chase/waypoint-route logic below applies while
+                // walking to/from the vendor. Placed after the stuck-detection block above (not
+                // right after the combat check) so a merchant run stuck on terrain -- a fence,
+                // same as normal route-walking can get stuck on -- gets the same
+                // jump/wiggle/wiggle/give-up escalation instead of spinning in place forever.
+                // See MerchantRunStepTask for the phase state machine;
+                // IsOnMerchantRun/CurrentMerchantRunPhase/CurrentMerchantWaypointIndex are plain
+                // WowPlayer fields, so the combat check above already gives this the same
+                // "return false, resume later" interruption behavior as normal pathfinding, with
+                // no extra plumbing needed.
+                if (IsOnMerchantRun)
+                {
+                    await MerchantRunStepTask();
+                    continue;
                 }
 
                 // We've got a target (its marker is on screen) but CanEngageTarget() just said
@@ -278,9 +321,31 @@ namespace WoWHelper
                         CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
                         break;
                     case PathfindingState.MOVING_TOWARDS_WAYPOINT:
-                        CurrentPathfindingState = await ChangeStateBasedOnTaskResult(MoveTowardsWaypointTask(),
-                            PathfindingState.PICKING_NEXT_WAYPOINT,
-                            PathfindingState.MOVING_TOWARDS_WAYPOINT);
+                        bool arrivedAtWaypoint = await MoveTowardsWaypointTask();
+                        if (arrivedAtWaypoint)
+                        {
+                            // Branch off to sell if bags are full and we just arrived at the
+                            // shared point between this route and its MerchantConfig. Matched
+                            // by position (not waypoint index), since which index in
+                            // Waypoints reaches that point -- and from which direction --
+                            // doesn't matter. See WowMerchantConfiguration.
+                            var merchant = FarmingConfig.LocationConfiguration.MerchantConfig;
+                            if (!IsOnMerchantRun && merchant != null && WorldState.BagsAreFull &&
+                                Vector2.Distance(FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex], merchant.Waypoints[0])
+                                    <= WowPlayerConstants.MERCHANT_BRANCH_POINT_EPSILON)
+                            {
+                                Console.WriteLine("Bags full at merchant branch point, starting merchant run");
+                                IsOnMerchantRun = true;
+                                CurrentMerchantRunPhase = MerchantRunPhase.WALKING_TO_MERCHANT;
+                                CurrentMerchantWaypointIndex = 1; // index 0 is where we're already standing
+                            }
+
+                            CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
+                        }
+                        else
+                        {
+                            CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
+                        }
                         break;
                 }
             }
@@ -299,56 +364,171 @@ namespace WoWHelper
         // Rotates towards the waypoint or walks towards the waypoint, depending
         public async Task<bool> MoveTowardsWaypointTask()
         {
-            var waypoint = FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex];
-            float waypointDistance = Vector2.Distance(WorldState.PlayerLocation, waypoint);
-            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, waypoint);
+            return await MoveTowardsPointTask(
+                FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex],
+                FarmingConfig.LocationConfiguration.DistanceTolerance);
+        }
+
+        // Same rotate-or-strafe-and-walk-or-arrive logic MoveTowardsWaypointTask uses, against
+        // an arbitrary point/tolerance instead of always reading the route's own
+        // Waypoints[CurrentWaypointIndex]/DistanceTolerance -- so MerchantRunStepTask can reuse
+        // it for the merchant-run legs, which walk a completely different waypoint list.
+        public async Task<bool> MoveTowardsPointTask(Vector2 target, float tolerance)
+        {
+            float targetDistance = Vector2.Distance(WorldState.PlayerLocation, target);
+            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, target);
             float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
 
-            Console.WriteLine($"Heading towards waypoint {waypoint}. At {WorldState.MapX},{WorldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {WorldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
+            Console.WriteLine($"Heading towards {target}. At {WorldState.MapX},{WorldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {WorldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
-            if (waypointDistance <= FarmingConfig.LocationConfiguration.DistanceTolerance)
+            if (targetDistance <= tolerance)
             {
-                Console.WriteLine($"Arrived at {waypoint} ({WorldState.MapX},{WorldState.MapY})");
+                Console.WriteLine($"Arrived at {target} ({WorldState.MapX},{WorldState.MapY})");
                 await EndWalkForwardTask();
                 return true;
             }
 
-            if (Math.Abs(degreesDifference) > WowPathfinding.GetWaypointDegreesTolerance(waypointDistance))
+            // A tolerance-aware heading requirement was tried here first and still oscillated:
+            // the bearing to a target this close swings wildly for tiny positional noise, so
+            // repeatedly re-aiming the whole body at it (RotateToDirectionTask, which halts
+            // forward motion) just reproduced the same spin-and-circle failure. Instead, a
+            // precision approach only rotates at all once heading error exceeds a much larger
+            // fixed threshold (PRECISION_APPROACH_ROTATION_TRIGGER_DEGREES) -- once roughly
+            // pointed at the target, it leans on strafing (below) to do the real aiming, since
+            // strafing doesn't touch facing and so can't feed back into a spin. Every real
+            // route's own DistanceTolerance stays on the unchanged distance-only formula.
+            bool isPrecisionApproach = tolerance <= WowPathfinding.PRECISION_APPROACH_TOLERANCE_THRESHOLD;
+            float headingTolerance = isPrecisionApproach
+                ? WowPathfinding.PRECISION_APPROACH_ROTATION_TRIGGER_DEGREES
+                : WowPathfinding.GetWaypointDegreesTolerance(targetDistance);
+
+            if (Math.Abs(degreesDifference) > headingTolerance)
             {
                 Console.WriteLine($"degreesDifference too large, rotating to heading");
-                //await EndWalkForwardTask();
-                await RotateToDirectionTask(desiredDegrees, waypointDistance);
-                return false;
-            }
-            else
-            {
-                // if we're already walking, ignore this
-                Console.WriteLine($"Start walking forward");
-                await StartWalkForwardTask();
 
-                var lateralDistance = WowPathfinding.GetLateralDistance(WorldState.FacingDegrees, WorldState.PlayerLocation, waypoint);
-                if (Math.Abs(lateralDistance) > WowPathfinding.STRAFE_LATERAL_DISTANCE_TOLERANCE)
+                // A precision approach stops forward movement before rotating -- turning while
+                // still walking traces an arc that can carry the character past the target
+                // instead of pivoting cleanly on top of it. Normal route-following keeps its
+                // existing behavior of turning without breaking stride.
+                if (isPrecisionApproach)
                 {
-                    if (lateralDistance > 0)
-                    {
-                        Keyboard.KeyDown(WowInput.STRAFE_RIGHT);
-                    }
-                    else
-                    {
-                        Keyboard.KeyDown(WowInput.STRAFE_LEFT);
-                    }
+                    await EndWalkForwardTask();
+                    await RotateToDirectionTask(desiredDegrees, targetDistance, WowPathfinding.PRECISION_APPROACH_ROTATION_TRIGGER_DEGREES);
                 }
                 else
                 {
-                    Keyboard.KeyUp(WowInput.STRAFE_LEFT);
-                    Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
+                    await RotateToDirectionTask(desiredDegrees, targetDistance);
                 }
 
                 return false;
             }
+
+            // if we're already walking, ignore this
+            Console.WriteLine($"Start walking forward");
+            await StartWalkForwardTask();
+
+            var lateralDistance = WowPathfinding.GetLateralDistance(WorldState.FacingDegrees, WorldState.PlayerLocation, target);
+
+            // A precision approach uses a tighter strafe tolerance -- the default (0.04) is
+            // already looser than a target like WowPlayerConstants.MERCHANT_FINAL_WAYPOINT_TOLERANCE
+            // (0.02), and strafing is the primary fine-aiming mechanism here (heading is only
+            // held roughly on target, see above), not just a minor nudge alongside rotation.
+            float strafeTolerance = isPrecisionApproach
+                ? WowPathfinding.PRECISION_APPROACH_STRAFE_TOLERANCE
+                : WowPathfinding.STRAFE_LATERAL_DISTANCE_TOLERANCE;
+
+            if (Math.Abs(lateralDistance) > strafeTolerance)
+            {
+                if (lateralDistance > 0)
+                {
+                    Keyboard.KeyDown(WowInput.STRAFE_RIGHT);
+                }
+                else
+                {
+                    Keyboard.KeyDown(WowInput.STRAFE_LEFT);
+                }
+            }
+            else
+            {
+                Keyboard.KeyUp(WowInput.STRAFE_LEFT);
+                Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
+            }
+
+            return false;
         }
 
-        public async Task<bool> RotateToDirectionTask(float desiredDegrees, float distance)
+        // Drives one tick of an in-progress merchant run (WowPlayer.IsOnMerchantRun) -- called
+        // from PathfindingLoopTask's loop instead of the normal target-finding/waypoint logic.
+        // See WowPlayerStates.MerchantRunPhase and WowMerchantConfiguration.
+        public async Task MerchantRunStepTask()
+        {
+            var merchant = FarmingConfig.LocationConfiguration.MerchantConfig;
+
+            switch (CurrentMerchantRunPhase)
+            {
+                case MerchantRunPhase.WALKING_TO_MERCHANT:
+                    bool isFinalLeg = CurrentMerchantWaypointIndex == merchant.Waypoints.Count - 1;
+                    float approachTolerance = isFinalLeg
+                        ? WowPlayerConstants.MERCHANT_FINAL_WAYPOINT_TOLERANCE
+                        : WowPlayerConstants.MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE;
+
+                    if (await MoveTowardsPointTask(merchant.Waypoints[CurrentMerchantWaypointIndex], approachTolerance))
+                    {
+                        if (isFinalLeg)
+                        {
+                            CurrentMerchantRunPhase = MerchantRunPhase.INTERACTING_WITH_MERCHANT;
+                        }
+                        else
+                        {
+                            CurrentMerchantWaypointIndex++;
+                        }
+                    }
+                    break;
+
+                case MerchantRunPhase.INTERACTING_WITH_MERCHANT:
+                    await EndWalkForwardTask();
+                    await WowInput.PressKeyWithControl(WowInput.CTRL_TARGET_MERCHANT);
+                    await Task.Delay(300); // let the client register the target before clicking
+                    Mouse.Move(FarmingConfig.ScreenConfiguration.Resolution.Width/2, FarmingConfig.ScreenConfiguration.Resolution.Height/2);
+                    Mouse.PressButton(Mouse.MouseKeys.Right);
+                    CurrentMerchantRunPhase = MerchantRunPhase.WAITING_FOR_AUTO_SELL;
+                    break;
+
+                case MerchantRunPhase.WAITING_FOR_AUTO_SELL:
+                    // Reuses the existing interruptible-wait helper (WowCommonCombatTasks.cs) --
+                    // if combat starts mid-wait this returns early, but we still move on to
+                    // walking back either way: if the vendor window got interrupted before
+                    // selling finished, bags stay full and the branch-off check in
+                    // PathfindingLoopTask will simply retry on the next lap.
+                    await WaitUnlessInCombatTask(WowPlayerConstants.MERCHANT_AUTO_SELL_WAIT_MILLIS);
+                    CurrentMerchantWaypointIndex = Math.Max(merchant.Waypoints.Count - 2, 0);
+                    CurrentMerchantRunPhase = MerchantRunPhase.WALKING_BACK_TO_ROUTE;
+                    break;
+
+                case MerchantRunPhase.WALKING_BACK_TO_ROUTE:
+                    if (await MoveTowardsPointTask(merchant.Waypoints[CurrentMerchantWaypointIndex], WowPlayerConstants.MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE))
+                    {
+                        if (CurrentMerchantWaypointIndex == 0)
+                        {
+                            IsOnMerchantRun = false;
+                            CurrentMerchantRunPhase = MerchantRunPhase.WALKING_TO_MERCHANT; // reset for next trip
+                        }
+                        else
+                        {
+                            CurrentMerchantWaypointIndex--;
+                        }
+                    }
+                    break;
+            }
+        }
+
+        // headingToleranceDegreesOverride, when given, is used directly as the break threshold
+        // instead of the distance-based WowPathfinding.GetWaypointDegreesTolerance curve -- used
+        // by MoveTowardsPointTask's precision-approach branch so this stops rotating at the same
+        // fixed PRECISION_APPROACH_ROTATION_TRIGGER_DEGREES it decided to rotate at, instead of
+        // the (much tighter at short range) normal-route formula immediately re-triggering
+        // another rotate next tick.
+        public async Task<bool> RotateToDirectionTask(float desiredDegrees, float distance, float? headingToleranceDegreesOverride = null)
         {
             await Task.Delay(0);
             try
@@ -363,7 +543,8 @@ namespace WoWHelper
 
                     //Console.WriteLine($"Desired Degrees: {desiredDegrees} Facing Degrees: {worldState.FacingDegrees} Degrees to Move: {degreesToMove}");
 
-                    if (absDegreesToMove <= WowPathfinding.GetWaypointDegreesTolerance(distance))
+                    float headingTolerance = headingToleranceDegreesOverride ?? WowPathfinding.GetWaypointDegreesTolerance(distance);
+                    if (absDegreesToMove <= headingTolerance)
                         break;
 
                     Keys directionKey = degreesToMove <= 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;

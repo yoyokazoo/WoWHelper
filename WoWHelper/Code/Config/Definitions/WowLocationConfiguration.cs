@@ -96,6 +96,10 @@ namespace WoWHelper.Code.WorldState
 
         public List<Vector2> Waypoints { get; set; }
 
+        // Optional "sell run" detour -- see WowMerchantConfiguration for the branch-off
+        // contract. Null (default) for routes that just log out on full bags instead.
+        public WowMerchantConfiguration MerchantConfig { get; set; }
+
         public WowLocationConfiguration()
         {
             TraversalMethod = WaypointTraversalMethod.CIRCULAR;

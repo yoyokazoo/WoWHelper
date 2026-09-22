@@ -607,7 +607,107 @@ of truth — edits should be made here, not in the WoW install directory.
   `AllMobsInZoneAreNatureImmune()` helper built on it; see "Expected mob
   roster" above. `Config/Definitions/CreatureConfig.cs` is the C# mirror of
   the Lua addon's `CreatureConfig.lua` name lists that `ExpectedMobNames`
-  checks against.
+  checks against. `WowLocationConfiguration.MerchantConfig`
+  (`WowMerchantConfiguration`, `Config/Definitions/WowMerchantConfiguration.cs`)
+  is an optional "sell run" detour — default `null`, most routes just log out
+  on full bags instead (`SetLogoutVariablesTask()`'s
+  `LogoutOnFullBagsEnabled && BagsAreFull` check, unaffected by this feature).
+  It's a `Name` (human-readable label only — **not** fed into any macro, see
+  below) plus a `List<Vector2> Waypoints`: `Waypoints[0]` MUST equal (within
+  `WowPlayerConstants.MERCHANT_BRANCH_POINT_EPSILON`) one of the owning
+  route's own `Waypoints` — that's the point the bot branches off from —
+  and `Waypoints[^1]` is the merchant's exact standing spot. Enforced by
+  `WoWHelperUnitTests/Tests/Pathfinding Tests/MerchantConfigTests.cs` rather
+  than at runtime, same as the mob-roster/nature-immunity checks above.
+  **Branch-off**: `PathfindingLoopTask`'s `MOVING_TOWARDS_WAYPOINT` case
+  (`WowMovementTasks.cs`) checks, every time it arrives at a route waypoint,
+  whether that waypoint's position matches `MerchantConfig.Waypoints[0]`
+  (position, not index — it doesn't matter which index in the route reaches
+  that point, or from which traversal direction) and `WorldState.BagsAreFull`
+  is true; if so it sets `WowPlayer.IsOnMerchantRun = true`. **Execution**:
+  once `IsOnMerchantRun` is true, `PathfindingLoopTask`'s loop skips its own
+  TAB/macro target-finding and periodic jump (guarded with
+  `!IsOnMerchantRun`) and instead calls `MerchantRunStepTask()` every tick,
+  which drives its own small state machine
+  (`WowPlayerStates.MerchantRunPhase`: `WALKING_TO_MERCHANT` →
+  `INTERACTING_WITH_MERCHANT` → `WAITING_FOR_AUTO_SELL` →
+  `WALKING_BACK_TO_ROUTE`) — walking leg-by-leg through `MerchantConfig.Waypoints`
+  via `MoveTowardsPointTask` (the same rotate/strafe/walk logic
+  `MoveTowardsWaypointTask` uses for the main route, extracted to take an
+  arbitrary point/tolerance instead of always reading
+  `FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex]`), with
+  every leg but the final one using `MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE`
+  and the final approach using the much tighter
+  `MERCHANT_FINAL_WAYPOINT_TOLERANCE` — the final waypoint is exactly where
+  `INTERACTING_WITH_MERCHANT` presses `WowInput.CTRL_TARGET_MERCHANT` (via
+  `PressKeyWithControl` — this key/macro already existed and, per live
+  testing, its `/stopmacro [mod:shift]`/`/stopmacro [nomod]` lines mean a
+  ctrl-press already falls through to its `/target` line with no macro
+  changes needed) and right-clicks screen center
+  (`FarmingConfig.ScreenConfiguration.LootDefaultX/Y`, the same point loot
+  corpses are clicked at) to open the vendor, so it only works if the bot
+  actually stopped right on top of the merchant. `WAITING_FOR_AUTO_SELL`
+  then waits `MERCHANT_AUTO_SELL_WAIT_MILLIS` (15s) via the existing
+  `WaitUnlessInCombatTask` for the addon's own `MERCHANT_SHOW` auto-sell
+  handler (see the Lua addon section below) to empty the bags, before
+  `WALKING_BACK_TO_ROUTE` retraces the same waypoints to index 0 and clears
+  `IsOnMerchantRun`. **Precision final approach**: `MoveTowardsPointTask`'s
+  heading-tolerance/movement logic was tuned only for normal route waypoints
+  (~0.1-0.3 unit `DistanceTolerance`), and landing on a 0.02-unit target with
+  it caused the bot to circle the merchant's exact spot without ever hitting
+  it. A first attempt made the heading requirement itself tolerance-aware
+  (tighter for a more precise target) but still oscillated: the bearing to a
+  target this close swings wildly for tiny positional noise, so repeatedly
+  re-aiming the whole body at it via `RotateToDirectionTask` (which halts
+  forward motion) reproduced the same spin-and-circle failure it was meant to
+  fix. The approach that actually worked leans on strafing instead of
+  rotation for the fine aiming, since strafing doesn't touch facing and can't
+  feed back into a spin: below `PRECISION_APPROACH_TOLERANCE_THRESHOLD` (0.05,
+  under every real route's own `DistanceTolerance`, so normal route-following
+  is byte-for-byte unchanged), `MoveTowardsPointTask` only bothers rotating at
+  all once heading error exceeds the much larger, fixed
+  `PRECISION_APPROACH_ROTATION_TRIGGER_DEGREES` (20°, deliberately well under
+  the diagonal a full-speed strafe-plus-walk can actually achieve, since
+  strafing is slower than walking forward in WoW) — stopping forward movement
+  first when it does rotate, since turning while still walking traces an arc
+  that can carry the character past the target instead of pivoting on top of
+  it — and once roughly pointed at the target, corrects the rest purely via
+  strafing, using a tighter `PRECISION_APPROACH_STRAFE_TOLERANCE` (0.01) in
+  place of the default `STRAFE_LATERAL_DISTANCE_TOLERANCE` (0.04, itself
+  already looser than the 0.02 target). Every real route's own
+  `DistanceTolerance`, and the merchant run's own
+  `MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE`, stay above the threshold and so
+  keep the original rotate-to-heading behavior unchanged; only
+  `MERCHANT_FINAL_WAYPOINT_TOLERANCE` currently opts into this. **Stuck detection**: `PathfindingLoopTask`'s existing
+  jump → wiggle-left → wiggle-right → give-up-and-logout escalation (the same
+  one normal route-walking relies on to get unstuck from terrain, e.g. a
+  fence) is a plain per-tick block keyed only off `WorldState.MapX/MapY`, not
+  the current waypoint/target, so it runs unconditionally every tick
+  regardless of `IsOnMerchantRun` — a merchant run stuck on the same kind of
+  obstacle gets the same escalation instead of spinning in place forever.
+  It's explicitly *disabled* (and the stuck anchor/clock kept continuously
+  reset instead) during `INTERACTING_WITH_MERCHANT`/`WAITING_FOR_AUTO_SELL`
+  specifically, since standing still there is intentional — otherwise the
+  escalation would eventually back off/strafe away from the vendor
+  mid-interaction, or (since the clock isn't paused, just not escalated
+  against) immediately misfire once `WALKING_BACK_TO_ROUTE` starts, having
+  gone stale during the ~15s+ interaction. **Combat interruption**: `IsOnMerchantRun`/
+  `CurrentMerchantRunPhase`/`CurrentMerchantWaypointIndex` are plain
+  `WowPlayer` fields (declared next to `CurrentWaypointIndex`/
+  `WaypointTraversalDirection`), so the existing combat short-circuit in
+  `CoreGameplayLoopTask` (which unconditionally jumps to
+  `IN_CORE_COMBAT_LOOP` from any state, with no save/restore of
+  `PlayerState` — see "Automatic farming-config resolution" above for the
+  same one-way-jump behavior elsewhere) leaves them untouched; once combat
+  resolves and the state machine works its way back to
+  `CHECK_FOR_VALID_TARGET` → `PathfindingLoopTask()` (the same path normal
+  route-walking already relies on to resume), the very next tick sees
+  `IsOnMerchantRun` still true and picks the trip back up from whatever
+  phase/waypoint index it was on — no new `PlayerState` values or
+  `CoreGameplayLoopTask` switch changes needed. If combat interrupts mid-sell
+  (rare — would mean a mob reached the player at the vendor) the bot still
+  walks back once the wait ends; bags may remain full, but the branch-off
+  check above will simply retry on the route's next lap.
 - **`Constants/`** — `WowInput.cs` maps logical actions to keybinds/macros the
   bot presses (expects specific in-game keybinds/macros to be set up to match),
   `WowPlayerConstants.cs` / `WowGameplayConstants.cs` hold thresholds/timings.

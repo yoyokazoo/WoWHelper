@@ -59,5 +59,28 @@
         // deliberately the full gap, not half of it, since the player is starting manually and
         // can be given some wiggle room. If a future route's own gaps exceed this, widen it.
         public const float MAX_DISTANCE_FROM_ROUTE_WAYPOINT = 5.8f;
+
+        // How close two Vector2s (a route waypoint and WowMerchantConfiguration.Waypoints[0])
+        // need to be to count as "the same point" -- matched by position, not waypoint index,
+        // since a route's Waypoints list can reach that same point via more than one
+        // index/direction. Small enough to require the config author actually meant the two
+        // to line up, not so tight that an extra decimal digit of precision breaks the match.
+        public const float MERCHANT_BRANCH_POINT_EPSILON = 0.01f;
+
+        // Tolerance for every leg of a merchant run except the final approach -- same as
+        // WowLocationConfiguration.DistanceTolerance's own default, since these are ordinary
+        // waypoint-to-waypoint hops.
+        public const float MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE = 0.2f;
+
+        // Deliberately much tighter than the intermediate tolerance above -- the final
+        // waypoint is the merchant's exact standing spot, and CTRL_TARGET_MERCHANT + a
+        // center-screen right-click only lands on the vendor's model if we actually stopped
+        // right next to it, not just "in the neighborhood."
+        public const float MERCHANT_FINAL_WAYPOINT_TOLERANCE = 0.02f;
+
+        // How long MerchantRunStepTask's WAITING_FOR_AUTO_SELL phase waits for the addon's
+        // existing MERCHANT_SHOW auto-sell handler (YoyokazooUI.lua) to empty the bags before
+        // walking back. Interruptible -- see WaitUnlessInCombatTask.
+        public const long MERCHANT_AUTO_SELL_WAIT_MILLIS = 15 * 1000;
     }
 }

@@ -43,5 +43,16 @@
             CONFIRMING_TRADE,
             CANCELING_TRADE
         }
+
+        // Drives MerchantRunStepTask (WowMovementTasks.cs) -- the branch-off-to-sell detour
+        // hijacked into PathfindingLoopTask's loop while WowPlayer.IsOnMerchantRun is true.
+        // See WowLocationConfiguration.MerchantConfig for the branch-off contract.
+        public enum MerchantRunPhase
+        {
+            WALKING_TO_MERCHANT,
+            INTERACTING_WITH_MERCHANT,
+            WAITING_FOR_AUTO_SELL,
+            WALKING_BACK_TO_ROUTE
+        }
     }
 }

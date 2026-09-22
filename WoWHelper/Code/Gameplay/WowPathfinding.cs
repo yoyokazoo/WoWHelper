@@ -26,6 +26,33 @@ namespace WoWHelper.Code
 
         public const float STRAFE_LATERAL_DISTANCE_TOLERANCE = 0.04f;
 
+        // Below this arrival tolerance, MoveTowardsPointTask switches from the normal
+        // rotate-to-heading behavior to the strafe-led precision approach below (see
+        // PRECISION_APPROACH_ROTATION_TRIGGER_DEGREES/PRECISION_APPROACH_STRAFE_TOLERANCE). Set
+        // below every real WowLocationConfiguration.DistanceTolerance in use (currently >= 0.1)
+        // so ordinary route-following is completely unaffected -- only very tight targets (e.g.
+        // WowPlayerConstants.MERCHANT_FINAL_WAYPOINT_TOLERANCE) opt into it.
+        public const float PRECISION_APPROACH_TOLERANCE_THRESHOLD = 0.05f;
+
+        // A tolerance/distance-driven heading requirement (tried first) still oscillated near a
+        // very tight target: the bearing to a point this close swings wildly for even small
+        // positional noise, so repeatedly re-aiming the whole body at it via RotateToDirectionTask
+        // (which halts forward motion) produced the same spin-and-circle failure it was meant to
+        // fix. Instead, a precision approach only bothers rotating at all once heading error
+        // exceeds this much larger, fixed threshold -- once roughly pointed at the target, it
+        // just keeps walking and lets the strafe-based lateral correction below do the real
+        // aiming, since strafing doesn't touch facing and can't feed back into a spin.
+        // Deliberately comfortably under WoW's forward/strafe speed ratio (strafing is slower
+        // than walking forward), so the diagonal a full-speed strafe-plus-walk can actually
+        // produce is always wide enough to correct whatever heading error this allows through.
+        public const float PRECISION_APPROACH_ROTATION_TRIGGER_DEGREES = 20.0f;
+
+        // Strafe-lateral-offset tolerance used instead of STRAFE_LATERAL_DISTANCE_TOLERANCE
+        // during a precision approach -- tighter, since that default (0.04) is already looser
+        // than WowPlayerConstants.MERCHANT_FINAL_WAYPOINT_TOLERANCE (0.02) and strafing is the
+        // primary fine-aiming mechanism here, not just a minor nudge alongside rotation.
+        public const float PRECISION_APPROACH_STRAFE_TOLERANCE = 0.01f;
+
 
         public static float GetDesiredDirectionInDegrees(Vector2 waypoint1, Vector2 waypoint2)
         {
