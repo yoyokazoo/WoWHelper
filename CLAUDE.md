@@ -740,25 +740,23 @@ of truth — edits should be made here, not in the WoW install directory.
   here, so there's no toggle/config for it — unlike the
   reference addon this was modeled on (KyrosKrane Sylvanblade's "Annoying
   Pop-up Remover"), which exposes it as a user-toggleable option.
-  Also auto-sells junk to an open merchant: on `MERCHANT_SHOW`, if the
-  `/yyconfig` "Auto-sell junk" checkbox (`YoyokazooUIDB.autoSellJunk`,
-  `IsAutoSellJunkEnabled()` — defaults **on**, unlike the logout toggles
-  above, since selling junk has no downside the way an unwanted auto-logout
-  would) is enabled, `WoWFunctions.lua`'s `FindAutoSellQueue()` builds the
-  list of bag slots to sell; if it's non-empty, `SellNextAutoSellQueueItem()`
-  sells one slot every `AUTO_SELL_TICK_SECONDS` (0.2s, via chained
-  `C_Timer.After` calls — `C_Container.UseContainerItem(bag, slot)` sells an
-  item only while a merchant window is open) and calls `CloseMerchant()` once
-  the queue is exhausted. `MERCHANT_SHOW` fires before Blizzard's own handler
-  has necessarily called `MerchantFrame:Show()` — confirmed live, the very
-  first tick consistently saw `MerchantFrame` exists but not yet shown, which
-  killed the chain before it ever sold anything — so each tick that finds
-  `MerchantFrame` not shown retries on a short timer
+  Also auto-sells junk to an open merchant, then auto-repairs: on
+  `MERCHANT_SHOW`, if the `/yyconfig` "Auto-sell junk" checkbox
+  (`YoyokazooUIDB.autoSellJunk`, `IsAutoSellJunkEnabled()` — defaults **on**,
+  unlike the logout toggles above, since selling junk has no downside the way
+  an unwanted auto-logout would) is enabled, `WoWFunctions.lua`'s
+  `FindAutoSellQueue()` builds the list of bag slots to sell (an empty list if
+  the checkbox is off); `SellNextAutoSellQueueItem()` sells one slot every
+  `AUTO_SELL_TICK_SECONDS` (0.2s, via chained `C_Timer.After` calls —
+  `C_Container.UseContainerItem(bag, slot)` sells an item only while a
+  merchant window is open). `MERCHANT_SHOW` fires before Blizzard's own
+  handler has necessarily called `MerchantFrame:Show()` — confirmed live, the
+  very first tick consistently saw `MerchantFrame` exists but not yet shown,
+  which killed the chain before it ever sold anything — so each tick that
+  finds `MerchantFrame` not shown retries on a short timer
   (`MERCHANT_NOT_SHOWN_RETRY_SECONDS`, 0.1s) rather than bailing outright,
   capped at `MERCHANT_NOT_SHOWN_MAX_RETRIES` (25, ~2.5s) so a merchant window
-  that genuinely never shows doesn't retry forever. If the queue was empty to
-  begin with, the merchant window is left open — nothing is closed. A
-  generation counter
+  that genuinely never shows doesn't retry forever. A generation counter
   (`autoSellGeneration`, bumped on every `MERCHANT_SHOW` and
   `MERCHANT_CLOSED`) is captured by each scheduled tick and checked before it
   fires, so a chain from an earlier merchant visit (or one interrupted by the
@@ -774,16 +772,43 @@ of truth — edits should be made here, not in the WoW install directory.
   `ShouldAutoSellItem()`); the root cause of auto-sell not doing anything was
   the `MERCHANT_SHOW`-fires-before-`MerchantFrame:Show()` race described
   above, not the bag scan itself, and the retry fix is now **confirmed
-  working live**. The whole path stays instrumented, off by default:
-  `AUTO_SELL_DEBUG` (a global in `WoWFunctions.lua`, currently **false**,
-  shared by both files rather than a per-file local like
-  `COMBAT_STALEMATE_DEBUG`) makes `AutoSellDebugPrint()` chat-print every
-  step — each occupied bag slot's raw itemInfo dumped key-by-key via
-  `AutoSellDescribeItemInfo()` (deliberately field-name-agnostic), each
-  queue/skip decision and its reason, the `MERCHANT_SHOW` handler's view of
-  the `/yyconfig` toggle and queue size, and each sell tick including any
-  not-shown retries or other guard it bailed on -- flip it back to `true` if
-  auto-sell needs debugging again.
+  working live**.
+
+  Once the sell queue is exhausted (empty or not — see below),
+  `FinishAutoSellVisit()` runs the repair step: if the `/yyconfig`
+  "Auto-repair" checkbox (`YoyokazooUIDB.autoRepairEnabled`,
+  `IsAutoRepairEnabled()` — defaults **on**, same "no downside" reasoning as
+  auto-sell junk) is enabled and `CanMerchantRepair()` is true, it reads
+  `GetRepairAllCost()` and calls `RepairAllItems()` only if that cost is
+  affordable (`<= GetMoney()`) — a merchant with no repair vendor, or one the
+  player can't afford full repairs at, is left alone rather than partially
+  repairing. Auto-repair is independent of auto-sell junk — it runs whether
+  or not that checkbox is on, since a merchant with nothing in our bags worth
+  selling might still be the one we need repairs from; `SellNextAutoSellQueueItem`
+  is still always called on `MERCHANT_SHOW` (with an empty queue if
+  auto-sell is off or nothing was queued) specifically so the repair check
+  goes through the exact same `MerchantFrame`-shown wait/retry as selling,
+  rather than adding a second, separately-timed path that risks hitting the
+  same show-race on unverified ground — except when both checkboxes are off,
+  which skips the wait/retry loop entirely since there'd be nothing for it to
+  do. The merchant window is only auto-closed (`CloseMerchant()`) if
+  something was actually sold or repaired this visit; if neither happened
+  (both toggles off, nothing queued and nothing needing repair, or repair
+  unaffordable) the window is left open exactly as the player left it. The
+  whole path stays instrumented, off by default: `AUTO_SELL_DEBUG` (a global
+  in `WoWFunctions.lua`, currently **false**, shared by both files rather
+  than a per-file local like `COMBAT_STALEMATE_DEBUG`) makes
+  `AutoSellDebugPrint()` chat-print every step — each occupied bag slot's raw
+  itemInfo dumped key-by-key via `AutoSellDescribeItemInfo()` (deliberately
+  field-name-agnostic), each queue/skip decision and its reason, the
+  `MERCHANT_SHOW` handler's view of both `/yyconfig` toggles and queue size,
+  each sell tick including any not-shown retries or other guard it bailed on,
+  and the repair cost/affordability decision — flip it back to `true` if
+  auto-sell or auto-repair need debugging again. `GetRepairAllCost()`'s exact
+  Classic Era return shape isn't verified against this client build from
+  reading source alone (same caveat as every other WoW Lua API call in this
+  addon, per the top of this file) — confirm live via `AUTO_SELL_DEBUG`
+  rather than guessing if repair behaves unexpectedly.
 
 ## Tests (`WoWHelperUnitTests/`)
 
