@@ -350,8 +350,8 @@ namespace WoWHelper.Code.WorldState
 /target Swirling
 /target Saltstone
 /target Sparkleshell
+/target Ironeye
         */
-        // TODO: add logoff if seen for the elite mob that pats here
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
@@ -363,6 +363,7 @@ namespace WoWHelper.Code.WorldState
 
             Waypoints = new List<Vector2>
             {
+                new Vector2(78.68f, 55.01f),
                 new Vector2(78.16f, 52.21f),
                 new Vector2(79.70f, 52.30f),
                 new Vector2(81.79f, 52.12f),
