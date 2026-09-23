@@ -343,37 +343,49 @@ namespace WoWHelper
             }
         }
 
+        // Measured empirically: how long holding a single turn key takes to spin the
+        // character a full 360 degrees. Shared by RotateToDirectionTask below and
+        // TurnToFaceTargetMarkerTask further down, both of which convert a computed
+        // degrees-to-turn directly into a turn-key hold duration rather than polling
+        // WorldState in a tight hold-and-recheck loop -- the addon's pixel-row update
+        // cadence lags real turning, so a loop that re-reads FacingDegrees every
+        // iteration and corrects on the fly tends to overshoot/oscillate on the stale
+        // reads. A single calculated hold, verified once afterward, sidesteps that.
+        private const float FULL_ROTATION_MILLIS = 2000f;
+
+        // Turns to face desiredDegrees: reads the current facing once, computes the
+        // signed degrees-to-turn and the turn-key hold duration that corresponds to
+        // (via FULL_ROTATION_MILLIS), does that one hold, then re-reads WorldState to
+        // verify. Returns true only if the post-turn facing landed within
+        // GetWaypointDegreesTolerance(distance) of desiredDegrees -- false otherwise
+        // (e.g. movement during the turn, or a stale/late WorldState read), leaving any
+        // retry to the caller: MoveTowardsWaypointTask calls this again on its next
+        // iteration with a freshly-computed desiredDegrees/distance, so a single
+        // imperfect turn self-corrects on the following pass rather than needing an
+        // internal retry loop here.
         public async Task<bool> RotateToDirectionTask(float desiredDegrees, float distance)
         {
-            await Task.Delay(0);
+            UpdateWorldState();
+
+            float currentDegrees = WorldState.FacingDegrees;
+            float degreesToMove = WowPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
+            float absDegreesToMove = Math.Abs(degreesToMove);
+            float tolerance = WowPathfinding.GetWaypointDegreesTolerance(distance);
+
+            if (absDegreesToMove <= tolerance)
+            {
+                return true;
+            }
+
+            Keys directionKey = degreesToMove <= 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
+            int turnMillis = (int)((absDegreesToMove / 360f) * FULL_ROTATION_MILLIS);
+
+            Console.WriteLine($"DEBUG RotateToDirectionTask: currentDegrees {currentDegrees:0.0}, desiredDegrees {desiredDegrees:0.0}, degreesToMove {degreesToMove:0.0} -> holding {directionKey} for {turnMillis}ms");
+
             try
             {
-                while (true)
-                {
-                    UpdateWorldState();
-
-                    float currentDegrees = WorldState.FacingDegrees;
-                    float degreesToMove = WowPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
-                    float absDegreesToMove = Math.Abs(degreesToMove);
-
-                    //Console.WriteLine($"Desired Degrees: {desiredDegrees} Facing Degrees: {worldState.FacingDegrees} Degrees to Move: {degreesToMove}");
-
-                    if (absDegreesToMove <= WowPathfinding.GetWaypointDegreesTolerance(distance))
-                        break;
-
-                    Keys directionKey = degreesToMove <= 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
-
-                    if (directionKey == WowInput.TURN_RIGHT)
-                    {
-                        Keyboard.KeyUp(WowInput.TURN_LEFT);
-                    }
-                    else
-                    {
-                        Keyboard.KeyUp(WowInput.TURN_RIGHT);
-                    }
-
-                    Keyboard.KeyDown(directionKey);
-                }
+                Keyboard.KeyDown(directionKey);
+                await Task.Delay(turnMillis);
             }
             finally
             {
@@ -381,13 +393,15 @@ namespace WoWHelper
                 Keyboard.KeyUp(WowInput.TURN_RIGHT);
             }
 
-            return true;
-        }
+            UpdateWorldState();
 
-        // Measured empirically: how long holding a single turn key takes to spin the
-        // character a full 360 degrees. TurnToFaceTargetMarkerTask below uses this to convert
-        // a computed bearing directly into a turn-key hold duration.
-        private const float FULL_ROTATION_MILLIS = 2000f;
+            float verifyDegreesToMove = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
+            bool success = Math.Abs(verifyDegreesToMove) <= tolerance;
+
+            Console.WriteLine($"DEBUG RotateToDirectionTask: post-turn facing {WorldState.FacingDegrees:0.0}, remaining degreesToMove {verifyDegreesToMove:0.0} (tolerance {tolerance:0.0}) -> success={success}");
+
+            return success;
+        }
 
         // How wide a facing cone counts as "roughly facing the target" -- matches the
         // frontal-cone requirement Classic already enforces for a targeted spell cast (see

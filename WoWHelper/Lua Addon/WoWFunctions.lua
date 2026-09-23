@@ -880,6 +880,7 @@ AUTO_SELL_WHITELIST_ITEM_NAMES = {
     "Heavy Leather",
     "Large Fang",
     "Long Tail Feather",
+    "Sharp Claw",
 }
 
 local function IsAutoSellWhitelistedByName(itemName)
