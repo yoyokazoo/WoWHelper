@@ -32,13 +32,15 @@ namespace WoWHelper.Code
 
         /*
          * 4 Buff
-#showtooltip [mod:shift] Berserker Rage; Battle Shout
+#showtooltip [mod:shift] Berserker Rage; [mod:ctrl] Sweeping Strikes; Battle Shout
 /cast [nomod] Battle Shout
 /cast [mod:shift] Berserker Rage
+/cast [mod:ctrl] Sweeping Strikes
         */
         public const Keys WARRIOR_BATTLE_SHOUT = Keys.D4;
         // TODO: add stance dancing to macros??
         public const Keys WARRIOR_SHIFT_BERSERKER_RAGE = Keys.D4;
+        public const Keys WARRIOR_CTRL_SWEEPING_STRIKES = Keys.D4;
 
         /*
          * 5 Dmg
@@ -168,13 +170,18 @@ namespace WoWHelper.Code
 
         /*
          * 8 Eat
-#showtooltip [mod:shift] Conjured Fresh Water; Conjured Bread
-/use [nomod] Conjured Bread
-/use [mod:shift] Conjured Fresh Water
-/use Big-mouth Clam
+#showtooltip [mod:shift] Conjured Crystal Water; Raw Bristle Whisker Catfish
+/use [nomod] Raw Bristle Whisker Catfish
+/use [mod:shift] Conjured Crystal Water
+/sit
+/use Thick-shelled Clam
+/stopmacro [mod:shift]
+/stopmacro [nomod]
+/target Derak Nightfall
         */
         public const Keys EAT_FOOD = Keys.D8;
         public const Keys SHIFT_DRINK_WATER = Keys.D8;
+        public const Keys CTRL_TARGET_MERCHANT = Keys.D8;
 
         /*
          * 9 Clr
@@ -264,6 +271,12 @@ namespace WoWHelper.Code
             // Why is it not Keys.Alt, which exists? no one knows!
             await PressKeyWithModifier(key, Keys.Menu);
         }
+
+        public static async Task PressKeyWithControl(Keys key)
+        {
+            await PressKeyWithModifier(key, Keys.LControlKey);
+        }
+
         #endregion
     }
 }

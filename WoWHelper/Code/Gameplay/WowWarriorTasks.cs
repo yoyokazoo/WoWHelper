@@ -280,10 +280,11 @@ namespace WoWHelper
 
         public async Task<bool> WarriorStartBattleReadyRecoverTask(WowWarriorClassState classState)
         {
-            if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
-            {
+            // clams
+            //if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
+            //{
                 await WowInput.PressKey(WowInput.EAT_FOOD);
-            }
+            //}
 
             return true;
         }

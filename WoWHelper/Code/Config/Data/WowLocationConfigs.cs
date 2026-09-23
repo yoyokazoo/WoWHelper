@@ -172,7 +172,7 @@ namespace WoWHelper.Code.WorldState
             Zone = WowZone.Felwood,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
             DistanceTolerance = 0.06f,
-            ChaseOutOfRangeTargets = false, // too much geometry to get hung up on off the path
+            ChaseOutOfRangeTargets = false, // Tall cliffs nearby, can't risk it
 
             Waypoints = new List<Vector2>
             {
@@ -313,7 +313,7 @@ namespace WoWHelper.Code.WorldState
 /target Ancient
 /target Carrion
         */
-        public static readonly WowLocationConfiguration LEVEL_37_KODO_GRAVEYARD = new WowLocationConfiguration
+        public static readonly WowLocationConfiguration LEVEL_36_KODO_GRAVEYARD = new WowLocationConfiguration
         {
             Title = "Kodo Graveyard, Desolace (Level 36+)",
             MinimumLevel = 36,
@@ -350,8 +350,8 @@ namespace WoWHelper.Code.WorldState
 /target Swirling
 /target Saltstone
 /target Sparkleshell
+/target Ironeye
         */
-        // TODO: add logoff if seen for the elite mob that pats here
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS_WAYPOINTS = new WowLocationConfiguration
         {
             Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
@@ -363,6 +363,7 @@ namespace WoWHelper.Code.WorldState
 
             Waypoints = new List<Vector2>
             {
+                new Vector2(78.68f, 55.01f),
                 new Vector2(78.16f, 52.21f),
                 new Vector2(79.70f, 52.30f),
                 new Vector2(81.79f, 52.12f),
@@ -389,9 +390,9 @@ namespace WoWHelper.Code.WorldState
             MaximumLevel = 35,
             Zone = WowZone.HillsbradFoothills,
             TraversalMethod = WowLocationConfiguration.WaypointTraversalMethod.LINEAR,
-            IsWaterZone = true, // swimming the river -- camera can't be straight down here
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             DistanceTolerance = 0.3f,
+            ChaseOutOfRangeTargets = false, // elite dragon nearby if we get dragged too far
 
             Waypoints = new List<Vector2>
             {
@@ -938,7 +939,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_50_FELWOOD_SOUTH,
             LEVEL_46_FERALAS_HIPPOGRYPHS,
             LEVEL_42_TANARIS_TURTLES,
-            LEVEL_37_KODO_GRAVEYARD,
+            LEVEL_36_KODO_GRAVEYARD,
             LEVEL_34_SHIMMERING_FLATS_WAYPOINTS,
             LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS,
             LEVEL_26_STONETALON_CHARRED_FOREST_WAYPOINTS,

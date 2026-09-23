@@ -173,8 +173,9 @@ namespace WoWHelper
             // returning to the combat loop, whose scoot-backwards/re-face handling would
             // move the character and cancel the logout timer. Logging out in combat is
             // fine -- nothing's hitting us, so the timer runs uninterrupted.
-            if (WorldState.CombatStalemate && !LogoutTriggered)
+            if (WorldState.CombatStalemate/* && !LogoutTriggered*/)
             {
+                /*
                 LogoutTriggered = true;
                 LogoutReason = "Combat stalemate: in combat 30+ seconds with no damage dealt or taken -- unreachable mob? (see IsCombatStalemate() in YoyokazooUI.lua)";
                 SlackHelper.SendMessageToChannel($"Logging out, combat stalemate detected (in combat but nothing happening -- unreachable mob?)");
@@ -196,6 +197,11 @@ namespace WoWHelper
                 // Logout got cancelled (the mob reached us after all?). LogoutTriggered stays
                 // set, so the normal CHECK_FOR_LOGOUT path picks it up once combat drops.
                 SlackHelper.SendMessageToChannel($"Combat stalemate logout didn't complete within {WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS / 1000}s -- back to the combat loop, will log out after combat");
+                */
+                var strafeKey = WowInput.STRAFE_LEFT;
+                Keyboard.KeyDown(strafeKey);
+                await Task.Delay(1000);
+                Keyboard.KeyUp(strafeKey);
             }
 
             // If we're about to die, petri alt+f4

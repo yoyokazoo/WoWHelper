@@ -78,6 +78,26 @@ if YoyokazooUIDB.logoutOnFullBags == nil then
     YoyokazooUIDB.logoutOnFullBags = false
 end
 
+-- Auto-sell junk to an open merchant (see the MERCHANT_SHOW handling below) --
+-- defaults ON, unlike the two above, since selling gray/whitelisted junk has
+-- no downside the way an unwanted auto-logout would. Lua-only, like the
+-- dynamite item/healing potion selectors -- never piped to the C# side via
+-- GetMultiBoolTwo, since the bot doesn't need to know it happened.
+if YoyokazooUIDB.autoSellJunk == nil then
+    YoyokazooUIDB.autoSellJunk = true
+end
+
+-- Auto-repair equipment at an open merchant, once the auto-sell pass (if any)
+-- is done -- see the MERCHANT_SHOW handling below. Same "defaults ON, no
+-- downside" reasoning as autoSellJunk above: repairing durability has no
+-- unwanted side effect the way an unwanted auto-logout would. Independent of
+-- autoSellJunk -- it runs whether or not that toggle is on, since a merchant
+-- with nothing sellable in our bags might still be the one we need repairs
+-- from.
+if YoyokazooUIDB.autoRepairEnabled == nil then
+    YoyokazooUIDB.autoRepairEnabled = true
+end
+
 -- Which dynamite-tier item AreWeLowOnDynamite() (WoWFunctions.lua) checks the bag
 -- count of -- selectable via the /yyconfig "Dynamite item" selector below instead
 -- of being hardcoded. Defaults to Dense Dynamite (18641), what it used to be
@@ -113,6 +133,14 @@ end
 
 function IsLogoutOnFullBagsEnabled()
     return YoyokazooUIDB.logoutOnFullBags
+end
+
+function IsAutoSellJunkEnabled()
+    return YoyokazooUIDB.autoSellJunk
+end
+
+function IsAutoRepairEnabled()
+    return YoyokazooUIDB.autoRepairEnabled
 end
 
 -- Read by AreWeLowOnDynamite() (WoWFunctions.lua). Not piped to the C# side at
@@ -193,6 +221,130 @@ frame:RegisterEvent("PLAYER_LEVEL_UP")
 frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 frame:RegisterEvent("LOOT_BIND_CONFIRM")
 frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+frame:RegisterEvent("MERCHANT_SHOW")
+frame:RegisterEvent("MERCHANT_CLOSED")
+
+-- Auto-sell-junk (see the MERCHANT_SHOW/MERCHANT_CLOSED handling below):
+-- sells one queued slot every AUTO_SELL_TICK_SECONDS rather than looping
+-- through the whole queue in one go -- firing a burst of sells in a single
+-- frame is known to silently drop some of them. autoSellGeneration is bumped
+-- on every MERCHANT_SHOW and MERCHANT_CLOSED; each scheduled tick captures
+-- the generation it was queued under and bails if that's gone stale (the
+-- merchant closed, or a newer MERCHANT_SHOW superseded it) instead of
+-- calling UseContainerItem on a closed merchant, which would use/equip the
+-- item instead of selling it.
+local AUTO_SELL_TICK_SECONDS = 0.2
+local autoSellGeneration = 0
+
+-- MERCHANT_SHOW fires before Blizzard's own handler has necessarily called
+-- MerchantFrame:Show() -- confirmed live: the very first tick (index 1),
+-- called synchronously out of the MERCHANT_SHOW handler below, consistently
+-- saw MerchantFrame exists=true, shown=false, which killed the whole chain
+-- before it ever got to sell anything. Rather than assume any fixed number of
+-- frames is enough for Blizzard's handler to catch up (RunNextFrame's single-
+-- frame defer, used for LOOT_BIND_CONFIRM above, isn't a good match here --
+-- that was papering over a different kind of race), retry on a short timer,
+-- capped so a merchant window that genuinely never shows (window closed
+-- before it opened, some other addon interfering, etc.) doesn't retry
+-- forever.
+local MERCHANT_NOT_SHOWN_RETRY_SECONDS = 0.1
+local MERCHANT_NOT_SHOWN_MAX_RETRIES = 25 -- 25 * 0.1s = 2.5s max wait
+
+-- Runs once the auto-sell pass for this merchant visit is done -- called from
+-- SellNextAutoSellQueueItem's index > #queue branch below, which is reached
+-- whether the queue actually had items in it, was empty to begin with, or
+-- auto-sell was off entirely (an empty queue in all three cases). Routing all
+-- three through the same queue-exhausted branch means repair waits for
+-- MerchantFrame to actually be shown the same way selling does, rather than
+-- introducing a second, separately-timed path that risks hitting the same
+-- MERCHANT_SHOW-fires-before-MerchantFrame:Show() race on an unverified
+-- code path. Checks the stale-generation guard itself too, the same as
+-- SellNextAutoSellQueueItem, since a merchant visit that closed mid-chain
+-- should not repair on a window that's no longer open.
+--
+-- GetRepairAllCost()'s exact Classic-Era return shape isn't verified against
+-- this client build from reading source alone (same caveat as every other
+-- WoW Lua API call in this addon -- see the top of CLAUDE.md); AUTO_SELL_DEBUG
+-- prints the raw cost/affordability decision so a live run confirms it rather
+-- than guessing.
+local function FinishAutoSellVisit(soldCount, generation)
+    if generation ~= autoSellGeneration then
+        AutoSellDebugPrint("finish bailed: stale generation (queued under " ..
+            generation .. ", now " .. autoSellGeneration .. ")")
+        return
+    end
+
+    local repaired = false
+    if IsAutoRepairEnabled() and CanMerchantRepair and CanMerchantRepair() then
+        local cost = GetRepairAllCost()
+        if cost and cost > 0 then
+            if cost <= GetMoney() then
+                RepairAllItems()
+                repaired = true
+                AutoSellDebugPrint("repaired all items for " .. cost .. " copper")
+            else
+                AutoSellDebugPrint("skipped repair: cost " .. cost .. " exceeds current money " .. GetMoney())
+            end
+        else
+            AutoSellDebugPrint("repair check: nothing needs repair (cost " .. tostring(cost) .. ")")
+        end
+    else
+        AutoSellDebugPrint("repair check: " .. (IsAutoRepairEnabled() and
+            "merchant can't repair" or "auto-repair is OFF in /yyconfig"))
+    end
+
+    if soldCount > 0 or repaired then
+        AutoSellDebugPrint("closing merchant (sold " .. soldCount .. ", repaired=" .. tostring(repaired) .. ")")
+        CloseMerchant()
+    else
+        AutoSellDebugPrint("nothing sold or repaired -- leaving merchant window alone")
+    end
+end
+
+local function SellNextAutoSellQueueItem(queue, index, generation, notShownRetries)
+    notShownRetries = notShownRetries or 0
+
+    if generation ~= autoSellGeneration then
+        AutoSellDebugPrint("tick " .. index .. " bailed: stale generation (queued under " ..
+            generation .. ", now " .. autoSellGeneration .. ")")
+        return
+    end
+
+    if not (MerchantFrame and MerchantFrame:IsShown()) then
+        if notShownRetries >= MERCHANT_NOT_SHOWN_MAX_RETRIES then
+            AutoSellDebugPrint("tick " .. index .. " giving up: MerchantFrame never shown after " ..
+                notShownRetries .. " retries")
+            return
+        end
+
+        AutoSellDebugPrint("tick " .. index .. " not shown yet (exists=" ..
+            tostring(MerchantFrame ~= nil) .. ", shown=" ..
+            tostring(MerchantFrame and MerchantFrame:IsShown()) .. ") -- retry " ..
+            (notShownRetries + 1) .. "/" .. MERCHANT_NOT_SHOWN_MAX_RETRIES)
+        C_Timer.After(MERCHANT_NOT_SHOWN_RETRY_SECONDS, function()
+            SellNextAutoSellQueueItem(queue, index, generation, notShownRetries + 1)
+        end)
+        return
+    end
+
+    if index > #queue then
+        -- Everything queued at MERCHANT_SHOW time is sold (or there was
+        -- nothing to sell) -- move on to the repair check before deciding
+        -- whether to close.
+        AutoSellDebugPrint("queue exhausted (" .. #queue .. " sold) -- checking repair")
+        FinishAutoSellVisit(#queue, generation)
+        return
+    end
+
+    local entry = queue[index]
+    AutoSellDebugPrint("selling " .. index .. "/" .. #queue .. ": bag " .. entry.bag ..
+        " slot " .. entry.slot)
+    C_Container.UseContainerItem(entry.bag, entry.slot)
+
+    C_Timer.After(AUTO_SELL_TICK_SECONDS, function()
+        SellNextAutoSellQueueItem(queue, index + 1, generation)
+    end)
+end
 
 frame:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_WHISPER" then
@@ -232,6 +384,48 @@ frame:SetScript("OnEvent", function(self, event, ...)
             -- RunNextFrame rather than calling it inline.
             RunNextFrame(function() ConfirmLootSlot(lootSlot) end)
         end
+    end
+
+    if event == "MERCHANT_SHOW" then
+        -- New generation whether or not auto-sell/auto-repair are even
+        -- enabled, so a stray tick from an earlier merchant visit can never
+        -- bleed into this one.
+        autoSellGeneration = autoSellGeneration + 1
+        local generation = autoSellGeneration
+
+        -- An empty queue (auto-sell off, or nothing to sell) still runs the
+        -- chain below -- it's what gets the repair check (FinishAutoSellVisit,
+        -- reached via SellNextAutoSellQueueItem's index > #queue branch) the
+        -- same MerchantFrame-shown wait selling gets, instead of a second,
+        -- unverified timing path.
+        local queue = {}
+        if IsAutoSellJunkEnabled() then
+            queue = FindAutoSellQueue()
+        end
+
+        AutoSellDebugPrint("MERCHANT_SHOW (generation " .. generation ..
+            "), autoSellJunk=" .. tostring(IsAutoSellJunkEnabled()) ..
+            ", autoRepair=" .. tostring(IsAutoRepairEnabled()) ..
+            ", queued=" .. #queue ..
+            ", MerchantFrame shown=" .. tostring(MerchantFrame and MerchantFrame:IsShown()))
+
+        -- Both toggles off means there's nothing this feature would ever do
+        -- at this merchant -- skip the MerchantFrame-shown wait/retry loop
+        -- entirely rather than polling for up to MERCHANT_NOT_SHOWN_MAX_RETRIES
+        -- ticks for no reason every time a merchant window opens.
+        if IsAutoSellJunkEnabled() or IsAutoRepairEnabled() then
+            SellNextAutoSellQueueItem(queue, 1, generation)
+        else
+            AutoSellDebugPrint("auto-sell and auto-repair are both OFF -- doing nothing")
+        end
+    end
+
+    if event == "MERCHANT_CLOSED" then
+        -- Invalidate any in-flight sell chain -- see the comment above
+        -- SellNextAutoSellQueueItem.
+        autoSellGeneration = autoSellGeneration + 1
+        AutoSellDebugPrint("MERCHANT_CLOSED (generation now " .. autoSellGeneration ..
+            ") -- any in-flight sell chain is now stale")
     end
 
     -- Entering combat counts as combat activity: starts the stalemate clock
@@ -421,10 +615,44 @@ SlashCmdList["YYDEBUG"] = function()
     print("YoyokazooUI: debug frame " .. (YoyokazooUIDB.debugFrameEnabled and "ON" or "OFF") .. " (saved).")
 end
 
+-- /yysell is a debug command for the auto-sell/auto-repair path (see
+-- AUTO_SELL_DEBUG in WoWFunctions.lua): it runs the same FindAutoSellQueue()
+-- bag scan the MERCHANT_SHOW handler runs, printing what it saw in every
+-- occupied slot and what it would sell -- but never sells anything, and never
+-- repairs anything. Usable anywhere, with no merchant open, so "does the scan
+-- find my junk?" can be answered separately from "does the selling work?".
+-- It also reports the pieces around the scan that can independently be
+-- wrong: both /yyconfig toggles, whether this addon's frame is actually
+-- registered for MERCHANT_SHOW, whether the MerchantFrame is up right now,
+-- and (if a merchant is open) whether it can repair and what that would
+-- currently cost.
+SLASH_YYSELL1 = "/yysell"
+SlashCmdList["YYSELL"] = function()
+    print("YoyokazooUI: auto-sell dry run --")
+    print("  autoSellJunk (/yyconfig) = " .. tostring(IsAutoSellJunkEnabled()))
+    print("  autoRepairEnabled (/yyconfig) = " .. tostring(IsAutoRepairEnabled()))
+    print("  registered for MERCHANT_SHOW = " .. tostring(frame:IsEventRegistered("MERCHANT_SHOW")))
+    print("  MerchantFrame shown = " .. tostring(MerchantFrame and MerchantFrame:IsShown()))
+    if CanMerchantRepair and CanMerchantRepair() then
+        print("  CanMerchantRepair = true, GetRepairAllCost = " .. tostring(GetRepairAllCost()))
+    else
+        print("  CanMerchantRepair = false (or no merchant open)")
+    end
+
+    -- Force the per-slot dumps on for this one scan even if AUTO_SELL_DEBUG is
+    -- off -- printing them is the entire point of asking for it by hand.
+    local wasDebug = AUTO_SELL_DEBUG
+    AUTO_SELL_DEBUG = true
+    local queue = FindAutoSellQueue()
+    AUTO_SELL_DEBUG = wasDebug
+
+    print("  would sell " .. #queue .. " slot(s) (nothing was sold)")
+end
+
 -- /yyconfig toggles the run-specific settings menu (CreateSettingsMenu(), UIFunctions.lua)
--- -- "log out on low dynamite"/"log out on full bags"/"dynamite item"/"healing potion"/
--- "desired world buff" for now, more can be added to the options list below as they come
--- up. Built once, lazily, on first use rather than
+-- -- "log out on low dynamite"/"log out on full bags"/"auto-sell junk"/"auto-repair"/
+-- "dynamite item"/"healing potion"/"desired world buff" for now, more can be added to the
+-- options list below as they come up. Built once, lazily, on first use rather than
 -- unconditionally at load time like the debug frame above, since there's no reason to pay
 -- for it on a run that never opens the menu.
 local settingsMenu = nil
@@ -447,6 +675,22 @@ SlashCmdList["YYCONFIG"] = function()
                 set = function(value)
                     YoyokazooUIDB.logoutOnFullBags = value
                     print("YoyokazooUI: Log out on full bags " .. (value and "ON" or "OFF") .. " (saved).")
+                end,
+            },
+            {
+                label = "Auto-sell junk",
+                get = IsAutoSellJunkEnabled,
+                set = function(value)
+                    YoyokazooUIDB.autoSellJunk = value
+                    print("YoyokazooUI: Auto-sell junk " .. (value and "ON" or "OFF") .. " (saved).")
+                end,
+            },
+            {
+                label = "Auto-repair",
+                get = IsAutoRepairEnabled,
+                set = function(value)
+                    YoyokazooUIDB.autoRepairEnabled = value
+                    print("YoyokazooUI: Auto-repair " .. (value and "ON" or "OFF") .. " (saved).")
                 end,
             },
             {

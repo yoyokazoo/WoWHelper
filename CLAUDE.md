@@ -551,33 +551,6 @@ of truth — edits should be made here, not in the WoW install directory.
   chase entirely, for routes where straying off the waypoints risks getting
   hung up on geometry or wandering into something dangerous (currently
   `LEVEL_53_NORTH_FELWOOD` and `LEVEL_34_SHIMMERING_FLATS_WAYPOINTS`).
-  **Water routes** (`WowLocationConfiguration.IsWaterZone`, default `false`;
-  read through the null-guarded `WowFarmingConfiguration.IsWaterZone`, since
-  the combat loop can reach this with `LocationConfiguration` still
-  unresolved — currently only `LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS`): the
-  straight-down camera all of the above assumes isn't possible while
-  swimming — "walk forward" swims in the direction the camera points, so
-  straight down would swim to the bottom — so those routes run with the
-  camera pitched (mostly) forward, and the marker's screen position means
-  something different: only its *horizontal* offset from center says
-  anything about facing, its vertical offset is distance/depth (not
-  in-front-vs-behind), anything behind the player is simply off screen, and
-  the pixel→degrees mapping is a perspective projection whose scale depends
-  on unreadable camera FOV/pitch. So in water: the out-of-range chase above
-  is skipped entirely (same as `ChaseOutOfRangeTargets = false`);
-  `TurnToFaceTargetMarkerTask` dispatches to
-  `TurnToFaceTargetMarkerInWaterTask`, which replaces the one computed
-  `FULL_ROTATION_MILLIS`-based hold with guess-and-check — if no marker is
-  visible, sweep right in `WATER_SWEEP_STEP_MILLIS` chunks (up to one full
-  rotation) until it appears, then turn towards it in proportional,
-  clamped steps (`WATER_TURN_STEP_*`), re-scanning after each, until its
-  horizontal offset is inside a deliberately wider band
-  (`WATER_FACING_TOLERANCE_FRACTION_OF_HEIGHT`, a fraction of screen
-  *height* because WoW's vertical FOV is fixed and the horizontal one
-  widens with aspect ratio); and `WalkIntoMeleeRangeTask` skips its
-  in-front-to-behind flip check and uses the mode-aware
-  `IsFacingTargetMarker(Point)` for its drift check. None of the water
-  constants are tuned against live testing yet.
 - **`Config/`** — per-location farming routes/waypoints
   (`WowLocationConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
@@ -599,11 +572,10 @@ of truth — edits should be made here, not in the WoW install directory.
   the color-encoding contract above. `Config/Definitions/` holds the POCOs
   these configs are instances of. Each `WowLocationConfiguration` carries a
   `Title`
-  (human-readable, includes the minimum level), `MinimumLevel`, `Zone`
+  (human-readable, includes the minimum level), `MinimumLevel`, and `Zone`
   (`WowZone` enum, `WowLocationConfiguration.cs`) — see the zone ID
   note in the color-encoding contract above for how `Zone` ties to
-  `WowWorldState.CurrentZone` — and `IsWaterZone` (see the water-routes note
-  in the target-marker section above), plus `ExpectedMobNames` and the
+  `WowWorldState.CurrentZone` — plus `ExpectedMobNames` and the
   `AllMobsInZoneAreNatureImmune()` helper built on it; see "Expected mob
   roster" above. `Config/Definitions/CreatureConfig.cs` is the C# mirror of
   the Lua addon's `CreatureConfig.lua` name lists that `ExpectedMobNames`
@@ -660,7 +632,21 @@ of truth — edits should be made here, not in the WoW install directory.
   pixel populate functions) and `GetClassBoolOne/Two`/`GetClassIntOne`
   (class-specific dispatchers — see "Class split" above). The
   `IsTargetCasterMob`/`IsTargetRunnerMob`/`IsTargetFireImmune` checks here
-  read their name lists from `CreatureConfig.lua`.
+  read their name lists from `CreatureConfig.lua`. Also holds the
+  merchant-auto-sell logic: `AUTO_SELL_WHITELIST_ITEM_NAMES` (currently
+  cooking/fishing byproducts — `"Tangy Clam Meat"`, `"Raw Bristle Whisker
+  Catfish"`, `"Turtle Meat"` — and skinning/leatherworking materials —
+  `"Light Leather"`, `"Medium Leather"`, `"Light Hide"`, `"Medium Hide"`,
+  `"Heavy Hide"`) is a short, manually-curated list of quality-1
+  (Common/white) item names worth selling despite not being gray junk —
+  matched by name (`GetItemInfo(itemID)`) rather than item ID, unlike
+  `DYNAMITE_ITEM_CHOICES`/`HEALING_POTION_ITEM_CHOICES` below, since this
+  isn't a runtime-selectable `/yyconfig` choice; `ShouldAutoSellItem(itemInfo)`
+  flags a single `C_Container.GetContainerItemInfo(bag, slot)` result — plain
+  quality 0 (Poor/gray) junk, or a whitelisted quality 1 item, skipping
+  anything `hasNoValue` (quest items, etc.) — and `FindAutoSellQueue()` scans
+  bags 0-4 for everything it flags, returning the `{ bag, slot }` list that
+  `YoyokazooUI.lua`'s `MERCHANT_SHOW` handler sells from (see below).
 - **`WarriorFunctions.lua`** / **`ShamanFunctions.lua`**
   / **`WarlockFunctions.lua`**
   — that class's specific checks (e.g. `TargetHasRend`, `CanCastMortalStrikeOrBloodthirst`,
@@ -749,7 +735,10 @@ of truth — edits should be made here, not in the WoW install directory.
   each backed by its own `YoyokazooUIDB` field
   (`logoutOnLowDynamite`/`logoutOnFullBags`) read via
   `IsLogoutOnLowDynamiteEnabled()`/`IsLogoutOnFullBagsEnabled()` when
-  `GetMultiBoolTwo()` packs the pixel row. Also auto-confirms the bind-on-pickup loot popup: on
+  `GetMultiBoolTwo()` packs the pixel row; `/yysell` is a debug-only dry run
+  of the auto-sell bag scan (see the auto-sell paragraph below) that prints
+  what it would sell without selling anything, and works with no merchant
+  open. Also auto-confirms the bind-on-pickup loot popup: on
   `LOOT_BIND_CONFIRM` it hides Blizzard's `"LOOT_BIND"` StaticPopup (if
   already shown — our frame registers after the default UI's own handler)
   and calls `ConfirmLootSlot(lootSlot)` — the same action that popup's own
@@ -760,6 +749,75 @@ of truth — edits should be made here, not in the WoW install directory.
   here, so there's no toggle/config for it — unlike the
   reference addon this was modeled on (KyrosKrane Sylvanblade's "Annoying
   Pop-up Remover"), which exposes it as a user-toggleable option.
+  Also auto-sells junk to an open merchant, then auto-repairs: on
+  `MERCHANT_SHOW`, if the `/yyconfig` "Auto-sell junk" checkbox
+  (`YoyokazooUIDB.autoSellJunk`, `IsAutoSellJunkEnabled()` — defaults **on**,
+  unlike the logout toggles above, since selling junk has no downside the way
+  an unwanted auto-logout would) is enabled, `WoWFunctions.lua`'s
+  `FindAutoSellQueue()` builds the list of bag slots to sell (an empty list if
+  the checkbox is off); `SellNextAutoSellQueueItem()` sells one slot every
+  `AUTO_SELL_TICK_SECONDS` (0.2s, via chained `C_Timer.After` calls —
+  `C_Container.UseContainerItem(bag, slot)` sells an item only while a
+  merchant window is open). `MERCHANT_SHOW` fires before Blizzard's own
+  handler has necessarily called `MerchantFrame:Show()` — confirmed live, the
+  very first tick consistently saw `MerchantFrame` exists but not yet shown,
+  which killed the chain before it ever sold anything — so each tick that
+  finds `MerchantFrame` not shown retries on a short timer
+  (`MERCHANT_NOT_SHOWN_RETRY_SECONDS`, 0.1s) rather than bailing outright,
+  capped at `MERCHANT_NOT_SHOWN_MAX_RETRIES` (25, ~2.5s) so a merchant window
+  that genuinely never shows doesn't retry forever. A generation counter
+  (`autoSellGeneration`, bumped on every `MERCHANT_SHOW` and
+  `MERCHANT_CLOSED`) is captured by each scheduled tick and checked before it
+  fires, so a chain from an earlier merchant visit (or one interrupted by the
+  window closing early) can never fire a stale sell on whatever's now open —
+  `UseContainerItem` on a closed merchant would use/equip the item instead of
+  selling it. This is Lua-only, like the "Dynamite item"/"Healing potion"
+  selectors — the bot doesn't need to know it happened, so nothing here
+  reaches the pixel row. Purely quality-based (0 = gray, always sold; 1 =
+  white, sold only if on `WoWFunctions.lua`'s `AUTO_SELL_WHITELIST_ITEM_NAMES`
+  whitelist) — the bag scan against this client's actual
+  `C_Container.GetContainerItemInfo` table shape (`quality`/`hasNoValue`
+  field names) is confirmed live (see the comment above
+  `ShouldAutoSellItem()`); the root cause of auto-sell not doing anything was
+  the `MERCHANT_SHOW`-fires-before-`MerchantFrame:Show()` race described
+  above, not the bag scan itself, and the retry fix is now **confirmed
+  working live**.
+
+  Once the sell queue is exhausted (empty or not — see below),
+  `FinishAutoSellVisit()` runs the repair step: if the `/yyconfig`
+  "Auto-repair" checkbox (`YoyokazooUIDB.autoRepairEnabled`,
+  `IsAutoRepairEnabled()` — defaults **on**, same "no downside" reasoning as
+  auto-sell junk) is enabled and `CanMerchantRepair()` is true, it reads
+  `GetRepairAllCost()` and calls `RepairAllItems()` only if that cost is
+  affordable (`<= GetMoney()`) — a merchant with no repair vendor, or one the
+  player can't afford full repairs at, is left alone rather than partially
+  repairing. Auto-repair is independent of auto-sell junk — it runs whether
+  or not that checkbox is on, since a merchant with nothing in our bags worth
+  selling might still be the one we need repairs from; `SellNextAutoSellQueueItem`
+  is still always called on `MERCHANT_SHOW` (with an empty queue if
+  auto-sell is off or nothing was queued) specifically so the repair check
+  goes through the exact same `MerchantFrame`-shown wait/retry as selling,
+  rather than adding a second, separately-timed path that risks hitting the
+  same show-race on unverified ground — except when both checkboxes are off,
+  which skips the wait/retry loop entirely since there'd be nothing for it to
+  do. The merchant window is only auto-closed (`CloseMerchant()`) if
+  something was actually sold or repaired this visit; if neither happened
+  (both toggles off, nothing queued and nothing needing repair, or repair
+  unaffordable) the window is left open exactly as the player left it. The
+  whole path stays instrumented, off by default: `AUTO_SELL_DEBUG` (a global
+  in `WoWFunctions.lua`, currently **false**, shared by both files rather
+  than a per-file local like `COMBAT_STALEMATE_DEBUG`) makes
+  `AutoSellDebugPrint()` chat-print every step — each occupied bag slot's raw
+  itemInfo dumped key-by-key via `AutoSellDescribeItemInfo()` (deliberately
+  field-name-agnostic), each queue/skip decision and its reason, the
+  `MERCHANT_SHOW` handler's view of both `/yyconfig` toggles and queue size,
+  each sell tick including any not-shown retries or other guard it bailed on,
+  and the repair cost/affordability decision — flip it back to `true` if
+  auto-sell or auto-repair need debugging again. `GetRepairAllCost()`'s exact
+  Classic Era return shape isn't verified against this client build from
+  reading source alone (same caveat as every other WoW Lua API call in this
+  addon, per the top of this file) — confirm live via `AUTO_SELL_DEBUG`
+  rather than guessing if repair behaves unexpectedly.
 
 ## Tests (`WoWHelperUnitTests/`)
 

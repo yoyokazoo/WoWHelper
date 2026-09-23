@@ -857,6 +857,165 @@ function AreBagsFull()
     return cachedBagsFull
 end
 
+-- Item names, beyond plain quality-0 (Poor/gray) junk, that are also worth
+-- auto-selling to an open merchant -- e.g. cooking/fishing byproducts that
+-- vendor for a few silver and are otherwise just dead bag space. Matched by
+-- name (via GetItemInfo(itemID), the same name the tooltip shows) rather
+-- than item ID -- unlike DYNAMITE_ITEM_CHOICES/HEALING_POTION_ITEM_CHOICES
+-- above, this is a short, manually-curated whitelist rather than a
+-- runtime-selectable /yyconfig choice, so there's no id-keyed selector UI
+-- to match against. Add more names here as they come up.
+AUTO_SELL_WHITELIST_ITEM_NAMES = {
+    "Tangy Clam Meat",
+    "Raw Bristle Whisker Catfish",
+    "Turtle Meat",
+    "Light Leather",
+    "Medium Leather",
+    "Light Hide",
+    "Medium Hide",
+    "Heavy Hide",
+    "Stringy Vulture Meat",
+    "Mystery Meat",
+    "Raw Rockscale Cod",
+    "Heavy Leather",
+    "Large Fang",
+    "Long Tail Feather",
+    "Sharp Claw",
+}
+
+local function IsAutoSellWhitelistedByName(itemName)
+    if not itemName then
+        return false
+    end
+
+    for _, name in ipairs(AUTO_SELL_WHITELIST_ITEM_NAMES) do
+        if name == itemName then
+            return true
+        end
+    end
+
+    return false
+end
+
+-- Set true to print every step of the auto-sell path to chat: what the bag
+-- scan actually sees in each occupied slot, why each slot was or wasn't
+-- queued, and (over in YoyokazooUI.lua) the MERCHANT_SHOW/sell-tick side of
+-- it. Same manually-flipped debug-flag pattern as COMBAT_STALEMATE_DEBUG in
+-- YoyokazooUI.lua, but global rather than local so YoyokazooUI.lua's merchant
+-- handling can share the one flag. Confirmed working live (2026-09-21) --
+-- root cause was the MERCHANT_SHOW-fires-before-MerchantFrame:Show() race,
+-- see MERCHANT_NOT_SHOWN_MAX_RETRIES in YoyokazooUI.lua -- so this defaults
+-- off; flip back to true if auto-sell needs debugging again.
+AUTO_SELL_DEBUG = false
+
+function AutoSellDebugPrint(message)
+    if AUTO_SELL_DEBUG then
+        print("|cff66ff99[autosell]|r " .. tostring(message))
+    end
+end
+
+-- Dumps every key/value pair of a C_Container.GetContainerItemInfo() result
+-- instead of reading named fields off it -- the whole point is to find out
+-- what this client actually calls them (quality vs itemQuality, hasNoValue vs
+-- noValue, ...), so nothing here may assume any particular field exists. Also
+-- reports the case where the API handed back something that isn't a table at
+-- all, which is what older Classic builds' multiple-return-value version of
+-- this function would look like from here.
+function AutoSellDescribeItemInfo(itemInfo)
+    if itemInfo == nil then
+        return "nil"
+    end
+
+    if type(itemInfo) ~= "table" then
+        return "NOT A TABLE (" .. type(itemInfo) .. "): " .. tostring(itemInfo)
+    end
+
+    local parts = {}
+    for key, value in pairs(itemInfo) do
+        table.insert(parts, tostring(key) .. "=" .. tostring(value))
+    end
+    table.sort(parts)
+
+    if #parts == 0 then
+        return "empty table"
+    end
+
+    return table.concat(parts, ", ")
+end
+
+-- Whether a single bag slot's item should be auto-sold to an open merchant:
+-- plain quality 0 (Poor/gray) junk, or a quality 1 (Common/white) item on
+-- AUTO_SELL_WHITELIST_ITEM_NAMES above. itemInfo is the table returned by
+-- C_Container.GetContainerItemInfo(bag, slot) (see GetFreeSlotsInBag() above
+-- for the same API) -- hasNoValue items (quest items, etc, which a vendor
+-- won't buy regardless of quality) are skipped even if gray. Not yet
+-- confirmed live against this client's actual itemInfo table shape -- flip
+-- AUTO_SELL_DEBUG on above and read the per-slot dumps rather than guessing
+-- at the field names.
+function ShouldAutoSellItem(itemInfo)
+    if not itemInfo then
+        return false
+    end
+
+    if itemInfo.hasNoValue then
+        AutoSellDebugPrint("    skipped: hasNoValue is set")
+        return false
+    end
+
+    if itemInfo.quality == 0 then
+        AutoSellDebugPrint("    QUEUED: quality 0 (gray junk)")
+        return true
+    end
+
+    if itemInfo.quality == 1 then
+        -- GetItemInfo returns nil for an item the client hasn't cached yet;
+        -- that shows up as name=nil here rather than as a silent non-match.
+        local itemName = GetItemInfo(itemInfo.itemID)
+        local whitelisted = IsAutoSellWhitelistedByName(itemName)
+        AutoSellDebugPrint("    quality 1, name=" .. tostring(itemName) .. " -- " ..
+            (whitelisted and "QUEUED (whitelisted)" or "skipped (not whitelisted)"))
+        return whitelisted
+    end
+
+    AutoSellDebugPrint("    skipped: quality=" .. tostring(itemInfo.quality) ..
+        " (" .. type(itemInfo.quality) .. ")")
+    return false
+end
+
+-- Scans bags 0-4 (backpack + equipped bags -- same range GetTotalFreeBagSlots()
+-- above uses) for everything ShouldAutoSellItem() flags, returning a flat list
+-- of { bag = ..., slot = ... } entries to sell. Doesn't sell anything itself --
+-- see the queued, one-per-tick sell loop in YoyokazooUI.lua's MERCHANT_SHOW
+-- handling (selling everything in a single loop iteration is known to
+-- silently drop some sells).
+function FindAutoSellQueue()
+    local queue = {}
+
+    if not (C_Container and C_Container.GetContainerItemInfo and C_Container.GetContainerNumSlots) then
+        AutoSellDebugPrint("C_Container.GetContainerItemInfo/GetContainerNumSlots missing -- " ..
+            "wrong bag API for this client build")
+        return queue
+    end
+
+    for bag = 0, 4 do
+        local total = C_Container.GetContainerNumSlots(bag)
+        AutoSellDebugPrint("bag " .. bag .. ": " .. tostring(total) .. " slots")
+        for slot = 1, (total or 0) do
+            local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+            if itemInfo ~= nil then
+                AutoSellDebugPrint("  " .. bag .. ":" .. slot .. " " .. AutoSellDescribeItemInfo(itemInfo))
+            end
+            if ShouldAutoSellItem(itemInfo) then
+                table.insert(queue, { bag = bag, slot = slot })
+            end
+        end
+    end
+
+    AutoSellDebugPrint("scan finished: " .. #queue .. " slot(s) queued")
+
+    return queue
+end
+
 -- True once LATENCY_HIGH_CYCLE_COUNT consecutive latency samples, one taken every
 -- LATENCY_CHECK_INTERVAL_SECONDS, have all read above LATENCY_HIGH_THRESHOLD_MS -- i.e.
 -- LATENCY_HIGH_CYCLE_COUNT * LATENCY_CHECK_INTERVAL_SECONDS = 10 sustained seconds of bad

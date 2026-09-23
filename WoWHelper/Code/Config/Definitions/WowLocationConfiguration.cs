@@ -76,17 +76,6 @@ namespace WoWHelper.Code.WorldState
         // walks a straight line at the target with no idea what's in between.
         public bool ChaseOutOfRangeTargets { get; set; }
 
-        // Whether this route is run swimming rather than on foot (e.g. river/coastal turtle
-        // routes). Everything target-marker-based in WowMovementTasks.cs assumes the camera is
-        // pitched straight down, which isn't an option in water: "walk forward" swims in the
-        // direction the camera points, so straight down would swim the character straight to
-        // the bottom. Water routes run with the camera pitched (mostly) forward instead, which
-        // changes what the marker's screen position means -- see the water-zone section of
-        // WowMovementTasks.cs for what this flag switches on: a guess-and-check
-        // TurnToFaceTargetMarkerTask instead of the timed one, a wider "facing" tolerance,
-        // and no out-of-range target chase at all (implies ChaseOutOfRangeTargets = false).
-        public bool IsWaterZone { get; set; }
-
         // Every mob name expected to be encountered while running this route, e.g.
         // { "Desert Rumbler" } for LEVEL_58_SILITHUS_RUMBLERS -- used by
         // AllMobsInZoneAreNatureImmune() below. NOT the same thing as the "/target Foo"
@@ -104,7 +93,6 @@ namespace WoWHelper.Code.WorldState
 
             EngageMethod = EngagementMethod.Charge;
             ChaseOutOfRangeTargets = true;
-            IsWaterZone = false;
 
             MaximumLevel = 61;
 
