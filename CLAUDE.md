@@ -653,18 +653,17 @@ of truth — edits should be made here, not in the WoW install directory.
   `TargetHasSunderArmor`/`KnowsSunderArmor` — ClassBoolOne G5/G6, feeding
   `WarriorShouldCastSunderArmor` in `WowWarriorTasks.cs`, which applies exactly
   one Sunder per target (any stack at all counts, it's a bool not a count)
-  right after Battle Shout/Overpower/Execute in the rotation priority;
-  `KnowsSweepingStrikes`/`CanCastSweepingStrikes` — ClassBoolOne G7/G8 (fully
-  packing that byte), feeding `WarriorShouldCastSweepingStrikes`, which fires
-  only against multiple attackers (`WorldState.AttackerCount > 1`) once it's
-  trained, off cooldown, and affordable
-  (`WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST`) — slotted directly below
-  Battle Shout in the rotation priority (ahead of Overpower/Execute/Sunder
-  Armor/Rend), since it's a short-duration buff best popped as soon as
-  multiple mobs are up rather than after the rest of the single-target
-  priority list runs. This is a re-add: an earlier `CanCastSweepingStrikes()`
-  was removed because nothing consumed the decoded field, before anything
-  wired it into the actual rotation — for Warrior;
+  right after Battle Shout/Overpower/Execute in the rotation priority — for
+  Warrior. Note the Warrior rotation's `WarriorShouldCastX` checks are
+  game-state only (buff up? proc available? target already debuffed?) and
+  deliberately don't look at rage: the `if/else if` chain in
+  `WarriorCombatLoopTask` picks one ability by priority, then the chosen
+  branch checks rage (`WorldState.ResourcePercent >= cost`) and does
+  *nothing* that tick if it can't afford it — waiting for rage rather than falling
+  through to a cheaper filler, so a 30-rage Mortal Strike/Bloodthirst isn't
+  starved by 15-rage abilities. Cleave/Heroic Strike's required rage
+  (`WarriorCleaveRageRequired`/`WarriorHeroicStrikeRageRequired`) is their
+  own cost plus a reserve for the next MS/BT, if trained;
   `ShouldCastRockbiterWeapon`, `CanCastEarthShock` for Shaman;
   `ShouldCastDemonArmor`/`ShouldSummonPet`/`ShouldCastImmolate`/
   `ShouldCastCorruption` for Warlock) plus a `GetXClassBoolOne/Two`/
