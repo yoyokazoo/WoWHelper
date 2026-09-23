@@ -343,6 +343,19 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(46.70f, 59.10f),
                 new Vector2(47.12f, 57.79f),
             },
+
+            MerchantConfig = new WowMerchantConfiguration
+            {
+                Name = "Muuran",
+                Waypoints = new List<Vector2>
+                {
+                    new Vector2(53.65f, 57.29f),
+                    new Vector2(54.63f, 57.79f),
+                    new Vector2(55.48f, 58.22f),
+                    new Vector2(55.88f, 57.25f),
+                    new Vector2(55.60f, 56.51f),
+                },
+            },
         };
 
         /*

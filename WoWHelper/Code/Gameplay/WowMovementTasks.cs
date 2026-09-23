@@ -325,7 +325,7 @@ namespace WoWHelper
                             // Waypoints reaches that point -- and from which direction --
                             // doesn't matter. See WowMerchantConfiguration.
                             var merchant = FarmingConfig.LocationConfiguration.MerchantConfig;
-                            if (!IsOnMerchantRun && merchant != null && WorldState.BagsAreFull &&
+                            if (!IsOnMerchantRun && merchant != null && /*WorldState.BagsAreFull &&*/
                                 Vector2.Distance(FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex], merchant.Waypoints[0])
                                     <= WowPlayerConstants.MERCHANT_BRANCH_POINT_EPSILON)
                             {

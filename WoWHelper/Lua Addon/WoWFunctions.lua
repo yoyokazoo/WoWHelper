@@ -583,8 +583,9 @@ end
 
 -- light shot, 2516
 -- rough arrow, 2512
+-- sharp arrow, 2515
 function AreWeLowOnAmmo()
-    local ammoCount = GetItemCount(2512, false)
+    local ammoCount = GetItemCount(2515, false)
     return ammoCount < 2
 end
 
