@@ -114,7 +114,10 @@ namespace WoWHelper
                 }
                 else if (WarriorShouldCastSweepingStrikes(classState))
                 {
-                    await WowInput.PressKeyWithControl(WowInput.WARRIOR_CTRL_SWEEPING_STRIKES);
+                    if (WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    {
+                        await WowInput.PressKeyWithControl(WowInput.WARRIOR_CTRL_SWEEPING_STRIKES);
+                    }
                 }
                 else if (WarriorShouldCastOverpower(classState))
                 {
@@ -206,8 +209,7 @@ namespace WoWHelper
         {
             return classState.KnowsSweepingStrikes &&
                 classState.SweepingStrikesCooledDown &&
-                WorldState.AttackerCount > 1 &&
-                WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST;
+                WorldState.AttackerCount > 1;
         }
 
         public bool WarriorShouldCastOverpower(WowWarriorClassState classState)
