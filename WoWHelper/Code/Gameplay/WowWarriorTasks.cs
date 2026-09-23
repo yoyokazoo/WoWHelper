@@ -204,11 +204,11 @@ namespace WoWHelper
         // Only below Battle Shout in priority. Sweeping Strikes makes the next
         // few melee swings cleave to a second target, so it's only worth popping
         // against multiple attackers, and only once it's actually trained and off
-        // cooldown.
+        // cooldown -- both folded into classState.CanCastSweepingStrikes itself
+        // (see its property comment on WowWarriorClassState).
         public bool WarriorShouldCastSweepingStrikes(WowWarriorClassState classState)
         {
-            return classState.KnowsSweepingStrikes &&
-                classState.SweepingStrikesCooledDown &&
+            return classState.CanCastSweepingStrikes && 
                 WorldState.AttackerCount > 1;
         }
 

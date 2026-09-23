@@ -773,6 +773,7 @@ namespace WoWHelper
             Keyboard.KeyUp(WowInput.STRAFE_LEFT);
             Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
             Keyboard.KeyUp(WowInput.LatestShiftKey);
+            Keyboard.KeyUp(WowInput.LatestControlKey);
             Keyboard.KeyUp(Keys.LShiftKey);
             await Task.Delay(0);
 

@@ -487,9 +487,33 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- Alert if enemy nameplates are on, since they're needed to count attackers
         local nameplateShowEnemies = AreEnemyNameplatesTurnedOn()
         if not nameplateShowEnemies then
-            UIErrorsFrame:AddMessage("Enemy nameplates are off! Turn them on!", 1, 0, 0, nil, 15) 
+            UIErrorsFrame:AddMessage("Enemy nameplates are off! Turn them on!", 1, 0, 0, nil, 15)
         end
-        
+
+        -- Alert what Ctrl+4 -- the key WowInput.WARRIOR_CTRL_SWEEPING_STRIKES presses for
+        -- Sweeping Strikes (WowWarriorTasks.cs) -- is currently bound to. The bot's Ctrl+4
+        -- macro casts Sweeping Strikes directly, independent of WoW's own action-bar
+        -- keybinding system -- it does NOT need (or want) Ctrl+4 bound to anything in the
+        -- Key Bindings menu. If something else already claims Ctrl+4 there (a default
+        -- action bar slot, another addon, etc.), WoW's own binding intercepts the
+        -- keypress first and that fires instead, so the macro never gets a chance to run --
+        -- confirmed live as the actual failure mode. Free (unbound) is the correct/working
+        -- state here, which is the opposite of the nameplate check above -- so unlike that
+        -- one, this only alerts (red, toast + chat) on the bad case (bound to something) --
+        -- silent otherwise, since PLAYER_ENTERING_WORLD fires on every zone change/loading
+        -- screen and a print on the good case every single time would just be chat spam.
+        -- Warrior-only, same as the ability itself.
+        local _, classFile = UnitClass("player")
+        if classFile == "WARRIOR" then
+            local ctrl4Binding = GetKeyBindingAction("CTRL-4")
+            if ctrl4Binding ~= "" then
+                -- Also printed to chat, not just the UIErrorsFrame toast -- the toast is
+                -- gone in a few seconds and easy to miss/misread, chat stays scrollable.
+                UIErrorsFrame:AddMessage("Ctrl+4 is bound to: " .. ctrl4Binding .. " -- Sweeping Strikes won't cast!", 1, 0, 0, nil, 15)
+                print("|cffff0000YoyokazooUI:|r Ctrl+4 is bound to: " .. ctrl4Binding .. " -- Sweeping Strikes won't cast!")
+            end
+        end
+
 
         print("XP session started. Level:", xpTracker.startLevel, "XP:", xpTracker.startXP)
 

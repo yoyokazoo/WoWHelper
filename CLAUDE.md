@@ -654,7 +654,46 @@ of truth — edits should be made here, not in the WoW install directory.
   `WarriorShouldCastSunderArmor` in `WowWarriorTasks.cs`, which applies exactly
   one Sunder per target (any stack at all counts, it's a bool not a count)
   right after Battle Shout/Overpower/Execute in the rotation priority — for
-  Warrior. Note the Warrior rotation's `WarriorShouldCastX` checks are
+  Warrior. `CanCastSweepingStrikes` — ClassBoolOne G8 (G7 reserved) — is a
+  single bit covering both "trained" and "off cooldown," unlike every other
+  `KnowsX`/`CanCastX` pair here: the trained-yet check
+  (`IsSpellKnownByName("Sweeping Strikes")`) is folded directly into
+  `CanCastSweepingStrikes()` (`WarriorFunctions.lua`) instead of getting its
+  own bit, because nothing on the C# side ever reads "does the player know
+  Sweeping Strikes" independently of "can I cast it right now" — unlike
+  `KnowsCharge` (also gates engage-method logic) and
+  `KnowsMortalStrikeOrBloodthirst` (also picks Heroic Strike's rage reserve),
+  which stay split because they're each read from more than one place. The
+  fold-in is required, not just tidier: `GetSpellCooldown()` reads `(0, 0)` —
+  "ready" — for a spell ID the player has never trained at all (same
+  false-ready quirk `KnowsMortalStrikeOrBloodthirst`'s own comment documents
+  for Mortal Strike/Bloodthirst), so without the guard a Warrior without the
+  talent would read "can cast" and, sitting second in `WarriorCombatLoopTask`'s
+  priority chain, block every lower-priority ability every tick for an
+  ability that was never actually going to fire. (This bit was also
+  hardcoded to the wrong spell ID for a while — 12328, Death Wish, not
+  Sweeping Strikes' actual 12292 — found live via a temporary
+  `SWEEPING_STRIKES_DEBUG` switch in `WarriorFunctions.lua`; same
+  manually-flipped debug-flag pattern as `COUNT_ATTACKERS_DEBUG`/
+  `COMBAT_STALEMATE_DEBUG` elsewhere, defaults off now that it's fixed.)
+  `CanCastSweepingStrikes()` also uses `SpellIsCooledDownIgnoringGCD()`
+  rather than the plain `SpellIsCooledDown()` every other Warrior cooldown
+  check here uses, since a ~30s-cooldown ability can still land on a tick
+  where the shared GCD (from whatever else was just cast) makes
+  `GetSpellCooldown()` read "on cooldown" a beat after the real cooldown
+  cleared. `SpellIsCooledDownIgnoringGCD()` (`WoWFunctions.lua`) and
+  `IsGlobalCooldownCooledDown()` (which decodes into `WorldState.GCDCooledDown`)
+  both now probe the same class-appropriate real spell via a shared
+  `GetGCDProbeSpell()` — Shaman: Lightning Bolt Rank 1 (confirmed live);
+  Warrior: Rend Rank 1 (772 — not ideal, since Rend isn't trainable until
+  level 4, but it's the first ability a Warrior learns that actually
+  triggers the GCD; this replaced an original Warrior pick of Heroic Strike,
+  which is confirmed wrong outright — Heroic Strike doesn't trigger the GCD
+  at all in Classic); Warlock: Shadow Bolt Rank 1 (still unconfirmed live).
+  Before this, both functions separately probed the dedicated GCD spell ID
+  (61304), confirmed via testing to never show a cooldown on this client for
+  any class — `SpellIsCooledDownIgnoringGCD()` was silently non-functional
+  until this fix. Note the Warrior rotation's `WarriorShouldCastX` checks are
   game-state only (buff up? proc available? target already debuffed?) and
   deliberately don't look at rage: the `if/else if` chain in
   `WarriorCombatLoopTask` picks one ability by priority, then the chosen
