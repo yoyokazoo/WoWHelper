@@ -313,7 +313,7 @@ namespace WoWHelper.Code.WorldState
 /target Ancient
 /target Carrion
         */
-        public static readonly WowLocationConfiguration LEVEL_37_KODO_GRAVEYARD = new WowLocationConfiguration
+        public static readonly WowLocationConfiguration LEVEL_36_KODO_GRAVEYARD = new WowLocationConfiguration
         {
             Title = "Kodo Graveyard, Desolace (Level 36+)",
             MinimumLevel = 36,
@@ -939,7 +939,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_50_FELWOOD_SOUTH,
             LEVEL_46_FERALAS_HIPPOGRYPHS,
             LEVEL_42_TANARIS_TURTLES,
-            LEVEL_37_KODO_GRAVEYARD,
+            LEVEL_36_KODO_GRAVEYARD,
             LEVEL_34_SHIMMERING_FLATS_WAYPOINTS,
             LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS,
             LEVEL_26_STONETALON_CHARRED_FOREST_WAYPOINTS,
