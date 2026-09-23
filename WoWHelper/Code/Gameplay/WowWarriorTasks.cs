@@ -101,6 +101,10 @@ namespace WoWHelper
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT);
                 }
+                else if (WarriorShouldCastSweepingStrikes(classState))
+                {
+                    await WowInput.PressKeyWithControl(WowInput.WARRIOR_CTRL_SWEEPING_STRIKES);
+                }
                 else if (WarriorShouldCastOverpower(classState))
                 {
                     await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_OVERPOWER);
@@ -160,6 +164,18 @@ namespace WoWHelper
         public bool WarriorShouldCastBattleShout(WowWarriorClassState classState)
         {
             return !classState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST;
+        }
+
+        // Only below Battle Shout in priority. Sweeping Strikes makes the next
+        // few melee swings cleave to a second target, so it's only worth popping
+        // against multiple attackers, and only once it's actually trained and off
+        // cooldown.
+        public bool WarriorShouldCastSweepingStrikes(WowWarriorClassState classState)
+        {
+            return classState.KnowsSweepingStrikes &&
+                classState.SweepingStrikesCooledDown &&
+                WorldState.AttackerCount > 1 &&
+                WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST;
         }
 
         public bool WarriorShouldCastOverpower(WowWarriorClassState classState)

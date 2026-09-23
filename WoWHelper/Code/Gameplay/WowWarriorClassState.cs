@@ -26,6 +26,8 @@ namespace WoWHelper
         public bool KnowsCharge { get; private set; }
         public bool TargetHasSunderArmor { get; private set; }
         public bool KnowsSunderArmor { get; private set; }
+        public bool KnowsSweepingStrikes { get; private set; }
+        public bool SweepingStrikesCooledDown { get; private set; }
 
         public override void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig)
         {
@@ -63,7 +65,12 @@ namespace WoWHelper
             // the target, not a full 5-stack.
             TargetHasSunderArmor = g5;
             KnowsSunderArmor = g6;
-            // g7-g8, ClassBoolTwo, and ClassIntOne currently reserved/unused for Warrior.
+            // Whether Sweeping Strikes is actually trained yet -- gates
+            // WowWarriorTasks.WarriorShouldCastSweepingStrikes the same way
+            // KnowsSunderArmor/KnowsRend/etc. gate their own abilities above.
+            KnowsSweepingStrikes = g7;
+            SweepingStrikesCooledDown = g8;
+            // ClassBoolTwo and ClassIntOne currently reserved/unused for Warrior.
         }
     }
 }

@@ -653,8 +653,18 @@ of truth — edits should be made here, not in the WoW install directory.
   `TargetHasSunderArmor`/`KnowsSunderArmor` — ClassBoolOne G5/G6, feeding
   `WarriorShouldCastSunderArmor` in `WowWarriorTasks.cs`, which applies exactly
   one Sunder per target (any stack at all counts, it's a bool not a count)
-  right after Battle Shout/Overpower/Execute in the rotation priority — for
-  Warrior;
+  right after Battle Shout/Overpower/Execute in the rotation priority;
+  `KnowsSweepingStrikes`/`CanCastSweepingStrikes` — ClassBoolOne G7/G8 (fully
+  packing that byte), feeding `WarriorShouldCastSweepingStrikes`, which fires
+  only against multiple attackers (`WorldState.AttackerCount > 1`) once it's
+  trained, off cooldown, and affordable
+  (`WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST`) — slotted directly below
+  Battle Shout in the rotation priority (ahead of Overpower/Execute/Sunder
+  Armor/Rend), since it's a short-duration buff best popped as soon as
+  multiple mobs are up rather than after the rest of the single-target
+  priority list runs. This is a re-add: an earlier `CanCastSweepingStrikes()`
+  was removed because nothing consumed the decoded field, before anything
+  wired it into the actual rotation — for Warrior;
   `ShouldCastRockbiterWeapon`, `CanCastEarthShock` for Shaman;
   `ShouldCastDemonArmor`/`ShouldSummonPet`/`ShouldCastImmolate`/
   `ShouldCastCorruption` for Warlock) plus a `GetXClassBoolOne/Two`/

@@ -134,18 +134,33 @@ function TargetHasSunderArmor()
     return TargetHasDebuffSpellName("Sunder Armor")
 end
 
+-- Whether the player has trained Sweeping Strikes yet -- same idea as
+-- KnowsRend()/KnowsSunderArmor() above. Sweeping Strikes only has one rank,
+-- but it's still name-matched rather than hardcoded, same as everything else
+-- in this "do we actually know it yet" family.
+function KnowsSweepingStrikes()
+    return IsSpellKnownByName("Sweeping Strikes")
+end
+
+-- Sweeping Strikes, 12328 -- single rank. Cooldown-only check (like
+-- CanCastMortalStrikeOrBloodthirst() above); KnowsSweepingStrikes() gates
+-- whether it's trained at all, and the C# side gates rage cost separately.
+-- This is a re-add: an earlier CanCastSweepingStrikes() was removed because
+-- nothing consumed the decoded field -- see WarriorShouldCastSweepingStrikes
+-- in WowWarriorTasks.cs, now that something does.
+function CanCastSweepingStrikes()
+    return SpellIsCooledDown(12328)
+end
+
 ------------------------------------------------------------
 -- Packs Warrior-specific state into the ClassBool/ClassInt pixels. Called
 -- via the GetClassBoolOne/Two/GetClassIntOne dispatchers in WoWFunctions.lua
 -- once UnitClass("player") resolves to WARRIOR, and read on the C# side by
--- WowWarriorClassState.UpdateFromBitmap. G7-G8 are reserved (previously
--- R8/G1/G4/G5/G6 were too -- see the "whether we know it" spell checks above,
--- added there once PlayerLevel-based training gates on the C# side were
--- replaced with real spellbook checks -- and previously CanCastWhirlwind()/
--- CanCastSweepingStrikes() -- removed since nothing ever consumed the
--- decoded WhirlwindCooledDown/SweepingStrikesCooledDown fields on the C#
--- side; re-add here if Whirlwind/Sweeping Strikes gets wired into the actual
--- rotation).
+-- WowWarriorClassState.UpdateFromBitmap. ClassBoolOne's R/G bytes are now
+-- fully packed (R8/G1/G4/G5/G6 were added once PlayerLevel-based training
+-- gates on the C# side were replaced with real spellbook checks; G7/G8 are
+-- KnowsSweepingStrikes/CanCastSweepingStrikes, added once
+-- WarriorShouldCastSweepingStrikes wired them into the rotation).
 ------------------------------------------------------------
 function GetWarriorClassBoolOne()
     local boolR1 = HasBuffNamed("Battle Shout")
@@ -165,8 +180,8 @@ function GetWarriorClassBoolOne()
     local boolG4 = KnowsCharge()
     local boolG5 = TargetHasSunderArmor()
     local boolG6 = KnowsSunderArmor()
-    local boolG7 = false
-    local boolG8 = false
+    local boolG7 = KnowsSweepingStrikes()
+    local boolG8 = CanCastSweepingStrikes()
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
