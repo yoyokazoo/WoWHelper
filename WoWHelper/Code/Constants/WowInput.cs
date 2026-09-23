@@ -32,13 +32,15 @@ namespace WoWHelper.Code
 
         /*
          * 4 Buff
-#showtooltip [mod:shift] Berserker Rage; Battle Shout
+#showtooltip [mod:shift] Berserker Rage; [mod:ctrl] Sweeping Strikes; Battle Shout
 /cast [nomod] Battle Shout
 /cast [mod:shift] Berserker Rage
+/cast [mod:ctrl] Sweeping Strikes
         */
         public const Keys WARRIOR_BATTLE_SHOUT = Keys.D4;
         // TODO: add stance dancing to macros??
         public const Keys WARRIOR_SHIFT_BERSERKER_RAGE = Keys.D4;
+        public const Keys WARRIOR_CTRL_SWEEPING_STRIKES = Keys.D4;
 
         /*
          * 5 Dmg

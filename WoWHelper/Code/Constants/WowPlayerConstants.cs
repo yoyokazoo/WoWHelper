@@ -24,7 +24,7 @@
         public const int EAT_FOOD_HP_THRESHOLD = 80;
         public const int DRINK_WATER_MP_THRESHOLD = 80;
 
-        public const int EMERGENCY_HP_THRESHOLD = 29;
+        public const int EMERGENCY_HP_THRESHOLD = 35;
         public const int PETRI_ALTF4_HP_THRESHOLD = 20;
 
         public const int REND_HP_THRESHOLD = 60;

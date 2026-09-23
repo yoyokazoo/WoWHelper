@@ -52,6 +52,7 @@ LONG_RANGE_CASTER_MOB_NAMES = {
 -- risk engaging or aggroing it.
 LOGOFF_IF_SEEN_MOB_NAMES = {
     ["Watery Invader"] = true,
+    ["Ironeye the Invincible"] = true,
     ["Suffering Highborne"] = true,
     ["Anguished Highborne"] = true,
 }

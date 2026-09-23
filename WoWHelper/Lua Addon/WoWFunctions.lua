@@ -874,6 +874,13 @@ AUTO_SELL_WHITELIST_ITEM_NAMES = {
     "Light Hide",
     "Medium Hide",
     "Heavy Hide",
+    "Stringy Vulture Meat",
+    "Mystery Meat",
+    "Raw Rockscale Cod",
+    "Heavy Leather",
+    "Large Fang",
+    "Long Tail Feather",
+    "Sharp Claw",
 }
 
 local function IsAutoSellWhitelistedByName(itemName)
