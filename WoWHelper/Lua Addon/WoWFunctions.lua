@@ -576,10 +576,36 @@ end
 -- Returns the name of whatever's currently bound to a key combo, in Blizzard's own
 -- binding-string format (e.g. "CTRL-4"), or "" if nothing is bound to it at all. Thin
 -- wrapper around GetBindingAction() so callers don't need to know that format
--- themselves -- see the Ctrl+4/Sweeping Strikes check in YoyokazooUI.lua's
--- PLAYER_ENTERING_WORLD handling for the case this exists for.
+-- themselves -- see FindBoundKeysMessage() below for the case this exists for.
 function GetKeyBindingAction(keyString)
     return GetBindingAction(keyString) or ""
+end
+
+-- Checks a modifier (e.g. "CTRL"/"SHIFT", Blizzard's own binding-string modifier
+-- name) against a list of { display, lookup } keys -- lookup being Blizzard's own
+-- binding-string key name (e.g. "4" or "MINUS" for "-"), display being what's
+-- actually printed on the key -- and returns one combined "Modifier+display=action,
+-- ..." message listing everything WoW's own Key Bindings menu already has bound to
+-- one of those combos, or "" if none of them are bound. Shared by every
+-- keybind-collision check in YoyokazooUI.lua's PLAYER_ENTERING_WORLD handling (Ctrl+4
+-- for Sweeping Strikes, every Shift+<key> our macros use for their [mod:shift] cast)
+-- -- those all exist because a macro's own bot-driven keypress (independent of WoW's
+-- action-bar keybinding system) never gets a chance to run if the Key Bindings menu
+-- already claims that combo first: WoW's own binding intercepts the keypress before
+-- the macro ever sees it, so whatever's gated on that modifier silently never fires
+-- -- confirmed live as the actual failure mode for Ctrl+4. Returning one combined
+-- message (rather than the caller looping key-by-key itself) means a keyboard with
+-- several of a modifier's keys already bound reports as one line, not a wall of
+-- separate toasts.
+function FindBoundKeysMessage(modifierLookup, modifierDisplay, keys)
+    local bindings = {}
+    for _, keyInfo in ipairs(keys) do
+        local binding = GetKeyBindingAction(modifierLookup .. "-" .. keyInfo.lookup)
+        if binding ~= "" then
+            table.insert(bindings, modifierDisplay .. "+" .. keyInfo.display .. "=" .. binding)
+        end
+    end
+    return table.concat(bindings, ", ")
 end
 
 -- Whether our current target is actively engaged with US specifically (its

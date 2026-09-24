@@ -490,28 +490,57 @@ frame:SetScript("OnEvent", function(self, event, ...)
             UIErrorsFrame:AddMessage("Enemy nameplates are off! Turn them on!", 1, 0, 0, nil, 15)
         end
 
-        -- Alert what Ctrl+4 -- the key WowInput.WARRIOR_CTRL_SWEEPING_STRIKES presses for
-        -- Sweeping Strikes (WowWarriorTasks.cs) -- is currently bound to. The bot's Ctrl+4
-        -- macro casts Sweeping Strikes directly, independent of WoW's own action-bar
-        -- keybinding system -- it does NOT need (or want) Ctrl+4 bound to anything in the
-        -- Key Bindings menu. If something else already claims Ctrl+4 there (a default
-        -- action bar slot, another addon, etc.), WoW's own binding intercepts the
-        -- keypress first and that fires instead, so the macro never gets a chance to run --
-        -- confirmed live as the actual failure mode. Free (unbound) is the correct/working
-        -- state here, which is the opposite of the nameplate check above -- so unlike that
-        -- one, this only alerts (red, toast + chat) on the bad case (bound to something) --
-        -- silent otherwise, since PLAYER_ENTERING_WORLD fires on every zone change/loading
-        -- screen and a print on the good case every single time would just be chat spam.
-        -- Warrior-only, same as the ability itself.
+        -- Alert if WoW's own Key Bindings menu already claims a modifier+key combo one
+        -- of our macros relies on to pick its alternate [mod:...] cast -- Ctrl+4
+        -- (WowInput.WARRIOR_CTRL_SWEEPING_STRIKES, Warrior-only, Sweeping Strikes) and
+        -- every Shift+<key> (WowInput.cs's SHIFT_* consts -- 1/8/9/0/-/= shared across
+        -- every class via the "Common" region, 2-7 used by whichever class is
+        -- currently playing, so checked unconditionally rather than gated by class --
+        -- an unrelated binding sitting on e.g. Shift+6 would still break a Shaman/
+        -- Warlock macro if that class is played later without a relog). Free
+        -- (unbound) is the correct/working state for all of these, which is the
+        -- opposite of the nameplate check above -- so unlike that one, this only
+        -- alerts (red, toast + chat) on the bad case (bound to something) -- silent
+        -- otherwise, since PLAYER_ENTERING_WORLD fires on every zone change/loading
+        -- screen and a print on the good case every single time would just be chat
+        -- spam. FindBoundKeysMessage (WoWFunctions.lua) does the actual lookup,
+        -- shared across both checks below -- see its own comment for why any of this
+        -- matters (WoW's own binding intercepts the keypress before the macro ever
+        -- sees it, so whatever's gated on that modifier silently never fires --
+        -- confirmed live as the actual failure mode for Ctrl+4).
+        local function AlertKeyBindingCollision(message)
+            -- Also printed to chat, not just the UIErrorsFrame toast -- the toast is
+            -- gone in a few seconds and easy to miss/misread, chat stays scrollable.
+            UIErrorsFrame:AddMessage(message, 1, 0, 0, nil, 15)
+            print("|cffff0000YoyokazooUI:|r " .. message)
+        end
+
+        local NUMBER_ROW_KEYS = {
+            { display = "1", lookup = "1" },
+            { display = "2", lookup = "2" },
+            { display = "3", lookup = "3" },
+            { display = "4", lookup = "4" },
+            { display = "5", lookup = "5" },
+            { display = "6", lookup = "6" },
+            { display = "7", lookup = "7" },
+            { display = "8", lookup = "8" },
+            { display = "9", lookup = "9" },
+            { display = "0", lookup = "0" },
+            { display = "-", lookup = "MINUS" },
+            { display = "=", lookup = "EQUALS" },
+        }
+
         local _, classFile = UnitClass("player")
         if classFile == "WARRIOR" then
-            local ctrl4Binding = GetKeyBindingAction("CTRL-4")
-            if ctrl4Binding ~= "" then
-                -- Also printed to chat, not just the UIErrorsFrame toast -- the toast is
-                -- gone in a few seconds and easy to miss/misread, chat stays scrollable.
-                UIErrorsFrame:AddMessage("Ctrl+4 is bound to: " .. ctrl4Binding .. " -- Sweeping Strikes won't cast!", 1, 0, 0, nil, 15)
-                print("|cffff0000YoyokazooUI:|r Ctrl+4 is bound to: " .. ctrl4Binding .. " -- Sweeping Strikes won't cast!")
+            local ctrl4Message = FindBoundKeysMessage("CTRL", "Ctrl", { { display = "4", lookup = "4" } })
+            if ctrl4Message ~= "" then
+                AlertKeyBindingCollision(ctrl4Message .. " -- Sweeping Strikes won't cast!")
             end
+        end
+
+        local shiftMessage = FindBoundKeysMessage("SHIFT", "Shift", NUMBER_ROW_KEYS)
+        if shiftMessage ~= "" then
+            AlertKeyBindingCollision("Shift keys bound, macros won't work: " .. shiftMessage)
         end
 
 
