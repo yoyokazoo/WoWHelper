@@ -147,6 +147,7 @@
     <Compile Include="Code\Gameplay\WowConfigResolutionTasks.cs" />
     <Compile Include="Code\Gameplay\WowManagementTasks.cs" />
     <Compile Include="Code\Gameplay\WowMovementTasks.cs" />
+    <Compile Include="Code\Gameplay\WowTurnCalibrationTasks.cs" />
     <Compile Include="Code\Gameplay\WowPathfinding.cs" />
     <Compile Include="Code\Gameplay\WowPlayerCombatConfig.cs" />
     <Compile Include="Code\Gameplay\WowShamanTasks.cs" />

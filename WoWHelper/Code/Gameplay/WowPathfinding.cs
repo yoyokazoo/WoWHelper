@@ -76,6 +76,29 @@ namespace WoWHelper.Code
             }
         }
 
+        // Right-click-drag turning, measured by WowPlayer.MouseTurnRateSweepTask
+        // (WowTurnCalibrationTasks.cs) at 1px steps from 1-363px, then 25px steps from
+        // 370-595px: exactly linear through the origin at 41px per 10 degrees (e.g. 41px ->
+        // 10.00, 205px -> 50.00, 328px -> 80.00, 595px -> 145.13), zero spread across repeats,
+        // identical left vs right. Drags under 4px didn't turn at all. Measured up to ~145
+        // degrees; the last stretch to 180 (~738px) is extrapolated. Measured with the
+        // in-game Mouse Look Speed at its default of 5.5, on a 3440-wide screen resolution --
+        // this constant may depend on either, so re-run the sweep if the setting or the
+        // resolution changes (this may need to become per-resolution, e.g. on
+        // WowScreenConfiguration, if other resolutions measure differently).
+        public const float MOUSE_DRAG_PIXELS_PER_DEGREE = 4.1f;
+        public const int MOUSE_DRAG_MIN_EFFECTIVE_PIXELS = 4;
+
+        // Signed drag distance for a signed turn, using GetDegreesToMove's convention
+        // (positive = turn left, negative = turn right), so its result can be passed straight
+        // in. Returns Mouse.MoveRelative's X convention: positive = drag right, negative =
+        // drag left. Turns under ~1 degree return a drag the game ignores (see
+        // MOUSE_DRAG_MIN_EFFECTIVE_PIXELS).
+        public static int GetMouseDragPixelsForDegrees(float degreesToMove)
+        {
+            return -(int)Math.Round(degreesToMove * MOUSE_DRAG_PIXELS_PER_DEGREE);
+        }
+
         public static float Clamp(float value, float min, float max)
         {
             if (value < min) return min;
