@@ -282,9 +282,9 @@ namespace WoWHelper.Code.WorldState
         /*
 /target Steeljaw
         */
-        public static readonly WowLocationConfiguration LEVEL_42_TANARIS_TURTLES = new WowLocationConfiguration
+        public static readonly WowLocationConfiguration LEVEL_41_TANARIS_TURTLES = new WowLocationConfiguration
         {
-            Title = "Tanaris Turtles (Level 42+)",
+            Title = "Tanaris Turtles (Level 41+)",
             MinimumLevel = 41,
             MaximumLevel = 48,
             Zone = WowZone.Tanaris,
@@ -301,6 +301,20 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(67.86f, 35.27f),
                 new Vector2(68.54f, 34.02f),
             },
+            /*
+            MerchantConfig = new WowMerchantConfiguration
+            {
+                Name = "Muuran",
+                Waypoints = new List<Vector2>
+                {
+                    new Vector2(53.65f, 57.29f),
+                    new Vector2(54.63f, 57.79f),
+                    new Vector2(55.48f, 58.22f),
+                    new Vector2(55.88f, 57.25f),
+                    new Vector2(55.60f, 56.51f),
+                },
+            },
+            */
         };
 
         #endregion
@@ -966,7 +980,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_53_NORTH_FELWOOD,
             LEVEL_50_FELWOOD_SOUTH,
             LEVEL_46_FERALAS_HIPPOGRYPHS,
-            LEVEL_42_TANARIS_TURTLES,
+            LEVEL_41_TANARIS_TURTLES,
             LEVEL_36_KODO_GRAVEYARD,
             LEVEL_34_SHIMMERING_FLATS_WAYPOINTS,
             LEVEL_29_HILLSBRAD_RIVER_WAYPOINTS,
