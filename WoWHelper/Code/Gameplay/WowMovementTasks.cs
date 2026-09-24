@@ -33,6 +33,19 @@ namespace WoWHelper
             float stuckX = WorldState.MapX;
             float stuckY = WorldState.MapY;
 
+            // Re-anchors stuck detection at our current position with a fresh clock, and
+            // re-arms the full jump -> wiggle -> wiggle -> give-up escalation.
+            void ResetStuckDetection()
+            {
+                stuckX = WorldState.MapX;
+                stuckY = WorldState.MapY;
+                lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                stationaryJumpAttemptedOnce = false;
+                stationaryWiggleAttemptedOnce = false;
+                stationaryWiggleAttemptedTwice = false;
+                stationaryAlertSent = false;
+            }
+
             await FocusOnWindowTask();
 
             // Count loops of the waypoints, if we haven't found a target in N loops, error out
@@ -126,32 +139,19 @@ namespace WoWHelper
 
                 if (merchantRunIsStationaryByDesign)
                 {
-                    stuckX = WorldState.MapX;
-                    stuckY = WorldState.MapY;
-                    lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    stationaryJumpAttemptedOnce = false;
-                    stationaryWiggleAttemptedOnce = false;
-                    stationaryWiggleAttemptedTwice = false;
-                    stationaryAlertSent = false;
+                    ResetStuckDetection();
                 }
                 else
                 {
                     float distanceFromStuckAnchor = Vector2.Distance(new Vector2(WorldState.MapX, WorldState.MapY), new Vector2(stuckX, stuckY));
                     if (distanceFromStuckAnchor >= MEANINGFUL_LOCATION_CHANGE_AMOUNT)
                     {
-                        stuckX = WorldState.MapX;
-                        stuckY = WorldState.MapY;
-                        lastLocationChangeTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-
                         // We made real progress -- if we get stuck again later in this same
                         // PathfindingLoopTask call (a different obstacle further along the
                         // route), give it the full jump -> wiggle -> wiggle -> alert escalation
                         // again instead of leaving every step permanently "already attempted"
                         // from this episode.
-                        stationaryJumpAttemptedOnce = false;
-                        stationaryWiggleAttemptedOnce = false;
-                        stationaryWiggleAttemptedTwice = false;
-                        stationaryAlertSent = false;
+                        ResetStuckDetection();
                     }
 
                     if (!stationaryJumpAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
@@ -207,6 +207,17 @@ namespace WoWHelper
                 if (IsOnMerchantRun)
                 {
                     await MerchantRunStepTask();
+
+                    // The reset above runs BEFORE the step, but WAITING_FOR_AUTO_SELL's step
+                    // itself blocks for MERCHANT_AUTO_SELL_WAIT_MILLIS and then flips the phase
+                    // to WALKING_BACK_TO_ROUTE -- so without resetting again here, the next
+                    // tick would see a clock that's already 15s+ stale and immediately fire
+                    // the jump/wiggle escalation (and eventually the stuck logout) while
+                    // walking away from the vendor.
+                    if (merchantRunIsStationaryByDesign)
+                    {
+                        ResetStuckDetection();
+                    }
                     continue;
                 }
 
@@ -368,7 +379,11 @@ namespace WoWHelper
         // an arbitrary point/tolerance instead of always reading the route's own
         // Waypoints[CurrentWaypointIndex]/DistanceTolerance -- so MerchantRunStepTask can reuse
         // it for the merchant-run legs, which walk a completely different waypoint list.
-        public async Task<bool> MoveTowardsPointTask(Vector2 target, float tolerance)
+        // useMouseRotation picks RotateToDirectionTaskWithMouse over ...WithKeyboard for the
+        // rotate-to-heading step -- the mouse turn is far more accurate, so the merchant run
+        // (which has to stop right on top of the vendor) uses it; route-walking still uses
+        // the keyboard turn.
+        public async Task<bool> MoveTowardsPointTask(Vector2 target, float tolerance, bool useMouseRotation = false)
         {
             float targetDistance = Vector2.Distance(WorldState.PlayerLocation, target);
             float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, target);
@@ -387,7 +402,14 @@ namespace WoWHelper
             {
                 Console.WriteLine($"degreesDifference too large, rotating to heading");
                 //await EndWalkForwardTask();
-                await RotateToDirectionTaskWithKeyboard(desiredDegrees, targetDistance);
+                if (useMouseRotation)
+                {
+                    await RotateToDirectionTaskWithMouse(desiredDegrees, targetDistance);
+                }
+                else
+                {
+                    await RotateToDirectionTaskWithKeyboard(desiredDegrees, targetDistance);
+                }
                 return false;
             }
 
@@ -431,7 +453,7 @@ namespace WoWHelper
                         ? WowPlayerConstants.MERCHANT_FINAL_WAYPOINT_TOLERANCE
                         : WowPlayerConstants.MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE;
 
-                    if (await MoveTowardsPointTask(merchant.Waypoints[CurrentMerchantWaypointIndex], approachTolerance))
+                    if (await MoveTowardsPointTask(merchant.Waypoints[CurrentMerchantWaypointIndex], approachTolerance, useMouseRotation: true))
                     {
                         if (isFinalLeg)
                         {
@@ -465,7 +487,7 @@ namespace WoWHelper
                     break;
 
                 case MerchantRunPhase.WALKING_BACK_TO_ROUTE:
-                    if (await MoveTowardsPointTask(merchant.Waypoints[CurrentMerchantWaypointIndex], WowPlayerConstants.MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE))
+                    if (await MoveTowardsPointTask(merchant.Waypoints[CurrentMerchantWaypointIndex], WowPlayerConstants.MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE, useMouseRotation: true))
                     {
                         if (CurrentMerchantWaypointIndex == 0)
                         {

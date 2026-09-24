@@ -625,13 +625,18 @@ of truth — edits should be made here, not in the WoW install directory.
   `WALKING_BACK_TO_ROUTE` retraces the same waypoints to index 0 and clears
   `IsOnMerchantRun`. The final approach uses the exact same
   rotate-to-heading/strafe-to-lane logic every other waypoint uses (no
-  merchant-specific tolerance branching in `MoveTowardsPointTask` itself) —
+  merchant-specific tolerance branching in `MoveTowardsPointTask` itself),
+  with one difference: every merchant-run leg (both directions) passes
+  `useMouseRotation: true`, so the rotate-to-heading step turns via
+  `RotateToDirectionTaskWithMouse` (right-click camera drag, far more
+  accurate) instead of the `RotateToDirectionTaskWithKeyboard` turn normal
+  route-walking still uses —
   an earlier version special-cased a "precision approach" below a tolerance
   threshold (rotate only past a large fixed heading error, then strafe-only
   fine aiming) to stop the bot circling the merchant's exact spot, but that
   was reverted in favor of the plain shared logic pending live testing
-  against `RotateToDirectionTask`'s own rewritten single-hold-then-verify
-  turn (see the "C# bot architecture" section) — if `MERCHANT_FINAL_WAYPOINT_TOLERANCE`
+  against `RotateToDirectionTask`'s own rewritten single-turn-then-verify
+  logic (see the "C# bot architecture" section) — if `MERCHANT_FINAL_WAYPOINT_TOLERANCE`
   (0.02, still much tighter than any real route's own `DistanceTolerance`)
   still can't be reliably reached with the shared logic, revisit a
   merchant-specific approach then. **Stuck detection**: `PathfindingLoopTask`'s existing
@@ -647,7 +652,14 @@ of truth — edits should be made here, not in the WoW install directory.
   escalation would eventually back off/strafe away from the vendor
   mid-interaction, or (since the clock isn't paused, just not escalated
   against) immediately misfire once `WALKING_BACK_TO_ROUTE` starts, having
-  gone stale during the ~15s+ interaction. **Combat interruption**: `IsOnMerchantRun`/
+  gone stale during the ~15s+ interaction. The reset (`ResetStuckDetection()`,
+  a local function in `PathfindingLoopTask`) runs both before *and after*
+  `MerchantRunStepTask()` on those phases — the after-reset is the one that
+  matters, since `WAITING_FOR_AUTO_SELL`'s step itself blocks for the full
+  15s wait and flips straight to `WALKING_BACK_TO_ROUTE`; with only the
+  before-reset, the first walk-back tick saw a 15s-stale clock and fired the
+  jump/wiggle escalation (and eventually the stuck logout) — confirmed live.
+  **Combat interruption**: `IsOnMerchantRun`/
   `CurrentMerchantRunPhase`/`CurrentMerchantWaypointIndex` are plain
   `WowPlayer` fields (declared next to `CurrentWaypointIndex`/
   `WaypointTraversalDirection`), so the existing combat short-circuit in
