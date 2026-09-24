@@ -134,18 +134,86 @@ function TargetHasSunderArmor()
     return TargetHasDebuffSpellName("Sunder Armor")
 end
 
+-- TEMP diagnostic switch: set true to print exactly what CanCastSweepingStrikes()
+-- sees every time it's checked -- talent-known state and the raw GetSpellCooldown()
+-- values. Same manually-flipped debug-flag pattern as COUNT_ATTACKERS_DEBUG
+-- (WoWFunctions.lua)/COMBAT_STALEMATE_DEBUG (YoyokazooUI.lua). Root-caused the
+-- "Sweeping Strikes never fires" bug this was added for (see CanCastSweepingStrikes()
+-- below), so back to off by default -- flip back to true if Sweeping Strikes needs
+-- debugging again.
+local SWEEPING_STRIKES_DEBUG = false
+
+-- Sweeping Strikes, 12292 -- single rank.
+--
+-- Root-caused live via SWEEPING_STRIKES_DEBUG below: this was hardcoded to 12328,
+-- which is actually Death Wish, not Sweeping Strikes -- GetSpellInfo(12328) still
+-- resolved to a real spell name (so nothing here errored or returned nil-early), it
+-- was just the wrong spell, so this silently checked Death Wish's cooldown instead
+-- and Sweeping Strikes itself never got cast. Corrected to 12292.
+--
+-- The trained-yet check is folded in here rather than exposed as its own
+-- KnowsSweepingStrikes() (unlike KnowsRend/KnowsCharge/KnowsMortalStrikeOrBloodthirst/
+-- KnowsSunderArmor, which stay separate because the C# side reads at least one of them
+-- from more than one place -- KnowsCharge also gates engage-method logic, and
+-- KnowsMortalStrikeOrBloodthirst also picks Heroic Strike's rage reserve). Nothing on
+-- the C# side ever needed "does the player know Sweeping Strikes" on its own, only
+-- paired with the cooldown check, so there was no reason to spend a second ClassBoolOne
+-- bit on it. Folding it in is still required, though, not optional: GetSpellInfo(12292)
+-- resolves a name -- and GetSpellCooldown() for that name reads (0, 0), i.e. "ready" --
+-- for a spell ID the player has never trained at all, the same false-ready quirk
+-- KnowsMortalStrikeOrBloodthirst()'s comment above documents for Mortal Strike/
+-- Bloodthirst. Without this guard, a Warrior who never spent the talent point would
+-- still read "can cast," and since this sits second in the rotation's priority chain
+-- (WowWarriorTasks.cs), it would block every lower-priority ability every tick for an
+-- ability that was never actually going to fire.
+--
+-- Uses SpellIsCooledDownIgnoringGCD() (WoWFunctions.lua), not the plain
+-- SpellIsCooledDown() every other Warrior cooldown check here uses -- Sweeping
+-- Strikes' real cooldown (~30s) is long enough next to the GCD (~1.5s) that plain
+-- SpellIsCooledDown() would usually still read correctly, but right at the moment
+-- the real cooldown clears, GetSpellCooldown() can still be reporting nothing but
+-- the shared GCD window from whatever else was just cast, reading as "still on
+-- cooldown" for that tick. SpellIsCooledDownIgnoringGCD() tells the two apart via
+-- GetGCDProbeSpell() (WoWFunctions.lua), the same class-appropriate real-spell probe
+-- IsGlobalCooldownCooledDown() uses -- see that function's comment for Warrior's own
+-- (not ideal, level-4-gated) pick.
+function CanCastSweepingStrikes()
+    if not IsSpellKnownByName("Sweeping Strikes") then
+        if SWEEPING_STRIKES_DEBUG then
+            print("|cffff9900[sweep]|r CanCastSweepingStrikes: not trained -> false")
+        end
+        return false
+    end
+
+    local result = SpellIsCooledDownIgnoringGCD(12292)
+
+    if SWEEPING_STRIKES_DEBUG then
+        local spellName = GetSpellInfo(12292)
+        local start, duration, enabled = GetSpellCooldown(spellName or 12292)
+        local remaining = (start and duration) and (start + duration - GetTime()) or nil
+        print(string.format(
+            "|cffff9900[sweep]|r CanCastSweepingStrikes: spellName(12292)=%s start=%s duration=%s enabled=%s remaining=%s -> ignoringGCD=%s plainCooledDown=%s",
+            tostring(spellName), tostring(start), tostring(duration), tostring(enabled),
+            tostring(remaining), tostring(result), tostring(SpellIsCooledDown(12292))))
+    end
+
+    return result
+end
+
 ------------------------------------------------------------
 -- Packs Warrior-specific state into the ClassBool/ClassInt pixels. Called
 -- via the GetClassBoolOne/Two/GetClassIntOne dispatchers in WoWFunctions.lua
 -- once UnitClass("player") resolves to WARRIOR, and read on the C# side by
--- WowWarriorClassState.UpdateFromBitmap. G7-G8 are reserved (previously
--- R8/G1/G4/G5/G6 were too -- see the "whether we know it" spell checks above,
--- added there once PlayerLevel-based training gates on the C# side were
--- replaced with real spellbook checks -- and previously CanCastWhirlwind()/
--- CanCastSweepingStrikes() -- removed since nothing ever consumed the
--- decoded WhirlwindCooledDown/SweepingStrikesCooledDown fields on the C#
--- side; re-add here if Whirlwind/Sweeping Strikes gets wired into the actual
--- rotation).
+-- WowWarriorClassState.UpdateFromBitmap. ClassBoolOne's R/G bytes are now
+-- fully packed (R8/G1/G4/G5/G6 were added once PlayerLevel-based training
+-- gates on the C# side were replaced with real spellbook checks; G8 is
+-- CanCastSweepingStrikes, added once WarriorShouldCastSweepingStrikes wired it
+-- into the rotation -- its trained-yet check is folded into
+-- CanCastSweepingStrikes() itself rather than spending a separate bit on it,
+-- since nothing needed that independently of the cooldown check -- see that
+-- function's own comment above for why that's safe here but isn't for
+-- KnowsCharge/KnowsMortalStrikeOrBloodthirst, which do still need their own
+-- bits. G7 is reserved again as a result).
 ------------------------------------------------------------
 function GetWarriorClassBoolOne()
     local boolR1 = HasBuffNamed("Battle Shout")
@@ -165,8 +233,8 @@ function GetWarriorClassBoolOne()
     local boolG4 = KnowsCharge()
     local boolG5 = TargetHasSunderArmor()
     local boolG6 = KnowsSunderArmor()
-    local boolG7 = false
-    local boolG8 = false
+    local boolG7 = false -- reserved
+    local boolG8 = CanCastSweepingStrikes()
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 

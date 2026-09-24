@@ -386,7 +386,8 @@ namespace WoWHelper
             if (Math.Abs(degreesDifference) > WowPathfinding.GetWaypointDegreesTolerance(targetDistance))
             {
                 Console.WriteLine($"degreesDifference too large, rotating to heading");
-                await RotateToDirectionTask(desiredDegrees, targetDistance);
+                //await EndWalkForwardTask();
+                await RotateToDirectionTaskWithKeyboard(desiredDegrees, targetDistance);
                 return false;
             }
 
@@ -480,27 +481,107 @@ namespace WoWHelper
             }
         }
 
+        // Two ways to turn by a computed amount, both taking degreesToMove in
+        // GetDegreesToMove's convention (positive = left, negative = right): TurnByKeyboardTask
+        // and TurnByMouseDragTask. Both do the whole turn in one go rather than polling
+        // WorldState in a tight turn-and-recheck loop -- the addon's pixel-row update cadence
+        // lags real turning, so a loop that re-reads FacingDegrees every iteration and
+        // corrects on the fly tends to overshoot/oscillate on the stale reads. Keyboard is the
+        // one currently used everywhere (preferred feel); mouse is more accurate and kept for
+        // future use.
+
         // Measured empirically: how long holding a single turn key takes to spin the
-        // character a full 360 degrees. Shared by RotateToDirectionTask below and
-        // TurnToFaceTargetMarkerTask further down, both of which convert a computed
-        // degrees-to-turn directly into a turn-key hold duration rather than polling
-        // WorldState in a tight hold-and-recheck loop -- the addon's pixel-row update
-        // cadence lags real turning, so a loop that re-reads FacingDegrees every
-        // iteration and corrects on the fly tends to overshoot/oscillate on the stale
-        // reads. A single calculated hold, verified once afterward, sidesteps that.
+        // character a full 360 degrees.
         private const float FULL_ROTATION_MILLIS = 2000f;
 
+        // Holds TURN_LEFT/TURN_RIGHT for the duration degreesToMove corresponds to (via
+        // FULL_ROTATION_MILLIS). Returns the hold duration in millis.
+        private async Task<int> TurnByKeyboardTask(float degreesToMove)
+        {
+            Keys directionKey = degreesToMove <= 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
+            int turnMillis = (int)((Math.Abs(degreesToMove) / 360f) * FULL_ROTATION_MILLIS);
+
+            try
+            {
+                Keyboard.KeyDown(directionKey);
+                await Task.Delay(turnMillis);
+            }
+            finally
+            {
+                Keyboard.KeyUp(WowInput.TURN_LEFT);
+                Keyboard.KeyUp(WowInput.TURN_RIGHT);
+            }
+
+            return turnMillis;
+        }
+
+        // How long to wait after a mouse turn before reading FacingDegrees back out, so the
+        // addon's pixel row has repainted with the post-turn heading. Without it, a stale
+        // read makes the caller think the turn fell short and turn again -- overshooting.
+        private const int TURN_SETTLE_MILLIS = 100;
+
+        // Turns with a single right-click mouse drag, sized via
+        // WowPathfinding.GetMouseDragPixelsForDegrees. Measured to land exactly (zero spread
+        // across repeats -- see WowTurnCalibrationTasks.cs), unlike a timed turn-key hold,
+        // which drifts with timer jitter. Skips drags too small for the game to register
+        // (they'd do nothing, and a right-click that doesn't drag risks counting as a click
+        // on whatever's under the cursor). Returns the pixels dragged (0 if skipped).
+        private async Task<int> TurnByMouseDragTask(float degreesToMove)
+        {
+            int dragPixels = WowPathfinding.GetMouseDragPixelsForDegrees(degreesToMove);
+            if (Math.Abs(dragPixels) < WowPathfinding.MOUSE_DRAG_MIN_EFFECTIVE_PIXELS)
+            {
+                return 0;
+            }
+
+            await RightClickDragTask(dragPixels);
+            await Task.Delay(TURN_SETTLE_MILLIS);
+            return dragPixels;
+        }
+
+        // Right-click drags the camera deltaX pixels horizontally (positive = right), which
+        // turns the character with it. Starts from (width/2, height/4) -- the same point the
+        // turn-rate calibration was measured from.
+        private async Task RightClickDragTask(int deltaX)
+        {
+            var resolution = FarmingConfig.ScreenConfiguration.Resolution;
+            Mouse.Move(resolution.Width / 2, resolution.Height / 4);
+            await Task.Delay(50);
+
+            try
+            {
+                Mouse.ButtonDown(Mouse.MouseKeys.Right);
+                await Task.Delay(50);
+                Mouse.MoveRelative(deltaX, 0);
+                await Task.Delay(50);
+            }
+            finally
+            {
+                Mouse.ButtonUp(Mouse.MouseKeys.Right);
+            }
+        }
+
+        public Task<bool> RotateToDirectionTaskWithKeyboard(float desiredDegrees, float distance)
+        {
+            return RotateToDirectionTask(desiredDegrees, distance, TurnByKeyboardTask, "ms held");
+        }
+
+        public Task<bool> RotateToDirectionTaskWithMouse(float desiredDegrees, float distance)
+        {
+            return RotateToDirectionTask(desiredDegrees, distance, TurnByMouseDragTask, "px dragged");
+        }
+
         // Turns to face desiredDegrees: reads the current facing once, computes the
-        // signed degrees-to-turn and the turn-key hold duration that corresponds to
-        // (via FULL_ROTATION_MILLIS), does that one hold, then re-reads WorldState to
-        // verify. Returns true only if the post-turn facing landed within
+        // signed degrees-to-turn, does that as one turn via turnTask (TurnByKeyboardTask or
+        // TurnByMouseDragTask, which returns an amount in turnUnits for logging), then
+        // re-reads WorldState to verify. Returns true only if the post-turn facing landed within
         // GetWaypointDegreesTolerance(distance) of desiredDegrees -- false otherwise
         // (e.g. movement during the turn, or a stale/late WorldState read), leaving any
         // retry to the caller: MoveTowardsWaypointTask calls this again on its next
         // iteration with a freshly-computed desiredDegrees/distance, so a single
         // imperfect turn self-corrects on the following pass rather than needing an
         // internal retry loop here.
-        public async Task<bool> RotateToDirectionTask(float desiredDegrees, float distance)
+        private async Task<bool> RotateToDirectionTask(float desiredDegrees, float distance, Func<float, Task<int>> turnTask, string turnUnits)
         {
             UpdateWorldState();
 
@@ -514,21 +595,9 @@ namespace WoWHelper
                 return true;
             }
 
-            Keys directionKey = degreesToMove <= 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
-            int turnMillis = (int)((absDegreesToMove / 360f) * FULL_ROTATION_MILLIS);
+            int turnAmount = await turnTask(degreesToMove);
 
-            Console.WriteLine($"DEBUG RotateToDirectionTask: currentDegrees {currentDegrees:0.0}, desiredDegrees {desiredDegrees:0.0}, degreesToMove {degreesToMove:0.0} -> holding {directionKey} for {turnMillis}ms");
-
-            try
-            {
-                Keyboard.KeyDown(directionKey);
-                await Task.Delay(turnMillis);
-            }
-            finally
-            {
-                Keyboard.KeyUp(WowInput.TURN_LEFT);
-                Keyboard.KeyUp(WowInput.TURN_RIGHT);
-            }
+            Console.WriteLine($"DEBUG RotateToDirectionTask: currentDegrees {currentDegrees:0.0}, desiredDegrees {desiredDegrees:0.0}, degreesToMove {degreesToMove:0.0} -> {turnAmount} {turnUnits}");
 
             UpdateWorldState();
 
@@ -582,8 +651,8 @@ namespace WoWHelper
         }
 
         // Turns to (roughly) face the current target: scans once for the target marker,
-        // calculates the bearing and the turn-key hold duration that bearing corresponds to
-        // (via FULL_ROTATION_MILLIS), does that one turn, then a final verification scan.
+        // calculates the bearing, does that one turn (TurnByKeyboardTask), then a final
+        // verification scan.
         // Returns true only if that verification lands within TARGET_FACING_CONE_DEGREES/2 of
         // dead-ahead -- false otherwise (marker not visible at all, or still outside the cone
         // after the turn, e.g. the target moved during it), leaving retries to the caller
@@ -599,14 +668,10 @@ namespace WoWHelper
                 return false;
             }
 
-            int turnMillis = (int)((Math.Abs(bearing.Value) / 360f) * FULL_ROTATION_MILLIS);
-            Keys turnKey = bearing.Value > 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
+            // Bearing is positive = turn right; TurnByKeyboardTask takes positive = turn left.
+            int turnMillis = await TurnByKeyboardTask(-bearing.Value);
 
-            Console.WriteLine($"DEBUG TurnToFaceTargetMarkerTask: bearing {bearing.Value:0.0} degrees -> holding {turnKey} for {turnMillis}ms");
-
-            Keyboard.KeyDown(turnKey);
-            await Task.Delay(turnMillis);
-            Keyboard.KeyUp(turnKey);
+            Console.WriteLine($"DEBUG TurnToFaceTargetMarkerTask: bearing {bearing.Value:0.0} degrees -> held turn key {turnMillis}ms");
 
             float? verifyBearing = GetTargetMarkerBearingDegrees();
             bool success = verifyBearing != null && Math.Abs(verifyBearing.Value) <= TARGET_FACING_CONE_DEGREES / 2f;
@@ -910,6 +975,7 @@ namespace WoWHelper
             Keyboard.KeyUp(WowInput.STRAFE_LEFT);
             Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
             Keyboard.KeyUp(WowInput.LatestShiftKey);
+            Keyboard.KeyUp(WowInput.LatestControlKey);
             Keyboard.KeyUp(Keys.LShiftKey);
             await Task.Delay(0);
 

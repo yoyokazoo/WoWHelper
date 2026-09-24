@@ -76,8 +76,51 @@ function SpellIsCooledDown(spellId)
     return false
 end
 
--- Classic: this spellId is commonly used to query the global cooldown
+-- Classic: this spellId is commonly used to query the global cooldown -- but probing it
+-- directly never showed a cooldown in testing on this client (start/duration stayed 0
+-- for every cast, any class), so it's kept only as GetGCDProbeSpell()'s last-resort
+-- fallback for a class with no real probe spell picked yet, not used directly anywhere.
 local GCD_SPELL_ID = 61304
+
+-- Picks the class-appropriate REAL spell to probe for the shared global cooldown's own
+-- start/duration -- shared by IsGlobalCooldownCooledDown() and
+-- SpellIsCooledDownIgnoringGCD() below, so there's exactly one place that decides which
+-- probe spell each class uses, not two copies that could drift out of sync (same class of
+-- coupling as everything else CLAUDE.md's "keep in sync" notes call out). A probe spell
+-- must be known early (ideally from level 1) and have NO cooldown of its own beyond the
+-- GCD -- a spell with a real independent cooldown (e.g. Charge) would read as "on
+-- cooldown" long after the GCD itself clears, and an ability that doesn't trigger the GCD
+-- at all (e.g. Heroic Strike -- Warrior's original, wrong pick here) would never reflect
+-- it either.
+--
+-- Confirmed via testing: Shaman (Lightning Bolt Rank 1, same spell ID
+-- CanSpellcastPullTarget() already uses above).
+--
+-- Warrior: Rend Rank 1 (772 -- same rank-1 ID TargetHasRend()'s name-match comment in
+-- WarriorFunctions.lua lists among Rend's 7 ranks). Not ideal -- Rend isn't trainable
+-- until level 4, so GetSpellCooldown(772) returns no start/duration at all below that
+-- (both callers below already treat "no start" as "GCD/cooldown clear", so a level 1-3
+-- Warrior just always reads as cooled down rather than actually tracking anything) -- but
+-- it's the first ability a Warrior learns that actually triggers the GCD, so there's no
+-- earlier-available real probe to use instead.
+--
+-- NOT yet confirmed via testing: Warlock (Shadow Bolt Rank 1, same spell ID
+-- CanSpellcastPullTarget() uses above, known from level 1, no cooldown beyond GCD). Verify
+-- the same way Shaman was (debug log around a cast, watch GCDCooledDown flip false->true)
+-- before trusting it.
+function GetGCDProbeSpell()
+    local _, classFile = UnitClass("player")
+
+    if classFile == "SHAMAN" then
+        return 403 -- Lightning Bolt (Rank 1)
+    elseif classFile == "WARRIOR" then
+        return 772 -- Rend (Rank 1)
+    elseif classFile == "WARLOCK" then
+        return 686 -- Shadow Bolt (Rank 1) -- UNTESTED
+    end
+
+    return GCD_SPELL_ID -- no real probe picked for this class yet -- confirmed NOT to work
+end
 
 -- Returns true if the *spell's own* cooldown is finished.
 -- If the only cooldown present is the GCD, returns true.
@@ -105,8 +148,10 @@ function SpellIsCooledDownIgnoringGCD(spellId)
         return true
     end
 
-    -- If we're here, spell has a cooldown reported. It might just be the GCD.
-    local gcdStart, gcdDuration = GetSpellCooldown(GCD_SPELL_ID)
+    -- If we're here, spell has a cooldown reported. It might just be the GCD -- probe the
+    -- same class-appropriate real spell IsGlobalCooldownCooledDown() does (GetGCDProbeSpell()
+    -- above), not the GCD_SPELL_ID placeholder directly (confirmed not to work on this client).
+    local gcdStart, gcdDuration = GetSpellCooldown(GetGCDProbeSpell())
 
     -- If no GCD data, fall back to original behavior
     if not gcdStart or gcdDuration == 0 then
@@ -528,6 +573,41 @@ function AreEnemyNameplatesTurnedOn()
     return GetCVarBool("nameplateShowEnemies")
 end
 
+-- Returns the name of whatever's currently bound to a key combo, in Blizzard's own
+-- binding-string format (e.g. "CTRL-4"), or "" if nothing is bound to it at all. Thin
+-- wrapper around GetBindingAction() so callers don't need to know that format
+-- themselves -- see FindBoundKeysMessage() below for the case this exists for.
+function GetKeyBindingAction(keyString)
+    return GetBindingAction(keyString) or ""
+end
+
+-- Checks a modifier (e.g. "CTRL"/"SHIFT", Blizzard's own binding-string modifier
+-- name) against a list of { display, lookup } keys -- lookup being Blizzard's own
+-- binding-string key name (e.g. "4" or "MINUS" for "-"), display being what's
+-- actually printed on the key -- and returns one combined "Modifier+display=action,
+-- ..." message listing everything WoW's own Key Bindings menu already has bound to
+-- one of those combos, or "" if none of them are bound. Shared by every
+-- keybind-collision check in YoyokazooUI.lua's PLAYER_ENTERING_WORLD handling (Ctrl+4
+-- for Sweeping Strikes, every Shift+<key> our macros use for their [mod:shift] cast)
+-- -- those all exist because a macro's own bot-driven keypress (independent of WoW's
+-- action-bar keybinding system) never gets a chance to run if the Key Bindings menu
+-- already claims that combo first: WoW's own binding intercepts the keypress before
+-- the macro ever sees it, so whatever's gated on that modifier silently never fires
+-- -- confirmed live as the actual failure mode for Ctrl+4. Returning one combined
+-- message (rather than the caller looping key-by-key itself) means a keyboard with
+-- several of a modifier's keys already bound reports as one line, not a wall of
+-- separate toasts.
+function FindBoundKeysMessage(modifierLookup, modifierDisplay, keys)
+    local bindings = {}
+    for _, keyInfo in ipairs(keys) do
+        local binding = GetKeyBindingAction(modifierLookup .. "-" .. keyInfo.lookup)
+        if binding ~= "" then
+            table.insert(bindings, modifierDisplay .. "+" .. keyInfo.display .. "=" .. binding)
+        end
+    end
+    return table.concat(bindings, ", ")
+end
+
 -- Whether our current target is actively engaged with US specifically (its
 -- target is us), not just "tapped by us" (loot rights) or "in combat with
 -- someone" -- true the instant it aggroes onto the player, even before any
@@ -764,36 +844,12 @@ end
 -- Was checking Lightning Shield's (324) cooldown as a stand-in for the GCD --
 -- broken for any non-Shaman character (and low-level Shamans without it
 -- yet), since it depends on the character actually knowing a specific
--- class's spell. Query the GCD's own spell ID directly instead, same
--- technique SpellIsCooledDownIgnoringGCD already uses above -- class-
--- agnostic, no GetSpellInfo() lookup needed.
+-- class's spell. Probes the same class-appropriate real spell
+-- SpellIsCooledDownIgnoringGCD() does (GetGCDProbeSpell() above -- see its own comment
+-- for the full reasoning and confirmed-vs-untested status of each class's pick) instead
+-- of GCD_SPELL_ID directly, which never showed a cooldown in testing on this client.
 function IsGlobalCooldownCooledDown()
-    local _, classFile = UnitClass("player")
-
-    -- GCD_SPELL_ID never showed a cooldown for ANY cast in testing (Rockbiter Weapon or
-    -- otherwise) on this client -- confirmed via debug logging, start/duration stayed 0
-    -- throughout. Probing a real, always-known low-level spell's own cooldown works instead,
-    -- since the GCD blocks it too while active -- as long as the probe spell has no cooldown of
-    -- its own beyond the GCD (a spell with a real independent cooldown, e.g. Charge, would read
-    -- as "on cooldown" long after the GCD itself clears, so it's not a safe pick here).
-    --
-    -- Confirmed via testing: Shaman (Lightning Bolt Rank 1, same spell ID CanSpellcastPullTarget()
-    -- already uses above). NOT yet confirmed via testing: Warrior (Heroic Strike, known from
-    -- level 1, rage-gated with no cooldown beyond GCD -- already referenced by name in
-    -- WarriorFunctions.lua), and Warlock (Shadow Bolt Rank 1, same spell ID
-    -- CanSpellcastPullTarget() uses above, known from level 1, no cooldown beyond GCD). Verify
-    -- these the same way Shaman was (debug log around a cast, watch GCDCooledDown flip
-    -- false->true) before trusting them.
-    local probeSpell = GCD_SPELL_ID
-    if classFile == "SHAMAN" then
-        probeSpell = 403 -- Lightning Bolt (Rank 1)
-    elseif classFile == "WARRIOR" then
-        probeSpell = "Heroic Strike" -- UNTESTED
-    elseif classFile == "WARLOCK" then
-        probeSpell = 686 -- Shadow Bolt (Rank 1) -- UNTESTED
-    end
-
-    local start, duration = GetSpellCooldown(probeSpell)
+    local start, duration = GetSpellCooldown(GetGCDProbeSpell())
 
     if not start or duration == 0 then
         return true
@@ -872,16 +928,19 @@ AUTO_SELL_WHITELIST_ITEM_NAMES = {
     "Turtle Meat",
     "Light Leather",
     "Medium Leather",
+    "Heavy Leather",
+    "Thick Leather",
     "Light Hide",
     "Medium Hide",
     "Heavy Hide",
     "Stringy Vulture Meat",
     "Mystery Meat",
     "Raw Rockscale Cod",
-    "Heavy Leather",
     "Large Fang",
     "Long Tail Feather",
     "Sharp Claw",
+    "Buzzard Wing",
+    "Heavy Kodo Meat",
 }
 
 local function IsAutoSellWhitelistedByName(itemName)

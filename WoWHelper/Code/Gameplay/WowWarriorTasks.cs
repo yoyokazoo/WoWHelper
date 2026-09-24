@@ -96,47 +96,82 @@ namespace WoWHelper
                     BerserkerRageTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
 
-                // Finally, if we've made it this far, do standard combat actions
+                // Finally, if we've made it this far, do standard combat actions. This chain
+                // picks ONE ability by priority based purely on game state (is the buff up,
+                // is the proc available, does the target already have the debuff, ...) --
+                // the WarriorShouldCastX checks deliberately don't look at rage. The rage
+                // check happens inside the chosen branch: if we can't afford the ability
+                // we've picked, we do nothing this tick and wait for rage to build, rather
+                // than falling through to something cheaper.
+                // Otherwise a 30-rage Mortal Strike/Bloodthirst coming off cooldown would
+                // keep getting starved by 15-rage fillers spent the moment they're affordable.
                 if (WarriorShouldCastBattleShout(classState))
                 {
-                    await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT);
+                    if (WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
+                    {
+                        await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT);
+                    }
+                }
+                else if (WarriorShouldCastSweepingStrikes(classState))
+                {
+                    if (WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    {
+                        await WowInput.PressKeyWithControl(WowInput.WARRIOR_CTRL_SWEEPING_STRIKES);
+                    }
                 }
                 else if (WarriorShouldCastOverpower(classState))
                 {
-                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_OVERPOWER);
+                    if (WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
+                    {
+                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_OVERPOWER);
+                    }
                 }
                 else if (WarriorShouldCastExecute(classState))
                 {
-                    await WowInput.PressKey(WowInput.WARRIOR_EXECUTE);
+                    if (WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST)
+                    {
+                        await WowInput.PressKey(WowInput.WARRIOR_EXECUTE);
+                    }
                 }
                 else if (WarriorShouldCastSunderArmor(classState))
                 {
-                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_SUNDER_ARMOR);
+                    if (WorldState.ResourcePercent >= WowGameplayConstants.SUNDER_ARMOR_RAGE_COST)
+                    {
+                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_SUNDER_ARMOR);
+                    }
                 }
                 else if (WarriorShouldCastRend(classState))
                 {
-                    await WowInput.PressKey(WowInput.WARRIOR_REND);
+                    if (WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
+                    {
+                        await WowInput.PressKey(WowInput.WARRIOR_REND);
+                    }
+                }
+                else if (WarriorShouldCastMortalStrikeOrBloodthirst(classState))
+                {
+                    if (WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
+                    {
+                        await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
+                    }
                 }
                 else if (WorldState.AttackerCount > 1)
                 {
-                    if (WarriorShouldCastMortalStrikeOrBloodthirst(classState))
+                    if (WarriorShouldCastCleave(classState))
                     {
-                        await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
-                    }
-                    else if (WarriorShouldCastCleave(classState))
-                    {
-                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_CLEAVE);
+                        if (WorldState.ResourcePercent >= WarriorCleaveRageRequired(classState))
+                        {
+                            await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_CLEAVE);
+                        }
                     }
                 }
-                else if (WorldState.AttackerCount <= 1) // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
+                else // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
                 {
-                    if (WarriorShouldCastMortalStrikeOrBloodthirst(classState))
+                    if (WarriorShouldCastHeroicStrike(classState))
                     {
-                        await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
-                    }
-                    else if (WarriorShouldCastHeroicStrike(classState))
-                    {
-                        await WowInput.PressKey(WowInput.WARRIOR_HEROIC_STRIKE);
+                        if (WorldState.ResourcePercent >= WarriorHeroicStrikeRageRequired(classState))
+                        {
+                            await WowInput.PressKey(WowInput.WARRIOR_HEROIC_STRIKE);
+                        }
                     }
                     // TODO: Actually split out Heroic Strike and cast if we have really surplus rage
                 }
@@ -157,21 +192,35 @@ namespace WoWHelper
             return WorldState.IsTargetFearCaster && !CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS);
         }
 
+        // None of the WarriorShouldCastX checks below look at rage -- they only decide
+        // whether the ability is the right thing to be doing given the game state. Rage is
+        // checked afterwards, inside the chosen branch of the rotation chain.
+
         public bool WarriorShouldCastBattleShout(WowWarriorClassState classState)
         {
-            return !classState.BattleShoutActive && WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST;
+            return !classState.BattleShoutActive;
+        }
+
+        // Only below Battle Shout in priority. Sweeping Strikes makes the next
+        // few melee swings cleave to a second target, so it's only worth popping
+        // against multiple attackers, and only once it's actually trained and off
+        // cooldown -- both folded into classState.CanCastSweepingStrikes itself
+        // (see its property comment on WowWarriorClassState).
+        public bool WarriorShouldCastSweepingStrikes(WowWarriorClassState classState)
+        {
+            return classState.CanCastSweepingStrikes && 
+                WorldState.AttackerCount > 1;
         }
 
         public bool WarriorShouldCastOverpower(WowWarriorClassState classState)
         {
-            return classState.OverpowerUsable && WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST;
+            return classState.OverpowerUsable;
         }
 
         public bool WarriorShouldCastExecute(WowWarriorClassState classState)
         {
             return classState.KnowsExecute &&
-                WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD &&
-                WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST;
+                WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD;
         }
 
         // One Sunder Armor per target, and only while it's still worth it: a single stack's
@@ -183,15 +232,14 @@ namespace WoWHelper
         {
             return classState.KnowsSunderArmor &&
                 !classState.TargetHasSunderArmor &&
-                WorldState.TargetHpPercent >= WowPlayerConstants.SUNDER_ARMOR_HP_THRESHOLD &&
-                WorldState.ResourcePercent >= WowGameplayConstants.SUNDER_ARMOR_RAGE_COST;
+                WorldState.TargetHpPercent >= WowPlayerConstants.SUNDER_ARMOR_HP_THRESHOLD;
         }
 
         // Bleed-immune targets never get Rend, regardless of anything else. Otherwise, Rend
-        // once it's actually trained, we can afford it, and the target isn't already bled,
-        // but only if it's worth the rage: either high enough HP that Rend's DoT will have
-        // time to tick, or a runner mob -- those flee at low HP, so Rend's damage-over-time
-        // keeps ticking (and helps finish it off) even after it breaks line of sight/melee range.
+        // once it's actually trained and the target isn't already bled, but only if it's
+        // worth the rage: either high enough HP that Rend's DoT will have time to tick, or a
+        // runner mob -- those flee at low HP, so Rend's damage-over-time keeps ticking (and
+        // helps finish it off) even after it breaks line of sight/melee range.
         public bool WarriorShouldCastRend(WowWarriorClassState classState)
         {
             if (WorldState.IsTargetBleedImmune)
@@ -200,7 +248,6 @@ namespace WoWHelper
             }
 
             return classState.KnowsRend &&
-                WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST &&
                 !classState.TargetHasRend &&
                 (WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD || WorldState.IsTargetRunnerMob);
         }
@@ -208,38 +255,45 @@ namespace WoWHelper
         // classState.MortalStrikeOrBloodThirstCooledDown alone isn't a safe usability check --
         // it's decoded from a Lua cooldown query that reads ready for a spell the player hasn't
         // even trained yet (see KnowsMortalStrikeOrBloodthirst()'s comment in
-        // WarriorFunctions.lua) -- so KnowsMortalStrikeOrBloodthirst has to gate it too. Used
-        // for both the multi- and single-attacker branches below -- those used to differ (only
-        // the single-attacker one had a "PlayerLevel >= 40" gate), but replacing that with the
-        // real trained-or-not check makes both branches' gating identical.
+        // WarriorFunctions.lua) -- so KnowsMortalStrikeOrBloodthirst has to gate it too.
+        // Sits above the attacker-count split in the rotation since it's the same call
+        // either way (the two branches used to duplicate it).
         public bool WarriorShouldCastMortalStrikeOrBloodthirst(WowWarriorClassState classState)
         {
             return classState.KnowsMortalStrikeOrBloodthirst &&
-                classState.MortalStrikeOrBloodThirstCooledDown &&
-                WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST;
+                classState.MortalStrikeOrBloodThirstCooledDown;
         }
 
         // Cleave only if nothing's already queued for the next swing (pressing it again
-        // would just be a wasted keypress until the swing lands) and we have enough spare
-        // rage to bloodthirst right after.
+        // would just be a wasted keypress until the swing lands).
         public bool WarriorShouldCastCleave(WowWarriorClassState classState)
         {
-            return !classState.NextSwingSpellQueued &&
-                WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.CLEAVE_RAGE_COST);
+            return !classState.NextSwingSpellQueued;
         }
 
-        // Heroic only if nothing's already queued for the next swing (see Cleave above), and
-        // we have enough spare rage to bloodthirst right after, unless we haven't trained
-        // Mortal Strike/Bloodthirst yet and can't cast it at all.
+        // Heroic only if nothing's already queued for the next swing (see Cleave above).
         public bool WarriorShouldCastHeroicStrike(WowWarriorClassState classState)
         {
-            if (classState.NextSwingSpellQueued)
-            {
-                return false;
-            }
+            return !classState.NextSwingSpellQueued;
+        }
 
-            return WorldState.ResourcePercent >= (WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST + WowGameplayConstants.HEROIC_STRIKE_RAGE_COST) ||
-                (!classState.KnowsMortalStrikeOrBloodthirst && WorldState.ResourcePercent >= WowGameplayConstants.HEROIC_STRIKE_RAGE_COST);
+        // Cleave/Heroic Strike are fillers for when Mortal Strike/Bloodthirst is on cooldown,
+        // so their rage requirement is their own cost PLUS a reserve for the next Mortal
+        // Strike/Bloodthirst -- otherwise the filler eats the rage MS/BT needs the moment it
+        // comes back up. No reserve if we haven't trained MS/BT yet and can't cast it at all.
+        public int WarriorCleaveRageRequired(WowWarriorClassState classState)
+        {
+            return WowGameplayConstants.CLEAVE_RAGE_COST + WarriorMortalStrikeOrBloodthirstRageReserve(classState);
+        }
+
+        public int WarriorHeroicStrikeRageRequired(WowWarriorClassState classState)
+        {
+            return WowGameplayConstants.HEROIC_STRIKE_RAGE_COST + WarriorMortalStrikeOrBloodthirstRageReserve(classState);
+        }
+
+        private int WarriorMortalStrikeOrBloodthirstRageReserve(WowWarriorClassState classState)
+        {
+            return classState.KnowsMortalStrikeOrBloodthirst ? WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST : 0;
         }
 
         public async Task<bool> WarriorStartBattleReadyRecoverTask(WowWarriorClassState classState)

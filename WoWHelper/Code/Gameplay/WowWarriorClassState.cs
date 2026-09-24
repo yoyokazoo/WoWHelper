@@ -26,6 +26,14 @@ namespace WoWHelper
         public bool KnowsCharge { get; private set; }
         public bool TargetHasSunderArmor { get; private set; }
         public bool KnowsSunderArmor { get; private set; }
+        // Whether Sweeping Strikes is both trained AND off cooldown -- the trained check
+        // is folded into the Lua side's CanCastSweepingStrikes() itself (WarriorFunctions.lua)
+        // rather than exposed as its own bit the way KnowsRend/KnowsSunderArmor/etc. are,
+        // since nothing here ever needs "trained" on its own, only paired with "off
+        // cooldown" (see that function's comment for why that's safe for this one but not
+        // for KnowsCharge/KnowsMortalStrikeOrBloodthirst, which are each read from more
+        // than one place).
+        public bool CanCastSweepingStrikes { get; private set; }
 
         public override void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig)
         {
@@ -63,7 +71,10 @@ namespace WoWHelper
             // the target, not a full 5-stack.
             TargetHasSunderArmor = g5;
             KnowsSunderArmor = g6;
-            // g7-g8, ClassBoolTwo, and ClassIntOne currently reserved/unused for Warrior.
+            // g7 reserved (used to be KnowsSweepingStrikes, folded into CanCastSweepingStrikes
+            // on the Lua side -- see this class's property comment above).
+            CanCastSweepingStrikes = g8;
+            // ClassBoolTwo and ClassIntOne currently reserved/unused for Warrior.
         }
     }
 }

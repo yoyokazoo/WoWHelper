@@ -202,7 +202,9 @@ namespace WoWHelper
                 Keyboard.KeyUp(WowInput.STRAFE_LEFT);
                 Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
                 Keyboard.KeyUp(WowInput.LatestShiftKey);
+                Keyboard.KeyUp(WowInput.LatestControlKey);
                 Keyboard.KeyUp(Keys.LShiftKey);
+                Mouse.ButtonUp(Mouse.MouseKeys.Right); // in case we were mid turn-drag
 
                 Environment.Exit(0);
             };
@@ -240,7 +242,9 @@ namespace WoWHelper
                 Keyboard.KeyUp(WowInput.STRAFE_LEFT);
                 Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
                 Keyboard.KeyUp(WowInput.LatestShiftKey);
+                Keyboard.KeyUp(WowInput.LatestControlKey);
                 Keyboard.KeyUp(Keys.LShiftKey);
+                Mouse.ButtonUp(Mouse.MouseKeys.Right); // in case we were mid turn-drag
 
                 Environment.Exit(0);
             };
@@ -257,7 +261,10 @@ namespace WoWHelper
             //await CreateHeatmapForLooting(saveBitmaps: true);
             //await TargetMarkerDebugTask();
 
-            return await WaitForWorldBuffThenLogoffTask();
+            //await MeasureKeyboardTurnRateTask();
+            await MouseTurnRateSweepTask(startPixels: 370, stepPixels: 25);
+            return true;
+            //return await WaitForWorldBuffThenLogoffTask();
 
             /*
             // Testing ShamanFaceCorrectDirectionToEngageTask/TurnToFaceTargetMarkerTask (see

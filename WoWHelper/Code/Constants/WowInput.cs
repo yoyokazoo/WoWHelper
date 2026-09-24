@@ -246,10 +246,9 @@ namespace WoWHelper.Code
 
         // For when we exit the program with ESC, make sure we don't have any lingering keys pressed down
         public static Keys LatestShiftKey;
+        public static Keys LatestControlKey;
         public static async Task PressKeyWithModifier(Keys key, Keys modifier)
         {
-            LatestShiftKey = key;
-
             Keyboard.KeyDown(modifier);
             await Task.Delay(15);
             Keyboard.KeyDown(key);
@@ -274,6 +273,8 @@ namespace WoWHelper.Code
 
         public static async Task PressKeyWithControl(Keys key)
         {
+            LatestControlKey = key;
+
             await PressKeyWithModifier(key, Keys.LControlKey);
         }
 
