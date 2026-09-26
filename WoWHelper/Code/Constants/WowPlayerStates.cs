@@ -6,7 +6,8 @@
         {
             WAITING_TO_FOCUS_ON_WINDOW,
             RESOLVE_FARMING_CONFIGURATION,
-            RUNNING
+            RUNNING,
+            EXITING
         }
 
         public enum PlayerState

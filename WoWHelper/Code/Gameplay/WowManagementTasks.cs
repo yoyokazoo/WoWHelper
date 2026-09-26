@@ -18,13 +18,22 @@ namespace WoWHelper
     {
         public async Task<bool> FocusOnWindowTask()
         {
-            IntPtr h = ScreenCapture.GetWindowHandleByName("WowClassic");
-            if (h == IntPtr.Zero) { return false; }
+            IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
+            if (wowHandle == IntPtr.Zero) { return false; }
 
-            ScreenCapture.SetForegroundWindow(h);
+            ScreenCapture.SetForegroundWindow(wowHandle);
 
-            await Task.Delay(1750);
-            return !WorldState.OnLoginScreen;
+            for(int tries = 1; tries <= 10; tries++)
+            {
+                await UpdateWorldStateAsync();
+                if (!WorldState.OnLoginScreen)
+                {
+                    Console.WriteLine($"FocusOnWindowTask succeeded after {tries} tries");
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public async Task<bool> RecoverFromLostWindowFocusTask()
