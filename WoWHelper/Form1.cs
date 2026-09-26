@@ -41,7 +41,7 @@ namespace WoWHelper
         private async void button2_Click(object sender, EventArgs e)
         {
             WowPlayer player = new WowPlayer();
-            player.AdHocTest();
+            player.KickOffAdHocTest();
         }
 
         private void button3_Click(object sender, EventArgs e)

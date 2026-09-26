@@ -7,7 +7,6 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
 using WoWHelper.Code.Config;
@@ -196,12 +195,16 @@ namespace WoWHelper
             }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        public void AdHocTest()
+        public void KickOffAdHocTest()
         {
-            _ = AdHocTestTask();
-
             KeyPoller.EscPressed += ReleaseInputsAndExit;
             KeyPoller.Start();
+
+            _ = AdHocTestTask().ContinueWith(t =>
+            {
+                Console.WriteLine($"AdHocTestTask crashed: {t.Exception}");
+                SlackHelper.SendMessageToChannel($"WoWHelper crashed: {t.Exception?.GetBaseException().Message}");
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         public async Task<bool> AdHocTestTask()
