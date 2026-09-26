@@ -21,11 +21,16 @@ namespace WoWHelper
             IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
             if (wowHandle == IntPtr.Zero) { return false; }
 
-            ScreenCapture.SetForegroundWindow(wowHandle);
-
             for(int tries = 1; tries <= 10; tries++)
             {
+                ScreenCapture.SetForegroundWindow(wowHandle);
                 await UpdateWorldStateAsync();
+
+                if (ScreenCapture.GetForegroundWindow() != wowHandle)
+                {
+                    continue;
+                }
+
                 if (!WorldState.OnLoginScreen)
                 {
                     Console.WriteLine($"FocusOnWindowTask succeeded after {tries} tries");
@@ -39,12 +44,16 @@ namespace WoWHelper
         public async Task<bool> RecoverFromLostWindowFocusTask()
         {
             SlackHelper.SendMessageToChannel("Lost focus on WoWClassic window! Refocusing...");
-            await FocusOnWindowTask();
 
-            Mouse.Move(ScreenConfiguration.LootDefaultX, ScreenConfiguration.LootDefaultX);
-            Mouse.PressButton(Mouse.MouseKeys.Left);
+            if (!await FocusOnWindowTask())
+            {
+                Mouse.Move(ScreenConfiguration.LootDefaultX, ScreenConfiguration.LootDefaultY);
+                Mouse.PressButton(Mouse.MouseKeys.Left);
 
-            await Task.Delay(300);
+                await Task.Delay(300);
+
+                await FocusOnWindowTask();
+            }
 
             await KeyUpMovementKeys();
 
