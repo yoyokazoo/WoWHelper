@@ -120,8 +120,7 @@ namespace WoWHelper
 
             PreviousWorldState = new WowWorldState(screenConfiguration);
             WorldState = new WowWorldState(screenConfiguration);
-            // ClassState stays null until ResolveCombatConfiguration can detect the
-            // player's actual class -- see the property comment above.
+            ClassState = null;
 
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }

@@ -36,45 +36,12 @@ namespace WoWHelper
         {
             WowPlayer player = new WowPlayer();
             player.KickOffCoreLoop();
-
-
-            //player.UpdateFromBitmap();
-            //IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
-            //Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromWindowHandle(wowHandle);
-            //ScreenCapture.SaveBitmapToFile(wowBitmap, "TestCapture.bmp");
-            /*
-            Bitmap wowBitmap = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(new Rectangle(0, 0, 400, 400));
-
-            player.UpdateFromBitmap(wowBitmap);
-            ScreenCapture.SaveBitmapToFile(wowBitmap, "TestCapture.bmp");
-
-            Console.WriteLine($"Done ({player.WorldState.HpPercent}) ({player.WorldState.ResourcePercent})");
-            */
-            //_ = CoreGameplayLoopTask();
         }
 
         private async void button2_Click(object sender, EventArgs e)
         {
-            // SlackHelper.SendScreenshotToChannel hits Slack's deprecated files.upload endpoint
-            // (returns "method_deprecated" now) -- using the SlackFileUploadWorkaround hack
-            // instead until that's fixed upstream. See SlackFileUploadWorkaround.cs.
-            /*
-            bool uploaded = await SlackFileUploadWorkaround.UploadScreenshotToChannelAsync(
-                title: "Ad Hoc Test Screenshot",
-                initialComment: "Sent from the Ad Hoc Test button");
-            Console.WriteLine($"Ad Hoc Test screenshot upload {(uploaded ? "succeeded" : "failed")}");
-            */
-
-            //SlackHelper.SendScreenshotToChannel(fileTitle: "Ad Hoc Test Screenshot", fileComment: "Sent from the Ad Hoc Test button");
-            //SlackHelper.SendMessageToChannel("Test slack message!", OnPostMessageCompleted);
             WowPlayer player = new WowPlayer();
             player.AdHocTest();
-        }
-
-        private void OnPostMessageCompleted(PostMessageResponse response)
-        {
-            // TODO: handle the response here
-            Console.WriteLine(response);
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -122,27 +89,6 @@ namespace WoWHelper
             }
         }
 
-        /*
-         * Waypoints = new List<Vector2>
-            {
-                new Vector2(53.60f, 39.54f),
-                new Vector2(53.58f, 40.99f),
-                new Vector2(52.96f, 41.78f),
-                new Vector2(52.07f, 42.04f),
-                new Vector2(51.51f, 41.22f),
-                new Vector2(50.84f, 41.76f),
-                new Vector2(51.25f, 42.36f),
-                new Vector2(50.71f, 43.01f),
-                new Vector2(52.22f, 43.96f),
-                new Vector2(52.97f, 43.92f),
-                new Vector2(53.44f, 43.40f),
-                new Vector2(53.54f, 42.67f),
-                new Vector2(54.59f, 43.87f),
-                new Vector2(55.23f, 42.98f),
-                new Vector2(54.28f, 42.10f),
-                new Vector2(53.96f, 40.54f),
-            },
-        */
         private void button4_Click(object sender, EventArgs e)
         {
             List<Vector2> points = new List<Vector2>();
