@@ -114,25 +114,16 @@ namespace WoWHelper
         // FarmingConfig.CombatConfiguration at startup instead of it being hardcoded.
         public WowCombatConfiguration? PlayerClass { get; private set; }
 
+        // Red Error Text in middle of screen
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
         public bool TargetNeedsToBeInFront { get; private set; }
         public bool InvalidTarget { get; private set; }
         public bool OutOfRange { get; private set; }
-        // "Target not in line of sight" red toast. Only wired up for 3440x1440 so far
-        // (see NotInLineOfSightPositions on WowScreenConfiguration) -- always false on
-        // resolutions that haven't had their positions captured yet.
         public bool NotInLineOfSight { get; private set; }
-        // "No path available" red toast -- the pathing-failure sibling of NotInLineOfSight
-        // (e.g. Charge can't route to the target). Also 3440x1440-only so far, see
-        // NoPathAvailablePositions.
         public bool NoPathAvailable { get; private set; }
-        // Either toast means the same thing for our purposes: the target we picked can't be
-        // reached from where we're standing, so give up on it (see
-        // AbandonUnreachableEngageTarget / MeleeMakeSureWeAreAttackingEnemyTask in
-        // WowCommonCombatTasks.cs). Consumers should read this rather than either flag alone
-        // so both toasts always get identical handling.
         public bool TargetUnreachable => NotInLineOfSight || NoPathAvailable;
+
         public bool OnLoginScreen { get; private set; }
         public bool Underwater { get; private set; }
 
@@ -153,8 +144,6 @@ namespace WoWHelper
             AttackerCount = -1;
             PlayerLevel = -1;
             ScreenConfig = screenConfig;
-
-            //TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
         }
 
         public static WowWorldState GetWoWWorldState(WowScreenConfiguration screenConfig)

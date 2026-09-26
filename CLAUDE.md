@@ -490,7 +490,13 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`Gameplay/WowPathfinding.cs`** — pure-math helpers for waypoint following
   (facing/turn-direction math, angle tolerance that tightens near a waypoint,
   lateral-distance-from-path calc). No side effects, unit-testable.
-- **Target-marker screen tracking** (`WowPlayer.FindTargetMarkerOnScreen`,
+- **`Gameplay/WowScreenCapture.cs`** — stateless static screen-scraping helpers
+  that capture beyond `WowWorldState`'s small per-tick pixel-row crop:
+  `FindTargetMarkerOnScreen` (full-screen target-marker search, see below) and
+  `CreateHeatmapForLooting` (frame-diffs the loot region and returns the point
+  to click — `WowPlayer` stores it into `LootX`/`LootY`). Each takes the
+  `WowScreenConfiguration` it needs rather than reading `WowPlayer` state.
+- **Target-marker screen tracking** (`WowScreenCapture.FindTargetMarkerOnScreen`,
   `WowMovementTasks.cs`) — there's no addon-legal way to read a target's
   actual position/bearing/distance in this client (`UnitPosition`,
   `C_Map.GetPlayerMapPosition`, and nameplate frame measurement are all

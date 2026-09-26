@@ -51,7 +51,7 @@ namespace WoWHelper
         public int LootX { get; private set; }
         public int LootY { get; private set; }
 
-        // Last position FindTargetMarkerOnScreen() actually found the target marker at --
+        // Last position WowScreenCapture.FindTargetMarkerOnScreen() actually found the target marker at --
         // set by WowMovementTasks.WalkIntoMeleeRangeTask() each time a scan succeeds. Null
         // until the first successful scan (or if none has succeeded yet this attempt).
         // Nullable rather than defaulting to 0,0 like LootX/Y above -- unlike loot's "default
@@ -225,96 +225,6 @@ namespace WoWHelper
             return true;
         }
 
-        // Captures a full-screen screenshot and searches it for the sentinel-colored target
-        // marker UIFunctions.lua paints onto the current target's nameplate (see
-        // WowScreenConfiguration.TARGET_MARKER_COLOR) -- a full-resolution capture, not the
-        // tiny fixed pixel-row crop WorldState normally reads, since the marker can be
-        // anywhere on screen. Returns its screen position, or null if not found (marker not
-        // created yet, target occluded, or no target at all). Shared by TargetMarkerDebugTask
-        // and WowMovementTasks.TurnToFaceTargetMarkerTask.
-        public Point? FindTargetMarkerOnScreen()
-        {
-            var resolution = FarmingConfig.ScreenConfiguration.Resolution;
-            var fullScreenRect = new Rectangle(0, 0, resolution.Width, resolution.Height);
-
-            using (Bitmap fullBmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(fullScreenRect))
-            {
-                Point? centroid = BitmapDifferenceVisualizer.FindColorCentroid(fullBmp, WowScreenConfiguration.TARGET_MARKER_COLOR);
-                if (centroid != null)
-                {
-                    //LootX = centroid.Value.X;
-                    //LootY = centroid.Value.Y;
-                }
-
-                // TEMP DEBUG (WalkIntoMeleeRangeTask troubleshooting): confirm whether the
-                // marker is actually being found at all, and where -- remove once resolved.
-                Console.WriteLine(centroid == null
-                    ? $"DEBUG FindTargetMarkerOnScreen: marker NOT found (color {WowScreenConfiguration.TARGET_MARKER_COLOR}, resolution {resolution})"
-                    : $"DEBUG FindTargetMarkerOnScreen: marker found at {centroid.Value}");
-
-                return centroid;
-            }
-        }
-
-        public async Task<bool> CreateHeatmapForLooting(bool saveBitmaps = false)
-        {
-            List<Bitmap> screenChunks = new List<Bitmap>();
-
-            var lootHeatmapRectangle = new Rectangle(
-                        FarmingConfig.ScreenConfiguration.LootHeatmapX,
-                        FarmingConfig.ScreenConfiguration.LootHeatmapY,
-                        FarmingConfig.ScreenConfiguration.LootHeatmapWidth,
-                        FarmingConfig.ScreenConfiguration.LootHeatmapHeight);
-
-            for (int i = 0; i < 20; i++)
-            {
-                Bitmap bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(lootHeatmapRectangle);
-                screenChunks.Add(bmp);
-                await Task.Delay(100);
-            }
-
-            // convert from absolute coords to relative to the snippet we took
-            int ignoreXMin = FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreX - FarmingConfig.ScreenConfiguration.LootHeatmapX;
-            int ignoreXMax = ignoreXMin + FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreWidth;
-            int ignoreYMin = FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreY - FarmingConfig.ScreenConfiguration.LootHeatmapY;
-            int ignoreYMax = ignoreYMin + FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreHeight;
-
-            int squareSize = 40;
-            int halfSquareSize = squareSize / 2;
-
-            var points = BitmapDifferenceVisualizer.FindHotspots(screenChunks, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
-            var bestSquareOffset = BitmapDifferenceVisualizer.FindBestSquareOffset(points, FarmingConfig.ScreenConfiguration.LootHeatmapWidth, FarmingConfig.ScreenConfiguration.LootHeatmapHeight, squareSize);
-            var asdf = BitmapDifferenceVisualizer.BuildDifferenceHeatmap(points, FarmingConfig.ScreenConfiguration.LootHeatmapWidth, FarmingConfig.ScreenConfiguration.LootHeatmapHeight, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
-
-            Console.WriteLine($"Best Offset = {bestSquareOffset}, click at {new Point(bestSquareOffset.offsetX + halfSquareSize, bestSquareOffset.offsetY + halfSquareSize)}");
-            LootX = FarmingConfig.ScreenConfiguration.LootHeatmapX + bestSquareOffset.offsetX + halfSquareSize;
-            LootY = FarmingConfig.ScreenConfiguration.LootHeatmapY + bestSquareOffset.offsetY + halfSquareSize;
-
-            Bitmap example = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(lootHeatmapRectangle);
-
-            if (saveBitmaps)
-            {
-                ScreenCapture.SaveBitmapToFile(asdf, "Heatmap.bmp");
-                ScreenCapture.SaveBitmapToFile(example, "Example.bmp");
-
-                using (Bitmap exampleWithIgnore = new Bitmap(example))
-                using (Graphics graphics = Graphics.FromImage(exampleWithIgnore))
-                {
-                    graphics.FillRectangle(Brushes.Black, ignoreXMin, ignoreYMin, ignoreXMax - ignoreXMin, ignoreYMax - ignoreYMin);
-                    ScreenCapture.SaveBitmapToFile(exampleWithIgnore, "ExampleWithIgnore.bmp");
-                }
-            }
-
-            foreach (Bitmap bmp in screenChunks)
-            {
-                bmp.Dispose();
-            }
-            asdf.Dispose();
-            example.Dispose();
-
-            return true;
-        }
-
         public async Task<bool> CoreGameplayLoopTask()
         {
             FarmStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
@@ -443,7 +353,9 @@ namespace WoWHelper
                         break;
                     case PlayerState.LOOT_ATTEMPT_TWO:
                         Console.WriteLine("Trying to loot a second time, in case the dying anim is slow");
-                        await CreateHeatmapForLooting();
+                        Point lootPoint = await WowScreenCapture.CreateHeatmapForLooting(FarmingConfig.ScreenConfiguration);
+                        LootX = lootPoint.X;
+                        LootY = lootPoint.Y;
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
                             PlayerState.SKIN_ATTEMPT_TWO,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);

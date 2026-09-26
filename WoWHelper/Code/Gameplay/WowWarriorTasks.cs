@@ -381,7 +381,7 @@ namespace WoWHelper
                     {
                         if (!classState.KnowsCharge && classState.CanChargeTarget)
                         {
-                            return FindTargetMarkerOnScreen() != null;
+                            return WowScreenCapture.FindTargetMarkerOnScreen(FarmingConfig.ScreenConfiguration) != null;
                         }
                         return classState.CanChargeTarget;
                     }

@@ -158,6 +158,7 @@
     <Compile Include="Code\Shared\KeyPoller.cs" />
     <Compile Include="Code\Constants\WowInput.cs" />
     <Compile Include="Code\Gameplay\WowPlayer.cs" />
+    <Compile Include="Code\Gameplay\WowScreenCapture.cs" />
     <Compile Include="Code\Gameplay\WowWorldState.cs" />
     <Compile Include="Code\Gameplay\WowClassState.cs" />
     <Compile Include="Code\Gameplay\WowWarriorClassState.cs" />

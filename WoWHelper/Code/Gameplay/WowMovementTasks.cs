@@ -243,7 +243,7 @@ namespace WoWHelper
                 {
                     lastTargetMarkerScanTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                    if (FindTargetMarkerOnScreen() != null)
+                    if (WowScreenCapture.FindTargetMarkerOnScreen(FarmingConfig.ScreenConfiguration) != null)
                     {
                         await WalkTowardsTargetMarkerTask();
 
@@ -649,7 +649,7 @@ namespace WoWHelper
         private const float TARGET_FACING_CONE_DEGREES = 30f;
 
         // Signed bearing in degrees from the player's own screen position to a target marker
-        // position (see WowPlayer.FindTargetMarkerOnScreen / UIFunctions.lua's target-marker
+        // position (see WowScreenCapture.FindTargetMarkerOnScreen / UIFunctions.lua's target-marker
         // section): 0 = dead ahead, positive = turn right by that many degrees, negative =
         // turn left. There is no addon-legal way to read a target's actual position/bearing
         // in this client (UnitPosition, C_Map.GetPlayerMapPosition, and even nameplate frame
@@ -678,7 +678,7 @@ namespace WoWHelper
         // on screen.
         private float? GetTargetMarkerBearingDegrees()
         {
-            var marker = FindTargetMarkerOnScreen();
+            var marker = WowScreenCapture.FindTargetMarkerOnScreen(FarmingConfig.ScreenConfiguration);
             return marker == null ? (float?)null : GetBearingDegreesFromMarkerPosition(marker.Value);
         }
 
@@ -785,7 +785,7 @@ namespace WoWHelper
                         return false;
                     }
 
-                    var marker = FindTargetMarkerOnScreen();
+                    var marker = WowScreenCapture.FindTargetMarkerOnScreen(FarmingConfig.ScreenConfiguration);
                     if (marker == null)
                     {
                         consecutiveMisses++;
