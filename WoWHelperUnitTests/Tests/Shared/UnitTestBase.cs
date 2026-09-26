@@ -38,7 +38,7 @@ namespace WoWHelperUnitTests
         {
             var bmp = LoadBitmap(relativePath);
             Player = new WowPlayer(WowScreenConfigs.GetForBitmap(bmp));
-            Player.UpdateFromBitmap(bmp);
+            Player.UpdateWorldStateFromBitmap(bmp);
         }
     }
 }

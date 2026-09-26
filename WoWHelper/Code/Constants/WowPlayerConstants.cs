@@ -82,5 +82,11 @@
         // existing MERCHANT_SHOW auto-sell handler (YoyokazooUI.lua) to empty the bags before
         // walking back. Interruptible -- see WaitUnlessInCombatTask.
         public const long MERCHANT_AUTO_SELL_WAIT_MILLIS = 15 * 1000;
+
+        // Short circuit for a merchant run that never finishes (e.g. circling the vendor's
+        // exact spot, or failing to open the vendor window and walking back with full bags
+        // forever) -- measured from branch-off, combat time included. Exceeding it triggers
+        // a logout.
+        public const long MERCHANT_RUN_TIMEOUT_MILLIS = 5 * 60 * 1000;
     }
 }

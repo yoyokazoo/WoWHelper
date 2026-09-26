@@ -676,6 +676,14 @@ of truth — edits should be made here, not in the WoW install directory.
   (rare — would mean a mob reached the player at the vendor) the bot still
   walks back once the wait ends; bags may remain full, but the branch-off
   check above will simply retry on the route's next lap.
+  **Timeout**: branch-off stamps `WowPlayer.MerchantRunStartTime`; if
+  `IsOnMerchantRun` is still true `WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS`
+  (5 min, wall-clock from branch-off, combat time included) later,
+  `PathfindingLoopTask` sets `LogoutTriggered`/`LogoutReason` (naming the
+  phase it got stuck in) and returns, same as the stuck-on-terrain give-up.
+  The check sits at the top of the `IsOnMerchantRun` block, so it's only
+  evaluated while pathfinding runs — a timeout that elapses mid-combat fires
+  on the first pathfinding tick after combat ends.
 - **`Constants/`** — `WowInput.cs` maps logical actions to keybinds/macros the
   bot presses (expects specific in-game keybinds/macros to be set up to match),
   `WowPlayerConstants.cs` / `WowGameplayConstants.cs` hold thresholds/timings.

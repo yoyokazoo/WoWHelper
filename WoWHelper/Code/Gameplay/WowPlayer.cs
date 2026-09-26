@@ -85,6 +85,9 @@ namespace WoWHelper
         public bool IsOnMerchantRun { get; private set; }
         public MerchantRunPhase CurrentMerchantRunPhase { get; private set; }
         public int CurrentMerchantWaypointIndex { get; private set; }
+        // Unix millis when the current merchant run branched off the route -- see the
+        // MERCHANT_RUN_TIMEOUT_MILLIS check in PathfindingLoopTask.
+        public long MerchantRunStartTime { get; private set; }
 
         public bool LogoutTriggered { get; private set; }
         public string LogoutReason { get; private set; }
@@ -143,15 +146,7 @@ namespace WoWHelper
             var timeToWait = NextUpdateTime - now;
             int timeToWaitClamped = (int)Math.Max(0, timeToWait);
             await Task.Delay(timeToWaitClamped);
-
-            PreviousWorldState.Bmp?.Dispose();
-            PreviousWorldState = WorldState;
-            WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
-            // ClassState is still null before ResolveCombatConfiguration has run (its
-            // concrete type isn't known yet -- nothing reads it before then).
-            ClassState?.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
-
-            NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
+            UpdateWorldState();
         }
 
         public void UpdateWorldState()
@@ -165,7 +160,7 @@ namespace WoWHelper
         }
 
         // For Testing only, otherwise use UpdateWorldState
-        public void UpdateFromBitmap(Bitmap bmp)
+        public void UpdateWorldStateFromBitmap(Bitmap bmp)
         {
             WorldState.UpdateFromBitmap(bmp);
             ClassState?.UpdateFromBitmap(bmp, FarmingConfig.ScreenConfiguration);

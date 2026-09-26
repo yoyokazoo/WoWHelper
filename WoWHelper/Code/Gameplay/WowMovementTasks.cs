@@ -206,6 +206,15 @@ namespace WoWHelper
                 // no extra plumbing needed.
                 if (IsOnMerchantRun)
                 {
+                    if (!CurrentTimeInsideDuration(MerchantRunStartTime, WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS))
+                    {
+                        Console.WriteLine($"Merchant run still unfinished after {WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS / 1000}s (phase {CurrentMerchantRunPhase}), logging out");
+                        LogoutTriggered = true;
+                        LogoutReason = $"Merchant run took longer than {WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS / 60000} minutes (stuck in {CurrentMerchantRunPhase})";
+                        await EndWalkForwardTask();
+                        return true;
+                    }
+
                     await MerchantRunStepTask();
 
                     // The reset above runs BEFORE the step, but WAITING_FOR_AUTO_SELL's step
@@ -344,6 +353,7 @@ namespace WoWHelper
                                 IsOnMerchantRun = true;
                                 CurrentMerchantRunPhase = MerchantRunPhase.WALKING_TO_MERCHANT;
                                 CurrentMerchantWaypointIndex = 1; // index 0 is where we're already standing
+                                MerchantRunStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                             }
 
                             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
