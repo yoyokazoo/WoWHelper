@@ -172,47 +172,36 @@ namespace WoWHelper
             return taskResult ? successState : failureState;
         }
 
-        PlayerState ChangeStateBasedOnBool(bool boolToCheck, PlayerState successState, PlayerState failureState)
-        {
-            return boolToCheck ? successState : failureState;
-        }
-
         public static bool CurrentTimeInsideDuration(long startTime, long duration)
         {
             return (DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime) < duration;
         }
 
+        private static void ReleaseInputsAndExit()
+        {
+            Console.WriteLine("ESC detected! Performing cleanup then quitting");
+
+            // Make sure we don't have any lingering keys pressed down
+            Keyboard.KeyUp(WowInput.MOVE_FORWARD);
+            Keyboard.KeyUp(WowInput.MOVE_BACK);
+            Keyboard.KeyUp(WowInput.TURN_LEFT);
+            Keyboard.KeyUp(WowInput.TURN_RIGHT);
+            Keyboard.KeyUp(WowInput.JUMP);
+            Keyboard.KeyUp(WowInput.STRAFE_LEFT);
+            Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
+            Keyboard.KeyUp(WowInput.LatestShiftKey);
+            Keyboard.KeyUp(WowInput.LatestControlKey);
+            Keyboard.KeyUp(Keys.LShiftKey);
+            Mouse.ButtonUp(Mouse.MouseKeys.Right);
+
+            Environment.Exit(0);
+        }
+
         public void KickOffCoreLoop()
         {
-            KeyPoller.EscPressed += async () => {
-                Console.WriteLine("ESC detected! Performing cleanup then quitting");
-                await Task.Delay(0);
-
-                // Make sure we don't have any lingering keys pressed down
-                Keyboard.KeyUp(WowInput.MOVE_FORWARD);
-                Keyboard.KeyUp(WowInput.MOVE_BACK);
-                Keyboard.KeyUp(WowInput.TURN_LEFT);
-                Keyboard.KeyUp(WowInput.TURN_RIGHT);
-                Keyboard.KeyUp(WowInput.JUMP);
-                Keyboard.KeyUp(WowInput.STRAFE_LEFT);
-                Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
-                Keyboard.KeyUp(WowInput.LatestShiftKey);
-                Keyboard.KeyUp(WowInput.LatestControlKey);
-                Keyboard.KeyUp(Keys.LShiftKey);
-                Mouse.ButtonUp(Mouse.MouseKeys.Right); // in case we were mid turn-drag
-
-                Environment.Exit(0);
-            };
+            KeyPoller.EscPressed += ReleaseInputsAndExit;
             KeyPoller.Start();
 
-            // Fire-and-forget -- nothing else awaits this Task, so without observing its
-            // exception here, any unhandled exception anywhere in the state machine (a bug
-            // in this codebase, not just a deliberate NotImplementedException) would raise
-            // a first-chance exception notification with no further trace, then silently
-            // kill the whole gameplay loop -- the character just stops being piloted, with
-            // nothing logged and no Slack alert to say why. Logging the full exception
-            // (with stack trace) and alerting on Slack turns that into something
-            // diagnosable and noticeable instead.
             _ = CoreGameplayLoopTask().ContinueWith(t =>
             {
                 Console.WriteLine($"CoreGameplayLoopTask crashed: {t.Exception}");
@@ -224,113 +213,16 @@ namespace WoWHelper
         {
             _ = AdHocTestTask();
 
-            KeyPoller.EscPressed += async () => {
-                Console.WriteLine("ESC detected! Performing cleanup then quitting");
-                await Task.Delay(0);
-
-                // Make sure we don't have any lingering keys pressed down
-                Keyboard.KeyUp(WowInput.MOVE_FORWARD);
-                Keyboard.KeyUp(WowInput.MOVE_BACK);
-                Keyboard.KeyUp(WowInput.TURN_LEFT);
-                Keyboard.KeyUp(WowInput.TURN_RIGHT);
-                Keyboard.KeyUp(WowInput.JUMP);
-                Keyboard.KeyUp(WowInput.STRAFE_LEFT);
-                Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
-                Keyboard.KeyUp(WowInput.LatestShiftKey);
-                Keyboard.KeyUp(WowInput.LatestControlKey);
-                Keyboard.KeyUp(Keys.LShiftKey);
-                Mouse.ButtonUp(Mouse.MouseKeys.Right); // in case we were mid turn-drag
-
-                Environment.Exit(0);
-            };
+            KeyPoller.EscPressed += ReleaseInputsAndExit;
             KeyPoller.Start();
         }
 
         public async Task<bool> AdHocTestTask()
         {
-            //SlackHelper.SendMessageToChannel($"Slack Test");
-            await FocusOnWindowTask();
             await FocusOnWindowTask();
             await UpdateWorldStateAsync();
-            //await PetriAltF4Task();
-            //await CreateHeatmapForLooting(saveBitmaps: true);
-            //await TargetMarkerDebugTask();
-
-            //await MeasureKeyboardTurnRateTask();
             await MouseTurnRateSweepTask(startPixels: 370, stepPixels: 25);
             return true;
-            //return await WaitForWorldBuffThenLogoffTask();
-
-            /*
-            // Testing ShamanFaceCorrectDirectionToEngageTask/TurnToFaceTargetMarkerTask (see
-            // the "Approach ranged/caster mobs" plan) in isolation, without the full engage
-            // state machine around it. ClassState needs resolving once before the loop so the
-            // WowShamanClassState cast below has something real to work with.
-            //
-            // ESC ends the loop early (KeyPoller is the same global ESC-detection mechanism
-            // used elsewhere in this codebase) -- useful since this loop otherwise only exits
-            // once ShamanFaceCorrectDirectionToEngageTask succeeds, which might never happen
-            // mid-test. Scoped to just this task: subscribed/started right before the loop,
-            // unsubscribed/stopped right after, so repeat AdHocTest runs don't stack handlers
-            // on KeyPoller's static event.
-            bool escPressed = false;
-            Action onEsc = () => escPressed = true;
-            KeyPoller.EscPressed += onEsc;
-            KeyPoller.Start();
-
-            try
-            {
-                ResolveCombatConfiguration();
-                while (true)
-                {
-                    if (escPressed)
-                    {
-                        Console.WriteLine("ESC pressed, ending ad hoc test loop");
-                        break;
-                    }
-
-                    await UpdateWorldStateAsync();
-                    bool canEngage = await ShamanFaceCorrectDirectionToEngageTask((WowShamanClassState)ClassState);
-                    break;
-                }
-            }
-            finally
-            {
-                KeyPoller.EscPressed -= onEsc;
-                KeyPoller.Stop();
-            }
-
-            await AvoidObstacleByJumping();
-            return true;
-            */
-            /*
-            await FocusOnWindowTask();
-            await PetriAltF4Task();
-            SlackHelper.SendMessageToChannel($"Petri Alt+F4ed!  Consider using Unstuck instead of logging back in");
-            Environment.Exit(0);
-            
-            */
-
-            /*
-            await FocusOnWindowTask();
-            await ThrowTargetDummyTask();
-
-            await Task.Delay(0);
-            return true;
-            */
-            /*
-            await FocusOnWindowTask();
-            await Task.Delay(10000);
-            await PutMoneyInTradeTask();
-            await AcceptTradeTask();
-            // wait for button to not be greyed out, and for other player to accept trade
-            await Task.Delay(7000);
-            await AcceptTradeConfirmationTask();
-
-            //SlackHelper.SendMessageToChannel($"Testing notification!");
-            await Task.Delay(0);
-            return true;
-            */
         }
 
         // Captures a full-screen screenshot and searches it for the sentinel-colored target
@@ -361,40 +253,6 @@ namespace WoWHelper
                     : $"DEBUG FindTargetMarkerOnScreen: marker found at {centroid.Value}");
 
                 return centroid;
-            }
-        }
-
-        // TEMP diagnostic (see the "Approach ranged/caster mobs" plan): verify the
-        // sentinel-colored target marker UIFunctions.lua paints onto the current target's
-        // nameplate is actually findable via screen-capture pixel search, and that its
-        // position relative to screen center matches expectations (this bot is run with the
-        // camera pitched straight down, so X < center should mean the target is to the
-        // player's left, Y < center should mean in front). Loops once a second until the
-        // process is stopped -- wired up to the AdHocTest button so it can be exercised in
-        // isolation, without running the full combat loop. Remove once confirmed.
-        public async Task<bool> TargetMarkerDebugTask()
-        {
-            while (true)
-            {
-                await UpdateWorldStateAsync();
-
-                var resolution = FarmingConfig.ScreenConfiguration.Resolution;
-                var marker = FindTargetMarkerOnScreen();
-                int centerX = resolution.Width / 2;
-                int centerY = resolution.Height / 2;
-
-                if (marker == null)
-                {
-                    Console.WriteLine("WoWHelper DEBUG: target marker NOT FOUND on screen");
-                }
-                else
-                {
-                    string leftRight = marker.Value.X < centerX ? "LEFT" : "RIGHT";
-                    string frontBack = marker.Value.Y < centerY ? "FRONT" : "BEHIND";
-                    Console.WriteLine($"WoWHelper DEBUG: target marker at {marker.Value} (screen center {centerX},{centerY}) -> {leftRight}/{frontBack}");
-                }
-
-                await Task.Delay(1000);
             }
         }
 
