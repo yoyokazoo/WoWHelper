@@ -189,7 +189,7 @@ namespace WoWHelper
         // Fear-casters are worth opening on preemptively, rather than reacting once feared.
         public bool WarriorShouldOpenWithBerserkerRage()
         {
-            return WorldState.IsTargetFearCaster && !CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS);
+            return WorldState.IsTargetFearCaster && !GeneralHelpers.CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS);
         }
 
         // None of the WarriorShouldCastX checks below look at rage -- they only decide
@@ -313,7 +313,7 @@ namespace WoWHelper
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
 
             bool hpRecovered = WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD;
-            bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && potionIsCooledDown;
 
             if (battleReady)
@@ -417,7 +417,7 @@ namespace WoWHelper
         public async Task<bool> WarriorUseDiamondFlaskTask()
         {
             bool shouldUseDiamondFlask = WorldState.AttackerCount > 1 &&
-                !CurrentTimeInsideDuration(HealingTrinketTime, WowGameplayConstants.DIAMOND_FLASK_COOLDOWN_MILLIS);
+                !GeneralHelpers.CurrentTimeInsideDuration(HealingTrinketTime, WowGameplayConstants.DIAMOND_FLASK_COOLDOWN_MILLIS);
 
             if (shouldUseDiamondFlask)
             {

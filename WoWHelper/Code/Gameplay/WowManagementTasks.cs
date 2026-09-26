@@ -293,7 +293,7 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Ammo";
             }
-            else if (!CurrentTimeInsideDuration(FarmStartTime, WowPlayerConstants.FARM_TIME_LIMIT_MILLIS))
+            else if (!GeneralHelpers.CurrentTimeInsideDuration(FarmStartTime, WowPlayerConstants.FARM_TIME_LIMIT_MILLIS))
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Farm Time Limit Reached";

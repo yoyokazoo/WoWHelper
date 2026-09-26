@@ -152,17 +152,6 @@ namespace WoWHelper
             ClassState?.UpdateFromBitmap(bmp, ScreenConfiguration);
         }
 
-        async Task<TState> ChangeStateBasedOnTaskResult<TState>(Task<bool> task, TState successState, TState failureState) where TState : Enum
-        {
-            bool taskResult = await task;
-            return taskResult ? successState : failureState;
-        }
-
-        public static bool CurrentTimeInsideDuration(long startTime, long duration)
-        {
-            return (DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime) < duration;
-        }
-
         private static void ReleaseInputsAndExit()
         {
             Console.WriteLine("ESC detected! Performing cleanup then quitting");
@@ -256,32 +245,32 @@ namespace WoWHelper
                 {
                     case PlayerState.WAITING_TO_FOCUS_ON_WINDOW:
                         Console.WriteLine("Focusing on window");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
                             PlayerState.RESOLVE_FARMING_CONFIGURATION,
                             PlayerState.WAITING_TO_FOCUS_ON_WINDOW);
                         break;
                     case PlayerState.RESOLVE_FARMING_CONFIGURATION:
                         Console.WriteLine("Auto-detecting combat/location config from live game state");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(ResolveFarmingConfigurationTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(ResolveFarmingConfigurationTask(),
                             PlayerState.CHECK_FOR_LOGOUT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.CHECK_FOR_LOGOUT:
                         Console.WriteLine("Checking if we should log out");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(SetLogoutVariablesTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SetLogoutVariablesTask(),
                             PlayerState.START_LOGGING_OUT,
                             PlayerState.START_BATTLE_READY_RECOVERY);
                         break;
                     case PlayerState.START_LOGGING_OUT:
                         Console.WriteLine($"Started logging out ({LogoutReason})");
                         SlackHelper.SendMessageToChannel($"Logging out: {LogoutReason}");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartLogoutTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartLogoutTask(),
                             PlayerState.WAITING_TO_LOG_OUT,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
                     case PlayerState.WAITING_TO_LOG_OUT:
                         Console.WriteLine("Waiting to log out");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(CheckIfLoggedOutTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(CheckIfLoggedOutTask(),
                             PlayerState.LOGGED_OUT,
                             PlayerState.WAITING_TO_LOG_OUT);
                         break;
@@ -291,37 +280,37 @@ namespace WoWHelper
                         break;
                     case PlayerState.START_BATTLE_READY_RECOVERY:
                         Console.WriteLine("Starting battle ready recovery");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartBattleReadyTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartBattleReadyTask(),
                             PlayerState.WAIT_UNTIL_BATTLE_READY,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.WAIT_UNTIL_BATTLE_READY:
                         Console.WriteLine("Waiting until battle ready");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(WaitUntilBattleReadyTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(WaitUntilBattleReadyTask(),
                             PlayerState.CHECK_FOR_VALID_TARGET,
                             PlayerState.WAIT_UNTIL_BATTLE_READY);
                         break;
                     case PlayerState.CHECK_FOR_VALID_TARGET:
                         Console.WriteLine("Checking for valid target");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(PathfindingLoopTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(PathfindingLoopTask(),
                             PlayerState.INITIATE_ENGAGE_TARGET,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
                     case PlayerState.INITIATE_ENGAGE_TARGET:
                         Console.WriteLine("Trying to engage target");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartEngageTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartEngageTask(),
                             PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
                             PlayerState.CHECK_FOR_LOGOUT);
                         break;
                     case PlayerState.CONTINUE_TO_TRY_TO_ENGAGE:
                         Console.WriteLine("Continuing to engage target");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(WaitUntilEngageTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(WaitUntilEngageTask(),
                             PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
                             PlayerState.CHECK_FOR_LOGOUT);
                         break;
                     case PlayerState.IN_CORE_COMBAT_LOOP:
                         Console.WriteLine("In core combat loop");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(CombatLoopTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(CombatLoopTask(),
                             PlayerState.TARGET_DEFEATED,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
@@ -331,13 +320,13 @@ namespace WoWHelper
                         await WaitUnlessInCombatTask(1500); // give the dying anim a sec
                         LootX = ScreenConfiguration.LootDefaultX;
                         LootY = ScreenConfiguration.LootDefaultY;
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(LootTask(),
                             PlayerState.SKIN_ATTEMPT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.SKIN_ATTEMPT:
                         Console.WriteLine("Trying to skin");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SkinTask(),
                             PlayerState.LOOT_ATTEMPT_TWO,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
@@ -346,13 +335,13 @@ namespace WoWHelper
                         Point lootPoint = await WowScreenCapture.CreateHeatmapForLooting(ScreenConfiguration);
                         LootX = lootPoint.X;
                         LootY = lootPoint.Y;
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(LootTask(),
                             PlayerState.SKIN_ATTEMPT_TWO,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.SKIN_ATTEMPT_TWO:
                         Console.WriteLine("Trying to skin");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SkinTask(),
                             PlayerState.CHECK_FOR_LOGOUT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         await ScootForwardsTask();

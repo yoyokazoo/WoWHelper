@@ -63,10 +63,10 @@ namespace WoWHelper
                 // WowCommonCombatTasks.cs) -- otherwise we'd immediately TAB/macro right back
                 // onto the same unreachable target we just cleared. Keep walking the route
                 // during the suppression window instead of standing still trying to retarget.
-                bool suppressedAfterLineOfSightBailout = CurrentTimeInsideDuration(
+                bool suppressedAfterLineOfSightBailout = GeneralHelpers.CurrentTimeInsideDuration(
                     LastLineOfSightBailoutTime, WowPlayerConstants.LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS);
 
-                if (!IsOnMerchantRun && !suppressedAfterLineOfSightBailout && !CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
+                if (!IsOnMerchantRun && !suppressedAfterLineOfSightBailout && !GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -93,7 +93,7 @@ namespace WoWHelper
                     targetChecks++;
                 }
 
-                if (!IsOnMerchantRun && !CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
+                if (!IsOnMerchantRun && !GeneralHelpers.CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
                 {
                     LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     await WowInput.PressKey(WowInput.JUMP);
@@ -154,28 +154,28 @@ namespace WoWHelper
                         ResetStuckDetection();
                     }
 
-                    if (!stationaryJumpAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
+                    if (!stationaryJumpAttemptedOnce && !GeneralHelpers.CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
                     {
                         //Console.WriteLine($"Haven't moved in a while, stuck at {PreviousWorldState.MapX},{PreviousWorldState.MapY} headed to {LocationConfiguration.Waypoints[CurrentWaypointIndex].X},{LocationConfiguration.Waypoints[CurrentWaypointIndex].Y}");
                         await AvoidObstacleByJumping();
                         stationaryJumpAttemptedOnce = true;
                     }
 
-                    if (!stationaryWiggleAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
+                    if (!stationaryWiggleAttemptedOnce && !GeneralHelpers.CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
                     {
                         // first wiggle try left
                         await AvoidObstacle(left: true);
                         stationaryWiggleAttemptedOnce = true;
                     }
 
-                    if (!stationaryWiggleAttemptedTwice && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE))
+                    if (!stationaryWiggleAttemptedTwice && !GeneralHelpers.CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE))
                     {
                         // second wiggle try right
                         await AvoidObstacle(left: false);
                         stationaryWiggleAttemptedTwice = true;
                     }
 
-                    if (!stationaryAlertSent && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_ALERT))
+                    if (!stationaryAlertSent && !GeneralHelpers.CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_ALERT))
                     {
                         //SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
                         //stationaryAlertSent = true;
@@ -206,7 +206,7 @@ namespace WoWHelper
                 // no extra plumbing needed.
                 if (IsOnMerchantRun)
                 {
-                    if (!CurrentTimeInsideDuration(MerchantRunStartTime, WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS))
+                    if (!GeneralHelpers.CurrentTimeInsideDuration(MerchantRunStartTime, WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS))
                     {
                         Console.WriteLine($"Merchant run still unfinished after {WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS / 1000}s (phase {CurrentMerchantRunPhase}), logging out");
                         LogoutTriggered = true;
@@ -239,7 +239,7 @@ namespace WoWHelper
                 // Skipped entirely (scan included) on routes that opt out via
                 // ChaseOutOfRangeTargets -- see that property's comment for why.
                 if (LocationConfiguration.ChaseOutOfRangeTargets &&
-                    !CurrentTimeInsideDuration(lastTargetMarkerScanTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS))
+                    !GeneralHelpers.CurrentTimeInsideDuration(lastTargetMarkerScanTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS))
                 {
                     lastTargetMarkerScanTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 

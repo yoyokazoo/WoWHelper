@@ -37,7 +37,7 @@ namespace WoWHelper
 
             bool hpRecovered = WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD;
             bool mpRecovered = WorldState.ResourcePercent >= WowPlayerConstants.STOP_RESTING_MP_THRESHOLD;
-            bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
 
             if (battleReady)
@@ -222,7 +222,7 @@ namespace WoWHelper
                 return false;
             }
 
-            if (WowPlayer.CurrentTimeInsideDuration(ImmolateCastTime, WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS))
+            if (GeneralHelpers.CurrentTimeInsideDuration(ImmolateCastTime, WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS))
             {
                 return false;
             }
@@ -238,7 +238,7 @@ namespace WoWHelper
                 return false;
             }
 
-            if (WowPlayer.CurrentTimeInsideDuration(CorruptionCastTime, WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS))
+            if (GeneralHelpers.CurrentTimeInsideDuration(CorruptionCastTime, WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS))
             {
                 return false;
             }

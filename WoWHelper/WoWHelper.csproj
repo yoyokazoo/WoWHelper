@@ -155,6 +155,7 @@
     <Compile Include="Code\Gameplay\WowWarlockTasks.cs" />
     <Compile Include="Code\Gameplay\WowWarriorTasks.cs" />
     <Compile Include="Code\Shared\BitmapDifferenceVisualizer.cs" />
+    <Compile Include="Code\Shared\GeneralHelpers.cs" />
     <Compile Include="Code\Shared\KeyPoller.cs" />
     <Compile Include="Code\Constants\WowInput.cs" />
     <Compile Include="Code\Gameplay\WowPlayer.cs" />

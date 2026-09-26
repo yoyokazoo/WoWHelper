@@ -697,6 +697,7 @@ of truth — edits should be made here, not in the WoW install directory.
   bot presses (expects specific in-game keybinds/macros to be set up to match),
   `WowPlayerConstants.cs` / `WowGameplayConstants.cs` hold thresholds/timings.
 - **`Shared/`** — `KeyPoller` (global ESC-to-stop hotkey + cleanup),
+  `GeneralHelpers` (stateless `ChangeStateBasedOnTaskResult`/`CurrentTimeInsideDuration`),
   `BitmapDifferenceVisualizer` (loot-heatmap detection by diffing frames to
   find where a loot corpse/sparkle is), `PathSubdivision` (splits long waypoint
   legs into shorter hops), `TessaractSingleton` (shared Tesseract OCR engine,
