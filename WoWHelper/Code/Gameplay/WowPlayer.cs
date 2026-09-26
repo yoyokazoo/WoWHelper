@@ -18,57 +18,27 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        // TODO: add task to zoom out and point camera down
-
-        // TODO: write custom getters/setters for these so we can keep checking the time until they're off cooldown,
-        // then use the cached value until they get dirtied again?
         public long FarmStartTime { get; private set; }
         public long LastFindTargetTime { get; private set; }
-        // Set whenever an engage attempt bails because WorldState.TargetUnreachable was true
-        // (the "not in line of sight" or "no path available" toast)
-        // (see AbandonUnreachableEngageTarget in WowCommonCombatTasks.cs). Defaults to 0, so
-        // CurrentTimeInsideDuration is false and nothing is suppressed until the first
-        // bailout. PathfindingLoopTask checks this to avoid immediately re-acquiring the
-        // same unreachable target -- see LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS.
         public long LastLineOfSightBailoutTime { get; private set; }
         public long LastJumpTime { get; private set; }
         public long DynamiteTime { get; private set; }
         public long HealthPotionTime { get; private set; }
-        public long HealingTrinketTime { get; private set; } // and Diamond Flask
+        public long HealingTrinketTime { get; private set; }
         public long BerserkerRageTime { get; private set; }
-        // Warlock DoTs -- see WarlockShouldCastImmolate/WarlockShouldCastCorruption in
-        // WowWarlockTasks.cs, which suppress re-casting a DoT within
-        // WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS of these.
         public long ImmolateCastTime { get; private set; }
         public long CorruptionCastTime { get; private set; }
         public long NextUpdateTime { get; private set; }
-
         public bool FullBagsAlertSent { get; private set; }
-
         public int EngageAttempts { get; private set; }
-
         public int LootX { get; private set; }
         public int LootY { get; private set; }
-
-        // Last position WowScreenCapture.FindTargetMarkerOnScreen() actually found the target marker at --
-        // set by WowMovementTasks.WalkIntoMeleeRangeTask() each time a scan succeeds. Null
-        // until the first successful scan (or if none has succeeded yet this attempt).
-        // Nullable rather than defaulting to 0,0 like LootX/Y above -- unlike loot's "default
-        // to screen center" fallback, there's no sane default screen position for "target not
-        // found," so callers need to be able to tell the difference.
         public int? MostRecentTargetMarkerX { get; private set; }
         public int? MostRecentTargetMarkerY { get; private set; }
 
         public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }
 
-        // Class-specific counterpart to WorldState -- see WowClassState. Null until
-        // ResolveCombatConfiguration (WowConfigResolutionTasks.cs, called every tick from
-        // EveryWorldStateUpdateTasks) picks CombatConfiguration from the
-        // player's live-detected class (WowWorldState.PlayerClass) and builds the matching
-        // concrete type; never changes again afterward. The class-specific Wow*Tasks.cs
-        // methods receive it pre-cast to their own class's type (see
-        // WowPlayerCombatConfig.cs), not read directly off this property.
         public WowClassState ClassState { get; private set; }
 
         public PlayerState CurrentPlayerState { get; private set; }
@@ -77,26 +47,15 @@ namespace WoWHelper
         public int CurrentWaypointIndex { get; private set; }
         public int WaypointTraversalDirection { get; private set; }
 
-        // Merchant-run detour state -- see WowMerchantConfiguration and
-        // WowMovementTasks.MerchantRunStepTask. Plain fields, same as the pathfinding state
-        // above, so a combat interruption mid-trip leaves them untouched and the trip resumes
-        // exactly where it left off once PathfindingLoopTask runs again.
         public bool IsOnMerchantRun { get; private set; }
         public MerchantRunPhase CurrentMerchantRunPhase { get; private set; }
         public int CurrentMerchantWaypointIndex { get; private set; }
-        // Unix millis when the current merchant run branched off the route -- see the
-        // MERCHANT_RUN_TIMEOUT_MILLIS check in PathfindingLoopTask.
         public long MerchantRunStartTime { get; private set; }
 
         public bool LogoutTriggered { get; private set; }
         public string LogoutReason { get; private set; }
         public Bitmap LogoutBitmap { get; private set; }
 
-        // Both resolved from live game state rather than hardcoded -- see
-        // ResolveCombatConfiguration/ResolveFarmingConfigurationTask
-        // (WowConfigResolutionTasks.cs). LocationConfiguration stays null (and
-        // CombatConfiguration stays Unknown) until then; LocationConfiguration can stay null
-        // for a whole run that started mid-combat, so null-check it where that can happen.
         public WowLocationConfiguration LocationConfiguration { get; private set; }
         public WowCombatConfiguration CombatConfiguration { get; private set; }
 
@@ -155,39 +114,30 @@ namespace WoWHelper
         private static void ReleaseInputsAndExit()
         {
             Console.WriteLine("ESC detected! Performing cleanup then quitting");
-
-            // Make sure we don't have any lingering keys pressed down
-            Keyboard.KeyUp(WowInput.MOVE_FORWARD);
-            Keyboard.KeyUp(WowInput.MOVE_BACK);
-            Keyboard.KeyUp(WowInput.TURN_LEFT);
-            Keyboard.KeyUp(WowInput.TURN_RIGHT);
-            Keyboard.KeyUp(WowInput.JUMP);
-            Keyboard.KeyUp(WowInput.STRAFE_LEFT);
-            Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
-            Keyboard.KeyUp(WowInput.LatestShiftKey);
-            Keyboard.KeyUp(WowInput.LatestControlKey);
-            Keyboard.KeyUp(Keys.LShiftKey);
-            Mouse.ButtonUp(Mouse.MouseKeys.Right);
-
+            WowInput.ReleaseAllInputs();
             Environment.Exit(0);
+        }
+
+        private static void EnableEscToQuit()
+        {
+            KeyPoller.EscPressed += ReleaseInputsAndExit;
+            KeyPoller.Start();
         }
 
         public void KickOffCoreLoop()
         {
-            KeyPoller.EscPressed += ReleaseInputsAndExit;
-            KeyPoller.Start();
+            EnableEscToQuit();
 
-            _ = CoreGameplayLoopTask().ContinueWith(t =>
+            _ = CoreLoopTask().ContinueWith(t =>
             {
-                Console.WriteLine($"CoreGameplayLoopTask crashed: {t.Exception}");
+                Console.WriteLine($"CoreLoopTask crashed: {t.Exception}");
                 SlackHelper.SendMessageToChannel($"WoWHelper crashed: {t.Exception?.GetBaseException().Message}");
             }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         public void KickOffAdHocTest()
         {
-            KeyPoller.EscPressed += ReleaseInputsAndExit;
-            KeyPoller.Start();
+            EnableEscToQuit();
 
             _ = AdHocTestTask().ContinueWith(t =>
             {
@@ -204,7 +154,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> CoreGameplayLoopTask()
+        public async Task<bool> CoreLoopTask()
         {
             FarmStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
