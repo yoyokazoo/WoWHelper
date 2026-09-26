@@ -125,19 +125,6 @@ namespace WoWHelper
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
 
-        private static WowClassState CreateClassState(WowCombatConfiguration combatConfiguration)
-        {
-            switch (combatConfiguration)
-            {
-                case WowCombatConfiguration.Warrior: return new WowWarriorClassState();
-                case WowCombatConfiguration.Shaman: return new WowShamanClassState();
-                case WowCombatConfiguration.Warlock: return new WowWarlockClassState();
-                default: throw new System.NotImplementedException(
-                    $"{nameof(CreateClassState)}: no ClassState implemented for CombatConfiguration \"{combatConfiguration}\" -- " +
-                    $"this should only be called with a resolved (non-Unknown) CombatConfiguration.");
-            }
-        }
-
         public async Task UpdateWorldStateAsync()
         {
             var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();

@@ -1,4 +1,5 @@
 using System.Drawing;
+using WoWHelper.Code.Gameplay;
 
 namespace WoWHelper
 {
@@ -26,5 +27,18 @@ namespace WoWHelper
         public bool Initialized { get; protected set; }
 
         public abstract void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig);
+
+        public static WowClassState Create(WowCombatConfiguration combatConfiguration)
+        {
+            switch (combatConfiguration)
+            {
+                case WowCombatConfiguration.Warrior: return new WowWarriorClassState();
+                case WowCombatConfiguration.Shaman: return new WowShamanClassState();
+                case WowCombatConfiguration.Warlock: return new WowWarlockClassState();
+                default: throw new System.NotImplementedException(
+                    $"{nameof(WowClassState)}.{nameof(Create)}: no ClassState implemented for CombatConfiguration \"{combatConfiguration}\" -- " +
+                    $"this should only be called with a resolved (non-Unknown) CombatConfiguration.");
+            }
+        }
     }
 }

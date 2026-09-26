@@ -41,7 +41,7 @@ namespace WoWHelper
             }
 
             FarmingConfig.CombatConfiguration = WorldState.PlayerClass.Value;
-            ClassState = CreateClassState(FarmingConfig.CombatConfiguration);
+            ClassState = WowClassState.Create(FarmingConfig.CombatConfiguration);
             ClassState.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
 
             Console.WriteLine($"Auto-detected combat config {FarmingConfig.CombatConfiguration}");

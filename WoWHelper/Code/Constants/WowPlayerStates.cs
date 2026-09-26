@@ -2,6 +2,13 @@
 {
     public static class WowPlayerStates
     {
+        public enum PlayerMetaState
+        {
+            WAITING_TO_FOCUS_ON_WINDOW,
+            RESOLVE_FARMING_CONFIGURATION,
+            RUNNING
+        }
+
         public enum PlayerState
         {
             WAITING_TO_FOCUS_ON_WINDOW,
@@ -19,7 +26,6 @@
 
             WALK_WAYPOINTS,
 
-            ESC_KEY_SEEN,
             CHECK_FOR_LOGOUT,
             START_LOGGING_OUT,
             WAITING_TO_LOG_OUT,

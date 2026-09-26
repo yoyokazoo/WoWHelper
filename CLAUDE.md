@@ -426,7 +426,7 @@ spell and the target doesn't already have that DoT on it -- same
 name-matched-against-`TargetHasDebuffSpellName()` pattern Shaman's
 `ShouldCastFlameShock`/`TargetHasFlameShock` use); R6-R8, `ClassBoolTwo`, and
 `ClassIntOne` are still fully reserved. The rest of the dispatch wiring (enum
-value, `CreateClassState`, all six
+value, `WowClassState.Create`, all six
 `WowPlayerCombatConfig.cs` switches, the `MultiBoolTwo` R4 class-detect bit)
 is also in place.
 
