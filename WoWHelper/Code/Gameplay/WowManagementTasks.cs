@@ -32,7 +32,7 @@ namespace WoWHelper
             SlackHelper.SendMessageToChannel("Lost focus on WoWClassic window! Refocusing...");
             await FocusOnWindowTask();
 
-            Mouse.Move(FarmingConfig.ScreenConfiguration.LootDefaultX, FarmingConfig.ScreenConfiguration.LootDefaultX);
+            Mouse.Move(ScreenConfiguration.LootDefaultX, ScreenConfiguration.LootDefaultX);
             Mouse.PressButton(Mouse.MouseKeys.Left);
 
             await Task.Delay(300);
@@ -115,8 +115,8 @@ namespace WoWHelper
             // ping on level up. Guarded on LocationConfiguration being resolved -- this task
             // runs every tick, including the handful before RESOLVE_FARMING_CONFIGURATION has
             // picked one (see WowPlayer.ResolveFarmingConfigurationTask), during which
-            // FarmingConfig.LogoffLevel (a LocationConfiguration passthrough) isn't safe to read.
-            if (FarmingConfig.LocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
+            // LocationConfiguration.MaximumLevel below would throw.
+            if (LocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
             {
                 string levelUpMessage = $"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!";
 
@@ -134,10 +134,10 @@ namespace WoWHelper
 
                 SlackHelper.SendMessageToChannel(levelUpMessage);
 
-                if (FarmingConfig.LogoffLevel == WorldState.PlayerLevel)
+                if (LocationConfiguration.MaximumLevel == WorldState.PlayerLevel)
                 {
                     LogoutTriggered = true;
-                    LogoutReason = $"Reached log out level {FarmingConfig.LogoffLevel}";
+                    LogoutReason = $"Reached log out level {LocationConfiguration.MaximumLevel}";
                 }
             }
 
@@ -226,7 +226,7 @@ namespace WoWHelper
             {
                 _ = SlackFileUploadWorkaround.UploadScreenshotToChannelAsync(
                     title: "Unseen Whisper!",
-                    cropRegion: FarmingConfig.ScreenConfiguration.SlackScreenshotCropRegion);
+                    cropRegion: ScreenConfiguration.SlackScreenshotCropRegion);
             }
         }
 
@@ -239,7 +239,7 @@ namespace WoWHelper
             // see WowConfigResolutionTasks.cs) never got a chance to run. Every check below
             // reads LocationConfiguration unconditionally, so log out now rather than NRE
             // trying to validate a route we were never told.
-            if (FarmingConfig.LocationConfiguration == null)
+            if (LocationConfiguration == null)
             {
                 LogoutTriggered = true;
                 LogoutReason = "LocationConfiguration was never resolved (bot likely started mid-combat, before RESOLVE_FARMING_CONFIGURATION got a chance to run) -- logging out rather than guessing a route";
@@ -247,22 +247,22 @@ namespace WoWHelper
                 return LogoutTriggered;
             }
 
-            float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, FarmingConfig.LocationConfiguration.Waypoints);
+            float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, LocationConfiguration.Waypoints);
 
             // Checked first so a wrong-zone/under-level/too-far-away start gives the clearest
             // possible reason, rather than getting masked behind some other logout condition
             // that also happens to be true on the very first tick.
-            if (FarmingConfig.LocationConfiguration.MinimumLevel > 0 && WorldState.PlayerLevel < FarmingConfig.LocationConfiguration.MinimumLevel)
+            if (LocationConfiguration.MinimumLevel > 0 && WorldState.PlayerLevel < LocationConfiguration.MinimumLevel)
             {
                 LogoutTriggered = true;
-                LogoutReason = $"Below minimum level for this route (level {WorldState.PlayerLevel}, need {FarmingConfig.LocationConfiguration.MinimumLevel}+)";
+                LogoutReason = $"Below minimum level for this route (level {WorldState.PlayerLevel}, need {LocationConfiguration.MinimumLevel}+)";
             }
             // Zone.Unknown means this route's config forgot to set Zone -- skip the check rather
             // than have a misconfigured route always immediately abort every session.
-            else if (FarmingConfig.LocationConfiguration.Zone != WowZone.Unknown && WorldState.CurrentZone != FarmingConfig.LocationConfiguration.Zone)
+            else if (LocationConfiguration.Zone != WowZone.Unknown && WorldState.CurrentZone != LocationConfiguration.Zone)
             {
                 LogoutTriggered = true;
-                LogoutReason = $"Wrong zone for this route (currently {WorldState.CurrentZone}, expected {FarmingConfig.LocationConfiguration.Zone})";
+                LogoutReason = $"Wrong zone for this route (currently {WorldState.CurrentZone}, expected {LocationConfiguration.Zone})";
             }
             else if (closestWaypointDistance > WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT)
             {
@@ -287,8 +287,8 @@ namespace WoWHelper
             // always read as "low on ammo", since a caster's ammo slot is just empty, not
             // merely low). Only Warrior can actually run out of ammo, so gate on class too.
             else if (WorldState.LowOnAmmo &&
-                FarmingConfig.CombatConfiguration == Code.Gameplay.WowCombatConfiguration.Warrior &&
-                FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
+                CombatConfiguration == Code.Gameplay.WowCombatConfiguration.Warrior &&
+                LocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Ammo";
@@ -438,7 +438,7 @@ namespace WoWHelper
 
         public async Task<bool> ThrowTargetDummyTask()
         {
-            Mouse.Move(FarmingConfig.ScreenConfiguration.DynamiteAndDummyX, FarmingConfig.ScreenConfiguration.DynamiteAndDummyY);
+            Mouse.Move(ScreenConfiguration.DynamiteAndDummyX, ScreenConfiguration.DynamiteAndDummyY);
             await Task.Delay(50);
             await WowInput.PressKeyWithShift(WowInput.SHIFT_TARGET_DUMMY);
             await Task.Delay(1000);

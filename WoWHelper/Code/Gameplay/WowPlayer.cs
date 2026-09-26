@@ -10,9 +10,9 @@ using System.Windows.Forms;
 using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
+using WoWHelper.Code.Config;
 using WoWHelper.Code.Gameplay;
 using WoWHelper.Code.WorldState;
-using static WoWHelper.Code.Gameplay.WowFarmingConfiguration;
 using static WoWHelper.Code.WowPlayerStates;
 
 namespace WoWHelper
@@ -65,7 +65,7 @@ namespace WoWHelper
 
         // Class-specific counterpart to WorldState -- see WowClassState. Null until
         // ResolveCombatConfiguration (WowConfigResolutionTasks.cs, called every tick from
-        // EveryWorldStateUpdateTasks) picks FarmingConfig.CombatConfiguration from the
+        // EveryWorldStateUpdateTasks) picks CombatConfiguration from the
         // player's live-detected class (WowWorldState.PlayerClass) and builds the matching
         // concrete type; never changes again afterward. The class-specific Wow*Tasks.cs
         // methods receive it pre-cast to their own class's type (see
@@ -93,15 +93,17 @@ namespace WoWHelper
         public string LogoutReason { get; private set; }
         public Bitmap LogoutBitmap { get; private set; }
 
-        public WowFarmingConfiguration FarmingConfig { get; private set; }
+        // Both resolved from live game state rather than hardcoded -- see
+        // ResolveCombatConfiguration/ResolveFarmingConfigurationTask
+        // (WowConfigResolutionTasks.cs). LocationConfiguration stays null (and
+        // CombatConfiguration stays Unknown) until then; LocationConfiguration can stay null
+        // for a whole run that started mid-combat, so null-check it where that can happen.
+        public WowLocationConfiguration LocationConfiguration { get; private set; }
+        public WowCombatConfiguration CombatConfiguration { get; private set; }
 
-        // WowFarmingConfiguration's own constructor auto-detects the current screen
-        // resolution -- used here just to get that default before the real
-        // FarmingConfig instance below is built for this WowPlayer.
-        public WowPlayer() : this(new WowFarmingConfiguration().ScreenConfiguration)
-        {
-        }
+        public WowScreenConfiguration ScreenConfiguration { get; private set; }
 
+        public WowPlayer() : this(WowScreenConfigs.GetForPrimaryScreen()) { }
         public WowPlayer(WowScreenConfiguration screenConfiguration)
         {
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS_ON_WINDOW;
@@ -113,10 +115,9 @@ namespace WoWHelper
             CurrentMerchantRunPhase = MerchantRunPhase.WALKING_TO_MERCHANT;
             CurrentMerchantWaypointIndex = 0;
 
-            FarmingConfig = new WowFarmingConfiguration
-            {
-                ScreenConfiguration = screenConfiguration
-            };
+            LocationConfiguration = null;
+            CombatConfiguration = WowCombatConfiguration.Unknown;
+            ScreenConfiguration = screenConfiguration;
 
             PreviousWorldState = new WowWorldState(screenConfiguration);
             WorldState = new WowWorldState(screenConfiguration);
@@ -139,8 +140,8 @@ namespace WoWHelper
         {
             PreviousWorldState.Bmp?.Dispose();
             PreviousWorldState = WorldState;
-            WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
-            ClassState?.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
+            WorldState = WowWorldState.GetWoWWorldState(ScreenConfiguration);
+            ClassState?.UpdateFromBitmap(WorldState.Bmp, ScreenConfiguration);
 
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
@@ -149,7 +150,7 @@ namespace WoWHelper
         public void UpdateWorldStateFromBitmap(Bitmap bmp)
         {
             WorldState.UpdateFromBitmap(bmp);
-            ClassState?.UpdateFromBitmap(bmp, FarmingConfig.ScreenConfiguration);
+            ClassState?.UpdateFromBitmap(bmp, ScreenConfiguration);
         }
 
         async Task<TState> ChangeStateBasedOnTaskResult<TState>(Task<bool> task, TState successState, TState failureState) where TState : Enum
@@ -225,7 +226,7 @@ namespace WoWHelper
                 // TODO: if on login screen all other values will be messed up
                 if (!WorldState.OnLoginScreen && WorldState.IsInCombat)
                 {
-                    // Shaman always pulls with a spell regardless of FarmingConfig.EngageMethod
+                    // Shaman always pulls with a spell regardless of LocationConfiguration.EngageMethod
                     // (Charge/Pull only distinguishes Warrior's two options -- see the enum's own
                     // comment on WowLocationConfiguration.cs), so checking CombatConfiguration here
                     // instead of EngageMethod covers it without needing to know which location
@@ -233,7 +234,7 @@ namespace WoWHelper
                     // pre-existing gap from before Warlock support was added, not touched by the
                     // Mage removal that dropped the Mage half of this check.)
                     if (CurrentPlayerState == PlayerState.CONTINUE_TO_TRY_TO_ENGAGE &&
-                        FarmingConfig.CombatConfiguration == WowCombatConfiguration.Shaman &&
+                        CombatConfiguration == WowCombatConfiguration.Shaman &&
                         WorldState.ResourcePercent < 100)
                     {
                         // We likely just cast a spell that hasn't yet hit the target.  Wait a little bit so it does,
@@ -325,8 +326,8 @@ namespace WoWHelper
                         Console.WriteLine("Target defeated, trying to loot");
                         // TODO: /canceltarget and /stopcasting and /stopattack here so we don't accidentally attack something
                         await WaitUnlessInCombatTask(1500); // give the dying anim a sec
-                        LootX = FarmingConfig.ScreenConfiguration.LootDefaultX;
-                        LootY = FarmingConfig.ScreenConfiguration.LootDefaultY;
+                        LootX = ScreenConfiguration.LootDefaultX;
+                        LootY = ScreenConfiguration.LootDefaultY;
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
                             PlayerState.SKIN_ATTEMPT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
@@ -339,7 +340,7 @@ namespace WoWHelper
                         break;
                     case PlayerState.LOOT_ATTEMPT_TWO:
                         Console.WriteLine("Trying to loot a second time, in case the dying anim is slow");
-                        Point lootPoint = await WowScreenCapture.CreateHeatmapForLooting(FarmingConfig.ScreenConfiguration);
+                        Point lootPoint = await WowScreenCapture.CreateHeatmapForLooting(ScreenConfiguration);
                         LootX = lootPoint.X;
                         LootY = lootPoint.Y;
                         CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),

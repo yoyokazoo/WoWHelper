@@ -129,14 +129,16 @@ needs them. An empty/unset `ExpectedMobNames` makes
 `AllMobsInZoneAreNatureImmune()` return `false` rather than vacuously `true`.
 
 **Automatic farming-config resolution:** there's no static "current config"
-singleton anymore -- `WowFarmingConfigs.cs`/`CURRENT_CONFIG` were removed;
-`WowPlayer`'s constructor builds its own `FarmingConfig` directly
-(`new WowFarmingConfiguration { ScreenConfiguration = screenConfiguration }`)
-instead of pulling a shared static instance (there's no `ManagementConfiguration`
+singleton anymore -- `WowFarmingConfigs.cs`/`CURRENT_CONFIG` were removed,
+and so was the `WowFarmingConfiguration` wrapper that replaced it: `WowPlayer`
+holds `LocationConfiguration`, `CombatConfiguration` and `ScreenConfiguration`
+as three plain properties of its own (there's no `ManagementConfiguration`
 anymore either — see the `Config/` bullet in the C# architecture section
-above). `LocationConfiguration` and `CombatConfiguration` are never hardcoded
-there; both start out `null`/`WowCombatConfiguration.Unknown` (see
-`WowFarmingConfiguration`'s constructor) and get resolved by two independent
+above). `ScreenConfiguration` is picked from the monitor resolution
+(`WowScreenConfigs.GetForPrimaryScreen()`) or passed into `WowPlayer`'s
+constructor. `LocationConfiguration` and `CombatConfiguration` are never
+hardcoded; both start out `null`/`WowCombatConfiguration.Unknown` (see
+`WowPlayer`'s constructor) and get resolved by two independent
 mechanisms in
 `WowConfigResolutionTasks.cs`, deliberately split apart (they used to be one
 method run only from `PlayerState.RESOLVE_FARMING_CONFIGURATION`) because
@@ -173,7 +175,7 @@ that state can be skipped entirely — see below:
   re-resolves it if that happens; code that reads `LocationConfiguration`
   either runs somewhere that short-circuit can't reach mid-combat, or (like
   the level-up-alert block in `EveryWorldStateUpdateTasks()`) guards on
-  `FarmingConfig.LocationConfiguration != null` first. `SetLogoutVariablesTask()`
+  `LocationConfiguration != null` first. `SetLogoutVariablesTask()`
   does not guard, so it would throw if reached in that state — a known gap,
   not yet fixed.
 
@@ -214,7 +216,7 @@ across two bytes. C# decodes these into `WowWorldState.PlayerClass` (nullable
 `WowCombatConfiguration` — null if none of the four bits are set, i.e. an
 unsupported class or the addon isn't rendering a real row yet), which
 `WowPlayer.ResolveFarmingConfigurationTask` uses to set
-`FarmingConfig.CombatConfiguration` automatically at startup — see "Automatic
+`CombatConfiguration` automatically at startup — see "Automatic
 farming-config resolution" below.
 
 Bits 5-8 carry `IsPlayerPoisoned`/`IsPlayerDiseased` (from `PlayerHasDebuffType()`
@@ -400,7 +402,7 @@ in `ShamanFunctions.lua`, `GetWarlockClassBoolOne` in `WarlockFunctions.lua`)
 — so the *same* pixel/bit position means something different depending on
 which class is playing. On the C# side, `WowPlayer.ClassState` (a
 `WowClassState` subtype — see the C# architecture section) decodes the
-matching bits, selected once from `FarmingConfig.CombatConfiguration` —
+matching bits, selected once from `CombatConfiguration` —
 itself auto-set at startup from the player's detected class (see "Automatic
 farming-config resolution" below), not hardcoded. Note
 `CanSpellcastPullTarget()` stays in `WoWFunctions.lua` rather than being
@@ -430,8 +432,8 @@ value, `WowClassState.Create`, all six
 `WowPlayerCombatConfig.cs` switches, the `MultiBoolTwo` R4 class-detect bit)
 is also in place.
 
-The `Screen.PrimaryScreen.Bounds`-based per-resolution config in
-`WowFarmingConfiguration` still selects a `WowScreenConfiguration`, but that
+The `Screen.PrimaryScreen.Bounds`-based per-resolution lookup
+(`WowScreenConfigs.GetForPrimaryScreen()`) still selects a `WowScreenConfiguration`, but that
 now only matters for the screen-capture crop size and the text/UI-signature
 matchers above — the pixel-row positions themselves are the same on every
 resolution.
@@ -463,7 +465,7 @@ of truth — edits should be made here, not in the WoW install directory.
   a Warrior-only field and silently getting stale data), each class gets its
   own concrete subtype exposing *only* its own fields — a wrong-class field
   reference is a compile error, not a runtime surprise. `WowPlayer.ClassState`
-  holds the one built for `FarmingConfig.CombatConfiguration` — `null` until
+  holds the one built for `CombatConfiguration` — `null` until
   `ResolveCombatConfiguration()` sets that from the player's detected class
   and builds the matching subtype (see "Automatic farming-config resolution"
   above) — and updates it (in place, same instance — no `PreviousClassState`
@@ -563,9 +565,10 @@ of truth — edits should be made here, not in the WoW install directory.
   farming-config resolution" above) and per-resolution screen pixel maps
   (`WowScreenConfigs.cs`). There's no separate farming-profile config file
   anymore either — `WowFarmingConfigs.cs`/`CURRENT_CONFIG` were removed;
-  `WowPlayer` builds its own `FarmingConfig` (a `WowFarmingConfiguration`)
-  directly in its constructor instead, with `LocationConfiguration`/
-  `CombatConfiguration` resolved at runtime, not set on any static instance.
+  `WowPlayer` holds `LocationConfiguration`/`CombatConfiguration`/
+  `ScreenConfiguration` as its own properties instead, with the first two
+  resolved at runtime, not set on any static instance. The
+  `WowCombatConfiguration` enum lives in `Config/Definitions/WowCombatConfiguration.cs`.
   There's no management/alert-toggle config anymore either —
   `WowManagementConfiguration`/`WowManagementConfigs.cs` were removed;
   `AlertOnPotionUsed`/`AlertOnFullBags`/`AlertOnUnreadWhisper` always fired
@@ -613,7 +616,7 @@ of truth — edits should be made here, not in the WoW install directory.
   via `MoveTowardsPointTask` (the same rotate/strafe/walk logic
   `MoveTowardsWaypointTask` uses for the main route, extracted to take an
   arbitrary point/tolerance instead of always reading
-  `FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex]`), with
+  `LocationConfiguration.Waypoints[CurrentWaypointIndex]`), with
   every leg but the final one using `MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE`
   and the final approach using the much tighter
   `MERCHANT_FINAL_WAYPOINT_TOLERANCE` — the final waypoint is exactly where
@@ -622,7 +625,7 @@ of truth — edits should be made here, not in the WoW install directory.
   testing, its `/stopmacro [mod:shift]`/`/stopmacro [nomod]` lines mean a
   ctrl-press already falls through to its `/target` line with no macro
   changes needed) and right-clicks screen center
-  (`FarmingConfig.ScreenConfiguration.LootDefaultX/Y`, the same point loot
+  (`ScreenConfiguration.LootDefaultX/Y`, the same point loot
   corpses are clicked at) to open the vendor, so it only works if the bot
   actually stopped right on top of the merchant. `WAITING_FOR_AUTO_SELL`
   then waits `MERCHANT_AUTO_SELL_WAIT_MILLIS` (15s) via the existing

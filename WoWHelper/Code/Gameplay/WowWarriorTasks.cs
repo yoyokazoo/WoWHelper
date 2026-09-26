@@ -341,17 +341,17 @@ namespace WoWHelper
                 return false;
             }
 
-            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge && !classState.KnowsCharge) // no charge yet
+            if (LocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge && !classState.KnowsCharge) // no charge yet
             {
                 await WowInput.PressKey(WowInput.START_ATTACK);
                 await WalkIntoMeleeRangeTask(classState);
                 //await WowInput.PressKey(WowInput.START_ATTACK);
             }
-            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
+            else if (LocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
                 await FaceAndChargeTarget();
             }
-            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
+            else if (LocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
                 if (!classState.WaitingToShoot)
                 {
@@ -375,20 +375,20 @@ namespace WoWHelper
         // WowWarriorClassState.
         public bool WarriorCanEngageTarget(WowWarriorClassState classState)
         {
-            switch (FarmingConfig.EngageMethod)
+            switch (LocationConfiguration.EngageMethod)
             {
                 case WowLocationConfiguration.EngagementMethod.Charge:
                     {
                         if (!classState.KnowsCharge && classState.CanChargeTarget)
                         {
-                            return WowScreenCapture.FindTargetMarkerOnScreen(FarmingConfig.ScreenConfiguration) != null;
+                            return WowScreenCapture.FindTargetMarkerOnScreen(ScreenConfiguration) != null;
                         }
                         return classState.CanChargeTarget;
                     }
                 case WowLocationConfiguration.EngagementMethod.Pull: return classState.CanShootTarget;
                 default: throw new System.NotImplementedException(
-                    $"{nameof(WarriorCanEngageTarget)}: EngageMethod \"{FarmingConfig.EngageMethod}\" (from location " +
-                    $"\"{FarmingConfig.LocationConfiguration?.Title}\") isn't supported for Warrior -- only Charge/Pull " +
+                    $"{nameof(WarriorCanEngageTarget)}: EngageMethod \"{LocationConfiguration.EngageMethod}\" (from location " +
+                    $"\"{LocationConfiguration?.Title}\") isn't supported for Warrior -- only Charge/Pull " +
                     $"are. This route's EngageMethod likely wasn't set up for this class -- see " +
                     $"WowConfigResolutionTasks.ResolveFarmingConfigurationTask.");
             }

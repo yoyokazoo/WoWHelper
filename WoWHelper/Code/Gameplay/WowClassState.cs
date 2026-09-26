@@ -15,7 +15,7 @@ namespace WoWHelper
     // WowWarriorClassState/WowShamanClassState/WowWarlockClassState.
     //
     // WowPlayer builds the right concrete instance once (based on
-    // FarmingConfig.CombatConfiguration) and updates it every tick alongside
+    // CombatConfiguration) and updates it every tick alongside
     // WorldState. The class-specific Wow*Tasks.cs methods receive their
     // class's concrete ClassState as a method parameter (not read off
     // `this`), so a wrong-class field reference is a compile error, not a

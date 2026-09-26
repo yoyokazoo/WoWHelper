@@ -111,7 +111,7 @@ namespace WoWHelper
         // WowCombatConfiguration rather than a separate "player class" enum since the two
         // are currently exactly 1:1 (each supported class has exactly one rotation).
         // Used by WowPlayer.ResolveFarmingConfigurationTask to auto-pick
-        // FarmingConfig.CombatConfiguration at startup instead of it being hardcoded.
+        // CombatConfiguration at startup instead of it being hardcoded.
         public WowCombatConfiguration? PlayerClass { get; private set; }
 
         // Red Error Text in middle of screen

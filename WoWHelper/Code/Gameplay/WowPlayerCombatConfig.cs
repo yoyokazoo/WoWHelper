@@ -8,7 +8,7 @@ namespace WoWHelper
     {
         // Each dispatch below casts ClassState to the class-specific type the
         // target method expects. Since ClassState is built once from
-        // FarmingConfig.CombatConfiguration (see WowPlayer's constructor) and
+        // CombatConfiguration (see WowPlayer's constructor) and
         // never changes afterward, this cast should always succeed in
         // practice -- if it doesn't, that means ClassState and
         // CombatConfiguration have gone out of sync, and throwing
@@ -17,17 +17,17 @@ namespace WoWHelper
         //
         // Shared message builder for all six dispatchers below, so the explanation of
         // *why* an unhandled CombatConfiguration is possible only needs to be written
-        // (and kept in sync) once. Unknown (-1) is the default value FarmingConfig
+        // (and kept in sync) once. Unknown (-1) is the value CombatConfiguration
         // starts with -- see the enum's own comment -- meaning either
         // ResolveFarmingConfigurationTask hasn't run yet or it failed; anything else
         // unhandled means a class was added to WowCombatConfiguration without adding a
         // case to this dispatcher.
         private string UnhandledCombatConfigurationMessage(string dispatcherName) =>
-            $"{dispatcherName}: no dispatch implemented for CombatConfiguration \"{FarmingConfig.CombatConfiguration}\".";
+            $"{dispatcherName}: no dispatch implemented for CombatConfiguration \"{CombatConfiguration}\".";
 
         public async Task<bool> StartBattleReadyTask()
         {
-            switch (FarmingConfig.CombatConfiguration)
+            switch (CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorStartBattleReadyRecoverTask((WowWarriorClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask((WowShamanClassState)ClassState);
@@ -38,7 +38,7 @@ namespace WoWHelper
 
         public async Task<bool> WaitUntilBattleReadyTask()
         {
-            switch (FarmingConfig.CombatConfiguration)
+            switch (CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorWaitUntilBattleReadyTask((WowWarriorClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanWaitUntilBattleReadyTask((WowShamanClassState)ClassState);
@@ -49,7 +49,7 @@ namespace WoWHelper
 
         public async Task<bool> StartEngageTask()
         {
-            switch (FarmingConfig.CombatConfiguration)
+            switch (CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorKickOffEngageTask((WowWarriorClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanKickOffEngageTask((WowShamanClassState)ClassState);
@@ -60,7 +60,7 @@ namespace WoWHelper
 
         public async Task<bool> WaitUntilEngageTask()
         {
-            switch (FarmingConfig.CombatConfiguration)
+            switch (CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorFaceCorrectDirectionToEngageTask((WowWarriorClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanFaceCorrectDirectionToEngageTask((WowShamanClassState)ClassState);
@@ -71,7 +71,7 @@ namespace WoWHelper
 
         public async Task<bool> CombatLoopTask()
         {
-            switch (FarmingConfig.CombatConfiguration)
+            switch (CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorCombatLoopTask((WowWarriorClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanCombatLoopTask((WowShamanClassState)ClassState);
@@ -89,7 +89,7 @@ namespace WoWHelper
         // know which typed ClassState to use at compile time.
         public bool CanEngageTarget()
         {
-            switch (FarmingConfig.CombatConfiguration)
+            switch (CombatConfiguration)
             {
                 case Code.Gameplay.WowCombatConfiguration.Warrior: return WarriorCanEngageTarget((WowWarriorClassState)ClassState);
                 case Code.Gameplay.WowCombatConfiguration.Shaman: return ShamanCanEngageTarget((WowShamanClassState)ClassState);

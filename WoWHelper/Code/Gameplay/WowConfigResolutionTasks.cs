@@ -10,7 +10,7 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        // Resolves FarmingConfig.CombatConfiguration + builds ClassState from the
+        // Resolves CombatConfiguration + builds ClassState from the
         // player's detected class (WorldState.PlayerClass). Deliberately NOT tied to the
         // RESOLVE_FARMING_CONFIGURATION player state -- called every tick from
         // WowManagementTasks.EveryWorldStateUpdateTasks() instead, so it resolves even if
@@ -40,11 +40,11 @@ namespace WoWHelper
                 return;
             }
 
-            FarmingConfig.CombatConfiguration = WorldState.PlayerClass.Value;
-            ClassState = WowClassState.Create(FarmingConfig.CombatConfiguration);
-            ClassState.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
+            CombatConfiguration = WorldState.PlayerClass.Value;
+            ClassState = WowClassState.Create(CombatConfiguration);
+            ClassState.UpdateFromBitmap(WorldState.Bmp, ScreenConfiguration);
 
-            Console.WriteLine($"Auto-detected combat config {FarmingConfig.CombatConfiguration}");
+            Console.WriteLine($"Auto-detected combat config {CombatConfiguration}");
         }
 
         // Runs once, during the RESOLVE_FARMING_CONFIGURATION player state (after the
@@ -92,9 +92,9 @@ namespace WoWHelper
                 return false;
             }
 
-            FarmingConfig.LocationConfiguration = matchingConfigs[0];
+            LocationConfiguration = matchingConfigs[0];
 
-            Console.WriteLine($"Using location config \"{FarmingConfig.LocationConfiguration.Title}\" (combat config {FarmingConfig.CombatConfiguration} already resolved)");
+            Console.WriteLine($"Using location config \"{LocationConfiguration.Title}\" (combat config {CombatConfiguration} already resolved)");
 
             return true;
         }

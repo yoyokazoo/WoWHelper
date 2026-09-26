@@ -55,7 +55,7 @@ namespace WoWHelper
 
             if (shouldThrowDynamite)
             {
-                Mouse.Move(FarmingConfig.ScreenConfiguration.DynamiteAndDummyX, FarmingConfig.ScreenConfiguration.DynamiteAndDummyY);
+                Mouse.Move(ScreenConfiguration.DynamiteAndDummyX, ScreenConfiguration.DynamiteAndDummyY);
                 await Task.Delay(50);
                 await WowInput.PressKey(WowInput.THROW_DYNAMITE);
                 await Task.Delay(1000);
