@@ -61,5 +61,17 @@
             WAITING_FOR_AUTO_SELL,
             WALKING_BACK_TO_ROUTE
         }
+
+        public enum PlayerGoal
+        {
+            FIGHT,
+            FIND_FIGHT,
+            LOG_OUT,
+            REPAIR,
+            SELL,
+            TRAIN,
+            TRAVEL,
+            SET_HEARTH
+        }
     }
 }

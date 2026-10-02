@@ -44,6 +44,7 @@ namespace WoWHelper
         public PlayerMetaState CurrentPlayerMetaState { get; private set; }
         public PlayerState CurrentPlayerState { get; private set; }
         public PathfindingState CurrentPathfindingState { get; private set; }
+        public PlayerGoal CurrentPlayerGoal { get; private set; }
 
         public int CurrentWaypointIndex { get; private set; }
         public int WaypointTraversalDirection { get; private set; }
@@ -59,7 +60,6 @@ namespace WoWHelper
 
         public WowLocationConfiguration LocationConfiguration { get; private set; }
         public WowCombatConfiguration CombatConfiguration { get; private set; }
-
         public WowScreenConfiguration ScreenConfiguration { get; private set; }
 
         public WowPlayer() : this(WowScreenConfigs.GetForPrimaryScreen()) { }
