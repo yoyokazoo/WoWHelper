@@ -107,6 +107,11 @@ namespace WoWHelper
         public bool AllSkillsKnownForThisLevel { get; private set; }
         public bool CanAffordToTrainAllSkills { get; private set; }
 
+        // Decoded from MultiBoolTwo's G byte, b8. A melee weapon at yellow durability or
+        // worse, or any other equipped piece at red (broken) -- see GearNeedsRepair() in
+        // WoWFunctions.lua. Refreshed by the addon only once a minute.
+        public bool GearNeedsRepair { get; private set; }
+
         // Which of the three bot-supported classes the player is playing, decoded from
         // MultiBoolOne's B byte (b2/b4 -- see GetMultiBoolOne() in WoWFunctions.lua) for
         // Warrior/Shaman, plus MultiBoolTwo's R4 (see UpdateMultiBoolTwo below) for
@@ -306,8 +311,8 @@ namespace WoWHelper
         // G2 (LogoutOnFullBagsEnabled), and G3 (HasDesiredWorldBuff) are packed into the
         // previously-unused G byte instead of continuing into R7/R8, followed by G4
         // (HighLatency), G5 (CombatStalemate), G6 (AllSkillsKnownForThisLevel), and G7
-        // (CanAffordToTrainAllSkills) -- G8 and the B byte are still reserved for future
-        // class-agnostic flags (see GetMultiBoolTwo() in WoWFunctions.lua).
+        // (CanAffordToTrainAllSkills), and G8 (GearNeedsRepair) -- the B byte is still
+        // reserved for future class-agnostic flags (see GetMultiBoolTwo() in WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
@@ -325,7 +330,7 @@ namespace WoWHelper
             IsTargetBleedImmune = r5;
             IsTargetFearCaster = r6;
 
-            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out _);
+            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
 
             LogoutOnLowDynamiteEnabled = g1;
             LogoutOnFullBagsEnabled = g2;
@@ -334,6 +339,7 @@ namespace WoWHelper
             CombatStalemate = g5;
             AllSkillsKnownForThisLevel = g6;
             CanAffordToTrainAllSkills = g7;
+            GearNeedsRepair = g8;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

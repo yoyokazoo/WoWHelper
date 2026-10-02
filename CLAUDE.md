@@ -71,7 +71,7 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G7 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills` |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G8 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -392,7 +392,26 @@ known (`IsPlayerSpell`) is unlearned; G7 compares their summed copper cost
 against `GetMoney()` (base cost, ignoring trainer rep discounts; true when
 nothing's unlearned). Only Warrior levels 1-2 are filled in so far (Battle
 Shout); Shaman/Warlock tables are empty, so they always read "all known".
-G8 and the B byte are still reserved for the next class-agnostic bool.
+G8 is `WowWorldState.GearNeedsRepair` (`GearNeedsRepair()`,
+`WoWFunctions.lua`): true if a melee weapon (main hand, or an off-hand
+*weapon* — shields count as armor) is at "yellow" durability or worse
+(`DURABILITY_YELLOW_RATIO`, 25% — our approximation of the durability doll's
+yellow, not exposed by the API), or any other equipped piece (armor, shield,
+ranged) is "red" (0 durability/broken). `GEAR_REPAIR_DEBUG` prints per-slot
+durability on each refresh. Nothing on the C# side consumes it yet. The G
+byte is now full; the B byte is still reserved for the next class-agnostic
+bool.
+
+**Rare-change state is interval-cached.** `AreBagsFull`,
+`AreWeLowOnHealthPotions`/`Dynamite`/`Ammo`, `GearNeedsRepair`, and the
+trainer-spell scan behind G6/G7 (`GetUnlearnedTrainerSpells`, shared so the
+two always refresh together) are all wrapped in `CacheOnInterval()` (top of
+`WoWFunctions.lua`): computed on the first call (startup), then at most once
+every `RARE_STATE_REFRESH_INTERVAL_SECONDS` (60s), returning the cached value
+in between rather than recomputing on the pixel row's ~50ms cadence. So any
+of these can lag reality by up to a minute (e.g. after a level-up, trainer
+visit, vendor sell, or `/yyconfig` item-selector change). Put the next flag
+of this kind behind the same helper.
 `ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,

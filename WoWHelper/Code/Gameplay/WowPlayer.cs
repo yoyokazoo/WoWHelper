@@ -174,6 +174,7 @@ namespace WoWHelper
             {
                 await UpdateWorldStateAsync();
                 await EveryWorldStateUpdateTasks();
+                UpdatePlayerGoal();
 
                 switch (CurrentPlayerMetaState)
                 {
@@ -186,12 +187,13 @@ namespace WoWHelper
                     case PlayerMetaState.RESOLVE_FARMING_CONFIGURATION:
                         Console.WriteLine("Auto-detecting combat/location config from live game state");
                         CurrentPlayerMetaState = await GeneralHelpers.ChangeStateBasedOnTaskResult(ResolveFarmingConfigurationTask(),
-                            PlayerMetaState.RUNNING,
+                            PlayerMetaState.EXECUTING_GOAL,
                             PlayerMetaState.EXITING);
                         break;
-                    case PlayerMetaState.RUNNING:
-                        Console.WriteLine("RUNNING");
-                        CurrentPlayerMetaState = PlayerMetaState.EXITING;
+                    case PlayerMetaState.EXECUTING_GOAL:
+                        Console.WriteLine($"EXECUTING_GOAL, current goal: {CurrentPlayerGoal}");
+                        await ExecuteGoalTask();
+                        // Right now once we're on the goal execution part, we stay in here forever.
                         break;
                     case PlayerMetaState.EXITING:
                         Console.WriteLine("Surprised we haven't exited yet...");
@@ -203,157 +205,178 @@ namespace WoWHelper
                 return true;
         }
 
-            /*
-            public async Task<bool> CoreLoopTask()
+        public async Task ExecuteGoalTask()
+        {
+            switch (CurrentPlayerGoal)
             {
-                FarmStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                case PlayerGoal.FIGHT:
+                    break;
+                case PlayerGoal.FIND_FIGHT:
+                    break;
+                case PlayerGoal.SELL:
+                    break;
+                case PlayerGoal.LOG_OUT:
+                    break;
+                case PlayerGoal.TRAVEL:
+                case PlayerGoal.SET_HEARTH:
+                case PlayerGoal.REPAIR:
+                case PlayerGoal.TRAIN:
+                    Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
+                    break;
+            }
+        }
 
-                Console.WriteLine("Kicking off core gameplay loop");
+        /*
+        public async Task<bool> CoreLoopTask()
+        {
+            FarmStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                while (CurrentPlayerState != PlayerState.EXITING_CORE_GAMEPLAY_LOOP)
+            Console.WriteLine("Kicking off core gameplay loop");
+
+            while (CurrentPlayerState != PlayerState.EXITING_CORE_GAMEPLAY_LOOP)
+            {
+                await UpdateWorldStateAsync();
+
+                // TODO: short circuit into combat/getting out of water/etc.
+                // TODO: if on login screen all other values will be messed up
+                if (WorldState.IsBotInAValidState && WorldState.IsInCombat)
                 {
-                    await UpdateWorldStateAsync();
-
-                    // TODO: short circuit into combat/getting out of water/etc.
-                    // TODO: if on login screen all other values will be messed up
-                    if (WorldState.IsBotInAValidState && WorldState.IsInCombat)
+                    // Shaman always pulls with a spell regardless of LocationConfiguration.EngageMethod
+                    // (Charge/Pull only distinguishes Warrior's two options -- see the enum's own
+                    // comment on WowLocationConfiguration.cs), so checking CombatConfiguration here
+                    // instead of EngageMethod covers it without needing to know which location
+                    // we're on. (Warlock also always pulls with a spell but isn't checked here --
+                    // pre-existing gap from before Warlock support was added, not touched by the
+                    // Mage removal that dropped the Mage half of this check.)
+                    if (CurrentPlayerState == PlayerState.CONTINUE_TO_TRY_TO_ENGAGE &&
+                        CombatConfiguration == WowCombatConfiguration.Shaman &&
+                        WorldState.ResourcePercent < 100)
                     {
-                        // Shaman always pulls with a spell regardless of LocationConfiguration.EngageMethod
-                        // (Charge/Pull only distinguishes Warrior's two options -- see the enum's own
-                        // comment on WowLocationConfiguration.cs), so checking CombatConfiguration here
-                        // instead of EngageMethod covers it without needing to know which location
-                        // we're on. (Warlock also always pulls with a spell but isn't checked here --
-                        // pre-existing gap from before Warlock support was added, not touched by the
-                        // Mage removal that dropped the Mage half of this check.)
-                        if (CurrentPlayerState == PlayerState.CONTINUE_TO_TRY_TO_ENGAGE &&
-                            CombatConfiguration == WowCombatConfiguration.Shaman &&
-                            WorldState.ResourcePercent < 100)
-                        {
-                            // We likely just cast a spell that hasn't yet hit the target.  Wait a little bit so it does,
-                            // so we correctly read that our current target is in combat with us, otherwise we get confused
-                            Console.WriteLine($"Waiting for spellcast");
-                            await Task.Delay(1200);
-                        }
-                        Console.WriteLine($"In combat unexpectedly ({CurrentPlayerState}), switching to PlayerState.IN_CORE_COMBAT_LOOP");
-                        CurrentPlayerState = PlayerState.IN_CORE_COMBAT_LOOP;
-                        //await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
+                        // We likely just cast a spell that hasn't yet hit the target.  Wait a little bit so it does,
+                        // so we correctly read that our current target is in combat with us, otherwise we get confused
+                        Console.WriteLine($"Waiting for spellcast");
+                        await Task.Delay(1200);
                     }
-
-                    await EveryWorldStateUpdateTasks();
-
-                    switch (CurrentPlayerState)
-                    {
-                        case PlayerState.WAITING_TO_FOCUS_ON_WINDOW:
-                            Console.WriteLine("Focusing on window");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
-                                PlayerState.RESOLVE_FARMING_CONFIGURATION,
-                                PlayerState.WAITING_TO_FOCUS_ON_WINDOW);
-                            break;
-                        case PlayerState.RESOLVE_FARMING_CONFIGURATION:
-                            Console.WriteLine("Auto-detecting combat/location config from live game state");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(ResolveFarmingConfigurationTask(),
-                                PlayerState.CHECK_FOR_LOGOUT,
-                                PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
-                            break;
-                        case PlayerState.CHECK_FOR_LOGOUT:
-                            Console.WriteLine("Checking if we should log out");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SetLogoutVariablesTask(),
-                                PlayerState.START_LOGGING_OUT,
-                                PlayerState.START_BATTLE_READY_RECOVERY);
-                            break;
-                        case PlayerState.START_LOGGING_OUT:
-                            Console.WriteLine($"Started logging out ({LogoutReason})");
-                            SlackHelper.SendMessageToChannel($"Logging out: {LogoutReason}");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartLogoutTask(),
-                                PlayerState.WAITING_TO_LOG_OUT,
-                                PlayerState.IN_CORE_COMBAT_LOOP);
-                            break;
-                        case PlayerState.WAITING_TO_LOG_OUT:
-                            Console.WriteLine("Waiting to log out");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(CheckIfLoggedOutTask(),
-                                PlayerState.LOGGED_OUT,
-                                PlayerState.WAITING_TO_LOG_OUT);
-                            break;
-                        case PlayerState.LOGGED_OUT:
-                            Console.WriteLine("Logged out");
-                            CurrentPlayerState = PlayerState.EXITING_CORE_GAMEPLAY_LOOP;
-                            break;
-                        case PlayerState.START_BATTLE_READY_RECOVERY:
-                            Console.WriteLine("Starting battle ready recovery");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartBattleReadyTask(),
-                                PlayerState.WAIT_UNTIL_BATTLE_READY,
-                                PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
-                            break;
-                        case PlayerState.WAIT_UNTIL_BATTLE_READY:
-                            Console.WriteLine("Waiting until battle ready");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(WaitUntilBattleReadyTask(),
-                                PlayerState.CHECK_FOR_VALID_TARGET,
-                                PlayerState.WAIT_UNTIL_BATTLE_READY);
-                            break;
-                        case PlayerState.CHECK_FOR_VALID_TARGET:
-                            Console.WriteLine("Checking for valid target");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(PathfindingLoopTask(),
-                                PlayerState.INITIATE_ENGAGE_TARGET,
-                                PlayerState.IN_CORE_COMBAT_LOOP);
-                            break;
-                        case PlayerState.INITIATE_ENGAGE_TARGET:
-                            Console.WriteLine("Trying to engage target");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartEngageTask(),
-                                PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
-                                PlayerState.CHECK_FOR_LOGOUT);
-                            break;
-                        case PlayerState.CONTINUE_TO_TRY_TO_ENGAGE:
-                            Console.WriteLine("Continuing to engage target");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(WaitUntilEngageTask(),
-                                PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
-                                PlayerState.CHECK_FOR_LOGOUT);
-                            break;
-                        case PlayerState.IN_CORE_COMBAT_LOOP:
-                            Console.WriteLine("In core combat loop");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(CombatLoopTask(),
-                                PlayerState.TARGET_DEFEATED,
-                                PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
-                            break;
-                        case PlayerState.TARGET_DEFEATED:
-                            Console.WriteLine("Target defeated, trying to loot");
-                            // TODO: /canceltarget and /stopcasting and /stopattack here so we don't accidentally attack something
-                            await WaitUnlessInCombatTask(1500); // give the dying anim a sec
-                            LootX = ScreenConfiguration.LootDefaultX;
-                            LootY = ScreenConfiguration.LootDefaultY;
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(LootTask(),
-                                PlayerState.SKIN_ATTEMPT,
-                                PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
-                            break;
-                        case PlayerState.SKIN_ATTEMPT:
-                            Console.WriteLine("Trying to skin");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SkinTask(),
-                                PlayerState.LOOT_ATTEMPT_TWO,
-                                PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
-                            break;
-                        case PlayerState.LOOT_ATTEMPT_TWO:
-                            Console.WriteLine("Trying to loot a second time, in case the dying anim is slow");
-                            Point lootPoint = await WowScreenCapture.CreateHeatmapForLooting(ScreenConfiguration);
-                            LootX = lootPoint.X;
-                            LootY = lootPoint.Y;
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(LootTask(),
-                                PlayerState.SKIN_ATTEMPT_TWO,
-                                PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
-                            break;
-                        case PlayerState.SKIN_ATTEMPT_TWO:
-                            Console.WriteLine("Trying to skin");
-                            CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SkinTask(),
-                                PlayerState.CHECK_FOR_LOGOUT,
-                                PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
-                            await ScootForwardsTask();
-                            break;
-                    }
+                    Console.WriteLine($"In combat unexpectedly ({CurrentPlayerState}), switching to PlayerState.IN_CORE_COMBAT_LOOP");
+                    CurrentPlayerState = PlayerState.IN_CORE_COMBAT_LOOP;
+                    //await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
                 }
 
-                Console.WriteLine("Exited Core Gameplay");
-                Environment.Exit(0);
+                await EveryWorldStateUpdateTasks();
 
-                return true;
+                switch (CurrentPlayerState)
+                {
+                    case PlayerState.WAITING_TO_FOCUS_ON_WINDOW:
+                        Console.WriteLine("Focusing on window");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
+                            PlayerState.RESOLVE_FARMING_CONFIGURATION,
+                            PlayerState.WAITING_TO_FOCUS_ON_WINDOW);
+                        break;
+                    case PlayerState.RESOLVE_FARMING_CONFIGURATION:
+                        Console.WriteLine("Auto-detecting combat/location config from live game state");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(ResolveFarmingConfigurationTask(),
+                            PlayerState.CHECK_FOR_LOGOUT,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        break;
+                    case PlayerState.CHECK_FOR_LOGOUT:
+                        Console.WriteLine("Checking if we should log out");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SetLogoutVariablesTask(),
+                            PlayerState.START_LOGGING_OUT,
+                            PlayerState.START_BATTLE_READY_RECOVERY);
+                        break;
+                    case PlayerState.START_LOGGING_OUT:
+                        Console.WriteLine($"Started logging out ({LogoutReason})");
+                        SlackHelper.SendMessageToChannel($"Logging out: {LogoutReason}");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartLogoutTask(),
+                            PlayerState.WAITING_TO_LOG_OUT,
+                            PlayerState.IN_CORE_COMBAT_LOOP);
+                        break;
+                    case PlayerState.WAITING_TO_LOG_OUT:
+                        Console.WriteLine("Waiting to log out");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(CheckIfLoggedOutTask(),
+                            PlayerState.LOGGED_OUT,
+                            PlayerState.WAITING_TO_LOG_OUT);
+                        break;
+                    case PlayerState.LOGGED_OUT:
+                        Console.WriteLine("Logged out");
+                        CurrentPlayerState = PlayerState.EXITING_CORE_GAMEPLAY_LOOP;
+                        break;
+                    case PlayerState.START_BATTLE_READY_RECOVERY:
+                        Console.WriteLine("Starting battle ready recovery");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartBattleReadyTask(),
+                            PlayerState.WAIT_UNTIL_BATTLE_READY,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        break;
+                    case PlayerState.WAIT_UNTIL_BATTLE_READY:
+                        Console.WriteLine("Waiting until battle ready");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(WaitUntilBattleReadyTask(),
+                            PlayerState.CHECK_FOR_VALID_TARGET,
+                            PlayerState.WAIT_UNTIL_BATTLE_READY);
+                        break;
+                    case PlayerState.CHECK_FOR_VALID_TARGET:
+                        Console.WriteLine("Checking for valid target");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(PathfindingLoopTask(),
+                            PlayerState.INITIATE_ENGAGE_TARGET,
+                            PlayerState.IN_CORE_COMBAT_LOOP);
+                        break;
+                    case PlayerState.INITIATE_ENGAGE_TARGET:
+                        Console.WriteLine("Trying to engage target");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartEngageTask(),
+                            PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
+                            PlayerState.CHECK_FOR_LOGOUT);
+                        break;
+                    case PlayerState.CONTINUE_TO_TRY_TO_ENGAGE:
+                        Console.WriteLine("Continuing to engage target");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(WaitUntilEngageTask(),
+                            PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
+                            PlayerState.CHECK_FOR_LOGOUT);
+                        break;
+                    case PlayerState.IN_CORE_COMBAT_LOOP:
+                        Console.WriteLine("In core combat loop");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(CombatLoopTask(),
+                            PlayerState.TARGET_DEFEATED,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        break;
+                    case PlayerState.TARGET_DEFEATED:
+                        Console.WriteLine("Target defeated, trying to loot");
+                        // TODO: /canceltarget and /stopcasting and /stopattack here so we don't accidentally attack something
+                        await WaitUnlessInCombatTask(1500); // give the dying anim a sec
+                        LootX = ScreenConfiguration.LootDefaultX;
+                        LootY = ScreenConfiguration.LootDefaultY;
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(LootTask(),
+                            PlayerState.SKIN_ATTEMPT,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        break;
+                    case PlayerState.SKIN_ATTEMPT:
+                        Console.WriteLine("Trying to skin");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SkinTask(),
+                            PlayerState.LOOT_ATTEMPT_TWO,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        break;
+                    case PlayerState.LOOT_ATTEMPT_TWO:
+                        Console.WriteLine("Trying to loot a second time, in case the dying anim is slow");
+                        Point lootPoint = await WowScreenCapture.CreateHeatmapForLooting(ScreenConfiguration);
+                        LootX = lootPoint.X;
+                        LootY = lootPoint.Y;
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(LootTask(),
+                            PlayerState.SKIN_ATTEMPT_TWO,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        break;
+                    case PlayerState.SKIN_ATTEMPT_TWO:
+                        Console.WriteLine("Trying to skin");
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SkinTask(),
+                            PlayerState.CHECK_FOR_LOGOUT,
+                            PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
+                        await ScootForwardsTask();
+                        break;
+                }
             }
-            */
+
+            Console.WriteLine("Exited Core Gameplay");
+            Environment.Exit(0);
+
+            return true;
         }
+        */
+    }
 }

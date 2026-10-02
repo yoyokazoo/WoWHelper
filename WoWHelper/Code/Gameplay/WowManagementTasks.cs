@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
@@ -59,6 +60,53 @@ namespace WoWHelper
             LogoutReason = "Lost window focus";
 
             return true;
+        }
+
+        public void UpdatePlayerGoal()
+        {
+            if (WorldState.IsInCombat)
+            {
+                CurrentPlayerGoal = PlayerGoal.FIGHT;
+                return;
+            }
+
+            if (LogoutTriggered)
+            {
+                CurrentPlayerGoal = PlayerGoal.LOG_OUT;
+                return;
+            }
+
+            if (!WorldState.AllSkillsKnownForThisLevel && WorldState.CanAffordToTrainAllSkills)
+            {
+                CurrentPlayerGoal = PlayerGoal.TRAIN;
+                return;
+            }
+
+            if (WorldState.BagsAreFull)
+            {
+                CurrentPlayerGoal = PlayerGoal.SELL;
+                return;
+            }
+
+            // if (needs to travel to a new location)
+            // {
+            // CurrentPlayerGoal = PlayerGoal.TRAVEL;
+            // return;
+            // }
+
+            // if (WorldState.GearNeedsRepair)
+            // {
+            // CurrentPlayerGoal = PlayerGoal.REPAIR;
+            // return;
+            // }
+
+            // if (WorldState.HearthInWrongLocation)
+            // {
+            // CurrentPlayerGoal = PlayerGoal.SET_HEARTH;
+            // return;
+            // }
+
+            CurrentPlayerGoal = PlayerGoal.FIND_FIGHT;
         }
 
         public async Task<bool> EveryWorldStateUpdateTasks()

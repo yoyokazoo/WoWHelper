@@ -1,3 +1,28 @@
+-- How often "rare change" state (bag fullness, consumable counts, gear
+-- durability, trainable skills) is actually recomputed. These get polled on the
+-- pixel row's ~50-100ms OnUpdate cadence (plus the debug frame's), but none of
+-- them change anywhere near that fast, and some (bag scans) allocate a table per
+-- occupied slot -- so compute once on the first call (startup) and then at most
+-- once per interval, returning the cached value in between.
+local RARE_STATE_REFRESH_INTERVAL_SECONDS = 60
+
+-- Wraps computeFn so it runs on the first call and then at most once every
+-- intervalSeconds, returning the last computed value in between.
+local function CacheOnInterval(computeFn, intervalSeconds)
+    local lastCheckTime = nil
+    local cachedValue = nil
+
+    return function()
+        local now = GetTime()
+        if not lastCheckTime or (now - lastCheckTime) >= intervalSeconds then
+            cachedValue = computeFn()
+            lastCheckTime = now
+        end
+
+        return cachedValue
+    end
+end
+
 function IsInCombat()
     return UnitAffectingCombat("player")
 end
@@ -575,8 +600,12 @@ end
 
 -- The target marker (UIFunctions.lua) is drawn on the target's nameplate, so a
 -- friendly target (e.g. a merchant/trainer NPC) only gets one if these are on.
+-- Reads nameplateShowFriendlyNPCs, not nameplateShowFriends -- confirmed live
+-- (via a temporary CVar dump) that the friendly-nameplate toggle sets the
+-- former to "1", while GetCVarBool("nameplateShowFriends") returned nil.
+-- Compared against the raw "1" string so a missing CVar reads false, never nil.
 function AreFriendlyNameplatesTurnedOn()
-    return GetCVarBool("nameplateShowFriends")
+    return GetCVar("nameplateShowFriendlyNPCs") == "1"
 end
 
 -- Returns the name of whatever's currently bound to a key combo, in Blizzard's own
@@ -643,10 +672,13 @@ HEALING_POTION_ITEM_CHOICES = {
     { id = 13446, label = "Major Healing Potion" },
 }
 
-function AreWeLowOnHealthPotions()
+-- Interval-cached (see CacheOnInterval) -- consumable counts are rare-change
+-- state, and nothing reading this needs to notice within the minute. Note a
+-- /yyconfig selector change also only shows up on the next refresh.
+AreWeLowOnHealthPotions = CacheOnInterval(function()
     local count = GetItemCount(GetHealingPotionItemId(), false)
     return count < 2
-end
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
 -- Known dynamite-tier consumables, selectable via the /yyconfig "Dynamite item"
 -- selector (YoyokazooUI.lua/UIFunctions.lua) instead of being hardcoded here.
@@ -662,18 +694,89 @@ DYNAMITE_ITEM_CHOICES = {
     { id = 10562, label = "Hi-Explosive Bomb" },
 }
 
-function AreWeLowOnDynamite()
+-- Interval-cached, same as AreWeLowOnHealthPotions() above.
+AreWeLowOnDynamite = CacheOnInterval(function()
     local dynamiteCount = GetItemCount(GetDynamiteItemId(), false)
     return dynamiteCount < 2
-end
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
 -- light shot, 2516
 -- rough arrow, 2512
 -- sharp arrow, 2515
-function AreWeLowOnAmmo()
+-- Interval-cached, same as AreWeLowOnHealthPotions() above.
+AreWeLowOnAmmo = CacheOnInterval(function()
     local ammoCount = GetItemCount(2515, false)
     return ammoCount < 2
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
+
+-- Prints every equipped slot's durability and the repair decision on each
+-- (once-a-minute) GearNeedsRepair() refresh. Flip on if the thresholds below
+-- don't match what the character sheet's durability doll shows in-game.
+GEAR_REPAIR_DEBUG = false
+
+-- Blizzard's durability doll turns a slot yellow when it's low and red when
+-- it's broken (0 durability). The exact "low" ratio isn't exposed to addons;
+-- 25% is our approximation of the doll's yellow -- confirm live via
+-- GEAR_REPAIR_DEBUG if it seems off.
+local DURABILITY_YELLOW_RATIO = 0.25
+local WEAPON_CLASS_ID = 2 -- GetItemInfoInstant classID for weapons (shields are armor, 4)
+
+local function IsMeleeWeaponSlot(slot)
+    if slot == INVSLOT_MAINHAND then
+        return true
+    end
+
+    -- Off-hand is only a weapon if something with weapon class is in it --
+    -- a shield is armor, and a held-in-off-hand item has no durability.
+    if slot == INVSLOT_OFFHAND then
+        local itemId = GetInventoryItemID("player", slot)
+        if not itemId then
+            return false
+        end
+        local _, _, _, _, _, classId = GetItemInfoInstant(itemId)
+        return classId == WEAPON_CLASS_ID
+    end
+
+    return false
 end
+
+-- True if a melee weapon (main hand, or off-hand weapon) is at yellow durability
+-- or worse, or any other equipped piece (armor, shield, ranged) is red/broken.
+-- Slots without durability (neck, rings, cloak, trinkets, empty) return nil from
+-- GetInventoryItemDurability and are skipped. Interval-cached -- durability only
+-- moves a point at a time per hit taken/dealt or death, so once a minute is plenty.
+-- Packed into MultiBoolTwo's G8.
+GearNeedsRepair = CacheOnInterval(function()
+    local needsRepair = false
+
+    for slot = INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do
+        local current, maximum = GetInventoryItemDurability(slot)
+        if current and maximum and maximum > 0 then
+            local isWeapon = IsMeleeWeaponSlot(slot)
+            local slotNeedsRepair
+            if isWeapon then
+                slotNeedsRepair = (current / maximum) <= DURABILITY_YELLOW_RATIO
+            else
+                slotNeedsRepair = current == 0
+            end
+
+            if GEAR_REPAIR_DEBUG then
+                print(string.format("GearNeedsRepair: slot %d %d/%d weapon=%s needsRepair=%s",
+                    slot, current, maximum, tostring(isWeapon), tostring(slotNeedsRepair)))
+            end
+
+            if slotNeedsRepair then
+                needsRepair = true
+            end
+        end
+    end
+
+    if GEAR_REPAIR_DEBUG then
+        print("GearNeedsRepair: " .. tostring(needsRepair))
+    end
+
+    return needsRepair
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
 function TargetHasDebuffSpellId(debuffSpellId)
   for i = 1, 40 do
@@ -905,20 +1008,10 @@ end
 -- don't change on the ~50-100ms cadence AreBagsFull() gets polled at (it's one
 -- of the flags packed into GetMultiBoolOne, read by both the pixel-row and
 -- debug OnUpdate loops in UIFunctions.lua), so cache the real check and only
--- recompute it periodically instead of every tick.
-local BAGS_FULL_CHECK_INTERVAL_SECONDS = 30
-local lastBagsFullCheckTime = nil
-local cachedBagsFull = false
-
-function AreBagsFull()
-    local now = GetTime()
-    if not lastBagsFullCheckTime or (now - lastBagsFullCheckTime) >= BAGS_FULL_CHECK_INTERVAL_SECONDS then
-        cachedBagsFull = GetTotalFreeBagSlots() == 0
-        lastBagsFullCheckTime = now
-    end
-
-    return cachedBagsFull
-end
+-- recompute it periodically (CacheOnInterval) instead of every tick.
+AreBagsFull = CacheOnInterval(function()
+    return GetTotalFreeBagSlots() == 0
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
 -- Item names, beyond plain quality-0 (Poor/gray) junk, that are also worth
 -- auto-selling to an open merchant -- e.g. cooking/fishing byproducts that
@@ -1406,7 +1499,10 @@ local function GetClassTrainerSpells()
     return nil
 end
 
-local function GetUnlearnedTrainerSpells()
+-- Interval-cached (see CacheOnInterval) and shared by both G6/G7 below, so the
+-- two always refresh together off the same snapshot. Means a level-up or a
+-- trainer visit can take up to a minute to show up -- fine for goal-setting.
+local GetUnlearnedTrainerSpells = CacheOnInterval(function()
     local unlearned = {}
     local trainerSpells = GetClassTrainerSpells()
     if not trainerSpells then
@@ -1421,7 +1517,7 @@ local function GetUnlearnedTrainerSpells()
     end
 
     return unlearned
-end
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
 -- Packed into MultiBoolTwo's G6.
 function AllSkillsKnownForThisLevel()
@@ -1519,8 +1615,9 @@ end
 -- COMBAT_STALEMATE_SECONDS, e.g. aggroed by a mob that can't path to us.
 -- G6 (AllSkillsKnownForThisLevel()) and G7 (CanAffordToTrainAllSkills()) feed
 -- the C# leveling-goal logic (WowLevelingConfigs.cs) -- see the class
--- trainer tables those read. G8 and the B byte are still fully reserved for
--- future class-agnostic flags.
+-- trainer tables those read. G8 (GearNeedsRepair()) is a weapon at yellow
+-- durability or any other piece broken. The G byte is now full; the B byte is
+-- still fully reserved for future class-agnostic flags.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()
@@ -1541,8 +1638,9 @@ function GetMultiBoolTwo()
     local boolG5 = IsCombatStalemate()
     local boolG6 = AllSkillsKnownForThisLevel()
     local boolG7 = CanAffordToTrainAllSkills()
+    local boolG8 = GearNeedsRepair()
 
-    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, false)
+    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
     return rByte/255.0, gByte/255.0, 0
 end

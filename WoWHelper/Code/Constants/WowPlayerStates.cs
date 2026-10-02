@@ -6,7 +6,7 @@
         {
             WAITING_TO_FOCUS_ON_WINDOW,
             RESOLVE_FARMING_CONFIGURATION,
-            RUNNING,
+            EXECUTING_GOAL,
             EXITING
         }
 
