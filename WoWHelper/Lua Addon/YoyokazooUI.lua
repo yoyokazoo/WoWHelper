@@ -237,7 +237,9 @@ frame:RegisterEvent("MERCHANT_CLOSED")
 frame:RegisterEvent("BAG_UPDATE_DELAYED")
 frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 frame:RegisterEvent("EQUIP_BIND_CONFIRM")
-frame:RegisterEvent("AUTOEQUIP_BIND_CONFIRM")
+-- No AUTOEQUIP_BIND_CONFIRM: that event doesn't exist on this client
+-- (RegisterEvent throws "unknown event" -- confirmed live), and an error here
+-- aborts the rest of this file's load.
 
 -- Auto-equip upgrades: equips the single best armor upgrade in our bags
 -- (FindBestEquipmentUpgrade(), WoWFunctions.lua -- greens/whites/grays only,
@@ -468,9 +470,9 @@ frame:SetScript("OnEvent", function(self, event, ...)
         ScheduleAutoEquipScan()
     end
 
-    if event == "EQUIP_BIND_CONFIRM" or event == "AUTOEQUIP_BIND_CONFIRM" then
+    if event == "EQUIP_BIND_CONFIRM" then
         -- Same idea as LOOT_BIND_CONFIRM above: Blizzard's UI shows a Yes/No
-        -- StaticPopup ("EQUIP_BIND"/"AUTOEQUIP_BIND") and holds the equip
+        -- StaticPopup ("EQUIP_BIND") and holds the equip
         -- until it's accepted; that popup's OnAccept is EquipPendingItem(slot).
         -- Only auto-accepted for an equip EquipBestUpgradeIfBetter() just
         -- started. The exact event args on this client build aren't verified
@@ -481,7 +483,6 @@ frame:SetScript("OnEvent", function(self, event, ...)
         if slot and lastAutoEquipTime and (GetTime() - lastAutoEquipTime) <= AUTO_EQUIP_BIND_CONFIRM_WINDOW_SECONDS then
             lastAutoEquipTime = nil
             StaticPopup_Hide("EQUIP_BIND")
-            StaticPopup_Hide("AUTOEQUIP_BIND")
             -- Deferred a frame for the same reason ConfirmLootSlot is above.
             RunNextFrame(function() EquipPendingItem(slot) end)
         end

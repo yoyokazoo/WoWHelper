@@ -1002,7 +1002,8 @@ of truth — edits should be made here, not in the WoW install directory.
   is open** — the auto-sell queue is bag/slot positions, and equipping drops
   the old item into the upgrade's bag slot, which the sell chain could then
   sell. The bind-on-equip popup is auto-accepted
-  (`EQUIP_BIND_CONFIRM`/`AUTOEQUIP_BIND_CONFIRM` → `EquipPendingItem(slot)`,
+  (`EQUIP_BIND_CONFIRM` → `EquipPendingItem(slot)` — there's no
+  `AUTOEQUIP_BIND_CONFIRM` on this client, registering it throws;
   deferred a frame like `ConfirmLootSlot`) only within 2s of an equip this
   code started, so manual equips still prompt. `GetItemStats()` key names
   and the bind-confirm event args aren't verified live yet —
