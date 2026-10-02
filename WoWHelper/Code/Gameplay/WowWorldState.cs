@@ -163,36 +163,30 @@ namespace WoWHelper
         {
             WowWorldState currentState = new WowWorldState(screenConfig);
 
-            // Checked right before the capture, so the two describe the same moment as
-            // closely as possible.
             System.IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
             currentState.WowWindowHasFocus = wowHandle != System.IntPtr.Zero && ScreenCapture.GetForegroundWindow() == wowHandle;
 
             currentState.Bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(screenConfig.CaptureRectangle);
             currentState.UpdateFromBitmap(currentState.Bmp);
-            //wowBitmap.Dispose(); // TODO: Implement IDisposable
 
             return currentState;
         }
 
         public void UpdateFromBitmap(Bitmap bmp)
         {
-            Initialized = true;
-
-            // Checked first (pixel-row index 0) -- if the addon isn't rendering, the rest
-            // of the row is garbage, so this is the one decode everything else implicitly
-            // depends on being meaningful.
             UpdateAddonLoaded(bmp);
+            if (!AddonLoaded)
+            {
+                return;
+            }
 
+            Initialized = true;
             UpdateMapX(bmp);
             UpdateMapY(bmp);
             PlayerLocation = new Vector2(MapX, MapY);
             UpdateFacingDegrees(bmp);
 
-            // UpdateMultiBoolOne must run before UpdateMultiBoolTwo -- the latter can
-            // override PlayerClass to Warlock (see UpdateMultiBoolTwo below), which
-            // depends on UpdateMultiBoolOne having already set it (to null, since none
-            // of the three class bits it owns will be set for a Warlock).
+            PlayerClass = null;
             UpdateMultiBoolOne(bmp);
             UpdateMultiBoolTwo(bmp);
             UpdateMultiIntOne(bmp);
@@ -203,23 +197,10 @@ namespace WoWHelper
             UpdateBreathBar(bmp);
         }
 
-        // Returns the R component of the color
-        public static int GetIntFromColor(Color color)
-        {
-            return color.R * 255 + color.G;
-        }
-
-        // Returns the R component as the whole number part, and the G component as the fractional part.
-        // Only works for numbers <= 255.99
+        // Returns the R and G component as the whole number part, and the B component as the fractional part.
         public static float GetFloatFromColor(Color color)
         {
             return color.R * 255.0f + color.G + (color.B / 255.0f);
-        }
-
-        // Return true if color is exactly green, false otherwise
-        public static bool GetBoolFromColor(Color color)
-        {
-            return color.R == 0 && color.G == 255 && color.B == 0;
         }
 
         public static void DecodeByte(
@@ -302,10 +283,6 @@ namespace WoWHelper
             {
                 PlayerClass = WowCombatConfiguration.Shaman;
             }
-            else
-            {
-                PlayerClass = null;
-            }
 
             // b5-b8 -- fully packs the byte (see GetMultiBoolOne() in WoWFunctions.lua).
             PlayerIsPoisoned = b5;
@@ -332,9 +309,6 @@ namespace WoWHelper
             LogoffMobSeen = r2;
             IsCurrentlySkinning = r3;
 
-            // Overrides PlayerClass (set to null by UpdateMultiBoolOne, since none of its
-            // three class bits will be set for a Warlock) rather than duplicating the
-            // "exactly one true" logic across two bytes -- see the comment on PlayerClass.
             if (r4)
             {
                 PlayerClass = WowCombatConfiguration.Warlock;
