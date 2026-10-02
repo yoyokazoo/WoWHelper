@@ -203,7 +203,7 @@ namespace WoWHelper
 
                     // TODO: short circuit into combat/getting out of water/etc.
                     // TODO: if on login screen all other values will be messed up
-                    if (!WorldState.OnLoginScreen && WorldState.IsInCombat)
+                    if (WorldState.IsBotInAValidState && WorldState.IsInCombat)
                     {
                         // Shaman always pulls with a spell regardless of LocationConfiguration.EngageMethod
                         // (Charge/Pull only distinguishes Warrior's two options -- see the enum's own

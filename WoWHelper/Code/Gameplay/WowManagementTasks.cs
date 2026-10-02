@@ -26,12 +26,7 @@ namespace WoWHelper
                 ScreenCapture.SetForegroundWindow(wowHandle);
                 await UpdateWorldStateAsync();
 
-                if (ScreenCapture.GetForegroundWindow() != wowHandle)
-                {
-                    continue;
-                }
-
-                if (!WorldState.OnLoginScreen)
+                if (WorldState.IsBotInAValidState)
                 {
                     Console.WriteLine($"FocusOnWindowTask succeeded after {tries} tries");
                     return true;
@@ -71,7 +66,7 @@ namespace WoWHelper
             // WAITING_TO_FOCUS_ON_WINDOW, the startup state before WoW has ever been
             // focused in the first place -- same exclusion the disconnect check below uses.
             // Reads the OS's own notion of the foreground window, not anything decoded off
-            // WorldState's pixel row, so (unlike everything past the OnLoginScreen gate
+            // WorldState's pixel row, so (unlike everything past the IsBotInAValidState gate
             // below) it's safe to run regardless of whether the addon is rendering yet.
             if (CurrentPlayerState != PlayerState.WAITING_TO_FOCUS_ON_WINDOW)
             {
@@ -83,13 +78,15 @@ namespace WoWHelper
             }
 
             // ping if logged out (still needs testing.  they changed login screen??)
-            // The one check in this method that legitimately needs to run while
-            // WorldState.OnLoginScreen is true -- it's specifically watching for that flag's
-            // OWN transition (not-on-login-screen -> on-login-screen), so it has to sit
-            // before the "everything past here needs a real row" gate below rather than
-            // behind it.
-            if (!PreviousWorldState.OnLoginScreen &&
-                WorldState.OnLoginScreen &&
+            // The one check in this method that legitimately needs to run while the addon
+            // isn't rendering -- it's specifically watching for AddonLoaded's OWN transition
+            // (loaded -> not loaded), so it has to sit before the "everything past here needs
+            // a real row" gate below rather than behind it. Requires WowWindowHasFocus so
+            // another window covering WoW (which also hides the sentinel pixel) isn't
+            // mistaken for a disconnect -- lost focus is handled separately above.
+            if (PreviousWorldState.AddonLoaded &&
+                !WorldState.AddonLoaded &&
+                WorldState.WowWindowHasFocus &&
                 !LogoutTriggered &&
                 CurrentPlayerState != PlayerState.WAITING_TO_FOCUS_ON_WINDOW)
             {
@@ -99,15 +96,16 @@ namespace WoWHelper
             // Everything below reads WorldState fields decoded off the addon's pixel row.
             // WowWorldState.UpdateFromBitmap decodes that row unconditionally every capture,
             // but its own comment admits the row is garbage whenever the addon isn't actually
-            // rendering it yet -- and OnLoginScreen IS that "isn't rendering yet" signal, true
-            // not just on the literal login/character-select screen but also during the
-            // startup window before/while focusing the WoW window. One gate here instead of
-            // repeating !WorldState.OnLoginScreen on every check below -- a garbage read
+            // rendering it yet (or something is covering the WoW window) -- and
+            // IsBotInAValidState is exactly the "row is real" signal: false on the literal
+            // login/character-select screen, during the startup window before/while focusing
+            // the WoW window, and whenever WoW isn't the foreground window. One gate here
+            // instead of repeating it on every check below -- a garbage read
             // anywhere past this point (a false LogoffMobSeen, a bogus PlayerClass, a
             // coincidentally-low PlayerHpPercent feeding the Petri Alt+F4 check, etc.) could
             // otherwise trigger real actions (logout, alt+f4, alerts) before the addon ever
             // painted a real row.
-            if (WorldState.OnLoginScreen)
+            if (!WorldState.IsBotInAValidState)
             {
                 return true;
             }
@@ -200,13 +198,13 @@ namespace WoWHelper
                 await StartLogoutTask();
 
                 long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS;
-                while (!WorldState.OnLoginScreen && DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
+                while (WorldState.AddonLoaded && DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
                 {
                     await Task.Delay(500);
                     await UpdateWorldStateAsync();
                 }
 
-                if (WorldState.OnLoginScreen)
+                if (!WorldState.AddonLoaded)
                 {
                     Console.WriteLine("Logged out after combat stalemate");
                     Environment.Exit(0);
@@ -407,7 +405,8 @@ namespace WoWHelper
         public async Task<bool> CheckIfLoggedOutTask()
         {
             await Task.Delay(0);
-            return WorldState.OnLoginScreen;
+            // Focus required, so a covered WoW window isn't mistaken for a finished logout.
+            return WorldState.WowWindowHasFocus && !WorldState.AddonLoaded;
         }
 
         public async Task<bool> LootTask()

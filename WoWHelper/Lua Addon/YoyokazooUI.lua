@@ -98,6 +98,13 @@ if YoyokazooUIDB.autoRepairEnabled == nil then
     YoyokazooUIDB.autoRepairEnabled = true
 end
 
+-- Auto-equip armor upgrades from bags (greens/whites/grays only -- see
+-- EquipBestUpgradeIfBetter below). Defaults ON. Lua-only, like auto-sell --
+-- the bot doesn't need to know it happened.
+if YoyokazooUIDB.autoEquipUpgrades == nil then
+    YoyokazooUIDB.autoEquipUpgrades = true
+end
+
 -- Which dynamite-tier item AreWeLowOnDynamite() (WoWFunctions.lua) checks the bag
 -- count of -- selectable via the /yyconfig "Dynamite item" selector below instead
 -- of being hardcoded. Defaults to Dense Dynamite (18641), what it used to be
@@ -141,6 +148,10 @@ end
 
 function IsAutoRepairEnabled()
     return YoyokazooUIDB.autoRepairEnabled
+end
+
+function IsAutoEquipUpgradesEnabled()
+    return YoyokazooUIDB.autoEquipUpgrades
 end
 
 -- Read by AreWeLowOnDynamite() (WoWFunctions.lua). Not piped to the C# side at
@@ -223,6 +234,73 @@ frame:RegisterEvent("LOOT_BIND_CONFIRM")
 frame:RegisterEvent("PLAYER_REGEN_DISABLED")
 frame:RegisterEvent("MERCHANT_SHOW")
 frame:RegisterEvent("MERCHANT_CLOSED")
+frame:RegisterEvent("BAG_UPDATE_DELAYED")
+frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+frame:RegisterEvent("EQUIP_BIND_CONFIRM")
+frame:RegisterEvent("AUTOEQUIP_BIND_CONFIRM")
+
+-- Auto-equip upgrades: equips the single best armor upgrade in our bags
+-- (FindBestEquipmentUpgrade(), WoWFunctions.lua -- greens/whites/grays only,
+-- scored by per-class stat weights). Returns true if it equipped something.
+-- One item per call; the equip itself fires BAG_UPDATE_DELAYED, which
+-- re-runs this, so several upgrades land one after another.
+--
+-- Skipped while in combat (the client refuses armor swaps mid-fight anyway --
+-- PLAYER_REGEN_ENABLED re-runs it once combat drops), while dead, and while a
+-- merchant is open: the auto-sell queue is a list of bag/slot positions built
+-- at MERCHANT_SHOW time, and equipping drops the previously-equipped item
+-- into exactly the bag slot the upgrade came from -- so equipping mid-sell
+-- could have the sell chain sell the item we just took off.
+--
+-- Equipping a bind-on-equip item pops a Yes/No confirm; the
+-- EQUIP_BIND_CONFIRM handling below auto-accepts it, but only within
+-- AUTO_EQUIP_BIND_CONFIRM_WINDOW_SECONDS of an equip this function started,
+-- so the player equipping something by hand still gets the normal prompt.
+local AUTO_EQUIP_BIND_CONFIRM_WINDOW_SECONDS = 2
+local lastAutoEquipTime = nil
+
+function EquipBestUpgradeIfBetter()
+    if not IsAutoEquipUpgradesEnabled() then
+        return false
+    end
+
+    if InCombatLockdown() or UnitAffectingCombat("player") or UnitIsDeadOrGhost("player") then
+        return false
+    end
+
+    if MerchantFrame and MerchantFrame:IsShown() then
+        return false
+    end
+
+    local upgrade = FindBestEquipmentUpgrade()
+    if not upgrade then
+        return false
+    end
+
+    print("YoyokazooUI: equipping upgrade " .. upgrade.itemLink .. " (score +" .. upgrade.gain .. ")")
+    lastAutoEquipTime = GetTime()
+    EquipItemByName(upgrade.itemLink, upgrade.inventorySlot)
+    return true
+end
+
+-- BAG_UPDATE_DELAYED can fire several times in quick succession (looting a
+-- corpse, a sell chain, the equip itself), so coalesce them into one scan
+-- AUTO_EQUIP_DEBOUNCE_SECONDS after the last one rather than rescanning the
+-- bags on every event.
+local AUTO_EQUIP_DEBOUNCE_SECONDS = 0.5
+local autoEquipScanPending = false
+
+local function ScheduleAutoEquipScan()
+    if autoEquipScanPending then
+        return
+    end
+
+    autoEquipScanPending = true
+    C_Timer.After(AUTO_EQUIP_DEBOUNCE_SECONDS, function()
+        autoEquipScanPending = false
+        EquipBestUpgradeIfBetter()
+    end)
+end
 
 -- Auto-sell-junk (see the MERCHANT_SHOW/MERCHANT_CLOSED handling below):
 -- sells one queued slot every AUTO_SELL_TICK_SECONDS rather than looping
@@ -386,6 +464,29 @@ frame:SetScript("OnEvent", function(self, event, ...)
         end
     end
 
+    if event == "BAG_UPDATE_DELAYED" or event == "PLAYER_REGEN_ENABLED" then
+        ScheduleAutoEquipScan()
+    end
+
+    if event == "EQUIP_BIND_CONFIRM" or event == "AUTOEQUIP_BIND_CONFIRM" then
+        -- Same idea as LOOT_BIND_CONFIRM above: Blizzard's UI shows a Yes/No
+        -- StaticPopup ("EQUIP_BIND"/"AUTOEQUIP_BIND") and holds the equip
+        -- until it's accepted; that popup's OnAccept is EquipPendingItem(slot).
+        -- Only auto-accepted for an equip EquipBestUpgradeIfBetter() just
+        -- started. The exact event args on this client build aren't verified
+        -- -- AUTO_EQUIP_DEBUG prints them.
+        local slot = ...
+        AutoEquipDebugPrint(event .. " slot=" .. tostring(slot) .. ", lastAutoEquipTime=" ..
+            tostring(lastAutoEquipTime) .. ", now=" .. GetTime())
+        if slot and lastAutoEquipTime and (GetTime() - lastAutoEquipTime) <= AUTO_EQUIP_BIND_CONFIRM_WINDOW_SECONDS then
+            lastAutoEquipTime = nil
+            StaticPopup_Hide("EQUIP_BIND")
+            StaticPopup_Hide("AUTOEQUIP_BIND")
+            -- Deferred a frame for the same reason ConfirmLootSlot is above.
+            RunNextFrame(function() EquipPendingItem(slot) end)
+        end
+    end
+
     if event == "MERCHANT_SHOW" then
         -- New generation whether or not auto-sell/auto-repair are even
         -- enabled, so a stray tick from an earlier merchant visit can never
@@ -426,6 +527,10 @@ frame:SetScript("OnEvent", function(self, event, ...)
         autoSellGeneration = autoSellGeneration + 1
         AutoSellDebugPrint("MERCHANT_CLOSED (generation now " .. autoSellGeneration ..
             ") -- any in-flight sell chain is now stale")
+
+        -- Auto-equip is skipped while a merchant is open (see
+        -- EquipBestUpgradeIfBetter), so catch up on anything it missed.
+        ScheduleAutoEquipScan()
     end
 
     -- Entering combat counts as combat activity: starts the stalemate clock
@@ -702,9 +807,31 @@ SlashCmdList["YYSELL"] = function()
     print("  would sell " .. #queue .. " slot(s) (nothing was sold)")
 end
 
+-- /yyequip is a debug dry run of auto-equip, same idea as /yysell above: runs
+-- FindBestEquipmentUpgrade() with AUTO_EQUIP_DEBUG forced on, printing every
+-- bag item's stats/score/skip reason and the upgrade it would pick -- but
+-- never equips anything.
+SLASH_YYEQUIP1 = "/yyequip"
+SlashCmdList["YYEQUIP"] = function()
+    print("YoyokazooUI: auto-equip dry run --")
+    print("  autoEquipUpgrades (/yyconfig) = " .. tostring(IsAutoEquipUpgradesEnabled()))
+
+    local wasDebug = AUTO_EQUIP_DEBUG
+    AUTO_EQUIP_DEBUG = true
+    local upgrade = FindBestEquipmentUpgrade()
+    AUTO_EQUIP_DEBUG = wasDebug
+
+    if upgrade then
+        print("  would equip " .. upgrade.itemLink .. " into inventory slot " .. upgrade.inventorySlot ..
+            " (score +" .. upgrade.gain .. ") (nothing was equipped)")
+    else
+        print("  no upgrade found")
+    end
+end
+
 -- /yyconfig toggles the run-specific settings menu (CreateSettingsMenu(), UIFunctions.lua)
 -- -- "log out on low dynamite"/"log out on full bags"/"auto-sell junk"/"auto-repair"/
--- "dynamite item"/"healing potion"/"desired world buff" for now, more can be added to the
+-- "auto-equip upgrades"/"dynamite item"/"healing potion"/"desired world buff" for now, more can be added to the
 -- options list below as they come up. Built once, lazily, on first use rather than
 -- unconditionally at load time like the debug frame above, since there's no reason to pay
 -- for it on a run that never opens the menu.
@@ -744,6 +871,14 @@ SlashCmdList["YYCONFIG"] = function()
                 set = function(value)
                     YoyokazooUIDB.autoRepairEnabled = value
                     print("YoyokazooUI: Auto-repair " .. (value and "ON" or "OFF") .. " (saved).")
+                end,
+            },
+            {
+                label = "Auto-equip upgrades",
+                get = IsAutoEquipUpgradesEnabled,
+                set = function(value)
+                    YoyokazooUIDB.autoEquipUpgrades = value
+                    print("YoyokazooUI: Auto-equip upgrades " .. (value and "ON" or "OFF") .. " (saved).")
                 end,
             },
             {

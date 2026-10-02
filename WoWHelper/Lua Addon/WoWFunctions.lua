@@ -1076,6 +1076,213 @@ function FindAutoSellQueue()
     return queue
 end
 
+------------------------------------------------------------
+-- Auto-equip upgrades from bags (see the BAG_UPDATE_DELAYED handling and
+-- /yyequip in YoyokazooUI.lua for the event/slash-command side).
+------------------------------------------------------------
+
+-- Set true to print every step of the auto-equip scan to chat: each candidate
+-- bag item's raw GetItemStats() table, its score vs. what's currently equipped,
+-- and why anything was skipped. GetItemStats()'s exact key names on this
+-- client build (ITEM_MOD_STRENGTH_SHORT etc.) aren't verified from reading
+-- source alone -- same caveat as every other WoW Lua API call in this addon
+-- (see the top of CLAUDE.md) -- so if scoring looks wrong, flip this on (or
+-- run /yyequip, which forces it on for one dry-run scan) and read the dumps
+-- rather than guessing.
+AUTO_EQUIP_DEBUG = false
+
+function AutoEquipDebugPrint(message)
+    if AUTO_EQUIP_DEBUG then
+        print("YoyokazooUI auto-equip: " .. message)
+    end
+end
+
+-- Highest item quality auto-equip will consider: 0 = Poor (gray), 1 = Common
+-- (white), 2 = Uncommon (green). Blues (3) and purples (4) are deliberately
+-- never auto-equipped -- those are worth a human decision.
+local AUTO_EQUIP_MAX_QUALITY = 2
+
+-- Armor equip slots auto-equip handles, keyed by GetItemInfo's equipLoc.
+-- Deliberately armor-only: weapons/shields/ranged change what the class
+-- rotations can do (2H vs. 1H+shield, weapon skill, etc.) and trinkets are
+-- mostly on-use effects a stat score can't see, so those stay manual. Rings
+-- list both finger slots -- a ring upgrade replaces whichever equipped ring
+-- scores worse.
+local AUTO_EQUIP_SLOTS_BY_EQUIP_LOC = {
+    INVTYPE_HEAD = { 1 },
+    INVTYPE_NECK = { 2 },
+    INVTYPE_SHOULDER = { 3 },
+    INVTYPE_CHEST = { 5 },
+    INVTYPE_ROBE = { 5 },
+    INVTYPE_WAIST = { 6 },
+    INVTYPE_LEGS = { 7 },
+    INVTYPE_FEET = { 8 },
+    INVTYPE_WRIST = { 9 },
+    INVTYPE_HAND = { 10 },
+    INVTYPE_FINGER = { 11, 12 },
+    INVTYPE_CLOAK = { 15 },
+}
+
+-- Armor-proficiency passive spell per armor subclass (GetItemInfoInstant's
+-- subclassID for classID 4, Armor). Checking the passive itself rather than
+-- hardcoding class/level rules means e.g. a level-40 Warrior who hasn't
+-- trained Plate Mail yet correctly won't be handed plate. Subclass 0
+-- (Miscellaneous -- necks, rings) has no proficiency requirement.
+local ARMOR_PROFICIENCY_SPELL_BY_SUBCLASS = {
+    [1] = 9078, -- Cloth
+    [2] = 9077, -- Leather
+    [3] = 8737, -- Mail
+    [4] = 750,  -- Plate Mail
+}
+
+-- Per-class stat weights for scoring gear. "armor" is the item's base armor
+-- value (GetItemStats' RESISTANCE0_NAME key). Rough leveling weights for how
+-- each class is actually played by the bot (Warrior melee, Shaman
+-- Rockbiter-melee + shocks, Warlock caster) -- tune as needed. Stats not
+-- listed here (resistances, weapon-only stats, etc.) contribute nothing.
+local AUTO_EQUIP_STAT_WEIGHTS = {
+    WARRIOR = {
+        ITEM_MOD_STRENGTH_SHORT = 1.0,
+        ITEM_MOD_AGILITY_SHORT = 0.7,
+        ITEM_MOD_STAMINA_SHORT = 0.6,
+        ITEM_MOD_SPIRIT_SHORT = 0.05,
+        RESISTANCE0_NAME = 0.02,
+    },
+    SHAMAN = {
+        ITEM_MOD_STRENGTH_SHORT = 1.0,
+        ITEM_MOD_AGILITY_SHORT = 0.5,
+        ITEM_MOD_STAMINA_SHORT = 0.6,
+        ITEM_MOD_INTELLECT_SHORT = 0.5,
+        ITEM_MOD_SPIRIT_SHORT = 0.2,
+        RESISTANCE0_NAME = 0.02,
+    },
+    WARLOCK = {
+        ITEM_MOD_STAMINA_SHORT = 1.0,
+        ITEM_MOD_INTELLECT_SHORT = 0.8,
+        ITEM_MOD_SPIRIT_SHORT = 0.6,
+        RESISTANCE0_NAME = 0.01,
+    },
+}
+
+local function PlayerKnowsSpellId(spellId)
+    if IsPlayerSpell then
+        return IsPlayerSpell(spellId)
+    end
+    return IsSpellKnown(spellId)
+end
+
+-- Weighted stat score for an item link, per AUTO_EQUIP_STAT_WEIGHTS for the
+-- player's class. nil link (empty slot) scores 0, so anything with a
+-- positive score is an upgrade over nothing.
+function GetItemEquipScore(itemLink)
+    if not itemLink then
+        return 0
+    end
+
+    local _, classFile = UnitClass("player")
+    local weights = AUTO_EQUIP_STAT_WEIGHTS[classFile]
+    if not weights then
+        return 0
+    end
+
+    local stats = GetItemStats(itemLink) or {}
+    local score = 0
+    local dump = {}
+    for statKey, value in pairs(stats) do
+        table.insert(dump, statKey .. "=" .. tostring(value))
+        score = score + (weights[statKey] or 0) * value
+    end
+
+    AutoEquipDebugPrint("    " .. itemLink .. " stats {" .. table.concat(dump, ", ") ..
+        "} score=" .. score)
+
+    return score
+end
+
+-- Whether a bag item is even eligible to be auto-equipped, independent of
+-- whether it's better: quality at most AUTO_EQUIP_MAX_QUALITY, an armor slot
+-- we handle, required level met, and armor type proficiency known. Returns the
+-- item's candidate inventory slot list, or nil (plus a reason for debugging).
+local function GetAutoEquipCandidateSlots(itemLink, quality)
+    if quality == nil or quality > AUTO_EQUIP_MAX_QUALITY then
+        return nil, "quality " .. tostring(quality) .. " is above green"
+    end
+
+    -- GetItemInfo returns nil for an item the client hasn't cached yet; the
+    -- next BAG_UPDATE_DELAYED scan will pick it up once it has.
+    local _, _, _, _, minLevel, _, _, _, equipLoc = GetItemInfo(itemLink)
+    if not equipLoc then
+        return nil, "item info not cached yet"
+    end
+
+    local slots = AUTO_EQUIP_SLOTS_BY_EQUIP_LOC[equipLoc]
+    if not slots then
+        return nil, "equipLoc " .. tostring(equipLoc) .. " not auto-equipped"
+    end
+
+    if (minLevel or 0) > UnitLevel("player") then
+        return nil, "requires level " .. minLevel
+    end
+
+    local _, _, _, _, _, classId, subclassId = GetItemInfoInstant(itemLink)
+    if classId ~= 4 then
+        return nil, "not armor (classID " .. tostring(classId) .. ")"
+    end
+
+    local proficiencySpell = ARMOR_PROFICIENCY_SPELL_BY_SUBCLASS[subclassId]
+    if subclassId ~= 0 and not (proficiencySpell and PlayerKnowsSpellId(proficiencySpell)) then
+        return nil, "armor subclass " .. tostring(subclassId) .. " not usable"
+    end
+
+    return slots
+end
+
+-- Scans bags 0-4 for the single best armor upgrade over what's currently
+-- equipped (greens/whites/grays only -- see AUTO_EQUIP_MAX_QUALITY), returning
+-- { bag, slot, inventorySlot, itemLink, gain } or nil if nothing beats what's
+-- equipped. Only one at a time: equipping moves the old item into the bag,
+-- which fires another BAG_UPDATE_DELAYED, which re-runs this scan against the
+-- new equipped state -- simpler than reasoning about several swaps at once
+-- (e.g. two ring upgrades competing for the same finger slot). "Better" is
+-- strictly greater score, so ties never flip-flop.
+function FindBestEquipmentUpgrade()
+    local best = nil
+
+    for bag = 0, 4 do
+        for slot = 1, (C_Container.GetContainerNumSlots(bag) or 0) do
+            local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+            if itemInfo and itemInfo.hyperlink then
+                local itemLink = itemInfo.hyperlink
+                local candidateSlots, reason = GetAutoEquipCandidateSlots(itemLink, itemInfo.quality)
+                if not candidateSlots then
+                    AutoEquipDebugPrint("  " .. bag .. ":" .. slot .. " " .. itemLink .. " skipped: " .. reason)
+                else
+                    AutoEquipDebugPrint("  " .. bag .. ":" .. slot .. " " .. itemLink .. " is a candidate")
+                    local bagScore = GetItemEquipScore(itemLink)
+
+                    -- For rings, compare against whichever equipped ring is worse.
+                    local worstSlot, worstScore = nil, nil
+                    for _, inventorySlot in ipairs(candidateSlots) do
+                        local equippedScore = GetItemEquipScore(GetInventoryItemLink("player", inventorySlot))
+                        if worstScore == nil or equippedScore < worstScore then
+                            worstSlot, worstScore = inventorySlot, equippedScore
+                        end
+                    end
+
+                    local gain = bagScore - worstScore
+                    AutoEquipDebugPrint("    vs inventory slot " .. worstSlot .. " (score " .. worstScore ..
+                        "): gain " .. gain)
+                    if gain > 0 and (best == nil or gain > best.gain) then
+                        best = { bag = bag, slot = slot, inventorySlot = worstSlot, itemLink = itemLink, gain = gain }
+                    end
+                end
+            end
+        end
+    end
+
+    return best
+end
+
 -- True once LATENCY_HIGH_CYCLE_COUNT consecutive latency samples, one taken every
 -- LATENCY_CHECK_INTERVAL_SECONDS, have all read above LATENCY_HIGH_THRESHOLD_MS -- i.e.
 -- LATENCY_HIGH_CYCLE_COUNT * LATENCY_CHECK_INTERVAL_SECONDS = 10 sustained seconds of bad

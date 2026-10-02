@@ -124,7 +124,20 @@ namespace WoWHelper
         public bool NoPathAvailable { get; private set; }
         public bool TargetUnreachable => NotInLineOfSight || NoPathAvailable;
 
-        public bool OnLoginScreen { get; private set; }
+        // Pixel-row index 0 reads exactly ADDON_LOADED_COLOR -- the addon is loaded and
+        // rendering the row, so the rest of it is meaningful. See UpdateAddonLoaded.
+        public bool AddonLoaded { get; private set; }
+
+        // Whether the WoW client window was the OS foreground window at capture time --
+        // i.e. it's the window actually receiving our keyboard/mouse input, and nothing is
+        // covering the screen area we capture. Only set by a live capture
+        // (GetWoWWorldState); stays false for bitmap-only updates (tests).
+        public bool WowWindowHasFocus { get; private set; }
+
+        // Both of the above: the capture is of WoW, and the addon's pixel row in it is
+        // real. Everything decoded off the row is garbage unless this is true.
+        public bool IsBotInAValidState => AddonLoaded && WowWindowHasFocus;
+
         public bool Underwater { get; private set; }
 
         public Bitmap Bmp { get; private set; }
@@ -150,6 +163,11 @@ namespace WoWHelper
         {
             WowWorldState currentState = new WowWorldState(screenConfig);
 
+            // Checked right before the capture, so the two describe the same moment as
+            // closely as possible.
+            System.IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
+            currentState.WowWindowHasFocus = wowHandle != System.IntPtr.Zero && ScreenCapture.GetForegroundWindow() == wowHandle;
+
             currentState.Bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(screenConfig.CaptureRectangle);
             currentState.UpdateFromBitmap(currentState.Bmp);
             //wowBitmap.Dispose(); // TODO: Implement IDisposable
@@ -164,7 +182,7 @@ namespace WoWHelper
             // Checked first (pixel-row index 0) -- if the addon isn't rendering, the rest
             // of the row is garbage, so this is the one decode everything else implicitly
             // depends on being meaningful.
-            UpdateOnLoginScreen(bmp);
+            UpdateAddonLoaded(bmp);
 
             UpdateMapX(bmp);
             UpdateMapY(bmp);
@@ -366,12 +384,13 @@ namespace WoWHelper
         // Index 0 of the pixel row is a fixed sentinel the addon paints, exactly
         // ADDON_LOADED_COLOR. If it's there, the addon is loaded and the rest of the row
         // is real; any other color -- including whatever's actually at this screen
-        // position when the addon isn't rendering, e.g. the login screen -- means
-        // OnLoginScreen. Replaces the old text/UI pixel-signature match.
-        public void UpdateOnLoginScreen(Bitmap bmp)
+        // position when the addon isn't rendering, e.g. the login screen, or another
+        // window covering WoW -- means !AddonLoaded. Replaces the old text/UI
+        // pixel-signature match.
+        public void UpdateAddonLoaded(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.AddonLoadedPosition.X, ScreenConfig.AddonLoadedPosition.Y);
-            OnLoginScreen = !(color.R == WowScreenConfiguration.ADDON_LOADED_COLOR.R
+            AddonLoaded = (color.R == WowScreenConfiguration.ADDON_LOADED_COLOR.R
                 && color.G == WowScreenConfiguration.ADDON_LOADED_COLOR.G
                 && color.B == WowScreenConfiguration.ADDON_LOADED_COLOR.B);
         }

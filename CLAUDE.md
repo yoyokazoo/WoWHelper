@@ -63,7 +63,7 @@ see "Adding a new pixel" below):
 
 | Index | Content | Decoded into |
 |---|---|---|
-| 0 | Fixed sentinel, exactly `ADDON_LOADED_COLOR` (96, 255, 117) | `WowWorldState.OnLoginScreen` (inverted — see below) |
+| 0 | Fixed sentinel, exactly `ADDON_LOADED_COLOR` (96, 255, 117) | `WowWorldState.AddonLoaded` (see below) |
 | 1 | Map X (float) | `WowWorldState.MapX` |
 | 2 | Map Y (float) | `WowWorldState.MapY` |
 | 3 | Facing degrees (float) | `WowWorldState.FacingDegrees` |
@@ -81,12 +81,22 @@ call and the corresponding C# `Update...` method); packed ints use a raw
 0-255 value per channel. Index 0 is the one exception — a plain exact-color
 match (`WowScreenConfiguration.ADDON_LOADED_COLOR`), not one of the schemes
 above: if the pixel is exactly that color, the addon is loaded and rendering
-the row (so the rest of it is meaningful) and `OnLoginScreen` is false;
+the row (so the rest of it is meaningful) and `AddonLoaded` is true;
 *any* other color — including whatever's actually on-screen at that position
-when the addon isn't loaded — means `OnLoginScreen` is true. This replaced an
+when the addon isn't loaded, or another window covering WoW — means
+`AddonLoaded` is false. This replaced an
 older, unrelated mechanism (a multi-point text/UI pixel-signature match
 against login-screen-specific colors) since folding it into the row is more
-reliable than matching login-screen chrome. Separately, **text/UI state
+reliable than matching login-screen chrome. Since a covered WoW window also
+hides the sentinel, `AddonLoaded` alone can't tell "logged out" from "lost
+focus" — so `WowWorldState` also carries `WowWindowHasFocus` (the WoW window
+was the OS foreground window at capture time, checked in `GetWoWWorldState`
+only — false for bitmap-only test updates), and `IsBotInAValidState`
+(`AddonLoaded && WowWindowHasFocus`) is what gates reading anything else off
+the row (`EveryWorldStateUpdateTasks()`'s early-return, `FocusOnWindowTask`,
+the combat short-circuit in `CoreGameplayLoopTask`). "Actually logged out"
+(the disconnect alert, `CheckIfLoggedOutTask`) is
+`WowWindowHasFocus && !AddonLoaded`. Separately, **text/UI state
 matched by exact pixel signature** (trade window, breath bar, red error toast
 text) is still its own unrelated mechanism — resolution-specific coordinates
 in `WowScreenConfigs.cs`, compared via `ImageMatchColorPositions.MatchesSourceImage`,
@@ -357,7 +367,7 @@ shore) — combat never drops, nothing ever hits, and the class combat loops
 consumer in `EveryWorldStateUpdateTasks()` can't just set `LogoutTriggered`
 like `LogoffMobSeen`/`HighLatency` do (the logout states are only reachable
 once combat drops) — it sets it, Slack-alerts, presses the logout macro
-itself via `StartLogoutTask()`, and then polls for `OnLoginScreen` right
+itself via `StartLogoutTask()`, and then polls for `!AddonLoaded` right
 there (up to `WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS`, 45s)
 before `Environment.Exit`, rather than returning to the combat loop — whose
 scoot-backwards/re-face handling would move the character and cancel the
@@ -971,6 +981,34 @@ of truth — edits should be made here, not in the WoW install directory.
   reading source alone (same caveat as every other WoW Lua API call in this
   addon, per the top of this file) — confirm live via `AUTO_SELL_DEBUG`
   rather than guessing if repair behaves unexpectedly.
+
+  Also auto-equips armor upgrades from bags: `EquipBestUpgradeIfBetter()`
+  (`YoyokazooUI.lua`) equips the single best upgrade found by
+  `FindBestEquipmentUpgrade()` (`WoWFunctions.lua`) via `EquipItemByName`,
+  gated by the `/yyconfig` "Auto-equip upgrades" checkbox
+  (`YoyokazooUIDB.autoEquipUpgrades`, `IsAutoEquipUpgradesEnabled()`,
+  defaults **on**). Only quality 0-2 (gray/white/green) —
+  `AUTO_EQUIP_MAX_QUALITY` — never blues/purples; only the armor slots in
+  `AUTO_EQUIP_SLOTS_BY_EQUIP_LOC` (head/neck/shoulder/chest/waist/legs/feet/
+  wrist/hands/rings/cloak — weapons, shields, ranged and trinkets are
+  deliberately left manual); required level must be met and the armor
+  type's proficiency passive known (`ARMOR_PROFICIENCY_SPELL_BY_SUBCLASS`,
+  via `IsPlayerSpell`). "Better" = strictly higher `GetItemEquipScore()`, a
+  per-class weighted sum over `GetItemStats()` (`AUTO_EQUIP_STAT_WEIGHTS`);
+  rings compare against whichever equipped ring scores worse. One item per
+  call — the equip fires `BAG_UPDATE_DELAYED`, which (debounced 0.5s,
+  `ScheduleAutoEquipScan()`) re-runs it, as do `PLAYER_REGEN_ENABLED` and
+  `MERCHANT_CLOSED`. Skipped in combat, while dead, and **while a merchant
+  is open** — the auto-sell queue is bag/slot positions, and equipping drops
+  the old item into the upgrade's bag slot, which the sell chain could then
+  sell. The bind-on-equip popup is auto-accepted
+  (`EQUIP_BIND_CONFIRM`/`AUTOEQUIP_BIND_CONFIRM` → `EquipPendingItem(slot)`,
+  deferred a frame like `ConfirmLootSlot`) only within 2s of an equip this
+  code started, so manual equips still prompt. `GetItemStats()` key names
+  and the bind-confirm event args aren't verified live yet —
+  `AUTO_EQUIP_DEBUG` (`WoWFunctions.lua`, off by default) prints the raw
+  stats/scores/skip reasons, and `/yyequip` is a dry run with it forced on.
+  Lua-only; nothing reaches the pixel row.
 
 ## Tests (`WoWHelperUnitTests/`)
 
