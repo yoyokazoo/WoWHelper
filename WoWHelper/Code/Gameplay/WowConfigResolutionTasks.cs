@@ -10,43 +10,6 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        // Resolves CombatConfiguration + builds ClassState from the
-        // player's detected class (WorldState.PlayerClass). Deliberately NOT tied to the
-        // RESOLVE_FARMING_CONFIGURATION player state -- called every tick from
-        // WowManagementTasks.EveryWorldStateUpdateTasks() instead, so it resolves even if
-        // CoreGameplayLoopTask's "already in combat" short-circuit (top of its while loop)
-        // jumps straight to IN_CORE_COMBAT_LOOP before RESOLVE_FARMING_CONFIGURATION ever
-        // gets to run -- e.g. the bot was (re)started while the character was already
-        // mid-fight. Without this split, the combat loop would try to dispatch on
-        // CombatConfiguration while it was still Unknown and ClassState was still null,
-        // hitting the "no dispatch implemented for CombatConfiguration \"Unknown\""
-        // NotImplementedException the moment it tried to act.
-        //
-        // Early-outs quietly (no logging, no Slack alert) in the two cases that are
-        // completely expected on any given tick: already resolved (ClassState != null --
-        // nothing to do; this runs every tick forever), or the addon hasn't rendered a
-        // real pixel row yet / this is an unsupported class (WorldState.PlayerClass ==
-        // null -- normal for the first handful of ticks after focusing the window, and
-        // while sitting on the login screen).
-        public void ResolveCombatConfiguration()
-        {
-            if (ClassState != null)
-            {
-                return;
-            }
-
-            if (WorldState.PlayerClass == null)
-            {
-                return;
-            }
-
-            CombatConfiguration = WorldState.PlayerClass.Value;
-            ClassState = WowClassState.Create(CombatConfiguration);
-            ClassState.UpdateFromBitmap(WorldState.Bmp, ScreenConfiguration);
-
-            Console.WriteLine($"Auto-detected combat config {CombatConfiguration}");
-        }
-
         // Runs once, during the RESOLVE_FARMING_CONFIGURATION player state (after the
         // window is focused). Picks LocationConfiguration from WowLocationConfigs.ALL_LOCATIONS
         // by filtering to configs the player currently satisfies (level, zone, and close

@@ -40,15 +40,18 @@ namespace WoWHelper
         {
             SlackHelper.SendMessageToChannel("Lost focus on WoWClassic window! Refocusing...");
 
-            if (!await FocusOnWindowTask())
+            for (int attempts = 0; attempts <= 5; attempts++)
             {
-                Mouse.Move(ScreenConfiguration.LootDefaultX, ScreenConfiguration.LootDefaultY);
-                Mouse.PressButton(Mouse.MouseKeys.Left);
-
-                await Task.Delay(300);
-
-                await FocusOnWindowTask();
+                if (!await FocusOnWindowTask())
+                {
+                    Console.WriteLine($"Refocus attempt {attempts} failed, trying again");
+                }
             }
+
+            Console.WriteLine($"Clicking on window to doubly make sure we have input focus");
+            Mouse.Move(ScreenConfiguration.LootDefaultX, ScreenConfiguration.LootDefaultY);
+            Mouse.PressButton(Mouse.MouseKeys.Left);
+            await Task.Delay(300);
 
             await KeyUpMovementKeys();
 
@@ -68,7 +71,7 @@ namespace WoWHelper
             // Reads the OS's own notion of the foreground window, not anything decoded off
             // WorldState's pixel row, so (unlike everything past the IsBotInAValidState gate
             // below) it's safe to run regardless of whether the addon is rendering yet.
-            if (CurrentPlayerState != PlayerState.WAITING_TO_FOCUS_ON_WINDOW)
+            if (CurrentPlayerMetaState != PlayerMetaState.WAITING_TO_FOCUS_ON_WINDOW)
             {
                 IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
                 if (wowHandle != IntPtr.Zero && ScreenCapture.GetForegroundWindow() != wowHandle)
@@ -110,52 +113,8 @@ namespace WoWHelper
                 return true;
             }
 
-            // Resolve CombatConfiguration/ClassState as soon as the addon gives us a real
-            // class read, independent of the RESOLVE_FARMING_CONFIGURATION player state --
-            // see WowConfigResolutionTasks.ResolveCombatConfiguration for why (short version:
-            // this task runs every tick, including ones before that state ever gets a chance
-            // to run, e.g. the bot started while already mid-combat). No-ops quietly once
-            // resolved.
-            ResolveCombatConfiguration();
-
-            // don't drown
-            if (WorldState.Underwater)
-            {
-                await GetOutOfWater();
-            }
-
-            // ping if unseen message -- shared with WaitForWorldBuffThenLogoffTask, which
-            // polls WorldState in its own loop rather than going through this method.
             AlertOnUnseenWhisper();
-
-            // ping on level up. Guarded on LocationConfiguration being resolved -- this task
-            // runs every tick, including the handful before RESOLVE_FARMING_CONFIGURATION has
-            // picked one (see WowPlayer.ResolveFarmingConfigurationTask), during which
-            // LocationConfiguration.MaximumLevel below would throw.
-            if (LocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
-            {
-                string levelUpMessage = $"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!";
-
-                // Newly-unlocked routes only (MinimumLevel exactly matches the level just
-                // reached) -- a config that was already eligible before this level-up isn't
-                // "new" news, so it's left out to keep the message short.
-                List<string> newlyEligibleConfigTitles = WowLocationConfigs.ALL_LOCATIONS
-                    .Where(config => config.MinimumLevel == WorldState.PlayerLevel)
-                    .Select(config => config.Title)
-                    .ToList();
-                if (newlyEligibleConfigTitles.Count > 0)
-                {
-                    levelUpMessage += $" Newly eligible route(s): {string.Join(", ", newlyEligibleConfigTitles)}";
-                }
-
-                SlackHelper.SendMessageToChannel(levelUpMessage);
-
-                if (LocationConfiguration.MaximumLevel == WorldState.PlayerLevel)
-                {
-                    LogoutTriggered = true;
-                    LogoutReason = $"Reached log out level {LocationConfiguration.MaximumLevel}";
-                }
-            }
+            AlertOnLevelUp();
 
             // Bail immediately if we've spotted a mob from LOGOFF_IF_SEEN_MOB_NAMES
             // (CreatureConfig.lua, e.g. "Watery Invader") anywhere nearby -- checked every
@@ -214,6 +173,9 @@ namespace WoWHelper
                 // set, so the normal CHECK_FOR_LOGOUT path picks it up once combat drops.
                 SlackHelper.SendMessageToChannel($"Combat stalemate logout didn't complete within {WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS / 1000}s -- back to the combat loop, will log out after combat");
                 */
+
+                // Temporarily switched to just move a bit, since the only place I've seen
+                // this is in the river when a Bear can't get to us and this will just fix it
                 var strafeKey = WowInput.STRAFE_LEFT;
                 Keyboard.KeyDown(strafeKey);
                 await Task.Delay(1000);
@@ -243,6 +205,38 @@ namespace WoWHelper
                 _ = SlackFileUploadWorkaround.UploadScreenshotToChannelAsync(
                     title: "Unseen Whisper!",
                     cropRegion: ScreenConfiguration.SlackScreenshotCropRegion);
+            }
+        }
+
+        public void AlertOnLevelUp()
+        {
+            // ping on level up. Guarded on LocationConfiguration being resolved -- this task
+            // runs every tick, including the handful before RESOLVE_FARMING_CONFIGURATION has
+            // picked one (see WowPlayer.ResolveFarmingConfigurationTask), during which
+            // LocationConfiguration.MaximumLevel below would throw.
+            if (LocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
+            {
+                string levelUpMessage = $"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!";
+
+                // Newly-unlocked routes only (MinimumLevel exactly matches the level just
+                // reached) -- a config that was already eligible before this level-up isn't
+                // "new" news, so it's left out to keep the message short.
+                List<string> newlyEligibleConfigTitles = WowLocationConfigs.ALL_LOCATIONS
+                    .Where(config => config.MinimumLevel == WorldState.PlayerLevel)
+                    .Select(config => config.Title)
+                    .ToList();
+                if (newlyEligibleConfigTitles.Count > 0)
+                {
+                    levelUpMessage += $" Newly eligible route(s): {string.Join(", ", newlyEligibleConfigTitles)}";
+                }
+
+                SlackHelper.SendMessageToChannel(levelUpMessage);
+
+                if (LocationConfiguration.MaximumLevel == WorldState.PlayerLevel)
+                {
+                    LogoutTriggered = true;
+                    LogoutReason = $"Reached log out level {LocationConfiguration.MaximumLevel}";
+                }
             }
         }
 

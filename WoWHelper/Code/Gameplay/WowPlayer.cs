@@ -101,9 +101,21 @@ namespace WoWHelper
             PreviousWorldState.Bmp?.Dispose();
             PreviousWorldState = WorldState;
             WorldState = WowWorldState.GetWoWWorldState(ScreenConfiguration);
-            ClassState?.UpdateFromBitmap(WorldState.Bmp, ScreenConfiguration);
+            UpdateClassState();
 
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
+        }
+
+        private void UpdateClassState()
+        {
+            if (ClassState == null && WorldState.IsBotInAValidState)
+            {
+                CombatConfiguration = WorldState.PlayerClass.Value;
+                ClassState = WowClassState.Create(CombatConfiguration);
+                Console.WriteLine($"Auto-detected combat config {CombatConfiguration}");
+            }
+
+            ClassState?.UpdateFromBitmap(WorldState.Bmp, ScreenConfiguration);
         }
 
         // For Testing only, otherwise use UpdateWorldState
@@ -161,6 +173,7 @@ namespace WoWHelper
             while (CurrentPlayerMetaState != PlayerMetaState.EXITING)
             {
                 await UpdateWorldStateAsync();
+                await EveryWorldStateUpdateTasks();
 
                 switch (CurrentPlayerMetaState)
                 {
