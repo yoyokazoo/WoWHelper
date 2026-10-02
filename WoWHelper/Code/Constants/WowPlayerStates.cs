@@ -73,5 +73,11 @@
             TRAVEL,
             SET_HEARTH
         }
+
+        public enum LogoutState
+        {
+            STARTING_LOGOUT,
+            WAITING_FOR_LOGOUT,
+        }
     }
 }

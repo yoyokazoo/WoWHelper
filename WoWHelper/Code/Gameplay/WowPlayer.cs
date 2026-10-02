@@ -45,6 +45,7 @@ namespace WoWHelper
         public PlayerState CurrentPlayerState { get; private set; }
         public PathfindingState CurrentPathfindingState { get; private set; }
         public PlayerGoal CurrentPlayerGoal { get; private set; }
+        public LogoutState CurrentLogoutState { get; private set; }
 
         public int CurrentWaypointIndex { get; private set; }
         public int WaypointTraversalDirection { get; private set; }
@@ -170,6 +171,10 @@ namespace WoWHelper
 
         public async Task<bool> CoreLoopTask()
         {
+            // TODO: Testing, delete me
+            LogoutTriggered = true;
+            LogoutReason = $"Testing new execute goal task";
+
             while (CurrentPlayerMetaState != PlayerMetaState.EXITING)
             {
                 await UpdateWorldStateAsync();
@@ -216,12 +221,28 @@ namespace WoWHelper
                 case PlayerGoal.SELL:
                     break;
                 case PlayerGoal.LOG_OUT:
+                    await PlayerLogoutGoalTask();
                     break;
                 case PlayerGoal.TRAVEL:
                 case PlayerGoal.SET_HEARTH:
                 case PlayerGoal.REPAIR:
                 case PlayerGoal.TRAIN:
                     Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
+                    break;
+            }
+        }
+
+        public async Task PlayerLogoutGoalTask()
+        {
+            switch(CurrentLogoutState)
+            {
+                case LogoutState.STARTING_LOGOUT:
+                    await StartLogoutTask();
+                    CurrentLogoutState = LogoutState.WAITING_FOR_LOGOUT;
+                    break;
+                case LogoutState.WAITING_FOR_LOGOUT:
+                    // nothing to do here but wait.  EveryWorldStateUpdate will handle seeing
+                    // that we've logged out before we'd get back in here
                     break;
             }
         }

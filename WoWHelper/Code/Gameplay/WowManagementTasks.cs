@@ -72,6 +72,11 @@ namespace WoWHelper
 
             if (LogoutTriggered)
             {
+                if (CurrentPlayerGoal != PlayerGoal.LOG_OUT)
+                {
+                    CurrentLogoutState = LogoutState.STARTING_LOGOUT;
+                }
+
                 CurrentPlayerGoal = PlayerGoal.LOG_OUT;
                 return;
             }
@@ -138,9 +143,20 @@ namespace WoWHelper
             if (PreviousWorldState.AddonLoaded &&
                 !WorldState.AddonLoaded &&
                 WorldState.WowWindowHasFocus &&
-                !LogoutTriggered &&
-                CurrentPlayerState != PlayerState.WAITING_TO_FOCUS_ON_WINDOW)
+                CurrentPlayerMetaState != PlayerMetaState.WAITING_TO_FOCUS_ON_WINDOW)
             {
+                if (LogoutTriggered && 
+                    CurrentPlayerGoal == PlayerGoal.LOG_OUT && 
+                    CurrentLogoutState == LogoutState.WAITING_FOR_LOGOUT)
+                {
+                    string logoutMessage = $"Logout successful, exiting";
+                    SlackHelper.SendMessageToChannel(logoutMessage);
+                    Console.WriteLine(logoutMessage);
+                    // Time for slackHelper to send message before quitting
+                    await Task.Delay(5000);
+                    Environment.Exit(0);
+                }
+
                 SlackHelper.SendMessageToChannel($"DISCONNECT?? Unexpectedly found self on logout screen");
             }
 
@@ -438,17 +454,11 @@ namespace WoWHelper
 
         public async Task<bool> StartLogoutTask()
         {
-            Console.WriteLine($"Starting logout: {LogoutReason}");
-            await Task.Delay(0);
+            string logoutMessage = $"Starting logout: {LogoutReason}";
+            SlackHelper.SendMessageToChannel(logoutMessage);
+            Console.WriteLine(logoutMessage);
             await WowInput.PressKey(WowInput.LOGOUT_MACRO);
             return true;
-        }
-
-        public async Task<bool> CheckIfLoggedOutTask()
-        {
-            await Task.Delay(0);
-            // Focus required, so a covered WoW window isn't mistaken for a finished logout.
-            return WorldState.WowWindowHasFocus && !WorldState.AddonLoaded;
         }
 
         public async Task<bool> LootTask()
