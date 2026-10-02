@@ -11,6 +11,12 @@
 -- since addon globals are one flat namespace).
 ------------------------------------------------------------
 
+-- Class trainer spells -- same shape as WARRIOR_TRAINER_SPELLS
+-- (WarriorFunctions.lua). TODO: not filled in yet, so Warlock always reads as
+-- "nothing to train".
+WARLOCK_TRAINER_SPELLS = {
+}
+
 -- Demon Skin (687, known from level 1) and Demon Armor (706, replaces Demon
 -- Skin at level 20) are two differently-named buffs, but only one is ever
 -- active on the player at a time -- name-matched via IsSpellKnownByName()/

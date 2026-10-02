@@ -573,6 +573,12 @@ function AreEnemyNameplatesTurnedOn()
     return GetCVarBool("nameplateShowEnemies")
 end
 
+-- The target marker (UIFunctions.lua) is drawn on the target's nameplate, so a
+-- friendly target (e.g. a merchant/trainer NPC) only gets one if these are on.
+function AreFriendlyNameplatesTurnedOn()
+    return GetCVarBool("nameplateShowFriends")
+end
+
 -- Returns the name of whatever's currently bound to a key combo, in Blizzard's own
 -- binding-string format (e.g. "CTRL-4"), or "" if nothing is bound to it at all. Thin
 -- wrapper around GetBindingAction() so callers don't need to know that format
@@ -1377,6 +1383,64 @@ function IsPlayerDiseased()
     return PlayerHasDebuffType("Disease")
 end
 
+-- Every class trainer spell the player should have learned by their current
+-- level and hasn't yet. Each class file holds its own trainer table
+-- (WARRIOR_TRAINER_SPELLS etc. -- distinct global names, since addon globals
+-- are one flat namespace) of { level, name, spellId, cost (copper) } entries.
+-- Matched by spell ID (rank-specific) rather than IsSpellKnownByName(), since
+-- a later rank of an already-known spell is still something to go train.
+-- There's no addon API for "what can I train" without a trainer window open,
+-- so these tables are hand-maintained -- a class with an empty/missing table
+-- reads as "nothing to train".
+local function GetClassTrainerSpells()
+    local _, classFile = UnitClass("player")
+
+    if classFile == "WARRIOR" then
+        return WARRIOR_TRAINER_SPELLS
+    elseif classFile == "SHAMAN" then
+        return SHAMAN_TRAINER_SPELLS
+    elseif classFile == "WARLOCK" then
+        return WARLOCK_TRAINER_SPELLS
+    end
+
+    return nil
+end
+
+local function GetUnlearnedTrainerSpells()
+    local unlearned = {}
+    local trainerSpells = GetClassTrainerSpells()
+    if not trainerSpells then
+        return unlearned
+    end
+
+    local playerLevel = UnitLevel("player")
+    for _, spell in ipairs(trainerSpells) do
+        if spell.level <= playerLevel and not PlayerKnowsSpellId(spell.spellId) then
+            table.insert(unlearned, spell)
+        end
+    end
+
+    return unlearned
+end
+
+-- Packed into MultiBoolTwo's G6.
+function AllSkillsKnownForThisLevel()
+    return #GetUnlearnedTrainerSpells() == 0
+end
+
+-- Packed into MultiBoolTwo's G7. True when nothing's left to train, too.
+-- Uses the tables' base costs -- doesn't account for the trainer's
+-- reputation discount, so this can read false slightly early, never true
+-- when we actually can't afford it.
+function CanAffordToTrainAllSkills()
+    local totalCost = 0
+    for _, spell in ipairs(GetUnlearnedTrainerSpells()) do
+        totalCost = totalCost + spell.cost
+    end
+
+    return totalCost <= GetMoney()
+end
+
 -- HasRockbiterWeaponMainHand(), ShouldCastRockbiterWeapon(),
 -- ShouldCastLightningShield(), and ShouldCastFlameShock() moved to
 -- ShamanFunctions.lua.
@@ -1453,7 +1517,10 @@ end
 -- G5 (IsCombatStalemate(), YoyokazooUI.lua) is likewise a live game-state
 -- query -- in combat, but no damage/miss combat-log events involving us for
 -- COMBAT_STALEMATE_SECONDS, e.g. aggroed by a mob that can't path to us.
--- G6-G8 and the B byte are still fully reserved for future class-agnostic flags.
+-- G6 (AllSkillsKnownForThisLevel()) and G7 (CanAffordToTrainAllSkills()) feed
+-- the C# leveling-goal logic (WowLevelingConfigs.cs) -- see the class
+-- trainer tables those read. G8 and the B byte are still fully reserved for
+-- future class-agnostic flags.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()
@@ -1472,8 +1539,10 @@ function GetMultiBoolTwo()
     local boolG3 = HasDesiredWorldBuff()
     local boolG4 = HasHighLatency()
     local boolG5 = IsCombatStalemate()
+    local boolG6 = AllSkillsKnownForThisLevel()
+    local boolG7 = CanAffordToTrainAllSkills()
 
-    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, false, false, false)
+    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, false)
 
     return rByte/255.0, gByte/255.0, 0
 end

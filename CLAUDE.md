@@ -71,7 +71,7 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G5 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate` |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G7 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -378,8 +378,21 @@ and falls through; `LogoutTriggered` stays set, so the normal
 `CHECK_FOR_LOGOUT` path finishes the job once combat drops.
 `COMBAT_STALEMATE_DEBUG` (a local in
 `YoyokazooUI.lua`) prints every counted activity event, for checking
-in-game which subevents actually fire during a stalemate. G6-G8 and the B
-byte are still reserved for the next class-agnostic bool.
+in-game which subevents actually fire during a stalemate.
+
+G6 is `WowWorldState.AllSkillsKnownForThisLevel` and G7 is
+`CanAffordToTrainAllSkills` (both `WoWFunctions.lua`) — inputs for the
+leveling-goal logic built on `WowLevelingConfigs.cs` (see the `Config/`
+bullet below). There's no addon API for "what can I train" without a trainer
+window open, so both read hand-maintained per-class tables
+(`WARRIOR_TRAINER_SPELLS`/`SHAMAN_TRAINER_SPELLS`/`WARLOCK_TRAINER_SPELLS`,
+one per class file, entries `{ level, name, spellId, cost }`): any entry
+with `level <= UnitLevel("player")` whose rank-specific `spellId` isn't
+known (`IsPlayerSpell`) is unlearned; G7 compares their summed copper cost
+against `GetMoney()` (base cost, ignoring trainer rep discounts; true when
+nothing's unlearned). Only Warrior levels 1-2 are filled in so far (Battle
+Shout); Shaman/Warlock tables are empty, so they always read "all known".
+G8 and the B byte are still reserved for the next class-agnostic bool.
 `ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
@@ -589,7 +602,20 @@ of truth — edits should be made here, not in the WoW install directory.
   never lived there to begin with — those are run-specific, toggled live via
   the addon's `/yyconfig` menu instead — see the `MultiBoolTwo` G1/G2 note in
   the color-encoding contract above. `Config/Definitions/` holds the POCOs
-  these configs are instances of. Each `WowLocationConfiguration` carries a
+  these configs are instances of. `WowLevelingConfigs.cs` (instances of
+  `WowLevelingConfiguration`) is a per-level leveling plan: the
+  `LocationConfigs` acceptable for gaining XP/money at that level (one entry
+  spans every starting zone — the goal logic picks by matching each
+  location's `Zone` to `WorldState.CurrentZone`) and `TrainerConfigs`
+  (stubbed as plain name strings for now), looked up via
+  `WowLevelingConfigs.GetFor(class, level)`. `Class` defaults to `null`
+  (any class); a class-specific entry is possible and `GetFor` prefers it
+  over an any-class one at the same level, but class differences should be
+  pushed into the addon where possible (e.g. the per-class trainer tables
+  behind G6/G7). Only levels 1-2 exist so far (both any-class), and nothing
+  reads it yet — the goal-setting logic (train vs. grind
+  for money vs. grind for XP, off the `MultiBoolTwo` G6/G7 bits) is still to
+  be written. Each `WowLocationConfiguration` carries a
   `Title`
   (human-readable, includes the minimum level), `MinimumLevel`, and `Zone`
   (`WowZone` enum, `WowLocationConfiguration.cs`) — see the zone ID

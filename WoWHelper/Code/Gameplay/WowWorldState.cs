@@ -99,6 +99,14 @@ namespace WoWHelper
         // the logout states while combat never drops.
         public bool CombatStalemate { get; private set; }
 
+        // Decoded from MultiBoolTwo's G byte, b6/b7. Whether the player has trained every
+        // class skill available at their current level, and whether they have enough money
+        // to train everything still missing (also true when nothing's missing). Both come
+        // from hand-maintained per-class trainer tables in the addon (WARRIOR_TRAINER_SPELLS
+        // etc.). Inputs to the leveling-goal logic built on WowLevelingConfigs.cs.
+        public bool AllSkillsKnownForThisLevel { get; private set; }
+        public bool CanAffordToTrainAllSkills { get; private set; }
+
         // Which of the three bot-supported classes the player is playing, decoded from
         // MultiBoolOne's B byte (b2/b4 -- see GetMultiBoolOne() in WoWFunctions.lua) for
         // Warrior/Shaman, plus MultiBoolTwo's R4 (see UpdateMultiBoolTwo below) for
@@ -297,9 +305,9 @@ namespace WoWHelper
         // the R byte so far -- R7-R8 are still reserved. G1 (LogoutOnLowDynamiteEnabled),
         // G2 (LogoutOnFullBagsEnabled), and G3 (HasDesiredWorldBuff) are packed into the
         // previously-unused G byte instead of continuing into R7/R8, followed by G4
-        // (HighLatency) and G5 (CombatStalemate) -- G6-G8 and the B byte are still
-        // reserved for future class-agnostic flags (see GetMultiBoolTwo() in
-        // WoWFunctions.lua).
+        // (HighLatency), G5 (CombatStalemate), G6 (AllSkillsKnownForThisLevel), and G7
+        // (CanAffordToTrainAllSkills) -- G8 and the B byte are still reserved for future
+        // class-agnostic flags (see GetMultiBoolTwo() in WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
@@ -317,13 +325,15 @@ namespace WoWHelper
             IsTargetBleedImmune = r5;
             IsTargetFearCaster = r6;
 
-            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out _, out _, out _);
+            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out _);
 
             LogoutOnLowDynamiteEnabled = g1;
             LogoutOnFullBagsEnabled = g2;
             HasDesiredWorldBuff = g3;
             HighLatency = g4;
             CombatStalemate = g5;
+            AllSkillsKnownForThisLevel = g6;
+            CanAffordToTrainAllSkills = g7;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)

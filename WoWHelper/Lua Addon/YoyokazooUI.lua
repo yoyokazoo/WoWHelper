@@ -596,6 +596,12 @@ frame:SetScript("OnEvent", function(self, event, ...)
             UIErrorsFrame:AddMessage("Enemy nameplates are off! Turn them on!", 1, 0, 0, nil, 15)
         end
 
+        -- Alert if friendly nameplates are off, since the target marker needs a
+        -- nameplate to draw on and friendly NPCs won't have one otherwise
+        if not AreFriendlyNameplatesTurnedOn() then
+            UIErrorsFrame:AddMessage("Friendly nameplates are off! Turn them on!", 1, 0, 0, nil, 15)
+        end
+
         -- Alert if WoW's own Key Bindings menu already claims a modifier+key combo one
         -- of our macros relies on to pick its alternate [mod:...] cast -- Ctrl+4
         -- (WowInput.WARRIOR_CTRL_SWEEPING_STRIKES, Warrior-only, Sweeping Strikes) and
