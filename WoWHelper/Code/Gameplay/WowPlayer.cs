@@ -262,7 +262,7 @@ namespace WoWHelper
             //await TargetMarkerDebugTask();
 
             //await MeasureKeyboardTurnRateTask();
-            await MouseTurnRateSweepTask(startPixels: 370, stepPixels: 25);
+            await MouseTurnRateSweepTask(startPixels: 1, stepPixels: 1);
             return true;
             //return await WaitForWorldBuffThenLogoffTask();
 

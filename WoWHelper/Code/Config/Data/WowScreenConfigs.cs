@@ -52,6 +52,12 @@ namespace WoWHelper.Code.Config
 
             SlackScreenshotCropRegion = new Rectangle(0, 1005, 790, 261),
 
+            // Measured via MouseTurnRateSweepTask: 1px steps 1-363px, then 25px steps
+            // 370-595px -- exactly linear through the origin at 41px per 10 degrees. See
+            // WowScreenConfiguration.MouseDragPixelsPerDegree for the full writeup.
+            MouseDragPixelsPerDegree = 4.1f,
+            MouseDragMinEffectivePixels = 4,
+
             FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
                     new ColorPosition(1529, 217, WowScreenConfiguration.ERROR_TEXT_COLOR),
@@ -227,6 +233,20 @@ namespace WoWHelper.Code.Config
             LootHeatmapIgnoreHeight = 75,
 
             SlackScreenshotCropRegion = new Rectangle(39, 786, 552, 161),
+
+            // Measured via MouseTurnRateSweepTask, first at 15px steps 0-180px, then refined
+            // with a 1px-step sweep 1-122px. Markedly different from 3440x1440 -- roughly
+            // 2.85x more turn per pixel -- and not a clean through-the-origin line the way
+            // 3440x1440's was: the 1px sweep found an exact 4px dead zone (pixels 1-4 all
+            // measured 0 degrees turned, pixel 5 the first to move) followed by a real
+            // affine relationship from ~pixel 16 onward (degrees ~= 0.6937*pixels - 5.72,
+            // refit by linear regression -- both sweeps agree closely on the slope). See
+            // WowScreenConfiguration.MouseDragPixelsPerDegree/MouseDragOffsetDegrees for how
+            // the slope/offset split is applied, and their doc comments for the residual
+            // low-pixel nonlinearity (5-15px) this doesn't fully correct for.
+            MouseDragPixelsPerDegree = 1.44f,
+            MouseDragOffsetDegrees = 5.72f,
+            MouseDragMinEffectivePixels = 5,
 
             FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {

@@ -75,27 +75,33 @@ namespace WoWHelper.Code
             }
         }
 
-        // Right-click-drag turning, measured by WowPlayer.MouseTurnRateSweepTask
-        // (WowTurnCalibrationTasks.cs) at 1px steps from 1-363px, then 25px steps from
-        // 370-595px: exactly linear through the origin at 41px per 10 degrees (e.g. 41px ->
-        // 10.00, 205px -> 50.00, 328px -> 80.00, 595px -> 145.13), zero spread across repeats,
-        // identical left vs right. Drags under 4px didn't turn at all. Measured up to ~145
-        // degrees; the last stretch to 180 (~738px) is extrapolated. Measured with the
-        // in-game Mouse Look Speed at its default of 5.5, on a 3440-wide screen resolution --
-        // this constant may depend on either, so re-run the sweep if the setting or the
-        // resolution changes (this may need to become per-resolution, e.g. on
-        // WowScreenConfiguration, if other resolutions measure differently).
-        public const float MOUSE_DRAG_PIXELS_PER_DEGREE = 4.1f;
-        public const int MOUSE_DRAG_MIN_EFFECTIVE_PIXELS = 4;
+        // Right-click-drag turning rate is resolution-dependent -- confirmed by
+        // WowPlayer.MouseTurnRateSweepTask (WowTurnCalibrationTasks.cs) measuring markedly
+        // different results on 1920x1080 vs 3440x1440 -- so the ratio/offset live per
+        // resolution on WowScreenConfiguration.MouseDragPixelsPerDegree/
+        // MouseDragOffsetDegrees/MouseDragMinEffectivePixels rather than as constants here.
+        // See those properties for the measured values and per-resolution caveats.
 
         // Signed drag distance for a signed turn, using GetDegreesToMove's convention
         // (positive = turn left, negative = turn right), so its result can be passed straight
         // in. Returns Mouse.MoveRelative's X convention: positive = drag right, negative =
-        // drag left. Turns under ~1 degree return a drag the game ignores (see
-        // MOUSE_DRAG_MIN_EFFECTIVE_PIXELS).
-        public static int GetMouseDragPixelsForDegrees(float degreesToMove)
+        // drag left. pixelsPerDegree/offsetDegrees should come from the current
+        // WowScreenConfiguration (MouseDragPixelsPerDegree/MouseDragOffsetDegrees) -- offsetDegrees
+        // compensates for a resolution whose measured degrees-vs-pixels line doesn't pass through
+        // the origin (see WowScreenConfiguration.MouseDragOffsetDegrees), and is 0 for one that
+        // does. A zero-degree request always returns a zero drag, regardless of offsetDegrees --
+        // there's nothing to compensate for if no turn was asked for. Turns under ~1 degree
+        // return a drag the game ignores (see WowScreenConfiguration.MouseDragMinEffectivePixels).
+        public static int GetMouseDragPixelsForDegrees(float degreesToMove, float pixelsPerDegree, float offsetDegrees)
         {
-            return -(int)Math.Round(degreesToMove * MOUSE_DRAG_PIXELS_PER_DEGREE);
+            float magnitude = Math.Abs(degreesToMove);
+            if (magnitude <= 0f)
+            {
+                return 0;
+            }
+
+            int pixelsMagnitude = (int)Math.Round((magnitude + offsetDegrees) * pixelsPerDegree);
+            return degreesToMove > 0 ? -pixelsMagnitude : pixelsMagnitude;
         }
 
         public static float Clamp(float value, float min, float max)

@@ -550,8 +550,10 @@ namespace WoWHelper
         // on whatever's under the cursor). Returns the pixels dragged (0 if skipped).
         private async Task<int> TurnByMouseDragTask(float degreesToMove)
         {
-            int dragPixels = WowPathfinding.GetMouseDragPixelsForDegrees(degreesToMove);
-            if (Math.Abs(dragPixels) < WowPathfinding.MOUSE_DRAG_MIN_EFFECTIVE_PIXELS)
+            var screenConfig = FarmingConfig.ScreenConfiguration;
+            int dragPixels = WowPathfinding.GetMouseDragPixelsForDegrees(
+                degreesToMove, screenConfig.MouseDragPixelsPerDegree, screenConfig.MouseDragOffsetDegrees);
+            if (Math.Abs(dragPixels) < screenConfig.MouseDragMinEffectivePixels)
             {
                 return 0;
             }

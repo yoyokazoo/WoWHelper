@@ -71,6 +71,36 @@ namespace WoWHelper
         // the full screen in that case (see SlackFileUploadWorkaround).
         public Rectangle? SlackScreenshotCropRegion { get; set; }
 
+        // Right-click-drag mouse turning rate (WowPathfinding.GetMouseDragPixelsForDegrees),
+        // measured per-resolution by WowPlayer.MouseTurnRateSweepTask
+        // (WowTurnCalibrationTasks.cs) -- confirmed resolution-dependent, not a shared
+        // constant: 3440x1440 measured exactly linear through the origin, while 1920x1080
+        // measured a real, non-zero-intercept affine relationship in its steady-state range
+        // (roughly pixel 16 and up: degrees ~= 0.6937*pixels - 5.72, refit by linear
+        // regression off a 1px-step sweep 1-122px -- see MouseDragOffsetDegrees below for how
+        // that intercept is applied). This is just the slope (degrees-per-pixel, inverted);
+        // it alone reproduces 3440x1440 exactly but needs MouseDragOffsetDegrees alongside it
+        // to reproduce 1920x1080. Defaults to the originally 3440x1440-only measured value for
+        // any resolution that hasn't been swept yet.
+        public float MouseDragPixelsPerDegree { get; set; } = 4.1f;
+
+        // Extra degrees-equivalent added to the requested turn before converting to pixels,
+        // to compensate for a resolution whose measured degrees-vs-pixels line has a non-zero
+        // intercept (see MouseDragPixelsPerDegree above) -- 0 for a resolution (3440x1440)
+        // whose line passes through the origin. Below the steady-state range this was fit
+        // from (1920x1080: roughly pixel 16 and under), the 1px-step sweep shows the real
+        // relationship curving above this affine line rather than continuing to follow it
+        // (e.g. pixel 10 measured ~2.58 degrees actual turn vs. ~1.3 degrees predicted) --
+        // that residual is left uncorrected since RotateToDirectionTask's turn-then-verify
+        // loop already re-turns on overshoot, and the residual is at most a couple degrees.
+        public float MouseDragOffsetDegrees { get; set; } = 0f;
+
+        // Drags shorter than this don't turn the character at all (TurnByMouseDragTask skips
+        // them rather than risk a right-click-with-no-drag registering as a click on whatever's
+        // under the cursor). Measured via a fine 1px-step sweep on both 3440x1440 and
+        // 1920x1080 -- confirmed different (4px vs 5px), so this is per-resolution too.
+        public int MouseDragMinEffectivePixels { get; set; } = 4;
+
         // Error text detections
         public ImageMatchColorPositions FacingWrongWayPositions { get; set; }
         public ImageMatchColorPositions TooFarAwayPositions { get; set; }

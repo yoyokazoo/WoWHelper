@@ -9,8 +9,9 @@ using WoWHelper.Code;
 namespace WoWHelper
 {
     // Ad-hoc calibration tasks for measuring how far the character actually turns per input
-    // (the mouse sweep produced WowPathfinding.MOUSE_DRAG_PIXELS_PER_DEGREE; RightClickDragTask
-    // lives in WowMovementTasks.cs). Not wired into the core loop -- call from AdHocTestTask().
+    // (the mouse sweep produces WowScreenConfiguration.MouseDragPixelsPerDegree, measured
+    // per-resolution; RightClickDragTask lives in WowMovementTasks.cs). Not wired into the
+    // core loop -- call from AdHocTestTask().
     public partial class WowPlayer
     {
         private const int CALIBRATION_ITERATIONS = 20;
