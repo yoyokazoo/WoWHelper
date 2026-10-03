@@ -266,73 +266,7 @@ namespace WoWHelper
                 {
                     case PathfindingState.PICKING_NEXT_WAYPOINT:
                         Console.WriteLine($"Picking next waypoint");
-                        if (CurrentWaypointIndex == -1)
-                        {
-                            // we've never picked a waypoint yet, so find the closest one
-                            Vector2 playerLocation = new Vector2(WorldState.MapX, WorldState.MapY);
-                            CurrentWaypointIndex = LocationConfiguration.Waypoints
-                                .Select((p, i) => (dist: Vector2.Distance(playerLocation, p), index: i))
-                                .OrderBy(t => t.dist)
-                                .First()
-                                .index;
-
-                            // Circular always goes in the same direction, so if you interrupt and restart, you'll still be going the same direction.
-                            // For linear let's do our best guess to pick the best direction
-                            if (LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
-                            {
-                                if (CurrentWaypointIndex == 0)
-                                {
-                                    WaypointTraversalDirection = 1;
-                                }
-                                else if (CurrentWaypointIndex == LocationConfiguration.Waypoints.Count - 1)
-                                {
-                                    WaypointTraversalDirection = -1;
-                                }
-                                else
-                                {
-                                    var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(LocationConfiguration.Waypoints[CurrentWaypointIndex], LocationConfiguration.Waypoints[CurrentWaypointIndex + 1]);
-                                    var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(LocationConfiguration.Waypoints[CurrentWaypointIndex], LocationConfiguration.Waypoints[CurrentWaypointIndex - 1]);
-                                    var facingDegrees = WorldState.FacingDegrees;
-                                    var forwardDiff = WowPathfinding.GetDegreesToMove(facingDegrees, forwardDegrees);
-                                    var backwardsDiff = WowPathfinding.GetDegreesToMove(facingDegrees, backwardsDegrees);
-
-                                    if (backwardsDiff < forwardDiff)
-                                    {
-                                        WaypointTraversalDirection = -1;
-                                    }
-
-                                    Console.WriteLine("Forward/Backwards/Facing/AbsFor/AbsBack");
-                                    Console.WriteLine(forwardDegrees);
-                                    Console.WriteLine(backwardsDegrees);
-                                    Console.WriteLine(facingDegrees);
-                                    Console.WriteLine(forwardDiff);
-                                    Console.WriteLine(backwardsDiff);
-
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // otherwise cycle through them
-                            CurrentWaypointIndex += WaypointTraversalDirection;
-
-                            if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= LocationConfiguration.Waypoints.Count)
-                            {
-                                if (LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR)
-                                {
-                                    CurrentWaypointIndex = 0;
-                                }
-                                else if (LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
-                                {
-                                    // since we detect this when we've gone out of bounds, switch direction.
-                                    // first addition puts us back in bounds, but we know we're already there, so do a second addition
-                                    WaypointTraversalDirection *= -1;
-                                    CurrentWaypointIndex += WaypointTraversalDirection;
-                                    CurrentWaypointIndex += WaypointTraversalDirection;
-                                }
-                            }
-                        }
-
+                        PickNextWaypoint();
                         CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
                         break;
                     case PathfindingState.MOVING_TOWARDS_WAYPOINT:
@@ -511,40 +445,6 @@ namespace WoWHelper
                     }
                     break;
             }
-        }
-
-        // Two ways to turn by a computed amount, both taking degreesToMove in
-        // GetDegreesToMove's convention (positive = left, negative = right): TurnByKeyboardTask
-        // and TurnByMouseDragTask. Both do the whole turn in one go rather than polling
-        // WorldState in a tight turn-and-recheck loop -- the addon's pixel-row update cadence
-        // lags real turning, so a loop that re-reads FacingDegrees every iteration and
-        // corrects on the fly tends to overshoot/oscillate on the stale reads. Keyboard is the
-        // one currently used everywhere (preferred feel); mouse is more accurate and kept for
-        // future use.
-
-        // Measured empirically: how long holding a single turn key takes to spin the
-        // character a full 360 degrees.
-        private const float FULL_ROTATION_MILLIS = 2000f;
-
-        // Holds TURN_LEFT/TURN_RIGHT for the duration degreesToMove corresponds to (via
-        // FULL_ROTATION_MILLIS). Returns the hold duration in millis.
-        private async Task<int> TurnByKeyboardTask(float degreesToMove)
-        {
-            Keys directionKey = degreesToMove <= 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
-            int turnMillis = (int)((Math.Abs(degreesToMove) / 360f) * FULL_ROTATION_MILLIS);
-
-            try
-            {
-                Keyboard.KeyDown(directionKey);
-                await Task.Delay(turnMillis);
-            }
-            finally
-            {
-                Keyboard.KeyUp(WowInput.TURN_LEFT);
-                Keyboard.KeyUp(WowInput.TURN_RIGHT);
-            }
-
-            return turnMillis;
         }
 
         // How long to wait after a mouse turn before reading FacingDegrees back out, so the
@@ -1012,6 +912,102 @@ namespace WoWHelper
             await Task.Delay(0);
 
             return true;
+        }
+
+        public void PickNextWaypoint()
+        {
+            if (CurrentWaypointIndex == -1)
+            {
+                // we've never picked a waypoint yet, so find the closest one
+                Vector2 playerLocation = new Vector2(WorldState.MapX, WorldState.MapY);
+                CurrentWaypointIndex = LocationConfiguration.Waypoints
+                    .Select((p, i) => (dist: Vector2.Distance(playerLocation, p), index: i))
+                    .OrderBy(t => t.dist)
+                    .First()
+                    .index;
+
+                // Circular always goes in the same direction, so if you interrupt and restart, you'll still be going the same direction.
+                // For linear let's do our best guess to pick the best direction
+                if (LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
+                {
+                    if (CurrentWaypointIndex == 0)
+                    {
+                        WaypointTraversalDirection = 1;
+                    }
+                    else if (CurrentWaypointIndex == LocationConfiguration.Waypoints.Count - 1)
+                    {
+                        WaypointTraversalDirection = -1;
+                    }
+                    else
+                    {
+                        var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(LocationConfiguration.Waypoints[CurrentWaypointIndex], LocationConfiguration.Waypoints[CurrentWaypointIndex + 1]);
+                        var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(LocationConfiguration.Waypoints[CurrentWaypointIndex], LocationConfiguration.Waypoints[CurrentWaypointIndex - 1]);
+                        var facingDegrees = WorldState.FacingDegrees;
+                        var forwardDiff = WowPathfinding.GetDegreesToMove(facingDegrees, forwardDegrees);
+                        var backwardsDiff = WowPathfinding.GetDegreesToMove(facingDegrees, backwardsDegrees);
+
+                        if (backwardsDiff < forwardDiff)
+                        {
+                            WaypointTraversalDirection = -1;
+                        }
+
+                        Console.WriteLine("Forward/Backwards/Facing/AbsFor/AbsBack");
+                        Console.WriteLine(forwardDegrees);
+                        Console.WriteLine(backwardsDegrees);
+                        Console.WriteLine(facingDegrees);
+                        Console.WriteLine(forwardDiff);
+                        Console.WriteLine(backwardsDiff);
+
+                    }
+                }
+            }
+            else
+            {
+                // otherwise cycle through them
+                CurrentWaypointIndex += WaypointTraversalDirection;
+
+                if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= LocationConfiguration.Waypoints.Count)
+                {
+                    if (LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR)
+                    {
+                        CurrentWaypointIndex = 0;
+                    }
+                    else if (LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
+                    {
+                        // since we detect this when we've gone out of bounds, switch direction.
+                        // first addition puts us back in bounds, but we know we're already there, so do a second addition
+                        WaypointTraversalDirection *= -1;
+                        CurrentWaypointIndex += WaypointTraversalDirection;
+                        CurrentWaypointIndex += WaypointTraversalDirection;
+                    }
+                }
+            }
+        }
+
+        // If distance is long enough, face using keyboard.  If not, stop and use mouse?
+        public async Task<bool> FaceWaypointTask()
+        {
+            await Task.Delay(0);
+            return true;
+            //await RotateToDirectionTaskWithKeyboard(desiredDegrees, targetDistance);
+        }
+
+        private async Task<int> TurnByKeyboardTask(float degreesToMove)
+        {
+            Keys directionKey = degreesToMove <= 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
+            int turnMillis = (int)((Math.Abs(degreesToMove) / 360f) * WowPathfinding.FULL_ROTATION_MILLIS);
+
+            try
+            {
+                Keyboard.KeyDown(directionKey);
+                await Task.Delay(turnMillis);
+            }
+            finally
+            {
+                Keyboard.KeyUp(directionKey);
+            }
+
+            return turnMillis;
         }
     }
 }

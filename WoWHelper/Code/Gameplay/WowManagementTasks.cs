@@ -62,58 +62,6 @@ namespace WoWHelper
             return true;
         }
 
-        public void UpdatePlayerGoal()
-        {
-            if (WorldState.IsInCombat)
-            {
-                CurrentPlayerGoal = PlayerGoal.FIGHT;
-                return;
-            }
-
-            if (LogoutTriggered)
-            {
-                if (CurrentPlayerGoal != PlayerGoal.LOG_OUT)
-                {
-                    CurrentLogoutState = LogoutState.STARTING_LOGOUT;
-                }
-
-                CurrentPlayerGoal = PlayerGoal.LOG_OUT;
-                return;
-            }
-
-            if (!WorldState.AllSkillsKnownForThisLevel && WorldState.CanAffordToTrainAllSkills)
-            {
-                CurrentPlayerGoal = PlayerGoal.TRAIN;
-                return;
-            }
-
-            if (WorldState.BagsAreFull)
-            {
-                CurrentPlayerGoal = PlayerGoal.SELL;
-                return;
-            }
-
-            // if (needs to travel to a new location)
-            // {
-            // CurrentPlayerGoal = PlayerGoal.TRAVEL;
-            // return;
-            // }
-
-            // if (WorldState.GearNeedsRepair)
-            // {
-            // CurrentPlayerGoal = PlayerGoal.REPAIR;
-            // return;
-            // }
-
-            // if (WorldState.HearthInWrongLocation)
-            // {
-            // CurrentPlayerGoal = PlayerGoal.SET_HEARTH;
-            // return;
-            // }
-
-            CurrentPlayerGoal = PlayerGoal.FIND_FIGHT;
-        }
-
         public async Task<bool> EveryWorldStateUpdateTasks()
         {
             // ping + refocus if something stole foreground focus from WoW -- every task

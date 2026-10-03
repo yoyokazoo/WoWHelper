@@ -46,6 +46,7 @@ namespace WoWHelper
         public PathfindingState CurrentPathfindingState { get; private set; }
         public PlayerGoal CurrentPlayerGoal { get; private set; }
         public LogoutState CurrentLogoutState { get; private set; }
+        public FindFightState CurrentFindFightState { get; private set; }
 
         public int CurrentWaypointIndex { get; private set; }
         public int WaypointTraversalDirection { get; private set; }
@@ -171,10 +172,6 @@ namespace WoWHelper
 
         public async Task<bool> CoreLoopTask()
         {
-            // TODO: Testing, delete me
-            LogoutTriggered = true;
-            LogoutReason = $"Testing new execute goal task";
-
             while (CurrentPlayerMetaState != PlayerMetaState.EXITING)
             {
                 await UpdateWorldStateAsync();
@@ -210,15 +207,81 @@ namespace WoWHelper
                 return true;
         }
 
+        public void UpdatePlayerGoal()
+        {
+            // TODO refactor this method: each state transition should happen in a more structured manner with an Initialize and a Cleanup or some such
+            // (set starting state, key up movement keys, etc.
+
+            if (WorldState.IsInCombat)
+            {
+                CurrentPlayerGoal = PlayerGoal.FIGHT;
+                return;
+            }
+
+            if (LogoutTriggered)
+            {
+                if (CurrentPlayerGoal != PlayerGoal.LOG_OUT)
+                {
+                    CurrentLogoutState = LogoutState.STARTING_LOGOUT;
+                }
+
+                CurrentPlayerGoal = PlayerGoal.LOG_OUT;
+                return;
+            }
+
+            if (!WorldState.AllSkillsKnownForThisLevel && WorldState.CanAffordToTrainAllSkills)
+            {
+                CurrentPlayerGoal = PlayerGoal.TRAIN;
+                return;
+            }
+
+            if (WorldState.BagsAreFull)
+            {
+                CurrentPlayerGoal = PlayerGoal.SELL;
+                return;
+            }
+
+            // if (needs to travel to a new location)
+            // {
+            // CurrentPlayerGoal = PlayerGoal.TRAVEL;
+            // return;
+            // }
+
+            // if (WorldState.GearNeedsRepair)
+            // {
+            // CurrentPlayerGoal = PlayerGoal.REPAIR;
+            // return;
+            // }
+
+            // if (WorldState.HearthInWrongLocation)
+            // {
+            // CurrentPlayerGoal = PlayerGoal.SET_HEARTH;
+            // return;
+            // }
+
+            if (CurrentPlayerGoal != PlayerGoal.FIND_FIGHT)
+            {
+                CurrentWaypointIndex = -1;
+                WaypointTraversalDirection = 1;
+
+                CurrentFindFightState = FindFightState.PICK_NEXT_WAYPOINT;
+            }
+
+            CurrentPlayerGoal = PlayerGoal.FIND_FIGHT;
+        }
+
         public async Task ExecuteGoalTask()
         {
             switch (CurrentPlayerGoal)
             {
                 case PlayerGoal.FIGHT:
+                    Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
                     break;
                 case PlayerGoal.FIND_FIGHT:
+                    await PlayerFindFightGoalTask();
                     break;
                 case PlayerGoal.SELL:
+                    Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
                     break;
                 case PlayerGoal.LOG_OUT:
                     await PlayerLogoutGoalTask();
@@ -243,6 +306,22 @@ namespace WoWHelper
                 case LogoutState.WAITING_FOR_LOGOUT:
                     // nothing to do here but wait.  EveryWorldStateUpdate will handle seeing
                     // that we've logged out before we'd get back in here
+                    break;
+            }
+        }
+
+        public async Task PlayerFindFightGoalTask()
+        {
+            switch (CurrentFindFightState)
+            {
+                case FindFightState.PICK_NEXT_WAYPOINT:
+                    PickNextWaypoint();
+                    CurrentFindFightState = FindFightState.FACE_WAYPOINT;
+                    break;
+                case FindFightState.FACE_WAYPOINT:
+                    
+                    break;
+                case FindFightState.WALK_TO_WAYPOINT:
                     break;
             }
         }

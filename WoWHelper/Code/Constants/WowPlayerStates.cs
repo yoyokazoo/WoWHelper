@@ -79,5 +79,12 @@
             STARTING_LOGOUT,
             WAITING_FOR_LOGOUT,
         }
+
+        public enum FindFightState
+        {
+            PICK_NEXT_WAYPOINT,
+            FACE_WAYPOINT,
+            WALK_TO_WAYPOINT
+        }
     }
 }
