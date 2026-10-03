@@ -12,6 +12,12 @@
 -- namespace).
 ------------------------------------------------------------
 
+-- Class trainer spells -- same shape as WARRIOR_TRAINER_SPELLS
+-- (WarriorFunctions.lua). TODO: not filled in yet, so Shaman always reads as
+-- "nothing to train".
+SHAMAN_TRAINER_SPELLS = {
+}
+
 function HasRockbiterWeaponMainHand()
     local hasMainHandEnchant,
           mainHandExpiration,

@@ -1,3 +1,28 @@
+-- How often "rare change" state (bag fullness, consumable counts, gear
+-- durability, trainable skills) is actually recomputed. These get polled on the
+-- pixel row's ~50-100ms OnUpdate cadence (plus the debug frame's), but none of
+-- them change anywhere near that fast, and some (bag scans) allocate a table per
+-- occupied slot -- so compute once on the first call (startup) and then at most
+-- once per interval, returning the cached value in between.
+local RARE_STATE_REFRESH_INTERVAL_SECONDS = 60
+
+-- Wraps computeFn so it runs on the first call and then at most once every
+-- intervalSeconds, returning the last computed value in between.
+local function CacheOnInterval(computeFn, intervalSeconds)
+    local lastCheckTime = nil
+    local cachedValue = nil
+
+    return function()
+        local now = GetTime()
+        if not lastCheckTime or (now - lastCheckTime) >= intervalSeconds then
+            cachedValue = computeFn()
+            lastCheckTime = now
+        end
+
+        return cachedValue
+    end
+end
+
 function IsInCombat()
     return UnitAffectingCombat("player")
 end
@@ -573,6 +598,16 @@ function AreEnemyNameplatesTurnedOn()
     return GetCVarBool("nameplateShowEnemies")
 end
 
+-- The target marker (UIFunctions.lua) is drawn on the target's nameplate, so a
+-- friendly target (e.g. a merchant/trainer NPC) only gets one if these are on.
+-- Reads nameplateShowFriendlyNPCs, not nameplateShowFriends -- confirmed live
+-- (via a temporary CVar dump) that the friendly-nameplate toggle sets the
+-- former to "1", while GetCVarBool("nameplateShowFriends") returned nil.
+-- Compared against the raw "1" string so a missing CVar reads false, never nil.
+function AreFriendlyNameplatesTurnedOn()
+    return GetCVar("nameplateShowFriendlyNPCs") == "1"
+end
+
 -- Returns the name of whatever's currently bound to a key combo, in Blizzard's own
 -- binding-string format (e.g. "CTRL-4"), or "" if nothing is bound to it at all. Thin
 -- wrapper around GetBindingAction() so callers don't need to know that format
@@ -637,10 +672,13 @@ HEALING_POTION_ITEM_CHOICES = {
     { id = 13446, label = "Major Healing Potion" },
 }
 
-function AreWeLowOnHealthPotions()
+-- Interval-cached (see CacheOnInterval) -- consumable counts are rare-change
+-- state, and nothing reading this needs to notice within the minute. Note a
+-- /yyconfig selector change also only shows up on the next refresh.
+AreWeLowOnHealthPotions = CacheOnInterval(function()
     local count = GetItemCount(GetHealingPotionItemId(), false)
     return count < 2
-end
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
 -- Known dynamite-tier consumables, selectable via the /yyconfig "Dynamite item"
 -- selector (YoyokazooUI.lua/UIFunctions.lua) instead of being hardcoded here.
@@ -656,18 +694,89 @@ DYNAMITE_ITEM_CHOICES = {
     { id = 10562, label = "Hi-Explosive Bomb" },
 }
 
-function AreWeLowOnDynamite()
+-- Interval-cached, same as AreWeLowOnHealthPotions() above.
+AreWeLowOnDynamite = CacheOnInterval(function()
     local dynamiteCount = GetItemCount(GetDynamiteItemId(), false)
     return dynamiteCount < 2
-end
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
 -- light shot, 2516
 -- rough arrow, 2512
 -- sharp arrow, 2515
-function AreWeLowOnAmmo()
+-- Interval-cached, same as AreWeLowOnHealthPotions() above.
+AreWeLowOnAmmo = CacheOnInterval(function()
     local ammoCount = GetItemCount(2515, false)
     return ammoCount < 2
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
+
+-- Prints every equipped slot's durability and the repair decision on each
+-- (once-a-minute) GearNeedsRepair() refresh. Flip on if the thresholds below
+-- don't match what the character sheet's durability doll shows in-game.
+GEAR_REPAIR_DEBUG = false
+
+-- Blizzard's durability doll turns a slot yellow when it's low and red when
+-- it's broken (0 durability). The exact "low" ratio isn't exposed to addons;
+-- 25% is our approximation of the doll's yellow -- confirm live via
+-- GEAR_REPAIR_DEBUG if it seems off.
+local DURABILITY_YELLOW_RATIO = 0.25
+local WEAPON_CLASS_ID = 2 -- GetItemInfoInstant classID for weapons (shields are armor, 4)
+
+local function IsMeleeWeaponSlot(slot)
+    if slot == INVSLOT_MAINHAND then
+        return true
+    end
+
+    -- Off-hand is only a weapon if something with weapon class is in it --
+    -- a shield is armor, and a held-in-off-hand item has no durability.
+    if slot == INVSLOT_OFFHAND then
+        local itemId = GetInventoryItemID("player", slot)
+        if not itemId then
+            return false
+        end
+        local _, _, _, _, _, classId = GetItemInfoInstant(itemId)
+        return classId == WEAPON_CLASS_ID
+    end
+
+    return false
 end
+
+-- True if a melee weapon (main hand, or off-hand weapon) is at yellow durability
+-- or worse, or any other equipped piece (armor, shield, ranged) is red/broken.
+-- Slots without durability (neck, rings, cloak, trinkets, empty) return nil from
+-- GetInventoryItemDurability and are skipped. Interval-cached -- durability only
+-- moves a point at a time per hit taken/dealt or death, so once a minute is plenty.
+-- Packed into MultiBoolTwo's G8.
+GearNeedsRepair = CacheOnInterval(function()
+    local needsRepair = false
+
+    for slot = INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do
+        local current, maximum = GetInventoryItemDurability(slot)
+        if current and maximum and maximum > 0 then
+            local isWeapon = IsMeleeWeaponSlot(slot)
+            local slotNeedsRepair
+            if isWeapon then
+                slotNeedsRepair = (current / maximum) <= DURABILITY_YELLOW_RATIO
+            else
+                slotNeedsRepair = current == 0
+            end
+
+            if GEAR_REPAIR_DEBUG then
+                print(string.format("GearNeedsRepair: slot %d %d/%d weapon=%s needsRepair=%s",
+                    slot, current, maximum, tostring(isWeapon), tostring(slotNeedsRepair)))
+            end
+
+            if slotNeedsRepair then
+                needsRepair = true
+            end
+        end
+    end
+
+    if GEAR_REPAIR_DEBUG then
+        print("GearNeedsRepair: " .. tostring(needsRepair))
+    end
+
+    return needsRepair
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
 function TargetHasDebuffSpellId(debuffSpellId)
   for i = 1, 40 do
@@ -899,20 +1008,10 @@ end
 -- don't change on the ~50-100ms cadence AreBagsFull() gets polled at (it's one
 -- of the flags packed into GetMultiBoolOne, read by both the pixel-row and
 -- debug OnUpdate loops in UIFunctions.lua), so cache the real check and only
--- recompute it periodically instead of every tick.
-local BAGS_FULL_CHECK_INTERVAL_SECONDS = 30
-local lastBagsFullCheckTime = nil
-local cachedBagsFull = false
-
-function AreBagsFull()
-    local now = GetTime()
-    if not lastBagsFullCheckTime or (now - lastBagsFullCheckTime) >= BAGS_FULL_CHECK_INTERVAL_SECONDS then
-        cachedBagsFull = GetTotalFreeBagSlots() == 0
-        lastBagsFullCheckTime = now
-    end
-
-    return cachedBagsFull
-end
+-- recompute it periodically (CacheOnInterval) instead of every tick.
+AreBagsFull = CacheOnInterval(function()
+    return GetTotalFreeBagSlots() == 0
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
 -- Item names, beyond plain quality-0 (Poor/gray) junk, that are also worth
 -- auto-selling to an open merchant -- e.g. cooking/fishing byproducts that
@@ -1076,6 +1175,213 @@ function FindAutoSellQueue()
     return queue
 end
 
+------------------------------------------------------------
+-- Auto-equip upgrades from bags (see the BAG_UPDATE_DELAYED handling and
+-- /yyequip in YoyokazooUI.lua for the event/slash-command side).
+------------------------------------------------------------
+
+-- Set true to print every step of the auto-equip scan to chat: each candidate
+-- bag item's raw GetItemStats() table, its score vs. what's currently equipped,
+-- and why anything was skipped. GetItemStats()'s exact key names on this
+-- client build (ITEM_MOD_STRENGTH_SHORT etc.) aren't verified from reading
+-- source alone -- same caveat as every other WoW Lua API call in this addon
+-- (see the top of CLAUDE.md) -- so if scoring looks wrong, flip this on (or
+-- run /yyequip, which forces it on for one dry-run scan) and read the dumps
+-- rather than guessing.
+AUTO_EQUIP_DEBUG = false
+
+function AutoEquipDebugPrint(message)
+    if AUTO_EQUIP_DEBUG then
+        print("YoyokazooUI auto-equip: " .. message)
+    end
+end
+
+-- Highest item quality auto-equip will consider: 0 = Poor (gray), 1 = Common
+-- (white), 2 = Uncommon (green). Blues (3) and purples (4) are deliberately
+-- never auto-equipped -- those are worth a human decision.
+local AUTO_EQUIP_MAX_QUALITY = 2
+
+-- Armor equip slots auto-equip handles, keyed by GetItemInfo's equipLoc.
+-- Deliberately armor-only: weapons/shields/ranged change what the class
+-- rotations can do (2H vs. 1H+shield, weapon skill, etc.) and trinkets are
+-- mostly on-use effects a stat score can't see, so those stay manual. Rings
+-- list both finger slots -- a ring upgrade replaces whichever equipped ring
+-- scores worse.
+local AUTO_EQUIP_SLOTS_BY_EQUIP_LOC = {
+    INVTYPE_HEAD = { 1 },
+    INVTYPE_NECK = { 2 },
+    INVTYPE_SHOULDER = { 3 },
+    INVTYPE_CHEST = { 5 },
+    INVTYPE_ROBE = { 5 },
+    INVTYPE_WAIST = { 6 },
+    INVTYPE_LEGS = { 7 },
+    INVTYPE_FEET = { 8 },
+    INVTYPE_WRIST = { 9 },
+    INVTYPE_HAND = { 10 },
+    INVTYPE_FINGER = { 11, 12 },
+    INVTYPE_CLOAK = { 15 },
+}
+
+-- Armor-proficiency passive spell per armor subclass (GetItemInfoInstant's
+-- subclassID for classID 4, Armor). Checking the passive itself rather than
+-- hardcoding class/level rules means e.g. a level-40 Warrior who hasn't
+-- trained Plate Mail yet correctly won't be handed plate. Subclass 0
+-- (Miscellaneous -- necks, rings) has no proficiency requirement.
+local ARMOR_PROFICIENCY_SPELL_BY_SUBCLASS = {
+    [1] = 9078, -- Cloth
+    [2] = 9077, -- Leather
+    [3] = 8737, -- Mail
+    [4] = 750,  -- Plate Mail
+}
+
+-- Per-class stat weights for scoring gear. "armor" is the item's base armor
+-- value (GetItemStats' RESISTANCE0_NAME key). Rough leveling weights for how
+-- each class is actually played by the bot (Warrior melee, Shaman
+-- Rockbiter-melee + shocks, Warlock caster) -- tune as needed. Stats not
+-- listed here (resistances, weapon-only stats, etc.) contribute nothing.
+local AUTO_EQUIP_STAT_WEIGHTS = {
+    WARRIOR = {
+        ITEM_MOD_STRENGTH_SHORT = 1.0,
+        ITEM_MOD_AGILITY_SHORT = 0.7,
+        ITEM_MOD_STAMINA_SHORT = 0.6,
+        ITEM_MOD_SPIRIT_SHORT = 0.05,
+        RESISTANCE0_NAME = 0.02,
+    },
+    SHAMAN = {
+        ITEM_MOD_STRENGTH_SHORT = 1.0,
+        ITEM_MOD_AGILITY_SHORT = 0.5,
+        ITEM_MOD_STAMINA_SHORT = 0.6,
+        ITEM_MOD_INTELLECT_SHORT = 0.5,
+        ITEM_MOD_SPIRIT_SHORT = 0.2,
+        RESISTANCE0_NAME = 0.02,
+    },
+    WARLOCK = {
+        ITEM_MOD_STAMINA_SHORT = 1.0,
+        ITEM_MOD_INTELLECT_SHORT = 0.8,
+        ITEM_MOD_SPIRIT_SHORT = 0.6,
+        RESISTANCE0_NAME = 0.01,
+    },
+}
+
+local function PlayerKnowsSpellId(spellId)
+    if IsPlayerSpell then
+        return IsPlayerSpell(spellId)
+    end
+    return IsSpellKnown(spellId)
+end
+
+-- Weighted stat score for an item link, per AUTO_EQUIP_STAT_WEIGHTS for the
+-- player's class. nil link (empty slot) scores 0, so anything with a
+-- positive score is an upgrade over nothing.
+function GetItemEquipScore(itemLink)
+    if not itemLink then
+        return 0
+    end
+
+    local _, classFile = UnitClass("player")
+    local weights = AUTO_EQUIP_STAT_WEIGHTS[classFile]
+    if not weights then
+        return 0
+    end
+
+    local stats = GetItemStats(itemLink) or {}
+    local score = 0
+    local dump = {}
+    for statKey, value in pairs(stats) do
+        table.insert(dump, statKey .. "=" .. tostring(value))
+        score = score + (weights[statKey] or 0) * value
+    end
+
+    AutoEquipDebugPrint("    " .. itemLink .. " stats {" .. table.concat(dump, ", ") ..
+        "} score=" .. score)
+
+    return score
+end
+
+-- Whether a bag item is even eligible to be auto-equipped, independent of
+-- whether it's better: quality at most AUTO_EQUIP_MAX_QUALITY, an armor slot
+-- we handle, required level met, and armor type proficiency known. Returns the
+-- item's candidate inventory slot list, or nil (plus a reason for debugging).
+local function GetAutoEquipCandidateSlots(itemLink, quality)
+    if quality == nil or quality > AUTO_EQUIP_MAX_QUALITY then
+        return nil, "quality " .. tostring(quality) .. " is above green"
+    end
+
+    -- GetItemInfo returns nil for an item the client hasn't cached yet; the
+    -- next BAG_UPDATE_DELAYED scan will pick it up once it has.
+    local _, _, _, _, minLevel, _, _, _, equipLoc = GetItemInfo(itemLink)
+    if not equipLoc then
+        return nil, "item info not cached yet"
+    end
+
+    local slots = AUTO_EQUIP_SLOTS_BY_EQUIP_LOC[equipLoc]
+    if not slots then
+        return nil, "equipLoc " .. tostring(equipLoc) .. " not auto-equipped"
+    end
+
+    if (minLevel or 0) > UnitLevel("player") then
+        return nil, "requires level " .. minLevel
+    end
+
+    local _, _, _, _, _, classId, subclassId = GetItemInfoInstant(itemLink)
+    if classId ~= 4 then
+        return nil, "not armor (classID " .. tostring(classId) .. ")"
+    end
+
+    local proficiencySpell = ARMOR_PROFICIENCY_SPELL_BY_SUBCLASS[subclassId]
+    if subclassId ~= 0 and not (proficiencySpell and PlayerKnowsSpellId(proficiencySpell)) then
+        return nil, "armor subclass " .. tostring(subclassId) .. " not usable"
+    end
+
+    return slots
+end
+
+-- Scans bags 0-4 for the single best armor upgrade over what's currently
+-- equipped (greens/whites/grays only -- see AUTO_EQUIP_MAX_QUALITY), returning
+-- { bag, slot, inventorySlot, itemLink, gain } or nil if nothing beats what's
+-- equipped. Only one at a time: equipping moves the old item into the bag,
+-- which fires another BAG_UPDATE_DELAYED, which re-runs this scan against the
+-- new equipped state -- simpler than reasoning about several swaps at once
+-- (e.g. two ring upgrades competing for the same finger slot). "Better" is
+-- strictly greater score, so ties never flip-flop.
+function FindBestEquipmentUpgrade()
+    local best = nil
+
+    for bag = 0, 4 do
+        for slot = 1, (C_Container.GetContainerNumSlots(bag) or 0) do
+            local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+            if itemInfo and itemInfo.hyperlink then
+                local itemLink = itemInfo.hyperlink
+                local candidateSlots, reason = GetAutoEquipCandidateSlots(itemLink, itemInfo.quality)
+                if not candidateSlots then
+                    AutoEquipDebugPrint("  " .. bag .. ":" .. slot .. " " .. itemLink .. " skipped: " .. reason)
+                else
+                    AutoEquipDebugPrint("  " .. bag .. ":" .. slot .. " " .. itemLink .. " is a candidate")
+                    local bagScore = GetItemEquipScore(itemLink)
+
+                    -- For rings, compare against whichever equipped ring is worse.
+                    local worstSlot, worstScore = nil, nil
+                    for _, inventorySlot in ipairs(candidateSlots) do
+                        local equippedScore = GetItemEquipScore(GetInventoryItemLink("player", inventorySlot))
+                        if worstScore == nil or equippedScore < worstScore then
+                            worstSlot, worstScore = inventorySlot, equippedScore
+                        end
+                    end
+
+                    local gain = bagScore - worstScore
+                    AutoEquipDebugPrint("    vs inventory slot " .. worstSlot .. " (score " .. worstScore ..
+                        "): gain " .. gain)
+                    if gain > 0 and (best == nil or gain > best.gain) then
+                        best = { bag = bag, slot = slot, inventorySlot = worstSlot, itemLink = itemLink, gain = gain }
+                    end
+                end
+            end
+        end
+    end
+
+    return best
+end
+
 -- True once LATENCY_HIGH_CYCLE_COUNT consecutive latency samples, one taken every
 -- LATENCY_CHECK_INTERVAL_SECONDS, have all read above LATENCY_HIGH_THRESHOLD_MS -- i.e.
 -- LATENCY_HIGH_CYCLE_COUNT * LATENCY_CHECK_INTERVAL_SECONDS = 10 sustained seconds of bad
@@ -1170,6 +1476,67 @@ function IsPlayerDiseased()
     return PlayerHasDebuffType("Disease")
 end
 
+-- Every class trainer spell the player should have learned by their current
+-- level and hasn't yet. Each class file holds its own trainer table
+-- (WARRIOR_TRAINER_SPELLS etc. -- distinct global names, since addon globals
+-- are one flat namespace) of { level, name, spellId, cost (copper) } entries.
+-- Matched by spell ID (rank-specific) rather than IsSpellKnownByName(), since
+-- a later rank of an already-known spell is still something to go train.
+-- There's no addon API for "what can I train" without a trainer window open,
+-- so these tables are hand-maintained -- a class with an empty/missing table
+-- reads as "nothing to train".
+local function GetClassTrainerSpells()
+    local _, classFile = UnitClass("player")
+
+    if classFile == "WARRIOR" then
+        return WARRIOR_TRAINER_SPELLS
+    elseif classFile == "SHAMAN" then
+        return SHAMAN_TRAINER_SPELLS
+    elseif classFile == "WARLOCK" then
+        return WARLOCK_TRAINER_SPELLS
+    end
+
+    return nil
+end
+
+-- Interval-cached (see CacheOnInterval) and shared by both G6/G7 below, so the
+-- two always refresh together off the same snapshot. Means a level-up or a
+-- trainer visit can take up to a minute to show up -- fine for goal-setting.
+local GetUnlearnedTrainerSpells = CacheOnInterval(function()
+    local unlearned = {}
+    local trainerSpells = GetClassTrainerSpells()
+    if not trainerSpells then
+        return unlearned
+    end
+
+    local playerLevel = UnitLevel("player")
+    for _, spell in ipairs(trainerSpells) do
+        if spell.level <= playerLevel and not PlayerKnowsSpellId(spell.spellId) then
+            table.insert(unlearned, spell)
+        end
+    end
+
+    return unlearned
+end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
+
+-- Packed into MultiBoolTwo's G6.
+function AllSkillsKnownForThisLevel()
+    return #GetUnlearnedTrainerSpells() == 0
+end
+
+-- Packed into MultiBoolTwo's G7. True when nothing's left to train, too.
+-- Uses the tables' base costs -- doesn't account for the trainer's
+-- reputation discount, so this can read false slightly early, never true
+-- when we actually can't afford it.
+function CanAffordToTrainAllSkills()
+    local totalCost = 0
+    for _, spell in ipairs(GetUnlearnedTrainerSpells()) do
+        totalCost = totalCost + spell.cost
+    end
+
+    return totalCost <= GetMoney()
+end
+
 -- HasRockbiterWeaponMainHand(), ShouldCastRockbiterWeapon(),
 -- ShouldCastLightningShield(), and ShouldCastFlameShock() moved to
 -- ShamanFunctions.lua.
@@ -1246,7 +1613,11 @@ end
 -- G5 (IsCombatStalemate(), YoyokazooUI.lua) is likewise a live game-state
 -- query -- in combat, but no damage/miss combat-log events involving us for
 -- COMBAT_STALEMATE_SECONDS, e.g. aggroed by a mob that can't path to us.
--- G6-G8 and the B byte are still fully reserved for future class-agnostic flags.
+-- G6 (AllSkillsKnownForThisLevel()) and G7 (CanAffordToTrainAllSkills()) feed
+-- the C# leveling-goal logic (WowLevelingConfigs.cs) -- see the class
+-- trainer tables those read. G8 (GearNeedsRepair()) is a weapon at yellow
+-- durability or any other piece broken. The G byte is now full; the B byte is
+-- still fully reserved for future class-agnostic flags.
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()
@@ -1265,8 +1636,11 @@ function GetMultiBoolTwo()
     local boolG3 = HasDesiredWorldBuff()
     local boolG4 = HasHighLatency()
     local boolG5 = IsCombatStalemate()
+    local boolG6 = AllSkillsKnownForThisLevel()
+    local boolG7 = CanAffordToTrainAllSkills()
+    local boolG8 = GearNeedsRepair()
 
-    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, false, false, false)
+    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
     return rByte/255.0, gByte/255.0, 0
 end

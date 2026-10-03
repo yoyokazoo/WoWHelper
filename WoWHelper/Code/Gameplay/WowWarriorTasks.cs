@@ -189,7 +189,7 @@ namespace WoWHelper
         // Fear-casters are worth opening on preemptively, rather than reacting once feared.
         public bool WarriorShouldOpenWithBerserkerRage()
         {
-            return WorldState.IsTargetFearCaster && !CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS);
+            return WorldState.IsTargetFearCaster && !GeneralHelpers.CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS);
         }
 
         // None of the WarriorShouldCastX checks below look at rage -- they only decide
@@ -313,7 +313,7 @@ namespace WoWHelper
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
 
             bool hpRecovered = WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD;
-            bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && potionIsCooledDown;
 
             if (battleReady)
@@ -341,17 +341,17 @@ namespace WoWHelper
                 return false;
             }
 
-            if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge && !classState.KnowsCharge) // no charge yet
+            if (LocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge && !classState.KnowsCharge) // no charge yet
             {
                 await WowInput.PressKey(WowInput.START_ATTACK);
                 await WalkIntoMeleeRangeTask(classState);
                 //await WowInput.PressKey(WowInput.START_ATTACK);
             }
-            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
+            else if (LocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
             {
                 await FaceAndChargeTarget();
             }
-            else if (FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
+            else if (LocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
                 if (!classState.WaitingToShoot)
                 {
@@ -375,20 +375,20 @@ namespace WoWHelper
         // WowWarriorClassState.
         public bool WarriorCanEngageTarget(WowWarriorClassState classState)
         {
-            switch (FarmingConfig.EngageMethod)
+            switch (LocationConfiguration.EngageMethod)
             {
                 case WowLocationConfiguration.EngagementMethod.Charge:
                     {
                         if (!classState.KnowsCharge && classState.CanChargeTarget)
                         {
-                            return FindTargetMarkerOnScreen() != null;
+                            return WowScreenCapture.FindTargetMarkerOnScreen(ScreenConfiguration) != null;
                         }
                         return classState.CanChargeTarget;
                     }
                 case WowLocationConfiguration.EngagementMethod.Pull: return classState.CanShootTarget;
                 default: throw new System.NotImplementedException(
-                    $"{nameof(WarriorCanEngageTarget)}: EngageMethod \"{FarmingConfig.EngageMethod}\" (from location " +
-                    $"\"{FarmingConfig.LocationConfiguration?.Title}\") isn't supported for Warrior -- only Charge/Pull " +
+                    $"{nameof(WarriorCanEngageTarget)}: EngageMethod \"{LocationConfiguration.EngageMethod}\" (from location " +
+                    $"\"{LocationConfiguration?.Title}\") isn't supported for Warrior -- only Charge/Pull " +
                     $"are. This route's EngageMethod likely wasn't set up for this class -- see " +
                     $"WowConfigResolutionTasks.ResolveFarmingConfigurationTask.");
             }
@@ -417,7 +417,7 @@ namespace WoWHelper
         public async Task<bool> WarriorUseDiamondFlaskTask()
         {
             bool shouldUseDiamondFlask = WorldState.AttackerCount > 1 &&
-                !CurrentTimeInsideDuration(HealingTrinketTime, WowGameplayConstants.DIAMOND_FLASK_COOLDOWN_MILLIS);
+                !GeneralHelpers.CurrentTimeInsideDuration(HealingTrinketTime, WowGameplayConstants.DIAMOND_FLASK_COOLDOWN_MILLIS);
 
             if (shouldUseDiamondFlask)
             {

@@ -19,7 +19,7 @@ namespace WoWHelper
         // the addon, exact match. Present (this exact color) means the addon is loaded
         // and the rest of the row is real; anything else -- including whatever's really
         // at this screen position when the addon isn't rendering, e.g. the login screen
-        // -- means OnLoginScreen. Replaces the old text/UI pixel-signature match against
+        // -- means !WowWorldState.AddonLoaded. Replaces the old text/UI pixel-signature match against
         // login-screen-specific colors.
         public static readonly Color ADDON_LOADED_COLOR = Color.FromArgb(96, 255, 117);
 

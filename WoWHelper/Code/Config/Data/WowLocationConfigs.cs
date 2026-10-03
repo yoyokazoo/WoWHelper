@@ -757,6 +757,19 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.29f, 62.22f),
                 new Vector2(45.49f, 64.54f),
             },
+
+            MerchantConfig = new WowMerchantConfiguration
+            {
+                Name = "Duokna",
+                Waypoints = new List<Vector2>
+                {
+                    new Vector2(44.19f, 66.23f),
+                    new Vector2(43.82f, 66.78f),
+                    new Vector2(43.72f, 67.81f),
+                    new Vector2(43.10f, 67.61f),
+                    new Vector2(42.58f, 67.35f),
+                },
+            },
         };
 
         #endregion

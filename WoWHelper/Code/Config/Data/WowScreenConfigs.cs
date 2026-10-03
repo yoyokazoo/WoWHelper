@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using WindowsGameAutomationTools.ImageDetection;
 
 namespace WoWHelper.Code.Config
@@ -11,6 +12,18 @@ namespace WoWHelper.Code.Config
     public class WowScreenConfigs
     {
         private const int RESOLUTION_MATCH_TOLERANCE = 5;
+
+        public static WowScreenConfiguration GetForPrimaryScreen()
+        {
+            int width = Screen.PrimaryScreen.Bounds.Width;
+            int height = Screen.PrimaryScreen.Bounds.Height;
+
+            if (width == 1920 && height == 1080) return RESOLUTION_1920_X_1080;
+            if (width == 3440 && height == 1440) return RESOLUTION_3440_X_1440;
+            if (width == 2560 && height == 1600) return RESOLUTION_2560_X_1600;
+
+            throw new Exception($"No screen config for resolution {width}x{height}!");
+        }
 
         public static WowScreenConfiguration GetForBitmap(Bitmap bitmap)
         {

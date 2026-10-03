@@ -99,6 +99,19 @@ namespace WoWHelper
         // the logout states while combat never drops.
         public bool CombatStalemate { get; private set; }
 
+        // Decoded from MultiBoolTwo's G byte, b6/b7. Whether the player has trained every
+        // class skill available at their current level, and whether they have enough money
+        // to train everything still missing (also true when nothing's missing). Both come
+        // from hand-maintained per-class trainer tables in the addon (WARRIOR_TRAINER_SPELLS
+        // etc.). Inputs to the leveling-goal logic built on WowLevelingConfigs.cs.
+        public bool AllSkillsKnownForThisLevel { get; private set; }
+        public bool CanAffordToTrainAllSkills { get; private set; }
+
+        // Decoded from MultiBoolTwo's G byte, b8. A melee weapon at yellow durability or
+        // worse, or any other equipped piece at red (broken) -- see GearNeedsRepair() in
+        // WoWFunctions.lua. Refreshed by the addon only once a minute.
+        public bool GearNeedsRepair { get; private set; }
+
         // Which of the three bot-supported classes the player is playing, decoded from
         // MultiBoolOne's B byte (b2/b4 -- see GetMultiBoolOne() in WoWFunctions.lua) for
         // Warrior/Shaman, plus MultiBoolTwo's R4 (see UpdateMultiBoolTwo below) for
@@ -111,29 +124,33 @@ namespace WoWHelper
         // WowCombatConfiguration rather than a separate "player class" enum since the two
         // are currently exactly 1:1 (each supported class has exactly one rotation).
         // Used by WowPlayer.ResolveFarmingConfigurationTask to auto-pick
-        // FarmingConfig.CombatConfiguration at startup instead of it being hardcoded.
+        // CombatConfiguration at startup instead of it being hardcoded.
         public WowCombatConfiguration? PlayerClass { get; private set; }
 
+        // Red Error Text in middle of screen
         public bool FacingWrongWay { get; private set; }
         public bool TooFarAway { get; private set; }
         public bool TargetNeedsToBeInFront { get; private set; }
         public bool InvalidTarget { get; private set; }
         public bool OutOfRange { get; private set; }
-        // "Target not in line of sight" red toast. Only wired up for 3440x1440 so far
-        // (see NotInLineOfSightPositions on WowScreenConfiguration) -- always false on
-        // resolutions that haven't had their positions captured yet.
         public bool NotInLineOfSight { get; private set; }
-        // "No path available" red toast -- the pathing-failure sibling of NotInLineOfSight
-        // (e.g. Charge can't route to the target). Also 3440x1440-only so far, see
-        // NoPathAvailablePositions.
         public bool NoPathAvailable { get; private set; }
-        // Either toast means the same thing for our purposes: the target we picked can't be
-        // reached from where we're standing, so give up on it (see
-        // AbandonUnreachableEngageTarget / MeleeMakeSureWeAreAttackingEnemyTask in
-        // WowCommonCombatTasks.cs). Consumers should read this rather than either flag alone
-        // so both toasts always get identical handling.
         public bool TargetUnreachable => NotInLineOfSight || NoPathAvailable;
-        public bool OnLoginScreen { get; private set; }
+
+        // Pixel-row index 0 reads exactly ADDON_LOADED_COLOR -- the addon is loaded and
+        // rendering the row, so the rest of it is meaningful. See UpdateAddonLoaded.
+        public bool AddonLoaded { get; private set; }
+
+        // Whether the WoW client window was the OS foreground window at capture time --
+        // i.e. it's the window actually receiving our keyboard/mouse input, and nothing is
+        // covering the screen area we capture. Only set by a live capture
+        // (GetWoWWorldState); stays false for bitmap-only updates (tests).
+        public bool WowWindowHasFocus { get; private set; }
+
+        // Both of the above: the capture is of WoW, and the addon's pixel row in it is
+        // real. Everything decoded off the row is garbage unless this is true.
+        public bool IsBotInAValidState => AddonLoaded && WowWindowHasFocus;
+
         public bool Underwater { get; private set; }
 
         public Bitmap Bmp { get; private set; }
@@ -153,39 +170,36 @@ namespace WoWHelper
             AttackerCount = -1;
             PlayerLevel = -1;
             ScreenConfig = screenConfig;
-
-            //TesseractEngineSingleton.Instance.SetVariable("tessedit_char_whitelist", "0123456789-.");
         }
 
         public static WowWorldState GetWoWWorldState(WowScreenConfiguration screenConfig)
         {
             WowWorldState currentState = new WowWorldState(screenConfig);
 
+            System.IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
+            currentState.WowWindowHasFocus = wowHandle != System.IntPtr.Zero && ScreenCapture.GetForegroundWindow() == wowHandle;
+
             currentState.Bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(screenConfig.CaptureRectangle);
             currentState.UpdateFromBitmap(currentState.Bmp);
-            //wowBitmap.Dispose(); // TODO: Implement IDisposable
 
             return currentState;
         }
 
         public void UpdateFromBitmap(Bitmap bmp)
         {
+            UpdateAddonLoaded(bmp);
+            if (!AddonLoaded)
+            {
+                return;
+            }
+
             Initialized = true;
-
-            // Checked first (pixel-row index 0) -- if the addon isn't rendering, the rest
-            // of the row is garbage, so this is the one decode everything else implicitly
-            // depends on being meaningful.
-            UpdateOnLoginScreen(bmp);
-
             UpdateMapX(bmp);
             UpdateMapY(bmp);
             PlayerLocation = new Vector2(MapX, MapY);
             UpdateFacingDegrees(bmp);
 
-            // UpdateMultiBoolOne must run before UpdateMultiBoolTwo -- the latter can
-            // override PlayerClass to Warlock (see UpdateMultiBoolTwo below), which
-            // depends on UpdateMultiBoolOne having already set it (to null, since none
-            // of the three class bits it owns will be set for a Warlock).
+            PlayerClass = null;
             UpdateMultiBoolOne(bmp);
             UpdateMultiBoolTwo(bmp);
             UpdateMultiIntOne(bmp);
@@ -196,23 +210,10 @@ namespace WoWHelper
             UpdateBreathBar(bmp);
         }
 
-        // Returns the R component of the color
-        public static int GetIntFromColor(Color color)
-        {
-            return color.R * 255 + color.G;
-        }
-
-        // Returns the R component as the whole number part, and the G component as the fractional part.
-        // Only works for numbers <= 255.99
+        // Returns the R and G component as the whole number part, and the B component as the fractional part.
         public static float GetFloatFromColor(Color color)
         {
             return color.R * 255.0f + color.G + (color.B / 255.0f);
-        }
-
-        // Return true if color is exactly green, false otherwise
-        public static bool GetBoolFromColor(Color color)
-        {
-            return color.R == 0 && color.G == 255 && color.B == 0;
         }
 
         public static void DecodeByte(
@@ -295,10 +296,6 @@ namespace WoWHelper
             {
                 PlayerClass = WowCombatConfiguration.Shaman;
             }
-            else
-            {
-                PlayerClass = null;
-            }
 
             // b5-b8 -- fully packs the byte (see GetMultiBoolOne() in WoWFunctions.lua).
             PlayerIsPoisoned = b5;
@@ -313,9 +310,9 @@ namespace WoWHelper
         // the R byte so far -- R7-R8 are still reserved. G1 (LogoutOnLowDynamiteEnabled),
         // G2 (LogoutOnFullBagsEnabled), and G3 (HasDesiredWorldBuff) are packed into the
         // previously-unused G byte instead of continuing into R7/R8, followed by G4
-        // (HighLatency) and G5 (CombatStalemate) -- G6-G8 and the B byte are still
-        // reserved for future class-agnostic flags (see GetMultiBoolTwo() in
-        // WoWFunctions.lua).
+        // (HighLatency), G5 (CombatStalemate), G6 (AllSkillsKnownForThisLevel), and G7
+        // (CanAffordToTrainAllSkills), and G8 (GearNeedsRepair) -- the B byte is still
+        // reserved for future class-agnostic flags (see GetMultiBoolTwo() in WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
@@ -325,9 +322,6 @@ namespace WoWHelper
             LogoffMobSeen = r2;
             IsCurrentlySkinning = r3;
 
-            // Overrides PlayerClass (set to null by UpdateMultiBoolOne, since none of its
-            // three class bits will be set for a Warlock) rather than duplicating the
-            // "exactly one true" logic across two bytes -- see the comment on PlayerClass.
             if (r4)
             {
                 PlayerClass = WowCombatConfiguration.Warlock;
@@ -336,13 +330,16 @@ namespace WoWHelper
             IsTargetBleedImmune = r5;
             IsTargetFearCaster = r6;
 
-            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out _, out _, out _);
+            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
 
             LogoutOnLowDynamiteEnabled = g1;
             LogoutOnFullBagsEnabled = g2;
             HasDesiredWorldBuff = g3;
             HighLatency = g4;
             CombatStalemate = g5;
+            AllSkillsKnownForThisLevel = g6;
+            CanAffordToTrainAllSkills = g7;
+            GearNeedsRepair = g8;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)
@@ -377,12 +374,13 @@ namespace WoWHelper
         // Index 0 of the pixel row is a fixed sentinel the addon paints, exactly
         // ADDON_LOADED_COLOR. If it's there, the addon is loaded and the rest of the row
         // is real; any other color -- including whatever's actually at this screen
-        // position when the addon isn't rendering, e.g. the login screen -- means
-        // OnLoginScreen. Replaces the old text/UI pixel-signature match.
-        public void UpdateOnLoginScreen(Bitmap bmp)
+        // position when the addon isn't rendering, e.g. the login screen, or another
+        // window covering WoW -- means !AddonLoaded. Replaces the old text/UI
+        // pixel-signature match.
+        public void UpdateAddonLoaded(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.AddonLoadedPosition.X, ScreenConfig.AddonLoadedPosition.Y);
-            OnLoginScreen = !(color.R == WowScreenConfiguration.ADDON_LOADED_COLOR.R
+            AddonLoaded = (color.R == WowScreenConfiguration.ADDON_LOADED_COLOR.R
                 && color.G == WowScreenConfiguration.ADDON_LOADED_COLOR.G
                 && color.B == WowScreenConfiguration.ADDON_LOADED_COLOR.B);
         }

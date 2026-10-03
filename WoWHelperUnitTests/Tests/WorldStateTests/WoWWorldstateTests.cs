@@ -67,12 +67,12 @@ namespace WoWHelperUnitTests
         */
 
         [TestMethod]
-        [DataRow(true, "..\\..\\Source Images\\new login screen.bmp")]
-        public void VerifyOnLoginScreen(bool expected, string fileName)
+        [DataRow(false, "..\\..\\Source Images\\new login screen.bmp")]
+        public void VerifyAddonLoaded(bool expected, string fileName)
         {
             LoadPlayer(fileName);
 
-            Assert.AreEqual(expected, Player.WorldState.OnLoginScreen);
+            Assert.AreEqual(expected, Player.WorldState.AddonLoaded);
         }
 
         [TestMethod]

@@ -63,7 +63,7 @@ see "Adding a new pixel" below):
 
 | Index | Content | Decoded into |
 |---|---|---|
-| 0 | Fixed sentinel, exactly `ADDON_LOADED_COLOR` (96, 255, 117) | `WowWorldState.OnLoginScreen` (inverted — see below) |
+| 0 | Fixed sentinel, exactly `ADDON_LOADED_COLOR` (96, 255, 117) | `WowWorldState.AddonLoaded` (see below) |
 | 1 | Map X (float) | `WowWorldState.MapX` |
 | 2 | Map Y (float) | `WowWorldState.MapY` |
 | 3 | Facing degrees (float) | `WowWorldState.FacingDegrees` |
@@ -71,7 +71,7 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G5 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate` |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G8 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -81,12 +81,22 @@ call and the corresponding C# `Update...` method); packed ints use a raw
 0-255 value per channel. Index 0 is the one exception — a plain exact-color
 match (`WowScreenConfiguration.ADDON_LOADED_COLOR`), not one of the schemes
 above: if the pixel is exactly that color, the addon is loaded and rendering
-the row (so the rest of it is meaningful) and `OnLoginScreen` is false;
+the row (so the rest of it is meaningful) and `AddonLoaded` is true;
 *any* other color — including whatever's actually on-screen at that position
-when the addon isn't loaded — means `OnLoginScreen` is true. This replaced an
+when the addon isn't loaded, or another window covering WoW — means
+`AddonLoaded` is false. This replaced an
 older, unrelated mechanism (a multi-point text/UI pixel-signature match
 against login-screen-specific colors) since folding it into the row is more
-reliable than matching login-screen chrome. Separately, **text/UI state
+reliable than matching login-screen chrome. Since a covered WoW window also
+hides the sentinel, `AddonLoaded` alone can't tell "logged out" from "lost
+focus" — so `WowWorldState` also carries `WowWindowHasFocus` (the WoW window
+was the OS foreground window at capture time, checked in `GetWoWWorldState`
+only — false for bitmap-only test updates), and `IsBotInAValidState`
+(`AddonLoaded && WowWindowHasFocus`) is what gates reading anything else off
+the row (`EveryWorldStateUpdateTasks()`'s early-return, `FocusOnWindowTask`,
+the combat short-circuit in `CoreGameplayLoopTask`). "Actually logged out"
+(the disconnect alert, `CheckIfLoggedOutTask`) is
+`WowWindowHasFocus && !AddonLoaded`. Separately, **text/UI state
 matched by exact pixel signature** (trade window, breath bar, red error toast
 text) is still its own unrelated mechanism — resolution-specific coordinates
 in `WowScreenConfigs.cs`, compared via `ImageMatchColorPositions.MatchesSourceImage`,
@@ -129,14 +139,16 @@ needs them. An empty/unset `ExpectedMobNames` makes
 `AllMobsInZoneAreNatureImmune()` return `false` rather than vacuously `true`.
 
 **Automatic farming-config resolution:** there's no static "current config"
-singleton anymore -- `WowFarmingConfigs.cs`/`CURRENT_CONFIG` were removed;
-`WowPlayer`'s constructor builds its own `FarmingConfig` directly
-(`new WowFarmingConfiguration { ScreenConfiguration = screenConfiguration }`)
-instead of pulling a shared static instance (there's no `ManagementConfiguration`
+singleton anymore -- `WowFarmingConfigs.cs`/`CURRENT_CONFIG` were removed,
+and so was the `WowFarmingConfiguration` wrapper that replaced it: `WowPlayer`
+holds `LocationConfiguration`, `CombatConfiguration` and `ScreenConfiguration`
+as three plain properties of its own (there's no `ManagementConfiguration`
 anymore either — see the `Config/` bullet in the C# architecture section
-above). `LocationConfiguration` and `CombatConfiguration` are never hardcoded
-there; both start out `null`/`WowCombatConfiguration.Unknown` (see
-`WowFarmingConfiguration`'s constructor) and get resolved by two independent
+above). `ScreenConfiguration` is picked from the monitor resolution
+(`WowScreenConfigs.GetForPrimaryScreen()`) or passed into `WowPlayer`'s
+constructor. `LocationConfiguration` and `CombatConfiguration` are never
+hardcoded; both start out `null`/`WowCombatConfiguration.Unknown` (see
+`WowPlayer`'s constructor) and get resolved by two independent
 mechanisms in
 `WowConfigResolutionTasks.cs`, deliberately split apart (they used to be one
 method run only from `PlayerState.RESOLVE_FARMING_CONFIGURATION`) because
@@ -173,7 +185,7 @@ that state can be skipped entirely — see below:
   re-resolves it if that happens; code that reads `LocationConfiguration`
   either runs somewhere that short-circuit can't reach mid-combat, or (like
   the level-up-alert block in `EveryWorldStateUpdateTasks()`) guards on
-  `FarmingConfig.LocationConfiguration != null` first. `SetLogoutVariablesTask()`
+  `LocationConfiguration != null` first. `SetLogoutVariablesTask()`
   does not guard, so it would throw if reached in that state — a known gap,
   not yet fixed.
 
@@ -214,7 +226,7 @@ across two bytes. C# decodes these into `WowWorldState.PlayerClass` (nullable
 `WowCombatConfiguration` — null if none of the four bits are set, i.e. an
 unsupported class or the addon isn't rendering a real row yet), which
 `WowPlayer.ResolveFarmingConfigurationTask` uses to set
-`FarmingConfig.CombatConfiguration` automatically at startup — see "Automatic
+`CombatConfiguration` automatically at startup — see "Automatic
 farming-config resolution" below.
 
 Bits 5-8 carry `IsPlayerPoisoned`/`IsPlayerDiseased` (from `PlayerHasDebuffType()`
@@ -355,7 +367,7 @@ shore) — combat never drops, nothing ever hits, and the class combat loops
 consumer in `EveryWorldStateUpdateTasks()` can't just set `LogoutTriggered`
 like `LogoffMobSeen`/`HighLatency` do (the logout states are only reachable
 once combat drops) — it sets it, Slack-alerts, presses the logout macro
-itself via `StartLogoutTask()`, and then polls for `OnLoginScreen` right
+itself via `StartLogoutTask()`, and then polls for `!AddonLoaded` right
 there (up to `WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS`, 45s)
 before `Environment.Exit`, rather than returning to the combat loop — whose
 scoot-backwards/re-face handling would move the character and cancel the
@@ -366,8 +378,40 @@ and falls through; `LogoutTriggered` stays set, so the normal
 `CHECK_FOR_LOGOUT` path finishes the job once combat drops.
 `COMBAT_STALEMATE_DEBUG` (a local in
 `YoyokazooUI.lua`) prints every counted activity event, for checking
-in-game which subevents actually fire during a stalemate. G6-G8 and the B
-byte are still reserved for the next class-agnostic bool.
+in-game which subevents actually fire during a stalemate.
+
+G6 is `WowWorldState.AllSkillsKnownForThisLevel` and G7 is
+`CanAffordToTrainAllSkills` (both `WoWFunctions.lua`) — inputs for the
+leveling-goal logic built on `WowLevelingConfigs.cs` (see the `Config/`
+bullet below). There's no addon API for "what can I train" without a trainer
+window open, so both read hand-maintained per-class tables
+(`WARRIOR_TRAINER_SPELLS`/`SHAMAN_TRAINER_SPELLS`/`WARLOCK_TRAINER_SPELLS`,
+one per class file, entries `{ level, name, spellId, cost }`): any entry
+with `level <= UnitLevel("player")` whose rank-specific `spellId` isn't
+known (`IsPlayerSpell`) is unlearned; G7 compares their summed copper cost
+against `GetMoney()` (base cost, ignoring trainer rep discounts; true when
+nothing's unlearned). Only Warrior levels 1-2 are filled in so far (Battle
+Shout); Shaman/Warlock tables are empty, so they always read "all known".
+G8 is `WowWorldState.GearNeedsRepair` (`GearNeedsRepair()`,
+`WoWFunctions.lua`): true if a melee weapon (main hand, or an off-hand
+*weapon* — shields count as armor) is at "yellow" durability or worse
+(`DURABILITY_YELLOW_RATIO`, 25% — our approximation of the durability doll's
+yellow, not exposed by the API), or any other equipped piece (armor, shield,
+ranged) is "red" (0 durability/broken). `GEAR_REPAIR_DEBUG` prints per-slot
+durability on each refresh. Nothing on the C# side consumes it yet. The G
+byte is now full; the B byte is still reserved for the next class-agnostic
+bool.
+
+**Rare-change state is interval-cached.** `AreBagsFull`,
+`AreWeLowOnHealthPotions`/`Dynamite`/`Ammo`, `GearNeedsRepair`, and the
+trainer-spell scan behind G6/G7 (`GetUnlearnedTrainerSpells`, shared so the
+two always refresh together) are all wrapped in `CacheOnInterval()` (top of
+`WoWFunctions.lua`): computed on the first call (startup), then at most once
+every `RARE_STATE_REFRESH_INTERVAL_SECONDS` (60s), returning the cached value
+in between rather than recomputing on the pixel row's ~50ms cadence. So any
+of these can lag reality by up to a minute (e.g. after a level-up, trainer
+visit, vendor sell, or `/yyconfig` item-selector change). Put the next flag
+of this kind behind the same helper.
 `ClassBoolTwo`'s
 R-byte bit 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
@@ -400,7 +444,7 @@ in `ShamanFunctions.lua`, `GetWarlockClassBoolOne` in `WarlockFunctions.lua`)
 — so the *same* pixel/bit position means something different depending on
 which class is playing. On the C# side, `WowPlayer.ClassState` (a
 `WowClassState` subtype — see the C# architecture section) decodes the
-matching bits, selected once from `FarmingConfig.CombatConfiguration` —
+matching bits, selected once from `CombatConfiguration` —
 itself auto-set at startup from the player's detected class (see "Automatic
 farming-config resolution" below), not hardcoded. Note
 `CanSpellcastPullTarget()` stays in `WoWFunctions.lua` rather than being
@@ -426,12 +470,12 @@ spell and the target doesn't already have that DoT on it -- same
 name-matched-against-`TargetHasDebuffSpellName()` pattern Shaman's
 `ShouldCastFlameShock`/`TargetHasFlameShock` use); R6-R8, `ClassBoolTwo`, and
 `ClassIntOne` are still fully reserved. The rest of the dispatch wiring (enum
-value, `CreateClassState`, all six
+value, `WowClassState.Create`, all six
 `WowPlayerCombatConfig.cs` switches, the `MultiBoolTwo` R4 class-detect bit)
 is also in place.
 
-The `Screen.PrimaryScreen.Bounds`-based per-resolution config in
-`WowFarmingConfiguration` still selects a `WowScreenConfiguration`, but that
+The `Screen.PrimaryScreen.Bounds`-based per-resolution lookup
+(`WowScreenConfigs.GetForPrimaryScreen()`) still selects a `WowScreenConfiguration`, but that
 now only matters for the screen-capture crop size and the text/UI-signature
 matchers above — the pixel-row positions themselves are the same on every
 resolution.
@@ -463,7 +507,7 @@ of truth — edits should be made here, not in the WoW install directory.
   a Warrior-only field and silently getting stale data), each class gets its
   own concrete subtype exposing *only* its own fields — a wrong-class field
   reference is a compile error, not a runtime surprise. `WowPlayer.ClassState`
-  holds the one built for `FarmingConfig.CombatConfiguration` — `null` until
+  holds the one built for `CombatConfiguration` — `null` until
   `ResolveCombatConfiguration()` sets that from the player's detected class
   and builds the matching subtype (see "Automatic farming-config resolution"
   above) — and updates it (in place, same instance — no `PreviousClassState`
@@ -490,7 +534,13 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`Gameplay/WowPathfinding.cs`** — pure-math helpers for waypoint following
   (facing/turn-direction math, angle tolerance that tightens near a waypoint,
   lateral-distance-from-path calc). No side effects, unit-testable.
-- **Target-marker screen tracking** (`WowPlayer.FindTargetMarkerOnScreen`,
+- **`Gameplay/WowScreenCapture.cs`** — stateless static screen-scraping helpers
+  that capture beyond `WowWorldState`'s small per-tick pixel-row crop:
+  `FindTargetMarkerOnScreen` (full-screen target-marker search, see below) and
+  `CreateHeatmapForLooting` (frame-diffs the loot region and returns the point
+  to click — `WowPlayer` stores it into `LootX`/`LootY`). Each takes the
+  `WowScreenConfiguration` it needs rather than reading `WowPlayer` state.
+- **Target-marker screen tracking** (`WowScreenCapture.FindTargetMarkerOnScreen`,
   `WowMovementTasks.cs`) — there's no addon-legal way to read a target's
   actual position/bearing/distance in this client (`UnitPosition`,
   `C_Map.GetPlayerMapPosition`, and nameplate frame measurement are all
@@ -557,9 +607,10 @@ of truth — edits should be made here, not in the WoW install directory.
   farming-config resolution" above) and per-resolution screen pixel maps
   (`WowScreenConfigs.cs`). There's no separate farming-profile config file
   anymore either — `WowFarmingConfigs.cs`/`CURRENT_CONFIG` were removed;
-  `WowPlayer` builds its own `FarmingConfig` (a `WowFarmingConfiguration`)
-  directly in its constructor instead, with `LocationConfiguration`/
-  `CombatConfiguration` resolved at runtime, not set on any static instance.
+  `WowPlayer` holds `LocationConfiguration`/`CombatConfiguration`/
+  `ScreenConfiguration` as its own properties instead, with the first two
+  resolved at runtime, not set on any static instance. The
+  `WowCombatConfiguration` enum lives in `Config/Definitions/WowCombatConfiguration.cs`.
   There's no management/alert-toggle config anymore either —
   `WowManagementConfiguration`/`WowManagementConfigs.cs` were removed;
   `AlertOnPotionUsed`/`AlertOnFullBags`/`AlertOnUnreadWhisper` always fired
@@ -570,7 +621,20 @@ of truth — edits should be made here, not in the WoW install directory.
   never lived there to begin with — those are run-specific, toggled live via
   the addon's `/yyconfig` menu instead — see the `MultiBoolTwo` G1/G2 note in
   the color-encoding contract above. `Config/Definitions/` holds the POCOs
-  these configs are instances of. Each `WowLocationConfiguration` carries a
+  these configs are instances of. `WowLevelingConfigs.cs` (instances of
+  `WowLevelingConfiguration`) is a per-level leveling plan: the
+  `LocationConfigs` acceptable for gaining XP/money at that level (one entry
+  spans every starting zone — the goal logic picks by matching each
+  location's `Zone` to `WorldState.CurrentZone`) and `TrainerConfigs`
+  (stubbed as plain name strings for now), looked up via
+  `WowLevelingConfigs.GetFor(class, level)`. `Class` defaults to `null`
+  (any class); a class-specific entry is possible and `GetFor` prefers it
+  over an any-class one at the same level, but class differences should be
+  pushed into the addon where possible (e.g. the per-class trainer tables
+  behind G6/G7). Only levels 1-2 exist so far (both any-class), and nothing
+  reads it yet — the goal-setting logic (train vs. grind
+  for money vs. grind for XP, off the `MultiBoolTwo` G6/G7 bits) is still to
+  be written. Each `WowLocationConfiguration` carries a
   `Title`
   (human-readable, includes the minimum level), `MinimumLevel`, and `Zone`
   (`WowZone` enum, `WowLocationConfiguration.cs`) — see the zone ID
@@ -607,7 +671,7 @@ of truth — edits should be made here, not in the WoW install directory.
   via `MoveTowardsPointTask` (the same rotate/strafe/walk logic
   `MoveTowardsWaypointTask` uses for the main route, extracted to take an
   arbitrary point/tolerance instead of always reading
-  `FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex]`), with
+  `LocationConfiguration.Waypoints[CurrentWaypointIndex]`), with
   every leg but the final one using `MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE`
   and the final approach using the much tighter
   `MERCHANT_FINAL_WAYPOINT_TOLERANCE` — the final waypoint is exactly where
@@ -616,7 +680,7 @@ of truth — edits should be made here, not in the WoW install directory.
   testing, its `/stopmacro [mod:shift]`/`/stopmacro [nomod]` lines mean a
   ctrl-press already falls through to its `/target` line with no macro
   changes needed) and right-clicks screen center
-  (`FarmingConfig.ScreenConfiguration.LootDefaultX/Y`, the same point loot
+  (`ScreenConfiguration.LootDefaultX/Y`, the same point loot
   corpses are clicked at) to open the vendor, so it only works if the bot
   actually stopped right on top of the merchant. `WAITING_FOR_AUTO_SELL`
   then waits `MERCHANT_AUTO_SELL_WAIT_MILLIS` (15s) via the existing
@@ -676,10 +740,19 @@ of truth — edits should be made here, not in the WoW install directory.
   (rare — would mean a mob reached the player at the vendor) the bot still
   walks back once the wait ends; bags may remain full, but the branch-off
   check above will simply retry on the route's next lap.
+  **Timeout**: branch-off stamps `WowPlayer.MerchantRunStartTime`; if
+  `IsOnMerchantRun` is still true `WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS`
+  (5 min, wall-clock from branch-off, combat time included) later,
+  `PathfindingLoopTask` sets `LogoutTriggered`/`LogoutReason` (naming the
+  phase it got stuck in) and returns, same as the stuck-on-terrain give-up.
+  The check sits at the top of the `IsOnMerchantRun` block, so it's only
+  evaluated while pathfinding runs — a timeout that elapses mid-combat fires
+  on the first pathfinding tick after combat ends.
 - **`Constants/`** — `WowInput.cs` maps logical actions to keybinds/macros the
   bot presses (expects specific in-game keybinds/macros to be set up to match),
   `WowPlayerConstants.cs` / `WowGameplayConstants.cs` hold thresholds/timings.
 - **`Shared/`** — `KeyPoller` (global ESC-to-stop hotkey + cleanup),
+  `GeneralHelpers` (stateless `ChangeStateBasedOnTaskResult`/`CurrentTimeInsideDuration`),
   `BitmapDifferenceVisualizer` (loot-heatmap detection by diffing frames to
   find where a loot corpse/sparkle is), `PathSubdivision` (splits long waypoint
   legs into shorter hops), `TessaractSingleton` (shared Tesseract OCR engine,
@@ -953,6 +1026,35 @@ of truth — edits should be made here, not in the WoW install directory.
   reading source alone (same caveat as every other WoW Lua API call in this
   addon, per the top of this file) — confirm live via `AUTO_SELL_DEBUG`
   rather than guessing if repair behaves unexpectedly.
+
+  Also auto-equips armor upgrades from bags: `EquipBestUpgradeIfBetter()`
+  (`YoyokazooUI.lua`) equips the single best upgrade found by
+  `FindBestEquipmentUpgrade()` (`WoWFunctions.lua`) via `EquipItemByName`,
+  gated by the `/yyconfig` "Auto-equip upgrades" checkbox
+  (`YoyokazooUIDB.autoEquipUpgrades`, `IsAutoEquipUpgradesEnabled()`,
+  defaults **on**). Only quality 0-2 (gray/white/green) —
+  `AUTO_EQUIP_MAX_QUALITY` — never blues/purples; only the armor slots in
+  `AUTO_EQUIP_SLOTS_BY_EQUIP_LOC` (head/neck/shoulder/chest/waist/legs/feet/
+  wrist/hands/rings/cloak — weapons, shields, ranged and trinkets are
+  deliberately left manual); required level must be met and the armor
+  type's proficiency passive known (`ARMOR_PROFICIENCY_SPELL_BY_SUBCLASS`,
+  via `IsPlayerSpell`). "Better" = strictly higher `GetItemEquipScore()`, a
+  per-class weighted sum over `GetItemStats()` (`AUTO_EQUIP_STAT_WEIGHTS`);
+  rings compare against whichever equipped ring scores worse. One item per
+  call — the equip fires `BAG_UPDATE_DELAYED`, which (debounced 0.5s,
+  `ScheduleAutoEquipScan()`) re-runs it, as do `PLAYER_REGEN_ENABLED` and
+  `MERCHANT_CLOSED`. Skipped in combat, while dead, and **while a merchant
+  is open** — the auto-sell queue is bag/slot positions, and equipping drops
+  the old item into the upgrade's bag slot, which the sell chain could then
+  sell. The bind-on-equip popup is auto-accepted
+  (`EQUIP_BIND_CONFIRM` → `EquipPendingItem(slot)` — there's no
+  `AUTOEQUIP_BIND_CONFIRM` on this client, registering it throws;
+  deferred a frame like `ConfirmLootSlot`) only within 2s of an equip this
+  code started, so manual equips still prompt. `GetItemStats()` key names
+  and the bind-confirm event args aren't verified live yet —
+  `AUTO_EQUIP_DEBUG` (`WoWFunctions.lua`, off by default) prints the raw
+  stats/scores/skip reasons, and `/yyequip` is a dry run with it forced on.
+  Lua-only; nothing reaches the pixel row.
 
 ## Tests (`WoWHelperUnitTests/`)
 

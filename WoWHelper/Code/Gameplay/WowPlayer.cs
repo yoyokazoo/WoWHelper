@@ -7,100 +7,67 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
 using WoWHelper.Code;
+using WoWHelper.Code.Config;
 using WoWHelper.Code.Gameplay;
 using WoWHelper.Code.WorldState;
-using static WoWHelper.Code.Gameplay.WowFarmingConfiguration;
 using static WoWHelper.Code.WowPlayerStates;
 
 namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        // TODO: add task to zoom out and point camera down
-
-        // TODO: write custom getters/setters for these so we can keep checking the time until they're off cooldown,
-        // then use the cached value until they get dirtied again?
         public long FarmStartTime { get; private set; }
         public long LastFindTargetTime { get; private set; }
-        // Set whenever an engage attempt bails because WorldState.TargetUnreachable was true
-        // (the "not in line of sight" or "no path available" toast)
-        // (see AbandonUnreachableEngageTarget in WowCommonCombatTasks.cs). Defaults to 0, so
-        // CurrentTimeInsideDuration is false and nothing is suppressed until the first
-        // bailout. PathfindingLoopTask checks this to avoid immediately re-acquiring the
-        // same unreachable target -- see LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS.
         public long LastLineOfSightBailoutTime { get; private set; }
         public long LastJumpTime { get; private set; }
         public long DynamiteTime { get; private set; }
         public long HealthPotionTime { get; private set; }
-        public long HealingTrinketTime { get; private set; } // and Diamond Flask
+        public long HealingTrinketTime { get; private set; }
         public long BerserkerRageTime { get; private set; }
-        // Warlock DoTs -- see WarlockShouldCastImmolate/WarlockShouldCastCorruption in
-        // WowWarlockTasks.cs, which suppress re-casting a DoT within
-        // WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS of these.
         public long ImmolateCastTime { get; private set; }
         public long CorruptionCastTime { get; private set; }
         public long NextUpdateTime { get; private set; }
-
         public bool FullBagsAlertSent { get; private set; }
-
         public int EngageAttempts { get; private set; }
-
         public int LootX { get; private set; }
         public int LootY { get; private set; }
-
-        // Last position FindTargetMarkerOnScreen() actually found the target marker at --
-        // set by WowMovementTasks.WalkIntoMeleeRangeTask() each time a scan succeeds. Null
-        // until the first successful scan (or if none has succeeded yet this attempt).
-        // Nullable rather than defaulting to 0,0 like LootX/Y above -- unlike loot's "default
-        // to screen center" fallback, there's no sane default screen position for "target not
-        // found," so callers need to be able to tell the difference.
         public int? MostRecentTargetMarkerX { get; private set; }
         public int? MostRecentTargetMarkerY { get; private set; }
 
         public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }
 
-        // Class-specific counterpart to WorldState -- see WowClassState. Null until
-        // ResolveCombatConfiguration (WowConfigResolutionTasks.cs, called every tick from
-        // EveryWorldStateUpdateTasks) picks FarmingConfig.CombatConfiguration from the
-        // player's live-detected class (WowWorldState.PlayerClass) and builds the matching
-        // concrete type; never changes again afterward. The class-specific Wow*Tasks.cs
-        // methods receive it pre-cast to their own class's type (see
-        // WowPlayerCombatConfig.cs), not read directly off this property.
         public WowClassState ClassState { get; private set; }
 
+        public PlayerMetaState CurrentPlayerMetaState { get; private set; }
         public PlayerState CurrentPlayerState { get; private set; }
         public PathfindingState CurrentPathfindingState { get; private set; }
+        public PlayerGoal CurrentPlayerGoal { get; private set; }
+        public LogoutState CurrentLogoutState { get; private set; }
+        public FindFightState CurrentFindFightState { get; private set; }
 
         public int CurrentWaypointIndex { get; private set; }
         public int WaypointTraversalDirection { get; private set; }
 
-        // Merchant-run detour state -- see WowMerchantConfiguration and
-        // WowMovementTasks.MerchantRunStepTask. Plain fields, same as the pathfinding state
-        // above, so a combat interruption mid-trip leaves them untouched and the trip resumes
-        // exactly where it left off once PathfindingLoopTask runs again.
         public bool IsOnMerchantRun { get; private set; }
         public MerchantRunPhase CurrentMerchantRunPhase { get; private set; }
         public int CurrentMerchantWaypointIndex { get; private set; }
+        public long MerchantRunStartTime { get; private set; }
 
         public bool LogoutTriggered { get; private set; }
         public string LogoutReason { get; private set; }
         public Bitmap LogoutBitmap { get; private set; }
 
-        public WowFarmingConfiguration FarmingConfig { get; private set; }
+        public WowLocationConfiguration LocationConfiguration { get; private set; }
+        public WowCombatConfiguration CombatConfiguration { get; private set; }
+        public WowScreenConfiguration ScreenConfiguration { get; private set; }
 
-        // WowFarmingConfiguration's own constructor auto-detects the current screen
-        // resolution -- used here just to get that default before the real
-        // FarmingConfig instance below is built for this WowPlayer.
-        public WowPlayer() : this(new WowFarmingConfiguration().ScreenConfiguration)
-        {
-        }
-
+        public WowPlayer() : this(WowScreenConfigs.GetForPrimaryScreen()) { }
         public WowPlayer(WowScreenConfiguration screenConfiguration)
         {
+            CurrentPlayerMetaState = PlayerMetaState.WAITING_TO_FOCUS_ON_WINDOW;
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS_ON_WINDOW;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentWaypointIndex = -1;
@@ -110,30 +77,15 @@ namespace WoWHelper
             CurrentMerchantRunPhase = MerchantRunPhase.WALKING_TO_MERCHANT;
             CurrentMerchantWaypointIndex = 0;
 
-            FarmingConfig = new WowFarmingConfiguration
-            {
-                ScreenConfiguration = screenConfiguration
-            };
+            LocationConfiguration = null;
+            CombatConfiguration = WowCombatConfiguration.Unknown;
+            ScreenConfiguration = screenConfiguration;
 
             PreviousWorldState = new WowWorldState(screenConfiguration);
             WorldState = new WowWorldState(screenConfiguration);
-            // ClassState stays null until ResolveCombatConfiguration can detect the
-            // player's actual class -- see the property comment above.
+            ClassState = null;
 
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-        }
-
-        private static WowClassState CreateClassState(WowCombatConfiguration combatConfiguration)
-        {
-            switch (combatConfiguration)
-            {
-                case WowCombatConfiguration.Warrior: return new WowWarriorClassState();
-                case WowCombatConfiguration.Shaman: return new WowShamanClassState();
-                case WowCombatConfiguration.Warlock: return new WowWarlockClassState();
-                default: throw new System.NotImplementedException(
-                    $"{nameof(CreateClassState)}: no ClassState implemented for CombatConfiguration \"{combatConfiguration}\" -- " +
-                    $"this should only be called with a resolved (non-Unknown) CombatConfiguration.");
-            }
         }
 
         public async Task UpdateWorldStateAsync()
@@ -143,326 +95,239 @@ namespace WoWHelper
             var timeToWait = NextUpdateTime - now;
             int timeToWaitClamped = (int)Math.Max(0, timeToWait);
             await Task.Delay(timeToWaitClamped);
-
-            PreviousWorldState.Bmp?.Dispose();
-            PreviousWorldState = WorldState;
-            WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
-            // ClassState is still null before ResolveCombatConfiguration has run (its
-            // concrete type isn't known yet -- nothing reads it before then).
-            ClassState?.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
-
-            NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
+            UpdateWorldState();
         }
 
         public void UpdateWorldState()
         {
             PreviousWorldState.Bmp?.Dispose();
             PreviousWorldState = WorldState;
-            WorldState = WowWorldState.GetWoWWorldState(FarmingConfig.ScreenConfiguration);
-            ClassState?.UpdateFromBitmap(WorldState.Bmp, FarmingConfig.ScreenConfiguration);
+            WorldState = WowWorldState.GetWoWWorldState(ScreenConfiguration);
+            UpdateClassState();
 
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
 
+        private void UpdateClassState()
+        {
+            if (ClassState == null && WorldState.IsBotInAValidState)
+            {
+                CombatConfiguration = WorldState.PlayerClass.Value;
+                ClassState = WowClassState.Create(CombatConfiguration);
+                Console.WriteLine($"Auto-detected combat config {CombatConfiguration}");
+            }
+
+            ClassState?.UpdateFromBitmap(WorldState.Bmp, ScreenConfiguration);
+        }
+
         // For Testing only, otherwise use UpdateWorldState
-        public void UpdateFromBitmap(Bitmap bmp)
+        public void UpdateWorldStateFromBitmap(Bitmap bmp)
         {
             WorldState.UpdateFromBitmap(bmp);
-            ClassState?.UpdateFromBitmap(bmp, FarmingConfig.ScreenConfiguration);
+            ClassState?.UpdateFromBitmap(bmp, ScreenConfiguration);
         }
 
-        async Task<TState> ChangeStateBasedOnTaskResult<TState>(Task<bool> task, TState successState, TState failureState) where TState : Enum
+        private static void ReleaseInputsAndExit()
         {
-            bool taskResult = await task;
-            return taskResult ? successState : failureState;
+            Console.WriteLine("ESC detected! Performing cleanup then quitting");
+            WowInput.ReleaseAllInputs();
+            Environment.Exit(0);
         }
 
-        PlayerState ChangeStateBasedOnBool(bool boolToCheck, PlayerState successState, PlayerState failureState)
+        private static void EnableEscToQuit()
         {
-            return boolToCheck ? successState : failureState;
-        }
-
-        public static bool CurrentTimeInsideDuration(long startTime, long duration)
-        {
-            return (DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime) < duration;
+            KeyPoller.EscPressed += ReleaseInputsAndExit;
+            KeyPoller.Start();
         }
 
         public void KickOffCoreLoop()
         {
-            KeyPoller.EscPressed += async () => {
-                Console.WriteLine("ESC detected! Performing cleanup then quitting");
-                await Task.Delay(0);
+            EnableEscToQuit();
 
-                // Make sure we don't have any lingering keys pressed down
-                Keyboard.KeyUp(WowInput.MOVE_FORWARD);
-                Keyboard.KeyUp(WowInput.MOVE_BACK);
-                Keyboard.KeyUp(WowInput.TURN_LEFT);
-                Keyboard.KeyUp(WowInput.TURN_RIGHT);
-                Keyboard.KeyUp(WowInput.JUMP);
-                Keyboard.KeyUp(WowInput.STRAFE_LEFT);
-                Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
-                Keyboard.KeyUp(WowInput.LatestShiftKey);
-                Keyboard.KeyUp(WowInput.LatestControlKey);
-                Keyboard.KeyUp(Keys.LShiftKey);
-                Mouse.ButtonUp(Mouse.MouseKeys.Right); // in case we were mid turn-drag
-
-                Environment.Exit(0);
-            };
-            KeyPoller.Start();
-
-            // Fire-and-forget -- nothing else awaits this Task, so without observing its
-            // exception here, any unhandled exception anywhere in the state machine (a bug
-            // in this codebase, not just a deliberate NotImplementedException) would raise
-            // a first-chance exception notification with no further trace, then silently
-            // kill the whole gameplay loop -- the character just stops being piloted, with
-            // nothing logged and no Slack alert to say why. Logging the full exception
-            // (with stack trace) and alerting on Slack turns that into something
-            // diagnosable and noticeable instead.
-            _ = CoreGameplayLoopTask().ContinueWith(t =>
+            _ = CoreLoopTask().ContinueWith(t =>
             {
-                Console.WriteLine($"CoreGameplayLoopTask crashed: {t.Exception}");
+                Console.WriteLine($"CoreLoopTask crashed: {t.Exception}");
                 SlackHelper.SendMessageToChannel($"WoWHelper crashed: {t.Exception?.GetBaseException().Message}");
             }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        public void AdHocTest()
+        public void KickOffAdHocTest()
         {
-            _ = AdHocTestTask();
+            EnableEscToQuit();
 
-            KeyPoller.EscPressed += async () => {
-                Console.WriteLine("ESC detected! Performing cleanup then quitting");
-                await Task.Delay(0);
-
-                // Make sure we don't have any lingering keys pressed down
-                Keyboard.KeyUp(WowInput.MOVE_FORWARD);
-                Keyboard.KeyUp(WowInput.MOVE_BACK);
-                Keyboard.KeyUp(WowInput.TURN_LEFT);
-                Keyboard.KeyUp(WowInput.TURN_RIGHT);
-                Keyboard.KeyUp(WowInput.JUMP);
-                Keyboard.KeyUp(WowInput.STRAFE_LEFT);
-                Keyboard.KeyUp(WowInput.STRAFE_RIGHT);
-                Keyboard.KeyUp(WowInput.LatestShiftKey);
-                Keyboard.KeyUp(WowInput.LatestControlKey);
-                Keyboard.KeyUp(Keys.LShiftKey);
-                Mouse.ButtonUp(Mouse.MouseKeys.Right); // in case we were mid turn-drag
-
-                Environment.Exit(0);
-            };
-            KeyPoller.Start();
+            _ = AdHocTestTask().ContinueWith(t =>
+            {
+                Console.WriteLine($"AdHocTestTask crashed: {t.Exception}");
+                SlackHelper.SendMessageToChannel($"WoWHelper crashed: {t.Exception?.GetBaseException().Message}");
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         public async Task<bool> AdHocTestTask()
         {
-            //SlackHelper.SendMessageToChannel($"Slack Test");
-            await FocusOnWindowTask();
             await FocusOnWindowTask();
             await UpdateWorldStateAsync();
-            //await PetriAltF4Task();
-            //await CreateHeatmapForLooting(saveBitmaps: true);
-            //await TargetMarkerDebugTask();
-
-            //await MeasureKeyboardTurnRateTask();
             await MouseTurnRateSweepTask(startPixels: 1, stepPixels: 1);
             return true;
-            //return await WaitForWorldBuffThenLogoffTask();
-
-            /*
-            // Testing ShamanFaceCorrectDirectionToEngageTask/TurnToFaceTargetMarkerTask (see
-            // the "Approach ranged/caster mobs" plan) in isolation, without the full engage
-            // state machine around it. ClassState needs resolving once before the loop so the
-            // WowShamanClassState cast below has something real to work with.
-            //
-            // ESC ends the loop early (KeyPoller is the same global ESC-detection mechanism
-            // used elsewhere in this codebase) -- useful since this loop otherwise only exits
-            // once ShamanFaceCorrectDirectionToEngageTask succeeds, which might never happen
-            // mid-test. Scoped to just this task: subscribed/started right before the loop,
-            // unsubscribed/stopped right after, so repeat AdHocTest runs don't stack handlers
-            // on KeyPoller's static event.
-            bool escPressed = false;
-            Action onEsc = () => escPressed = true;
-            KeyPoller.EscPressed += onEsc;
-            KeyPoller.Start();
-
-            try
-            {
-                ResolveCombatConfiguration();
-                while (true)
-                {
-                    if (escPressed)
-                    {
-                        Console.WriteLine("ESC pressed, ending ad hoc test loop");
-                        break;
-                    }
-
-                    await UpdateWorldStateAsync();
-                    bool canEngage = await ShamanFaceCorrectDirectionToEngageTask((WowShamanClassState)ClassState);
-                    break;
-                }
-            }
-            finally
-            {
-                KeyPoller.EscPressed -= onEsc;
-                KeyPoller.Stop();
-            }
-
-            await AvoidObstacleByJumping();
-            return true;
-            */
-            /*
-            await FocusOnWindowTask();
-            await PetriAltF4Task();
-            SlackHelper.SendMessageToChannel($"Petri Alt+F4ed!  Consider using Unstuck instead of logging back in");
-            Environment.Exit(0);
-            
-            */
-
-            /*
-            await FocusOnWindowTask();
-            await ThrowTargetDummyTask();
-
-            await Task.Delay(0);
-            return true;
-            */
-            /*
-            await FocusOnWindowTask();
-            await Task.Delay(10000);
-            await PutMoneyInTradeTask();
-            await AcceptTradeTask();
-            // wait for button to not be greyed out, and for other player to accept trade
-            await Task.Delay(7000);
-            await AcceptTradeConfirmationTask();
-
-            //SlackHelper.SendMessageToChannel($"Testing notification!");
-            await Task.Delay(0);
-            return true;
-            */
         }
 
-        // Captures a full-screen screenshot and searches it for the sentinel-colored target
-        // marker UIFunctions.lua paints onto the current target's nameplate (see
-        // WowScreenConfiguration.TARGET_MARKER_COLOR) -- a full-resolution capture, not the
-        // tiny fixed pixel-row crop WorldState normally reads, since the marker can be
-        // anywhere on screen. Returns its screen position, or null if not found (marker not
-        // created yet, target occluded, or no target at all). Shared by TargetMarkerDebugTask
-        // and WowMovementTasks.TurnToFaceTargetMarkerTask.
-        public Point? FindTargetMarkerOnScreen()
+        public async Task<bool> CoreLoopTask()
         {
-            var resolution = FarmingConfig.ScreenConfiguration.Resolution;
-            var fullScreenRect = new Rectangle(0, 0, resolution.Width, resolution.Height);
-
-            using (Bitmap fullBmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(fullScreenRect))
-            {
-                Point? centroid = BitmapDifferenceVisualizer.FindColorCentroid(fullBmp, WowScreenConfiguration.TARGET_MARKER_COLOR);
-                if (centroid != null)
-                {
-                    //LootX = centroid.Value.X;
-                    //LootY = centroid.Value.Y;
-                }
-
-                // TEMP DEBUG (WalkIntoMeleeRangeTask troubleshooting): confirm whether the
-                // marker is actually being found at all, and where -- remove once resolved.
-                Console.WriteLine(centroid == null
-                    ? $"DEBUG FindTargetMarkerOnScreen: marker NOT found (color {WowScreenConfiguration.TARGET_MARKER_COLOR}, resolution {resolution})"
-                    : $"DEBUG FindTargetMarkerOnScreen: marker found at {centroid.Value}");
-
-                return centroid;
-            }
-        }
-
-        // TEMP diagnostic (see the "Approach ranged/caster mobs" plan): verify the
-        // sentinel-colored target marker UIFunctions.lua paints onto the current target's
-        // nameplate is actually findable via screen-capture pixel search, and that its
-        // position relative to screen center matches expectations (this bot is run with the
-        // camera pitched straight down, so X < center should mean the target is to the
-        // player's left, Y < center should mean in front). Loops once a second until the
-        // process is stopped -- wired up to the AdHocTest button so it can be exercised in
-        // isolation, without running the full combat loop. Remove once confirmed.
-        public async Task<bool> TargetMarkerDebugTask()
-        {
-            while (true)
+            while (CurrentPlayerMetaState != PlayerMetaState.EXITING)
             {
                 await UpdateWorldStateAsync();
+                await EveryWorldStateUpdateTasks();
+                UpdatePlayerGoal();
 
-                var resolution = FarmingConfig.ScreenConfiguration.Resolution;
-                var marker = FindTargetMarkerOnScreen();
-                int centerX = resolution.Width / 2;
-                int centerY = resolution.Height / 2;
-
-                if (marker == null)
+                switch (CurrentPlayerMetaState)
                 {
-                    Console.WriteLine("WoWHelper DEBUG: target marker NOT FOUND on screen");
+                    case PlayerMetaState.WAITING_TO_FOCUS_ON_WINDOW:
+                        Console.WriteLine("Focusing on window");
+                        CurrentPlayerMetaState = await GeneralHelpers.ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
+                            PlayerMetaState.RESOLVE_FARMING_CONFIGURATION,
+                            PlayerMetaState.WAITING_TO_FOCUS_ON_WINDOW);
+                        break;
+                    case PlayerMetaState.RESOLVE_FARMING_CONFIGURATION:
+                        Console.WriteLine("Auto-detecting combat/location config from live game state");
+                        CurrentPlayerMetaState = await GeneralHelpers.ChangeStateBasedOnTaskResult(ResolveFarmingConfigurationTask(),
+                            PlayerMetaState.EXECUTING_GOAL,
+                            PlayerMetaState.EXITING);
+                        break;
+                    case PlayerMetaState.EXECUTING_GOAL:
+                        Console.WriteLine($"EXECUTING_GOAL, current goal: {CurrentPlayerGoal}");
+                        await ExecuteGoalTask();
+                        // Right now once we're on the goal execution part, we stay in here forever.
+                        break;
+                    case PlayerMetaState.EXITING:
+                        Console.WriteLine("Surprised we haven't exited yet...");
+                        break;
                 }
-                else
-                {
-                    string leftRight = marker.Value.X < centerX ? "LEFT" : "RIGHT";
-                    string frontBack = marker.Value.Y < centerY ? "FRONT" : "BEHIND";
-                    Console.WriteLine($"WoWHelper DEBUG: target marker at {marker.Value} (screen center {centerX},{centerY}) -> {leftRight}/{frontBack}");
-                }
-
-                await Task.Delay(1000);
             }
+
+            Environment.Exit(0);
+                return true;
         }
 
-        public async Task<bool> CreateHeatmapForLooting(bool saveBitmaps = false)
+        public void UpdatePlayerGoal()
         {
-            List<Bitmap> screenChunks = new List<Bitmap>();
+            // TODO refactor this method: each state transition should happen in a more structured manner with an Initialize and a Cleanup or some such
+            // (set starting state, key up movement keys, etc.
 
-            var lootHeatmapRectangle = new Rectangle(
-                        FarmingConfig.ScreenConfiguration.LootHeatmapX,
-                        FarmingConfig.ScreenConfiguration.LootHeatmapY,
-                        FarmingConfig.ScreenConfiguration.LootHeatmapWidth,
-                        FarmingConfig.ScreenConfiguration.LootHeatmapHeight);
-
-            for (int i = 0; i < 20; i++)
+            if (WorldState.IsInCombat)
             {
-                Bitmap bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(lootHeatmapRectangle);
-                screenChunks.Add(bmp);
-                await Task.Delay(100);
+                CurrentPlayerGoal = PlayerGoal.FIGHT;
+                return;
             }
 
-            // convert from absolute coords to relative to the snippet we took
-            int ignoreXMin = FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreX - FarmingConfig.ScreenConfiguration.LootHeatmapX;
-            int ignoreXMax = ignoreXMin + FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreWidth;
-            int ignoreYMin = FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreY - FarmingConfig.ScreenConfiguration.LootHeatmapY;
-            int ignoreYMax = ignoreYMin + FarmingConfig.ScreenConfiguration.LootHeatmapIgnoreHeight;
-
-            int squareSize = 40;
-            int halfSquareSize = squareSize / 2;
-
-            var points = BitmapDifferenceVisualizer.FindHotspots(screenChunks, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
-            var bestSquareOffset = BitmapDifferenceVisualizer.FindBestSquareOffset(points, FarmingConfig.ScreenConfiguration.LootHeatmapWidth, FarmingConfig.ScreenConfiguration.LootHeatmapHeight, squareSize);
-            var asdf = BitmapDifferenceVisualizer.BuildDifferenceHeatmap(points, FarmingConfig.ScreenConfiguration.LootHeatmapWidth, FarmingConfig.ScreenConfiguration.LootHeatmapHeight, ignoreXMin, ignoreXMax, ignoreYMin, ignoreYMax);
-
-            Console.WriteLine($"Best Offset = {bestSquareOffset}, click at {new Point(bestSquareOffset.offsetX + halfSquareSize, bestSquareOffset.offsetY + halfSquareSize)}");
-            LootX = FarmingConfig.ScreenConfiguration.LootHeatmapX + bestSquareOffset.offsetX + halfSquareSize;
-            LootY = FarmingConfig.ScreenConfiguration.LootHeatmapY + bestSquareOffset.offsetY + halfSquareSize;
-
-            Bitmap example = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(lootHeatmapRectangle);
-
-            if (saveBitmaps)
+            if (LogoutTriggered)
             {
-                ScreenCapture.SaveBitmapToFile(asdf, "Heatmap.bmp");
-                ScreenCapture.SaveBitmapToFile(example, "Example.bmp");
-
-                using (Bitmap exampleWithIgnore = new Bitmap(example))
-                using (Graphics graphics = Graphics.FromImage(exampleWithIgnore))
+                if (CurrentPlayerGoal != PlayerGoal.LOG_OUT)
                 {
-                    graphics.FillRectangle(Brushes.Black, ignoreXMin, ignoreYMin, ignoreXMax - ignoreXMin, ignoreYMax - ignoreYMin);
-                    ScreenCapture.SaveBitmapToFile(exampleWithIgnore, "ExampleWithIgnore.bmp");
+                    CurrentLogoutState = LogoutState.STARTING_LOGOUT;
                 }
+
+                CurrentPlayerGoal = PlayerGoal.LOG_OUT;
+                return;
             }
 
-            foreach (Bitmap bmp in screenChunks)
+            if (!WorldState.AllSkillsKnownForThisLevel && WorldState.CanAffordToTrainAllSkills)
             {
-                bmp.Dispose();
+                CurrentPlayerGoal = PlayerGoal.TRAIN;
+                return;
             }
-            asdf.Dispose();
-            example.Dispose();
 
-            return true;
+            if (WorldState.BagsAreFull)
+            {
+                CurrentPlayerGoal = PlayerGoal.SELL;
+                return;
+            }
+
+            // if (needs to travel to a new location)
+            // {
+            // CurrentPlayerGoal = PlayerGoal.TRAVEL;
+            // return;
+            // }
+
+            // if (WorldState.GearNeedsRepair)
+            // {
+            // CurrentPlayerGoal = PlayerGoal.REPAIR;
+            // return;
+            // }
+
+            // if (WorldState.HearthInWrongLocation)
+            // {
+            // CurrentPlayerGoal = PlayerGoal.SET_HEARTH;
+            // return;
+            // }
+
+            if (CurrentPlayerGoal != PlayerGoal.FIND_FIGHT)
+            {
+                CurrentWaypointIndex = -1;
+                WaypointTraversalDirection = 1;
+
+                CurrentFindFightState = FindFightState.PICK_NEXT_WAYPOINT;
+            }
+
+            CurrentPlayerGoal = PlayerGoal.FIND_FIGHT;
         }
 
-        public async Task<bool> CoreGameplayLoopTask()
+        public async Task ExecuteGoalTask()
+        {
+            switch (CurrentPlayerGoal)
+            {
+                case PlayerGoal.FIGHT:
+                    Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
+                    break;
+                case PlayerGoal.FIND_FIGHT:
+                    await PlayerFindFightGoalTask();
+                    break;
+                case PlayerGoal.SELL:
+                    Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
+                    break;
+                case PlayerGoal.LOG_OUT:
+                    await PlayerLogoutGoalTask();
+                    break;
+                case PlayerGoal.TRAVEL:
+                case PlayerGoal.SET_HEARTH:
+                case PlayerGoal.REPAIR:
+                case PlayerGoal.TRAIN:
+                    Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
+                    break;
+            }
+        }
+
+        public async Task PlayerLogoutGoalTask()
+        {
+            switch(CurrentLogoutState)
+            {
+                case LogoutState.STARTING_LOGOUT:
+                    await StartLogoutTask();
+                    CurrentLogoutState = LogoutState.WAITING_FOR_LOGOUT;
+                    break;
+                case LogoutState.WAITING_FOR_LOGOUT:
+                    // nothing to do here but wait.  EveryWorldStateUpdate will handle seeing
+                    // that we've logged out before we'd get back in here
+                    break;
+            }
+        }
+
+        public async Task PlayerFindFightGoalTask()
+        {
+            switch (CurrentFindFightState)
+            {
+                case FindFightState.PICK_NEXT_WAYPOINT:
+                    PickNextWaypoint();
+                    CurrentFindFightState = FindFightState.FACE_WAYPOINT;
+                    break;
+                case FindFightState.FACE_WAYPOINT:
+                    
+                    break;
+                case FindFightState.WALK_TO_WAYPOINT:
+                    break;
+            }
+        }
+
+        /*
+        public async Task<bool> CoreLoopTask()
         {
             FarmStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -474,9 +339,9 @@ namespace WoWHelper
 
                 // TODO: short circuit into combat/getting out of water/etc.
                 // TODO: if on login screen all other values will be messed up
-                if (!WorldState.OnLoginScreen && WorldState.IsInCombat)
+                if (WorldState.IsBotInAValidState && WorldState.IsInCombat)
                 {
-                    // Shaman always pulls with a spell regardless of FarmingConfig.EngageMethod
+                    // Shaman always pulls with a spell regardless of LocationConfiguration.EngageMethod
                     // (Charge/Pull only distinguishes Warrior's two options -- see the enum's own
                     // comment on WowLocationConfiguration.cs), so checking CombatConfiguration here
                     // instead of EngageMethod covers it without needing to know which location
@@ -484,7 +349,7 @@ namespace WoWHelper
                     // pre-existing gap from before Warlock support was added, not touched by the
                     // Mage removal that dropped the Mage half of this check.)
                     if (CurrentPlayerState == PlayerState.CONTINUE_TO_TRY_TO_ENGAGE &&
-                        FarmingConfig.CombatConfiguration == WowCombatConfiguration.Shaman &&
+                        CombatConfiguration == WowCombatConfiguration.Shaman &&
                         WorldState.ResourcePercent < 100)
                     {
                         // We likely just cast a spell that hasn't yet hit the target.  Wait a little bit so it does,
@@ -503,32 +368,32 @@ namespace WoWHelper
                 {
                     case PlayerState.WAITING_TO_FOCUS_ON_WINDOW:
                         Console.WriteLine("Focusing on window");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(FocusOnWindowTask(),
                             PlayerState.RESOLVE_FARMING_CONFIGURATION,
                             PlayerState.WAITING_TO_FOCUS_ON_WINDOW);
                         break;
                     case PlayerState.RESOLVE_FARMING_CONFIGURATION:
                         Console.WriteLine("Auto-detecting combat/location config from live game state");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(ResolveFarmingConfigurationTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(ResolveFarmingConfigurationTask(),
                             PlayerState.CHECK_FOR_LOGOUT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.CHECK_FOR_LOGOUT:
                         Console.WriteLine("Checking if we should log out");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(SetLogoutVariablesTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SetLogoutVariablesTask(),
                             PlayerState.START_LOGGING_OUT,
                             PlayerState.START_BATTLE_READY_RECOVERY);
                         break;
                     case PlayerState.START_LOGGING_OUT:
                         Console.WriteLine($"Started logging out ({LogoutReason})");
                         SlackHelper.SendMessageToChannel($"Logging out: {LogoutReason}");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartLogoutTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartLogoutTask(),
                             PlayerState.WAITING_TO_LOG_OUT,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
                     case PlayerState.WAITING_TO_LOG_OUT:
                         Console.WriteLine("Waiting to log out");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(CheckIfLoggedOutTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(CheckIfLoggedOutTask(),
                             PlayerState.LOGGED_OUT,
                             PlayerState.WAITING_TO_LOG_OUT);
                         break;
@@ -538,37 +403,37 @@ namespace WoWHelper
                         break;
                     case PlayerState.START_BATTLE_READY_RECOVERY:
                         Console.WriteLine("Starting battle ready recovery");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartBattleReadyTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartBattleReadyTask(),
                             PlayerState.WAIT_UNTIL_BATTLE_READY,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.WAIT_UNTIL_BATTLE_READY:
                         Console.WriteLine("Waiting until battle ready");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(WaitUntilBattleReadyTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(WaitUntilBattleReadyTask(),
                             PlayerState.CHECK_FOR_VALID_TARGET,
                             PlayerState.WAIT_UNTIL_BATTLE_READY);
                         break;
                     case PlayerState.CHECK_FOR_VALID_TARGET:
                         Console.WriteLine("Checking for valid target");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(PathfindingLoopTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(PathfindingLoopTask(),
                             PlayerState.INITIATE_ENGAGE_TARGET,
                             PlayerState.IN_CORE_COMBAT_LOOP);
                         break;
                     case PlayerState.INITIATE_ENGAGE_TARGET:
                         Console.WriteLine("Trying to engage target");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(StartEngageTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(StartEngageTask(),
                             PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
                             PlayerState.CHECK_FOR_LOGOUT);
                         break;
                     case PlayerState.CONTINUE_TO_TRY_TO_ENGAGE:
                         Console.WriteLine("Continuing to engage target");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(WaitUntilEngageTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(WaitUntilEngageTask(),
                             PlayerState.CONTINUE_TO_TRY_TO_ENGAGE,
                             PlayerState.CHECK_FOR_LOGOUT);
                         break;
                     case PlayerState.IN_CORE_COMBAT_LOOP:
                         Console.WriteLine("In core combat loop");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(CombatLoopTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(CombatLoopTask(),
                             PlayerState.TARGET_DEFEATED,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
@@ -576,28 +441,30 @@ namespace WoWHelper
                         Console.WriteLine("Target defeated, trying to loot");
                         // TODO: /canceltarget and /stopcasting and /stopattack here so we don't accidentally attack something
                         await WaitUnlessInCombatTask(1500); // give the dying anim a sec
-                        LootX = FarmingConfig.ScreenConfiguration.LootDefaultX;
-                        LootY = FarmingConfig.ScreenConfiguration.LootDefaultY;
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
+                        LootX = ScreenConfiguration.LootDefaultX;
+                        LootY = ScreenConfiguration.LootDefaultY;
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(LootTask(),
                             PlayerState.SKIN_ATTEMPT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.SKIN_ATTEMPT:
                         Console.WriteLine("Trying to skin");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SkinTask(),
                             PlayerState.LOOT_ATTEMPT_TWO,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.LOOT_ATTEMPT_TWO:
                         Console.WriteLine("Trying to loot a second time, in case the dying anim is slow");
-                        await CreateHeatmapForLooting();
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(LootTask(),
+                        Point lootPoint = await WowScreenCapture.CreateHeatmapForLooting(ScreenConfiguration);
+                        LootX = lootPoint.X;
+                        LootY = lootPoint.Y;
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(LootTask(),
                             PlayerState.SKIN_ATTEMPT_TWO,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         break;
                     case PlayerState.SKIN_ATTEMPT_TWO:
                         Console.WriteLine("Trying to skin");
-                        CurrentPlayerState = await ChangeStateBasedOnTaskResult(SkinTask(),
+                        CurrentPlayerState = await GeneralHelpers.ChangeStateBasedOnTaskResult(SkinTask(),
                             PlayerState.CHECK_FOR_LOGOUT,
                             PlayerState.EXITING_CORE_GAMEPLAY_LOOP);
                         await ScootForwardsTask();
@@ -610,5 +477,6 @@ namespace WoWHelper
 
             return true;
         }
+        */
     }
 }

@@ -2,6 +2,14 @@
 {
     public static class WowPlayerStates
     {
+        public enum PlayerMetaState
+        {
+            WAITING_TO_FOCUS_ON_WINDOW,
+            RESOLVE_FARMING_CONFIGURATION,
+            EXECUTING_GOAL,
+            EXITING
+        }
+
         public enum PlayerState
         {
             WAITING_TO_FOCUS_ON_WINDOW,
@@ -19,7 +27,6 @@
 
             WALK_WAYPOINTS,
 
-            ESC_KEY_SEEN,
             CHECK_FOR_LOGOUT,
             START_LOGGING_OUT,
             WAITING_TO_LOG_OUT,
@@ -53,6 +60,31 @@
             INTERACTING_WITH_MERCHANT,
             WAITING_FOR_AUTO_SELL,
             WALKING_BACK_TO_ROUTE
+        }
+
+        public enum PlayerGoal
+        {
+            FIGHT,
+            FIND_FIGHT,
+            LOG_OUT,
+            REPAIR,
+            SELL,
+            TRAIN,
+            TRAVEL,
+            SET_HEARTH
+        }
+
+        public enum LogoutState
+        {
+            STARTING_LOGOUT,
+            WAITING_FOR_LOGOUT,
+        }
+
+        public enum FindFightState
+        {
+            PICK_NEXT_WAYPOINT,
+            FACE_WAYPOINT,
+            WALK_TO_WAYPOINT
         }
     }
 }

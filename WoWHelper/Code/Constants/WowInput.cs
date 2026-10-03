@@ -244,7 +244,7 @@ namespace WoWHelper.Code
             await Task.Delay(10);
         }
 
-        // For when we exit the program with ESC, make sure we don't have any lingering keys pressed down
+        // Tracked so ReleaseAllInputs knows which modified keys might still be held down
         public static Keys LatestShiftKey;
         public static Keys LatestControlKey;
         public static async Task PressKeyWithModifier(Keys key, Keys modifier)
@@ -276,6 +276,27 @@ namespace WoWHelper.Code
             LatestControlKey = key;
 
             await PressKeyWithModifier(key, Keys.LControlKey);
+        }
+
+        #endregion
+
+        #region Cleanup
+
+        // Releases every key/button the bot may be holding down, so nothing is left
+        // stuck pressed (e.g. when quitting mid-movement with ESC).
+        public static void ReleaseAllInputs()
+        {
+            Keyboard.KeyUp(MOVE_FORWARD);
+            Keyboard.KeyUp(MOVE_BACK);
+            Keyboard.KeyUp(TURN_LEFT);
+            Keyboard.KeyUp(TURN_RIGHT);
+            Keyboard.KeyUp(JUMP);
+            Keyboard.KeyUp(STRAFE_LEFT);
+            Keyboard.KeyUp(STRAFE_RIGHT);
+            Keyboard.KeyUp(LatestShiftKey);
+            Keyboard.KeyUp(LatestControlKey);
+            Keyboard.KeyUp(Keys.LShiftKey);
+            Mouse.ButtonUp(Mouse.MouseKeys.Right);
         }
 
         #endregion

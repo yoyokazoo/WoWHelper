@@ -6,6 +6,14 @@
 -- the dispatchers in WoWFunctions.lua and GetWarriorClassBoolOne/Two below).
 ------------------------------------------------------------
 
+-- Class trainer spells, read by AllSkillsKnownForThisLevel()/
+-- CanAffordToTrainAllSkills() in WoWFunctions.lua. spellId is the specific
+-- rank trained at that level; cost is in copper. Only levels 1-2 so far
+-- (Warrior has nothing new at level 2). Not yet verified live.
+WARRIOR_TRAINER_SPELLS = {
+    { level = 1, name = "Battle Shout", spellId = 6673, cost = 10 },
+}
+
 -- Overpower rank 1, 7384 (GetSpellCooldown is queried by name, so rank 1's ID
 -- covers every rank). Both halves are needed: IsUsableSpell only reports
 -- whether the spell's *conditions* are met -- enough rage, and the 5s

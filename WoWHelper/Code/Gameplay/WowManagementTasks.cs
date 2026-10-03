@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using WindowsGameAutomationTools.Images;
 using WindowsGameAutomationTools.Slack;
@@ -18,23 +19,39 @@ namespace WoWHelper
     {
         public async Task<bool> FocusOnWindowTask()
         {
-            IntPtr h = ScreenCapture.GetWindowHandleByName("WowClassic");
-            if (h == IntPtr.Zero) { return false; }
+            IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
+            if (wowHandle == IntPtr.Zero) { return false; }
 
-            ScreenCapture.SetForegroundWindow(h);
+            for(int tries = 1; tries <= 10; tries++)
+            {
+                ScreenCapture.SetForegroundWindow(wowHandle);
+                await UpdateWorldStateAsync();
 
-            await Task.Delay(1750);
-            return !WorldState.OnLoginScreen;
+                if (WorldState.IsBotInAValidState)
+                {
+                    Console.WriteLine($"FocusOnWindowTask succeeded after {tries} tries");
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public async Task<bool> RecoverFromLostWindowFocusTask()
         {
             SlackHelper.SendMessageToChannel("Lost focus on WoWClassic window! Refocusing...");
-            await FocusOnWindowTask();
 
-            Mouse.Move(FarmingConfig.ScreenConfiguration.LootDefaultX, FarmingConfig.ScreenConfiguration.LootDefaultX);
+            for (int attempts = 0; attempts <= 5; attempts++)
+            {
+                if (!await FocusOnWindowTask())
+                {
+                    Console.WriteLine($"Refocus attempt {attempts} failed, trying again");
+                }
+            }
+
+            Console.WriteLine($"Clicking on window to doubly make sure we have input focus");
+            Mouse.Move(ScreenConfiguration.LootDefaultX, ScreenConfiguration.LootDefaultY);
             Mouse.PressButton(Mouse.MouseKeys.Left);
-
             await Task.Delay(300);
 
             await KeyUpMovementKeys();
@@ -53,9 +70,9 @@ namespace WoWHelper
             // WAITING_TO_FOCUS_ON_WINDOW, the startup state before WoW has ever been
             // focused in the first place -- same exclusion the disconnect check below uses.
             // Reads the OS's own notion of the foreground window, not anything decoded off
-            // WorldState's pixel row, so (unlike everything past the OnLoginScreen gate
+            // WorldState's pixel row, so (unlike everything past the IsBotInAValidState gate
             // below) it's safe to run regardless of whether the addon is rendering yet.
-            if (CurrentPlayerState != PlayerState.WAITING_TO_FOCUS_ON_WINDOW)
+            if (CurrentPlayerMetaState != PlayerMetaState.WAITING_TO_FOCUS_ON_WINDOW)
             {
                 IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
                 if (wowHandle != IntPtr.Zero && ScreenCapture.GetForegroundWindow() != wowHandle)
@@ -65,81 +82,51 @@ namespace WoWHelper
             }
 
             // ping if logged out (still needs testing.  they changed login screen??)
-            // The one check in this method that legitimately needs to run while
-            // WorldState.OnLoginScreen is true -- it's specifically watching for that flag's
-            // OWN transition (not-on-login-screen -> on-login-screen), so it has to sit
-            // before the "everything past here needs a real row" gate below rather than
-            // behind it.
-            if (!PreviousWorldState.OnLoginScreen &&
-                WorldState.OnLoginScreen &&
-                !LogoutTriggered &&
-                CurrentPlayerState != PlayerState.WAITING_TO_FOCUS_ON_WINDOW)
+            // The one check in this method that legitimately needs to run while the addon
+            // isn't rendering -- it's specifically watching for AddonLoaded's OWN transition
+            // (loaded -> not loaded), so it has to sit before the "everything past here needs
+            // a real row" gate below rather than behind it. Requires WowWindowHasFocus so
+            // another window covering WoW (which also hides the sentinel pixel) isn't
+            // mistaken for a disconnect -- lost focus is handled separately above.
+            if (PreviousWorldState.AddonLoaded &&
+                !WorldState.AddonLoaded &&
+                WorldState.WowWindowHasFocus &&
+                CurrentPlayerMetaState != PlayerMetaState.WAITING_TO_FOCUS_ON_WINDOW)
             {
+                if (LogoutTriggered && 
+                    CurrentPlayerGoal == PlayerGoal.LOG_OUT && 
+                    CurrentLogoutState == LogoutState.WAITING_FOR_LOGOUT)
+                {
+                    string logoutMessage = $"Logout successful, exiting";
+                    SlackHelper.SendMessageToChannel(logoutMessage);
+                    Console.WriteLine(logoutMessage);
+                    // Time for slackHelper to send message before quitting
+                    await Task.Delay(5000);
+                    Environment.Exit(0);
+                }
+
                 SlackHelper.SendMessageToChannel($"DISCONNECT?? Unexpectedly found self on logout screen");
             }
 
             // Everything below reads WorldState fields decoded off the addon's pixel row.
             // WowWorldState.UpdateFromBitmap decodes that row unconditionally every capture,
             // but its own comment admits the row is garbage whenever the addon isn't actually
-            // rendering it yet -- and OnLoginScreen IS that "isn't rendering yet" signal, true
-            // not just on the literal login/character-select screen but also during the
-            // startup window before/while focusing the WoW window. One gate here instead of
-            // repeating !WorldState.OnLoginScreen on every check below -- a garbage read
+            // rendering it yet (or something is covering the WoW window) -- and
+            // IsBotInAValidState is exactly the "row is real" signal: false on the literal
+            // login/character-select screen, during the startup window before/while focusing
+            // the WoW window, and whenever WoW isn't the foreground window. One gate here
+            // instead of repeating it on every check below -- a garbage read
             // anywhere past this point (a false LogoffMobSeen, a bogus PlayerClass, a
             // coincidentally-low PlayerHpPercent feeding the Petri Alt+F4 check, etc.) could
             // otherwise trigger real actions (logout, alt+f4, alerts) before the addon ever
             // painted a real row.
-            if (WorldState.OnLoginScreen)
+            if (!WorldState.IsBotInAValidState)
             {
                 return true;
             }
 
-            // Resolve CombatConfiguration/ClassState as soon as the addon gives us a real
-            // class read, independent of the RESOLVE_FARMING_CONFIGURATION player state --
-            // see WowConfigResolutionTasks.ResolveCombatConfiguration for why (short version:
-            // this task runs every tick, including ones before that state ever gets a chance
-            // to run, e.g. the bot started while already mid-combat). No-ops quietly once
-            // resolved.
-            ResolveCombatConfiguration();
-
-            // don't drown
-            if (WorldState.Underwater)
-            {
-                await GetOutOfWater();
-            }
-
-            // ping if unseen message -- shared with WaitForWorldBuffThenLogoffTask, which
-            // polls WorldState in its own loop rather than going through this method.
             AlertOnUnseenWhisper();
-
-            // ping on level up. Guarded on LocationConfiguration being resolved -- this task
-            // runs every tick, including the handful before RESOLVE_FARMING_CONFIGURATION has
-            // picked one (see WowPlayer.ResolveFarmingConfigurationTask), during which
-            // FarmingConfig.LogoffLevel (a LocationConfiguration passthrough) isn't safe to read.
-            if (FarmingConfig.LocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
-            {
-                string levelUpMessage = $"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!";
-
-                // Newly-unlocked routes only (MinimumLevel exactly matches the level just
-                // reached) -- a config that was already eligible before this level-up isn't
-                // "new" news, so it's left out to keep the message short.
-                List<string> newlyEligibleConfigTitles = WowLocationConfigs.ALL_LOCATIONS
-                    .Where(config => config.MinimumLevel == WorldState.PlayerLevel)
-                    .Select(config => config.Title)
-                    .ToList();
-                if (newlyEligibleConfigTitles.Count > 0)
-                {
-                    levelUpMessage += $" Newly eligible route(s): {string.Join(", ", newlyEligibleConfigTitles)}";
-                }
-
-                SlackHelper.SendMessageToChannel(levelUpMessage);
-
-                if (FarmingConfig.LogoffLevel == WorldState.PlayerLevel)
-                {
-                    LogoutTriggered = true;
-                    LogoutReason = $"Reached log out level {FarmingConfig.LogoffLevel}";
-                }
-            }
+            AlertOnLevelUp();
 
             // Bail immediately if we've spotted a mob from LOGOFF_IF_SEEN_MOB_NAMES
             // (CreatureConfig.lua, e.g. "Watery Invader") anywhere nearby -- checked every
@@ -182,13 +169,13 @@ namespace WoWHelper
                 await StartLogoutTask();
 
                 long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS;
-                while (!WorldState.OnLoginScreen && DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
+                while (WorldState.AddonLoaded && DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
                 {
                     await Task.Delay(500);
                     await UpdateWorldStateAsync();
                 }
 
-                if (WorldState.OnLoginScreen)
+                if (!WorldState.AddonLoaded)
                 {
                     Console.WriteLine("Logged out after combat stalemate");
                     Environment.Exit(0);
@@ -198,6 +185,9 @@ namespace WoWHelper
                 // set, so the normal CHECK_FOR_LOGOUT path picks it up once combat drops.
                 SlackHelper.SendMessageToChannel($"Combat stalemate logout didn't complete within {WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS / 1000}s -- back to the combat loop, will log out after combat");
                 */
+
+                // Temporarily switched to just move a bit, since the only place I've seen
+                // this is in the river when a Bear can't get to us and this will just fix it
                 var strafeKey = WowInput.STRAFE_LEFT;
                 Keyboard.KeyDown(strafeKey);
                 await Task.Delay(1000);
@@ -226,7 +216,39 @@ namespace WoWHelper
             {
                 _ = SlackFileUploadWorkaround.UploadScreenshotToChannelAsync(
                     title: "Unseen Whisper!",
-                    cropRegion: FarmingConfig.ScreenConfiguration.SlackScreenshotCropRegion);
+                    cropRegion: ScreenConfiguration.SlackScreenshotCropRegion);
+            }
+        }
+
+        public void AlertOnLevelUp()
+        {
+            // ping on level up. Guarded on LocationConfiguration being resolved -- this task
+            // runs every tick, including the handful before RESOLVE_FARMING_CONFIGURATION has
+            // picked one (see WowPlayer.ResolveFarmingConfigurationTask), during which
+            // LocationConfiguration.MaximumLevel below would throw.
+            if (LocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
+            {
+                string levelUpMessage = $"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!";
+
+                // Newly-unlocked routes only (MinimumLevel exactly matches the level just
+                // reached) -- a config that was already eligible before this level-up isn't
+                // "new" news, so it's left out to keep the message short.
+                List<string> newlyEligibleConfigTitles = WowLocationConfigs.ALL_LOCATIONS
+                    .Where(config => config.MinimumLevel == WorldState.PlayerLevel)
+                    .Select(config => config.Title)
+                    .ToList();
+                if (newlyEligibleConfigTitles.Count > 0)
+                {
+                    levelUpMessage += $" Newly eligible route(s): {string.Join(", ", newlyEligibleConfigTitles)}";
+                }
+
+                SlackHelper.SendMessageToChannel(levelUpMessage);
+
+                if (LocationConfiguration.MaximumLevel == WorldState.PlayerLevel)
+                {
+                    LogoutTriggered = true;
+                    LogoutReason = $"Reached log out level {LocationConfiguration.MaximumLevel}";
+                }
             }
         }
 
@@ -239,7 +261,7 @@ namespace WoWHelper
             // see WowConfigResolutionTasks.cs) never got a chance to run. Every check below
             // reads LocationConfiguration unconditionally, so log out now rather than NRE
             // trying to validate a route we were never told.
-            if (FarmingConfig.LocationConfiguration == null)
+            if (LocationConfiguration == null)
             {
                 LogoutTriggered = true;
                 LogoutReason = "LocationConfiguration was never resolved (bot likely started mid-combat, before RESOLVE_FARMING_CONFIGURATION got a chance to run) -- logging out rather than guessing a route";
@@ -247,22 +269,22 @@ namespace WoWHelper
                 return LogoutTriggered;
             }
 
-            float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, FarmingConfig.LocationConfiguration.Waypoints);
+            float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, LocationConfiguration.Waypoints);
 
             // Checked first so a wrong-zone/under-level/too-far-away start gives the clearest
             // possible reason, rather than getting masked behind some other logout condition
             // that also happens to be true on the very first tick.
-            if (FarmingConfig.LocationConfiguration.MinimumLevel > 0 && WorldState.PlayerLevel < FarmingConfig.LocationConfiguration.MinimumLevel)
+            if (LocationConfiguration.MinimumLevel > 0 && WorldState.PlayerLevel < LocationConfiguration.MinimumLevel)
             {
                 LogoutTriggered = true;
-                LogoutReason = $"Below minimum level for this route (level {WorldState.PlayerLevel}, need {FarmingConfig.LocationConfiguration.MinimumLevel}+)";
+                LogoutReason = $"Below minimum level for this route (level {WorldState.PlayerLevel}, need {LocationConfiguration.MinimumLevel}+)";
             }
             // Zone.Unknown means this route's config forgot to set Zone -- skip the check rather
             // than have a misconfigured route always immediately abort every session.
-            else if (FarmingConfig.LocationConfiguration.Zone != WowZone.Unknown && WorldState.CurrentZone != FarmingConfig.LocationConfiguration.Zone)
+            else if (LocationConfiguration.Zone != WowZone.Unknown && WorldState.CurrentZone != LocationConfiguration.Zone)
             {
                 LogoutTriggered = true;
-                LogoutReason = $"Wrong zone for this route (currently {WorldState.CurrentZone}, expected {FarmingConfig.LocationConfiguration.Zone})";
+                LogoutReason = $"Wrong zone for this route (currently {WorldState.CurrentZone}, expected {LocationConfiguration.Zone})";
             }
             else if (closestWaypointDistance > WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT)
             {
@@ -287,13 +309,13 @@ namespace WoWHelper
             // always read as "low on ammo", since a caster's ammo slot is just empty, not
             // merely low). Only Warrior can actually run out of ammo, so gate on class too.
             else if (WorldState.LowOnAmmo &&
-                FarmingConfig.CombatConfiguration == Code.Gameplay.WowCombatConfiguration.Warrior &&
-                FarmingConfig.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
+                CombatConfiguration == Code.Gameplay.WowCombatConfiguration.Warrior &&
+                LocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Ammo";
             }
-            else if (!CurrentTimeInsideDuration(FarmStartTime, WowPlayerConstants.FARM_TIME_LIMIT_MILLIS))
+            else if (!GeneralHelpers.CurrentTimeInsideDuration(FarmStartTime, WowPlayerConstants.FARM_TIME_LIMIT_MILLIS))
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Farm Time Limit Reached";
@@ -380,16 +402,11 @@ namespace WoWHelper
 
         public async Task<bool> StartLogoutTask()
         {
-            Console.WriteLine($"Starting logout: {LogoutReason}");
-            await Task.Delay(0);
+            string logoutMessage = $"Starting logout: {LogoutReason}";
+            SlackHelper.SendMessageToChannel(logoutMessage);
+            Console.WriteLine(logoutMessage);
             await WowInput.PressKey(WowInput.LOGOUT_MACRO);
             return true;
-        }
-
-        public async Task<bool> CheckIfLoggedOutTask()
-        {
-            await Task.Delay(0);
-            return WorldState.OnLoginScreen;
         }
 
         public async Task<bool> LootTask()
@@ -438,7 +455,7 @@ namespace WoWHelper
 
         public async Task<bool> ThrowTargetDummyTask()
         {
-            Mouse.Move(FarmingConfig.ScreenConfiguration.DynamiteAndDummyX, FarmingConfig.ScreenConfiguration.DynamiteAndDummyY);
+            Mouse.Move(ScreenConfiguration.DynamiteAndDummyX, ScreenConfiguration.DynamiteAndDummyY);
             await Task.Delay(50);
             await WowInput.PressKeyWithShift(WowInput.SHIFT_TARGET_DUMMY);
             await Task.Delay(1000);

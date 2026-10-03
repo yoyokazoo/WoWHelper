@@ -63,22 +63,22 @@ namespace WoWHelper
                 // WowCommonCombatTasks.cs) -- otherwise we'd immediately TAB/macro right back
                 // onto the same unreachable target we just cleared. Keep walking the route
                 // during the suppression window instead of standing still trying to retarget.
-                bool suppressedAfterLineOfSightBailout = CurrentTimeInsideDuration(
+                bool suppressedAfterLineOfSightBailout = GeneralHelpers.CurrentTimeInsideDuration(
                     LastLineOfSightBailoutTime, WowPlayerConstants.LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS);
 
-                if (!IsOnMerchantRun && !suppressedAfterLineOfSightBailout && !CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
+                if (!IsOnMerchantRun && !suppressedAfterLineOfSightBailout && !GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                    if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.TAB)
+                    if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.TAB)
                     {
                         await WowInput.PressKey(WowInput.TAB_TARGET);
                     }
-                    else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
+                    else if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
                     {
                         await WowInput.PressKey(WowInput.FIND_TARGET_MACRO);
                     }
-                    else if (FarmingConfig.LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
+                    else if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
                     {
                         if (targetChecks % 2 == 0)
                         {
@@ -93,7 +93,7 @@ namespace WoWHelper
                     targetChecks++;
                 }
 
-                if (!IsOnMerchantRun && !CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
+                if (!IsOnMerchantRun && !GeneralHelpers.CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
                 {
                     LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     await WowInput.PressKey(WowInput.JUMP);
@@ -154,28 +154,28 @@ namespace WoWHelper
                         ResetStuckDetection();
                     }
 
-                    if (!stationaryJumpAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
+                    if (!stationaryJumpAttemptedOnce && !GeneralHelpers.CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_JUMP))
                     {
-                        //Console.WriteLine($"Haven't moved in a while, stuck at {PreviousWorldState.MapX},{PreviousWorldState.MapY} headed to {FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex].X},{FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex].Y}");
+                        //Console.WriteLine($"Haven't moved in a while, stuck at {PreviousWorldState.MapX},{PreviousWorldState.MapY} headed to {LocationConfiguration.Waypoints[CurrentWaypointIndex].X},{LocationConfiguration.Waypoints[CurrentWaypointIndex].Y}");
                         await AvoidObstacleByJumping();
                         stationaryJumpAttemptedOnce = true;
                     }
 
-                    if (!stationaryWiggleAttemptedOnce && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
+                    if (!stationaryWiggleAttemptedOnce && !GeneralHelpers.CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE))
                     {
                         // first wiggle try left
                         await AvoidObstacle(left: true);
                         stationaryWiggleAttemptedOnce = true;
                     }
 
-                    if (!stationaryWiggleAttemptedTwice && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE))
+                    if (!stationaryWiggleAttemptedTwice && !GeneralHelpers.CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE))
                     {
                         // second wiggle try right
                         await AvoidObstacle(left: false);
                         stationaryWiggleAttemptedTwice = true;
                     }
 
-                    if (!stationaryAlertSent && !CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_ALERT))
+                    if (!stationaryAlertSent && !GeneralHelpers.CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_ALERT))
                     {
                         //SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
                         //stationaryAlertSent = true;
@@ -206,6 +206,15 @@ namespace WoWHelper
                 // no extra plumbing needed.
                 if (IsOnMerchantRun)
                 {
+                    if (!GeneralHelpers.CurrentTimeInsideDuration(MerchantRunStartTime, WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS))
+                    {
+                        Console.WriteLine($"Merchant run still unfinished after {WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS / 1000}s (phase {CurrentMerchantRunPhase}), logging out");
+                        LogoutTriggered = true;
+                        LogoutReason = $"Merchant run took longer than {WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS / 60000} minutes (stuck in {CurrentMerchantRunPhase})";
+                        await EndWalkForwardTask();
+                        return true;
+                    }
+
                     await MerchantRunStepTask();
 
                     // The reset above runs BEFORE the step, but WAITING_FOR_AUTO_SELL's step
@@ -229,12 +238,12 @@ namespace WoWHelper
                 // is far more expensive than the pixel-row read WorldState does each tick.
                 // Skipped entirely (scan included) on routes that opt out via
                 // ChaseOutOfRangeTargets -- see that property's comment for why.
-                if (FarmingConfig.LocationConfiguration.ChaseOutOfRangeTargets &&
-                    !CurrentTimeInsideDuration(lastTargetMarkerScanTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS))
+                if (LocationConfiguration.ChaseOutOfRangeTargets &&
+                    !GeneralHelpers.CurrentTimeInsideDuration(lastTargetMarkerScanTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS))
                 {
                     lastTargetMarkerScanTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                    if (FindTargetMarkerOnScreen() != null)
+                    if (WowScreenCapture.FindTargetMarkerOnScreen(ScreenConfiguration) != null)
                     {
                         await WalkTowardsTargetMarkerTask();
 
@@ -257,73 +266,7 @@ namespace WoWHelper
                 {
                     case PathfindingState.PICKING_NEXT_WAYPOINT:
                         Console.WriteLine($"Picking next waypoint");
-                        if (CurrentWaypointIndex == -1)
-                        {
-                            // we've never picked a waypoint yet, so find the closest one
-                            Vector2 playerLocation = new Vector2(WorldState.MapX, WorldState.MapY);
-                            CurrentWaypointIndex = FarmingConfig.LocationConfiguration.Waypoints
-                                .Select((p, i) => (dist: Vector2.Distance(playerLocation, p), index: i))
-                                .OrderBy(t => t.dist)
-                                .First()
-                                .index;
-
-                            // Circular always goes in the same direction, so if you interrupt and restart, you'll still be going the same direction.
-                            // For linear let's do our best guess to pick the best direction
-                            if (FarmingConfig.LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
-                            {
-                                if (CurrentWaypointIndex == 0)
-                                {
-                                    WaypointTraversalDirection = 1;
-                                }
-                                else if (CurrentWaypointIndex == FarmingConfig.LocationConfiguration.Waypoints.Count - 1)
-                                {
-                                    WaypointTraversalDirection = -1;
-                                }
-                                else
-                                {
-                                    var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex], FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex + 1]);
-                                    var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex], FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex - 1]);
-                                    var facingDegrees = WorldState.FacingDegrees;
-                                    var forwardDiff = WowPathfinding.GetDegreesToMove(facingDegrees, forwardDegrees);
-                                    var backwardsDiff = WowPathfinding.GetDegreesToMove(facingDegrees, backwardsDegrees);
-
-                                    if (backwardsDiff < forwardDiff)
-                                    {
-                                        WaypointTraversalDirection = -1;
-                                    }
-
-                                    Console.WriteLine("Forward/Backwards/Facing/AbsFor/AbsBack");
-                                    Console.WriteLine(forwardDegrees);
-                                    Console.WriteLine(backwardsDegrees);
-                                    Console.WriteLine(facingDegrees);
-                                    Console.WriteLine(forwardDiff);
-                                    Console.WriteLine(backwardsDiff);
-
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // otherwise cycle through them
-                            CurrentWaypointIndex += WaypointTraversalDirection;
-
-                            if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= FarmingConfig.LocationConfiguration.Waypoints.Count)
-                            {
-                                if (FarmingConfig.LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR)
-                                {
-                                    CurrentWaypointIndex = 0;
-                                }
-                                else if (FarmingConfig.LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
-                                {
-                                    // since we detect this when we've gone out of bounds, switch direction.
-                                    // first addition puts us back in bounds, but we know we're already there, so do a second addition
-                                    WaypointTraversalDirection *= -1;
-                                    CurrentWaypointIndex += WaypointTraversalDirection;
-                                    CurrentWaypointIndex += WaypointTraversalDirection;
-                                }
-                            }
-                        }
-
+                        PickNextWaypoint();
                         CurrentPathfindingState = PathfindingState.MOVING_TOWARDS_WAYPOINT;
                         break;
                     case PathfindingState.MOVING_TOWARDS_WAYPOINT:
@@ -335,15 +278,16 @@ namespace WoWHelper
                             // by position (not waypoint index), since which index in
                             // Waypoints reaches that point -- and from which direction --
                             // doesn't matter. See WowMerchantConfiguration.
-                            var merchant = FarmingConfig.LocationConfiguration.MerchantConfig;
+                            var merchant = LocationConfiguration.MerchantConfig;
                             if (!IsOnMerchantRun && merchant != null && WorldState.BagsAreFull &&
-                                Vector2.Distance(FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex], merchant.Waypoints[0])
+                                Vector2.Distance(LocationConfiguration.Waypoints[CurrentWaypointIndex], merchant.Waypoints[0])
                                     <= WowPlayerConstants.MERCHANT_BRANCH_POINT_EPSILON)
                             {
                                 Console.WriteLine("Bags full at merchant branch point, starting merchant run");
                                 IsOnMerchantRun = true;
                                 CurrentMerchantRunPhase = MerchantRunPhase.WALKING_TO_MERCHANT;
                                 CurrentMerchantWaypointIndex = 1; // index 0 is where we're already standing
+                                MerchantRunStartTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                             }
 
                             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
@@ -371,8 +315,8 @@ namespace WoWHelper
         public async Task<bool> MoveTowardsWaypointTask()
         {
             return await MoveTowardsPointTask(
-                FarmingConfig.LocationConfiguration.Waypoints[CurrentWaypointIndex],
-                FarmingConfig.LocationConfiguration.DistanceTolerance);
+                LocationConfiguration.Waypoints[CurrentWaypointIndex],
+                LocationConfiguration.DistanceTolerance);
         }
 
         // Same rotate-or-strafe-and-walk-or-arrive logic MoveTowardsWaypointTask uses, against
@@ -443,7 +387,7 @@ namespace WoWHelper
         // See WowPlayerStates.MerchantRunPhase and WowMerchantConfiguration.
         public async Task MerchantRunStepTask()
         {
-            var merchant = FarmingConfig.LocationConfiguration.MerchantConfig;
+            var merchant = LocationConfiguration.MerchantConfig;
 
             switch (CurrentMerchantRunPhase)
             {
@@ -470,7 +414,7 @@ namespace WoWHelper
                     await EndWalkForwardTask();
                     await WowInput.PressKeyWithControl(WowInput.CTRL_TARGET_MERCHANT);
                     await Task.Delay(300); // let the client register the target before clicking
-                    Mouse.Move(FarmingConfig.ScreenConfiguration.Resolution.Width/2, FarmingConfig.ScreenConfiguration.Resolution.Height/2);
+                    Mouse.Move(ScreenConfiguration.Resolution.Width/2, ScreenConfiguration.Resolution.Height/2);
                     Mouse.PressButton(Mouse.MouseKeys.Right);
                     CurrentMerchantRunPhase = MerchantRunPhase.WAITING_FOR_AUTO_SELL;
                     break;
@@ -503,40 +447,6 @@ namespace WoWHelper
             }
         }
 
-        // Two ways to turn by a computed amount, both taking degreesToMove in
-        // GetDegreesToMove's convention (positive = left, negative = right): TurnByKeyboardTask
-        // and TurnByMouseDragTask. Both do the whole turn in one go rather than polling
-        // WorldState in a tight turn-and-recheck loop -- the addon's pixel-row update cadence
-        // lags real turning, so a loop that re-reads FacingDegrees every iteration and
-        // corrects on the fly tends to overshoot/oscillate on the stale reads. Keyboard is the
-        // one currently used everywhere (preferred feel); mouse is more accurate and kept for
-        // future use.
-
-        // Measured empirically: how long holding a single turn key takes to spin the
-        // character a full 360 degrees.
-        private const float FULL_ROTATION_MILLIS = 2000f;
-
-        // Holds TURN_LEFT/TURN_RIGHT for the duration degreesToMove corresponds to (via
-        // FULL_ROTATION_MILLIS). Returns the hold duration in millis.
-        private async Task<int> TurnByKeyboardTask(float degreesToMove)
-        {
-            Keys directionKey = degreesToMove <= 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
-            int turnMillis = (int)((Math.Abs(degreesToMove) / 360f) * FULL_ROTATION_MILLIS);
-
-            try
-            {
-                Keyboard.KeyDown(directionKey);
-                await Task.Delay(turnMillis);
-            }
-            finally
-            {
-                Keyboard.KeyUp(WowInput.TURN_LEFT);
-                Keyboard.KeyUp(WowInput.TURN_RIGHT);
-            }
-
-            return turnMillis;
-        }
-
         // How long to wait after a mouse turn before reading FacingDegrees back out, so the
         // addon's pixel row has repainted with the post-turn heading. Without it, a stale
         // read makes the caller think the turn fell short and turn again -- overshooting.
@@ -550,7 +460,7 @@ namespace WoWHelper
         // on whatever's under the cursor). Returns the pixels dragged (0 if skipped).
         private async Task<int> TurnByMouseDragTask(float degreesToMove)
         {
-            var screenConfig = FarmingConfig.ScreenConfiguration;
+            var screenConfig = ScreenConfiguration;
             int dragPixels = WowPathfinding.GetMouseDragPixelsForDegrees(
                 degreesToMove, screenConfig.MouseDragPixelsPerDegree, screenConfig.MouseDragOffsetDegrees);
             if (Math.Abs(dragPixels) < screenConfig.MouseDragMinEffectivePixels)
@@ -568,7 +478,7 @@ namespace WoWHelper
         // turn-rate calibration was measured from.
         private async Task RightClickDragTask(int deltaX)
         {
-            var resolution = FarmingConfig.ScreenConfiguration.Resolution;
+            var resolution = ScreenConfiguration.Resolution;
             Mouse.Move(resolution.Width / 2, resolution.Height / 4);
             await Task.Delay(50);
 
@@ -641,7 +551,7 @@ namespace WoWHelper
         private const float TARGET_FACING_CONE_DEGREES = 30f;
 
         // Signed bearing in degrees from the player's own screen position to a target marker
-        // position (see WowPlayer.FindTargetMarkerOnScreen / UIFunctions.lua's target-marker
+        // position (see WowScreenCapture.FindTargetMarkerOnScreen / UIFunctions.lua's target-marker
         // section): 0 = dead ahead, positive = turn right by that many degrees, negative =
         // turn left. There is no addon-legal way to read a target's actual position/bearing
         // in this client (UnitPosition, C_Map.GetPlayerMapPosition, and even nameplate frame
@@ -655,7 +565,7 @@ namespace WoWHelper
         // don't need a second full-screen capture just to also get a bearing out of it.
         private float GetBearingDegreesFromMarkerPosition(Point markerPosition)
         {
-            var resolution = FarmingConfig.ScreenConfiguration.Resolution;
+            var resolution = ScreenConfiguration.Resolution;
             float dx = markerPosition.X - (resolution.Width / 2f);
             float dy = markerPosition.Y - (resolution.Height / 2f);
 
@@ -670,7 +580,7 @@ namespace WoWHelper
         // on screen.
         private float? GetTargetMarkerBearingDegrees()
         {
-            var marker = FindTargetMarkerOnScreen();
+            var marker = WowScreenCapture.FindTargetMarkerOnScreen(ScreenConfiguration);
             return marker == null ? (float?)null : GetBearingDegreesFromMarkerPosition(marker.Value);
         }
 
@@ -777,7 +687,7 @@ namespace WoWHelper
                         return false;
                     }
 
-                    var marker = FindTargetMarkerOnScreen();
+                    var marker = WowScreenCapture.FindTargetMarkerOnScreen(ScreenConfiguration);
                     if (marker == null)
                     {
                         consecutiveMisses++;
@@ -795,7 +705,7 @@ namespace WoWHelper
                         MostRecentTargetMarkerY = marker.Value.Y;
 
                         float bearing = GetBearingDegreesFromMarkerPosition(marker.Value);
-                        float verticalOffset = marker.Value.Y - (FarmingConfig.ScreenConfiguration.Resolution.Height / 2f);
+                        float verticalOffset = marker.Value.Y - (ScreenConfiguration.Resolution.Height / 2f);
                         bool isInFrontOfPlayer = Math.Abs(bearing) <= 90f;
                         Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] marker={marker.Value} bearing={bearing:0.0} deg (cone +/-{TARGET_FACING_CONE_DEGREES / 2f:0.0}) verticalOffset={verticalOffset:0.0}px (shrinking magnitude = closer) inFront={isInFrontOfPlayer}");
 
@@ -1004,6 +914,102 @@ namespace WoWHelper
             await Task.Delay(0);
 
             return true;
+        }
+
+        public void PickNextWaypoint()
+        {
+            if (CurrentWaypointIndex == -1)
+            {
+                // we've never picked a waypoint yet, so find the closest one
+                Vector2 playerLocation = new Vector2(WorldState.MapX, WorldState.MapY);
+                CurrentWaypointIndex = LocationConfiguration.Waypoints
+                    .Select((p, i) => (dist: Vector2.Distance(playerLocation, p), index: i))
+                    .OrderBy(t => t.dist)
+                    .First()
+                    .index;
+
+                // Circular always goes in the same direction, so if you interrupt and restart, you'll still be going the same direction.
+                // For linear let's do our best guess to pick the best direction
+                if (LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
+                {
+                    if (CurrentWaypointIndex == 0)
+                    {
+                        WaypointTraversalDirection = 1;
+                    }
+                    else if (CurrentWaypointIndex == LocationConfiguration.Waypoints.Count - 1)
+                    {
+                        WaypointTraversalDirection = -1;
+                    }
+                    else
+                    {
+                        var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(LocationConfiguration.Waypoints[CurrentWaypointIndex], LocationConfiguration.Waypoints[CurrentWaypointIndex + 1]);
+                        var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(LocationConfiguration.Waypoints[CurrentWaypointIndex], LocationConfiguration.Waypoints[CurrentWaypointIndex - 1]);
+                        var facingDegrees = WorldState.FacingDegrees;
+                        var forwardDiff = WowPathfinding.GetDegreesToMove(facingDegrees, forwardDegrees);
+                        var backwardsDiff = WowPathfinding.GetDegreesToMove(facingDegrees, backwardsDegrees);
+
+                        if (backwardsDiff < forwardDiff)
+                        {
+                            WaypointTraversalDirection = -1;
+                        }
+
+                        Console.WriteLine("Forward/Backwards/Facing/AbsFor/AbsBack");
+                        Console.WriteLine(forwardDegrees);
+                        Console.WriteLine(backwardsDegrees);
+                        Console.WriteLine(facingDegrees);
+                        Console.WriteLine(forwardDiff);
+                        Console.WriteLine(backwardsDiff);
+
+                    }
+                }
+            }
+            else
+            {
+                // otherwise cycle through them
+                CurrentWaypointIndex += WaypointTraversalDirection;
+
+                if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= LocationConfiguration.Waypoints.Count)
+                {
+                    if (LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.CIRCULAR)
+                    {
+                        CurrentWaypointIndex = 0;
+                    }
+                    else if (LocationConfiguration.TraversalMethod == WowLocationConfiguration.WaypointTraversalMethod.LINEAR)
+                    {
+                        // since we detect this when we've gone out of bounds, switch direction.
+                        // first addition puts us back in bounds, but we know we're already there, so do a second addition
+                        WaypointTraversalDirection *= -1;
+                        CurrentWaypointIndex += WaypointTraversalDirection;
+                        CurrentWaypointIndex += WaypointTraversalDirection;
+                    }
+                }
+            }
+        }
+
+        // If distance is long enough, face using keyboard.  If not, stop and use mouse?
+        public async Task<bool> FaceWaypointTask()
+        {
+            await Task.Delay(0);
+            return true;
+            //await RotateToDirectionTaskWithKeyboard(desiredDegrees, targetDistance);
+        }
+
+        private async Task<int> TurnByKeyboardTask(float degreesToMove)
+        {
+            Keys directionKey = degreesToMove <= 0 ? WowInput.TURN_RIGHT : WowInput.TURN_LEFT;
+            int turnMillis = (int)((Math.Abs(degreesToMove) / 360f) * WowPathfinding.FULL_ROTATION_MILLIS);
+
+            try
+            {
+                Keyboard.KeyDown(directionKey);
+                await Task.Delay(turnMillis);
+            }
+            finally
+            {
+                Keyboard.KeyUp(directionKey);
+            }
+
+            return turnMillis;
         }
     }
 }

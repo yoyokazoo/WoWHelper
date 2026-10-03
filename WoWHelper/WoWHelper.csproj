@@ -139,11 +139,13 @@
     <Compile Include="Code\Constants\WowGameplayConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerStates.cs" />
-    <Compile Include="Code\Config\Definitions\WowFarmingConfiguration.cs" />
+    <Compile Include="Code\Config\Definitions\WowCombatConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowLocationConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowMerchantConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\CreatureConfig.cs" />
+    <Compile Include="Code\Config\Definitions\WowLevelingConfiguration.cs" />
     <Compile Include="Code\Config\Data\WowLocationConfigs.cs" />
+    <Compile Include="Code\Config\Data\WowLevelingConfigs.cs" />
     <Compile Include="Code\Gameplay\WowCommonCombatTasks.cs" />
     <Compile Include="Code\Gameplay\WowConfigResolutionTasks.cs" />
     <Compile Include="Code\Gameplay\WowManagementTasks.cs" />
@@ -155,9 +157,11 @@
     <Compile Include="Code\Gameplay\WowWarlockTasks.cs" />
     <Compile Include="Code\Gameplay\WowWarriorTasks.cs" />
     <Compile Include="Code\Shared\BitmapDifferenceVisualizer.cs" />
+    <Compile Include="Code\Shared\GeneralHelpers.cs" />
     <Compile Include="Code\Shared\KeyPoller.cs" />
     <Compile Include="Code\Constants\WowInput.cs" />
     <Compile Include="Code\Gameplay\WowPlayer.cs" />
+    <Compile Include="Code\Gameplay\WowScreenCapture.cs" />
     <Compile Include="Code\Gameplay\WowWorldState.cs" />
     <Compile Include="Code\Gameplay\WowClassState.cs" />
     <Compile Include="Code\Gameplay\WowWarriorClassState.cs" />

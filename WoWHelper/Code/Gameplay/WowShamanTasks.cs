@@ -158,7 +158,7 @@ namespace WoWHelper
             // this runs inside the combat loop, which can be reached with it still unresolved
             // if the bot was (re)started mid-fight (see "Automatic farming-config resolution"
             // in CLAUDE.md).
-            if (FarmingConfig.LocationConfiguration != null && FarmingConfig.LocationConfiguration.AllMobsInZoneAreNatureImmune())
+            if (LocationConfiguration != null && LocationConfiguration.AllMobsInZoneAreNatureImmune())
             {
                 return false;
             }
@@ -271,7 +271,7 @@ namespace WoWHelper
 
             bool hpRecovered = WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD;
             bool mpRecovered = WorldState.ResourcePercent >= WowPlayerConstants.STOP_RESTING_MP_THRESHOLD;
-            bool potionIsCooledDown = !WowPlayer.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
 
             if (ShamanShouldCastCurePoison(classState))
@@ -380,7 +380,7 @@ namespace WoWHelper
         // CanSpellcastPullTarget is shared with Warlock under the same name but
         // each class gets its own ClassState type, so each also gets its own
         // thin CanEngageTarget wrapper. Shaman always pulls with a spell
-        // regardless of FarmingConfig.EngageMethod (Charge/Pull only matters for
+        // regardless of LocationConfiguration.EngageMethod (Charge/Pull only matters for
         // Warrior -- see the enum's own comment on WowLocationConfiguration.cs),
         // so unlike WarriorCanEngageTarget this doesn't need to dispatch on it at all.
         public bool ShamanCanEngageTarget(WowShamanClassState classState)

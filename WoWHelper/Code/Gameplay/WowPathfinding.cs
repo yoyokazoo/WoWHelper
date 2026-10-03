@@ -26,6 +26,12 @@ namespace WoWHelper.Code
 
         public const float STRAFE_LATERAL_DISTANCE_TOLERANCE = 0.04f;
 
+        // Found experimentally, https://docs.google.com/spreadsheets/d/1rKDjzZpp7rHOLpsKg3mYy_qlmD5BkHvBZwc6nGFjMVw/edit?gid=0#gid=0
+        public const float PLAYER_MOVE_SPEED = 0.1325f;
+        // Found experimentally
+        public const float FULL_ROTATION_MILLIS = 2000f;
+
+
         public static float GetDesiredDirectionInDegrees(Vector2 waypoint1, Vector2 waypoint2)
         {
             float dx = waypoint2.X - waypoint1.X;
@@ -73,6 +79,37 @@ namespace WoWHelper.Code
             {
                 return deltaDegrees;
             }
+        }
+
+        // Returns the signed degrees to turn (GetDegreesToMove convention: + = left, - = right)
+        // so that, while walking forward at PLAYER_MOVE_SPEED during the turn, you end up
+        // facing `target`. Returns null if the target is inside the turning circle (unreachable).
+        public static float? GetDegreesToMoveWhileWalking(Vector2 player, float facingDegrees, Vector2 target, float naiveDegreesToMove)
+        {
+            double omega = 2 * Math.PI / (FULL_ROTATION_MILLIS / 1000.0);   // rad/s
+            double r = PLAYER_MOVE_SPEED / omega;
+
+            // Target relative to player, in the same corrected space GetDesiredDirectionInDegrees uses
+            double tx = target.X - player.X;
+            double ty = -(target.Y - player.Y) * 0.666;
+
+            double phi0 = (facingDegrees + 90) * Math.PI / 180;   // WoW deg -> math angle
+            int s = naiveDegreesToMove >= 0 ? 1 : -1;               // +1 left (CCW), -1 right (CW)
+
+            // Turn-circle center: r along the heading's left normal (or right, for s = -1)
+            double cx = s * r * -Math.Sin(phi0);
+            double cy = s * r * Math.Cos(phi0);
+
+            double dx = tx - cx, dy = ty - cy;
+            double d = Math.Sqrt(dx * dx + dy * dy);
+            if (d <= r) return null;
+
+            double cp = Math.Atan2(dy, dx) - s * Math.Acos(r / d);  // tangent point's angle around C
+            double phiEnd = cp + s * Math.PI / 2;                   // heading at tangent point
+
+            double turn = s * (phiEnd - phi0);                      // magnitude in turn direction
+            turn = ((turn % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+            return (float)(s * turn * 180 / Math.PI);
         }
 
         // Right-click-drag turning rate is resolution-dependent -- confirmed by
