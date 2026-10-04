@@ -28,7 +28,7 @@ namespace WoWHelperUnitTests
         [DataRow(340f, 40f, 60f)]
         public void VerifyGetDirectionToDragMouse(float currentDegrees, float desiredDegrees, float expectedDegrees)
         {
-            var degreesToMove = WowPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
+            var degreesToMove = WowPathfinding.GetDegreesToMoveWhileStationary(currentDegrees, desiredDegrees);
             AssertExtensions.DoublesAreAlmostEqual(expectedDegrees, degreesToMove);
         }
 

@@ -331,7 +331,7 @@ namespace WoWHelper
                 case FindEnemyTargetState.FACE_WAYPOINT:
                     // TODO: debugging, remove this
                     float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, CurrentWaypoint);
-                    float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
+                    float? degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint, WalkingForward);
                     Console.WriteLine($"Before FaceWaypointTask facing {WorldState.FacingDegrees}, aiming towards {desiredDegrees}, need to move {degreesDifference} degrees.");
 
                     await FaceWaypointTask();
@@ -341,7 +341,7 @@ namespace WoWHelper
                     await Task.Delay(200);
                     await UpdateWorldStateAsync();
                     desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, CurrentWaypoint);
-                    degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
+                    degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint, WalkingForward);
                     Console.WriteLine($"After FaceWaypointTask facing {WorldState.FacingDegrees}, error of {degreesDifference} degrees");
 
                     break;

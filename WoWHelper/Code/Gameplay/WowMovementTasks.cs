@@ -331,7 +331,10 @@ namespace WoWHelper
         {
             float targetDistance = Vector2.Distance(WorldState.PlayerLocation, target);
             float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, target);
-            float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
+            // Inside the turning circle while walking: use the turn-in-place difference, so the
+            // rotate-to-heading branch below handles it
+            float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.PlayerLocation, WorldState.FacingDegrees, target, WalkingForward)
+                ?? WowPathfinding.GetDegreesToMoveWhileStationary(WorldState.FacingDegrees, desiredDegrees);
 
             Console.WriteLine($"Heading towards {target}. At {WorldState.MapX},{WorldState.MapY}.  DesiredDegrees: {desiredDegrees}, facing degrees: {WorldState.FacingDegrees}.  DegreesDifference: {degreesDifference}");
 
@@ -520,7 +523,7 @@ namespace WoWHelper
             UpdateWorldState();
 
             float currentDegrees = WorldState.FacingDegrees;
-            float degreesToMove = WowPathfinding.GetDegreesToMove(currentDegrees, desiredDegrees);
+            float degreesToMove = WowPathfinding.GetDegreesToMoveWhileStationary(currentDegrees, desiredDegrees);
             float absDegreesToMove = Math.Abs(degreesToMove);
             float tolerance = WowPathfinding.GetWaypointDegreesTolerance(distance);
 
@@ -535,7 +538,7 @@ namespace WoWHelper
 
             UpdateWorldState();
 
-            float verifyDegreesToMove = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
+            float verifyDegreesToMove = WowPathfinding.GetDegreesToMoveWhileStationary(WorldState.FacingDegrees, desiredDegrees);
             bool success = Math.Abs(verifyDegreesToMove) <= tolerance;
 
             Console.WriteLine($"DEBUG RotateToDirectionTask: post-turn facing {WorldState.FacingDegrees:0.0}, remaining degreesToMove {verifyDegreesToMove:0.0} (tolerance {tolerance:0.0}) -> success={success}");
@@ -972,8 +975,8 @@ namespace WoWHelper
                     var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(CurrentWaypoint, LocationConfiguration.Waypoints[CurrentWaypointIndex + 1]);
                     var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(CurrentWaypoint, LocationConfiguration.Waypoints[CurrentWaypointIndex - 1]);
                     var facingDegrees = WorldState.FacingDegrees;
-                    var forwardDiff = WowPathfinding.GetDegreesToMove(facingDegrees, forwardDegrees);
-                    var backwardsDiff = WowPathfinding.GetDegreesToMove(facingDegrees, backwardsDegrees);
+                    var forwardDiff = WowPathfinding.GetDegreesToMoveWhileStationary(facingDegrees, forwardDegrees);
+                    var backwardsDiff = WowPathfinding.GetDegreesToMoveWhileStationary(facingDegrees, backwardsDegrees);
                     Console.WriteLine($"At {CurrentWaypoint}, picking direction to start LINEAR path.  {forwardDiff} to {LocationConfiguration.Waypoints[CurrentWaypointIndex + 1]}, {backwardsDiff} to {LocationConfiguration.Waypoints[CurrentWaypointIndex - 1]}");
 
                     if (Math.Abs(backwardsDiff) < Math.Abs(forwardDiff))
@@ -998,17 +1001,17 @@ namespace WoWHelper
             }
         }
 
-        // If distance is long enough, face using keyboard.  If not, stop and use mouse?
         public async Task FaceWaypointTask()
         {
-            // TODO: handle differently if we're very close to the WP
-            // TODO: handle differently if we're in motion
-            
-            //float targetDistance = Vector2.Distance(WorldState.PlayerLocation, target);
-            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, CurrentWaypoint);
-            float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
+            float? degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint, WalkingForward);
+            if (degreesDifference == null)
+            {
+                // Too tight of a turn while walking.  Stop and turn.
+                await EndWalkForwardTask();
+                degreesDifference = WowPathfinding.GetDegreesToMoveWhileStationary(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint);
+            }
 
-            await TurnByKeyboardTask(degreesDifference);
+            await TurnByKeyboardTask(degreesDifference.Value);
         }
 
         public bool WalkingForward = false;
@@ -1019,11 +1022,18 @@ namespace WoWHelper
                 await StartWalkForwardTask();
             }
 
-            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, CurrentWaypoint);
-            float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
-            if (Math.Abs(degreesDifference) > WowPathfinding.WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES)
+            float? degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint, WalkingForward);
+            if (degreesDifference == null)
             {
-                await TurnByKeyboardTask(degreesDifference);
+                // Too tight of a turn while walking.  Stop and turn.
+                await EndWalkForwardTask();
+                await TurnByKeyboardTask(WowPathfinding.GetDegreesToMoveWhileStationary(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint));
+                return;
+            }
+
+            if (Math.Abs(degreesDifference.Value) > WowPathfinding.WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES)
+            {
+                await TurnByKeyboardTask(degreesDifference.Value);
             }
         }
 

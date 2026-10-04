@@ -59,7 +59,29 @@ namespace WoWHelper.Code
             return (float)directionInDegrees;
         }
 
-        public static float GetDegreesToMove(float currentDegrees, float desiredDegrees)
+        // Signed turn (+ = left, - = right) to face `target`, picking the turning-circle math
+        // when walkingForward (see GetDegreesToMoveWhileWalking) or a plain turn-in-place
+        // otherwise. Null only when walking and the target is inside the turning circle --
+        // callers should stop walking and turn in place instead.
+        public static float? GetDegreesToMove(Vector2 player, float facingDegrees, Vector2 target, bool walkingForward)
+        {
+            if (walkingForward)
+            {
+                return GetDegreesToMoveWhileWalking(player, facingDegrees, target);
+            }
+
+            return GetDegreesToMoveWhileStationary(player, facingDegrees, target);
+        }
+
+        public static float GetDegreesToMoveWhileStationary(Vector2 player, float facingDegrees, Vector2 target)
+        {
+            float desiredDegrees = GetDesiredDirectionInDegrees(player, target);
+            return GetDegreesToMoveWhileStationary(facingDegrees, desiredDegrees);
+        }
+
+        // Signed difference between two headings, wrapped to +/-180 (+ = left, - = right).
+        // Heading-only overload, for callers that don't have a target position.
+        public static float GetDegreesToMoveWhileStationary(float currentDegrees, float desiredDegrees)
         {
             float deltaDegrees = desiredDegrees - currentDegrees;
 
@@ -84,8 +106,12 @@ namespace WoWHelper.Code
         // Returns the signed degrees to turn (GetDegreesToMove convention: + = left, - = right)
         // so that, while walking forward at PLAYER_MOVE_SPEED during the turn, you end up
         // facing `target`. Returns null if the target is inside the turning circle (unreachable).
-        public static float? GetDegreesToMoveWhileWalking(Vector2 player, float facingDegrees, Vector2 target, float naiveDegreesToMove)
+        // Turn direction follows the stationary turn's sign, but the result is NOT wrapped to
+        // +/-180 -- once committed to a direction, the needed turn can exceed 180.
+        public static float? GetDegreesToMoveWhileWalking(Vector2 player, float facingDegrees, Vector2 target)
         {
+            float naiveDegreesToMove = GetDegreesToMoveWhileStationary(player, facingDegrees, target);
+
             double omega = 2 * Math.PI / (FULL_ROTATION_MILLIS / 1000.0);   // rad/s
             double r = PLAYER_MOVE_SPEED / omega;
 
