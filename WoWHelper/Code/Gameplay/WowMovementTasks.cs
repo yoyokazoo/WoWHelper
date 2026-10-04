@@ -1022,18 +1022,10 @@ namespace WoWHelper
                 await StartWalkForwardTask();
             }
 
-            float? degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint, WalkingForward);
-            if (degreesDifference == null)
+            float degreesDifference = WowPathfinding.GetDegreesToMoveWhileStationary(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint);
+            if (Math.Abs(degreesDifference) > WowPathfinding.WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES)
             {
-                // Too tight of a turn while walking.  Stop and turn.
-                await EndWalkForwardTask();
-                await TurnByKeyboardTask(WowPathfinding.GetDegreesToMoveWhileStationary(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint));
-                return;
-            }
-
-            if (Math.Abs(degreesDifference.Value) > WowPathfinding.WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES)
-            {
-                await TurnByKeyboardTask(degreesDifference.Value);
+                await FaceWaypointTask();
             }
         }
 
