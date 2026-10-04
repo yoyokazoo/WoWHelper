@@ -1018,6 +1018,13 @@ namespace WoWHelper
             {
                 await StartWalkForwardTask();
             }
+
+            float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, CurrentWaypoint);
+            float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
+            if (Math.Abs(degreesDifference) > WowPathfinding.WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES)
+            {
+                await TurnByKeyboardTask(degreesDifference);
+            }
         }
 
         private async Task<int> TurnByKeyboardTask(float degreesToMove)
