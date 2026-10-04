@@ -807,6 +807,7 @@ namespace WoWHelper
 
         public async Task<bool> StartWalkForwardTask()
         {
+            WalkingForward = true;
             await Task.Delay(0);
             Keyboard.KeyDown(WowInput.MOVE_FORWARD);
             return true;
@@ -814,6 +815,7 @@ namespace WoWHelper
 
         public async Task<bool> EndWalkForwardTask()
         {
+            WalkingForward = false;
             await Task.Delay(0);
             Keyboard.KeyUp(WowInput.MOVE_FORWARD);
             Keyboard.KeyUp(WowInput.STRAFE_LEFT);
@@ -1007,6 +1009,15 @@ namespace WoWHelper
             float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
 
             await TurnByKeyboardTask(degreesDifference);
+        }
+
+        public bool WalkingForward = false;
+        public async Task WalkToWaypointTask()
+        {
+            if (!WalkingForward)
+            {
+                await StartWalkForwardTask();
+            }
         }
 
         private async Task<int> TurnByKeyboardTask(float degreesToMove)

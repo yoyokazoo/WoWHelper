@@ -341,8 +341,28 @@ namespace WoWHelper
                     break;
                 case FindFightState.WALK_TO_WAYPOINT:
                     Console.WriteLine($"FindFightState.WALK_TO_WAYPOINT not yet implemented, exiting");
-                    await Task.Delay(10);
-                    Environment.Exit(0);
+                    
+                    // TODO: return true if we can intersect with the waypoint by holding down forward.
+                    // if we can't, AKA we're close to the WP, but not close enough to be on it and it's inside our
+                    // 0.42 radius circle, return false so we can stop walking forward, re-face, then re-walk forward.
+                    // In general our navigation threshold should be set such that this is impossible, and our NPC waypoints
+                    // we'll set tight thresholds
+                    await WalkToWaypointTask();
+
+                    float targetDistance = Vector2.Distance(WorldState.PlayerLocation, CurrentWaypoint);
+                    bool arrived = targetDistance <= 0.2f; // default distance tolerance.  We can probably get this lower by improving our pathfinding
+                    if (arrived)
+                    {
+                        await EndWalkForwardTask();
+                        Console.WriteLine($"Arrived at {CurrentWaypoint}, distance away {targetDistance}, exiting");
+                        await Task.Delay(10);
+                        Environment.Exit(0);
+                    }
+                    else
+                    {
+                        // haven't arrived yet, do nothing, we'll keep walking till the next 
+                    }
+
                     break;
             }
         }
