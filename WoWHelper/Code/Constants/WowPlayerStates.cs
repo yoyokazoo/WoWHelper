@@ -65,7 +65,7 @@
         public enum PlayerGoal
         {
             FIGHT,
-            FIND_FIGHT,
+            FIND_ENEMY_TARGET,
             LOG_OUT,
             REPAIR,
             SELL,
@@ -80,11 +80,13 @@
             WAITING_FOR_LOGOUT,
         }
 
-        public enum FindFightState
+        public enum FindEnemyTargetState
         {
             PICK_NEXT_WAYPOINT,
             FACE_WAYPOINT,
-            WALK_TO_WAYPOINT
+            WALK_TO_WAYPOINT,
+            WALK_TO_TARGETED_ENEMY,
+            ENGAGE_TARGETED_ENEMY
         }
     }
 }

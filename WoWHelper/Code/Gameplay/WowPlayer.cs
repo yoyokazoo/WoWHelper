@@ -20,6 +20,9 @@ namespace WoWHelper
     {
         public long FarmStartTime { get; private set; }
         public long LastFindTargetTime { get; private set; }
+        public int FindTargetCount { get; private set; }
+        public long LastFindTargetMarkerTime { get; private set; }
+        public Point LastFindTargetMarkerPoint { get; private set; }
         public long LastLineOfSightBailoutTime { get; private set; }
         public long LastJumpTime { get; private set; }
         public long DynamiteTime { get; private set; }
@@ -46,7 +49,7 @@ namespace WoWHelper
         public PathfindingState CurrentPathfindingState { get; private set; }
         public PlayerGoal CurrentPlayerGoal { get; private set; }
         public LogoutState CurrentLogoutState { get; private set; }
-        public FindFightState CurrentFindFightState { get; private set; }
+        public FindEnemyTargetState CurrentFindEnemyTargetState { get; private set; }
 
         public int CurrentWaypointIndex { get; private set; }
         public Vector2 CurrentWaypoint => LocationConfiguration.Waypoints[CurrentWaypointIndex]; 
@@ -260,15 +263,15 @@ namespace WoWHelper
             // return;
             // }
 
-            if (CurrentPlayerGoal != PlayerGoal.FIND_FIGHT)
+            if (CurrentPlayerGoal != PlayerGoal.FIND_ENEMY_TARGET)
             {
                 CurrentWaypointIndex = -1;
                 WaypointTraversalDirection = 1;
 
-                CurrentFindFightState = FindFightState.PICK_NEXT_WAYPOINT;
+                CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
             }
 
-            CurrentPlayerGoal = PlayerGoal.FIND_FIGHT;
+            CurrentPlayerGoal = PlayerGoal.FIND_ENEMY_TARGET;
         }
 
         public async Task ExecuteGoalTask()
@@ -278,8 +281,8 @@ namespace WoWHelper
                 case PlayerGoal.FIGHT:
                     Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
                     break;
-                case PlayerGoal.FIND_FIGHT:
-                    await PlayerFindFightGoalTask();
+                case PlayerGoal.FIND_ENEMY_TARGET:
+                    await PlayerFindEnemyTargetGoalTask();
                     break;
                 case PlayerGoal.SELL:
                     Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
@@ -311,25 +314,28 @@ namespace WoWHelper
             }
         }
 
-        public async Task PlayerFindFightGoalTask()
+        public async Task PlayerFindEnemyTargetGoalTask()
         {
-            switch (CurrentFindFightState)
+            await TargetEnemyTask();
+            UpdateCurrentFindEnemyTargetState();
+
+            switch (CurrentFindEnemyTargetState)
             {
-                case FindFightState.PICK_NEXT_WAYPOINT:
+                case FindEnemyTargetState.PICK_NEXT_WAYPOINT:
                     // TODO: May need to rethink this a bit since we'll be re-entering this
                     // method so I think it's going to advance us through the waypoints incorrectly
                     PickNextWaypoint();
-                    CurrentFindFightState = FindFightState.FACE_WAYPOINT;
+                    CurrentFindEnemyTargetState = FindEnemyTargetState.FACE_WAYPOINT;
                     Console.WriteLine($"Picked next waypoint: {CurrentWaypoint}");
                     break;
-                case FindFightState.FACE_WAYPOINT:
+                case FindEnemyTargetState.FACE_WAYPOINT:
                     // TODO: debugging, remove this
                     float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, CurrentWaypoint);
                     float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
                     Console.WriteLine($"Before FaceWaypointTask facing {WorldState.FacingDegrees}, aiming towards {desiredDegrees}, need to move {degreesDifference} degrees.");
 
                     await FaceWaypointTask();
-                    CurrentFindFightState = FindFightState.WALK_TO_WAYPOINT;
+                    CurrentFindEnemyTargetState = FindEnemyTargetState.WALK_TO_WAYPOINT;
 
                     // TODO: Debugging, remove this
                     await Task.Delay(200);
@@ -339,7 +345,7 @@ namespace WoWHelper
                     Console.WriteLine($"After FaceWaypointTask facing {WorldState.FacingDegrees}, error of {degreesDifference} degrees");
 
                     break;
-                case FindFightState.WALK_TO_WAYPOINT:
+                case FindEnemyTargetState.WALK_TO_WAYPOINT:
                     // TODO: return true if we can intersect with the waypoint by holding down forward.
                     // if we can't, AKA we're close to the WP, but not close enough to be on it and it's inside our
                     // 0.42 radius circle, return false so we can stop walking forward, re-face, then re-walk forward.
@@ -348,17 +354,11 @@ namespace WoWHelper
                     await WalkToWaypointTask();
 
                     float targetDistance = Vector2.Distance(WorldState.PlayerLocation, CurrentWaypoint);
-                    bool arrived = targetDistance <= LocationConfiguration.DistanceTolerance; // default distance tolerance.  We can probably get this lower by improving our pathfinding
+                    bool arrived = targetDistance <= LocationConfiguration.DistanceTolerance;
                     if (arrived)
                     {
-                        /*
-                        await EndWalkForwardTask();
-                        Console.WriteLine($"Arrived at {CurrentWaypoint}, distance away {targetDistance}, exiting");
-                        await Task.Delay(10);
-                        Environment.Exit(0);
-                        */
                         Console.WriteLine($"Arrived at {CurrentWaypoint}, distance away {targetDistance}, picking next waypoint");
-                        CurrentFindFightState = FindFightState.PICK_NEXT_WAYPOINT;
+                        CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
                     }
                     else
                     {
@@ -366,7 +366,77 @@ namespace WoWHelper
                     }
 
                     break;
+                case FindEnemyTargetState.WALK_TO_TARGETED_ENEMY:
+                    Console.WriteLine($"Not yet implemented {CurrentFindEnemyTargetState}");
+                    Environment.Exit(0);
+                    break;
+                case FindEnemyTargetState.ENGAGE_TARGETED_ENEMY:
+                    Console.WriteLine($"Not yet implemented {CurrentFindEnemyTargetState}");
+                    Environment.Exit(0);
+                    break;
             }
+        }
+
+        public async Task TargetEnemyTask()
+        {
+            if (GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
+            {
+                return;
+            }
+
+            LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            FindTargetCount++;
+
+            if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.TAB)
+            {
+                await WowInput.PressKey(WowInput.TAB_TARGET);
+            }
+            else if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
+            {
+                await WowInput.PressKey(WowInput.FIND_TARGET_MACRO);
+            }
+            else if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
+            {
+                if (FindTargetCount % 2 == 0)
+                {
+                    await WowInput.PressKey(WowInput.TAB_TARGET);
+                }
+                else
+                {
+                    await WowInput.PressKey(WowInput.FIND_TARGET_MACRO);
+                }
+            }
+        }
+
+        public void UpdateCurrentFindEnemyTargetState()
+        {
+            if (!GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetMarkerTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS) &&
+                TryFindTargetMarkerOnScreen())
+            {
+                CurrentFindEnemyTargetState = FindEnemyTargetState.WALK_TO_TARGETED_ENEMY;
+                return;
+            }
+
+            /*
+            if (CanEngageTarget())
+            {
+                CurrentFindEnemyTargetState = FindEnemyTargetState.ENGAGE_TARGETED_ENEMY;
+                return;
+            }
+            */
+        }
+
+        public bool TryFindTargetMarkerOnScreen()
+        {
+            LastFindTargetMarkerTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            var targetMarker = WowScreenCapture.FindTargetMarkerOnScreen(ScreenConfiguration);
+            if (targetMarker == null)
+            {
+                return false;
+            }
+
+            LastFindTargetMarkerPoint = targetMarker.Value;
+            return true;
         }
 
         /*
