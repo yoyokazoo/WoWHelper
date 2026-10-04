@@ -49,6 +49,7 @@ namespace WoWHelper
         public FindFightState CurrentFindFightState { get; private set; }
 
         public int CurrentWaypointIndex { get; private set; }
+        public Vector2 CurrentWaypoint => LocationConfiguration.Waypoints[CurrentWaypointIndex]; 
         public int WaypointTraversalDirection { get; private set; }
 
         public bool IsOnMerchantRun { get; private set; }
@@ -315,13 +316,33 @@ namespace WoWHelper
             switch (CurrentFindFightState)
             {
                 case FindFightState.PICK_NEXT_WAYPOINT:
+                    // TODO: May need to rethink this a bit since we'll be re-entering this
+                    // method so I think it's going to advance us through the waypoints incorrectly
                     PickNextWaypoint();
                     CurrentFindFightState = FindFightState.FACE_WAYPOINT;
+                    Console.WriteLine($"Picked next waypoint: {CurrentWaypoint}");
                     break;
                 case FindFightState.FACE_WAYPOINT:
-                    
+                    // TODO: debugging, remove this
+                    float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, CurrentWaypoint);
+                    float degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
+                    Console.WriteLine($"Before FaceWaypointTask facing {WorldState.FacingDegrees}, aiming towards {desiredDegrees}, need to move {degreesDifference} degrees.");
+
+                    await FaceWaypointTask();
+                    CurrentFindFightState = FindFightState.WALK_TO_WAYPOINT;
+
+                    // TODO: Debugging, remove this
+                    await Task.Delay(200);
+                    await UpdateWorldStateAsync();
+                    desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, CurrentWaypoint);
+                    degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.FacingDegrees, desiredDegrees);
+                    Console.WriteLine($"After FaceWaypointTask facing {WorldState.FacingDegrees}, error of {degreesDifference} degrees");
+
                     break;
                 case FindFightState.WALK_TO_WAYPOINT:
+                    Console.WriteLine($"FindFightState.WALK_TO_WAYPOINT not yet implemented, exiting");
+                    await Task.Delay(10);
+                    Environment.Exit(0);
                     break;
             }
         }
