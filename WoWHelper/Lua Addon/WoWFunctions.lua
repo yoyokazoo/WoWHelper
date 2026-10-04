@@ -1618,6 +1618,64 @@ end
 -- trainer tables those read. G8 (GearNeedsRepair()) is a weapon at yellow
 -- durability or any other piece broken. The G byte is now full; the B byte is
 -- still fully reserved for future class-agnostic flags.
+------------------------------------------------------------
+-- Target-finding macro. The bot presses this macro (WowInput.FIND_TARGET_MACRO)
+-- to find mobs; its /target lines differ per farming route, so the bot types
+-- "/yytarget Mottled,Scorpid" (YoyokazooUI.lua) once it has resolved its route,
+-- and SetTargetMacroMobs() rewrites the macro's body in place -- in place, so
+-- its keybind survives. The macro itself must already exist (the addon never
+-- creates it); IsTargetMacroMissing() drives an on-screen alert on
+-- PLAYER_ENTERING_WORLD (YoyokazooUI.lua) if it doesn't.
+------------------------------------------------------------
+TARGET_MACRO_NAME = "0 Targ"
+local MAX_MACRO_BODY_LENGTH = 255
+
+function IsTargetMacroMissing()
+    return GetMacroIndexByName(TARGET_MACRO_NAME) == 0
+end
+
+-- mobNamesCsv is e.g. "Mottled,Scorpid". Returns true on success, or false plus
+-- a reason.
+function SetTargetMacroMobs(mobNamesCsv)
+    if InCombatLockdown() then
+        return false, "can't edit macros in combat"
+    end
+
+    local macroIndex = GetMacroIndexByName(TARGET_MACRO_NAME)
+    if macroIndex == 0 then
+        return false, "no macro named \"" .. TARGET_MACRO_NAME .. "\""
+    end
+
+    local lines = { "/cleartarget", "/stopmacro [mod:shift]" }
+    for name in string.gmatch(mobNamesCsv or "", "[^,]+") do
+        name = strtrim(name)
+        if name ~= "" then
+            table.insert(lines, "/target " .. name)
+        end
+    end
+
+    if #lines == 2 then
+        return false, "no mob names given"
+    end
+
+    local body = table.concat(lines, "\n")
+    if #body > MAX_MACRO_BODY_LENGTH then
+        return false, "macro body is " .. #body .. " chars, over the " .. MAX_MACRO_BODY_LENGTH .. " limit"
+    end
+
+    -- Pass the existing name/icon back unchanged, so only the body changes.
+    local name, icon = GetMacroInfo(macroIndex)
+    EditMacro(macroIndex, name, icon, body)
+
+    -- Read it back rather than trusting EditMacro silently worked.
+    local _, _, newBody = GetMacroInfo(GetMacroIndexByName(TARGET_MACRO_NAME))
+    if newBody ~= body then
+        return false, "EditMacro didn't take -- body reads back as: " .. tostring(newBody)
+    end
+
+    return true
+end
+
 function GetMultiBoolTwo()
     local boolR1 = IsTargetLongRangeCaster()
     local boolR2 = IsLogoffMobSeen()

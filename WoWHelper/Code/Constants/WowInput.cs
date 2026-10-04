@@ -184,22 +184,22 @@ namespace WoWHelper.Code
         public const Keys CTRL_TARGET_MERCHANT = Keys.D8;
 
         /*
-         * 9 Clr
-/cleartarget
+         * 9 Pot
+#showtooltip Healing Potion
+/use Healing Potion
         */
-        public const Keys CLEAR_TARGET_MACRO = Keys.D9;
+        public const Keys HEALING_POTION = Keys.D9;
         public const Keys SHIFT_9 = Keys.D9;
 
         /*
-         * 0 Targ
-#showtooltip [mod:shift] Healing Potion; Target
-/use [mod:shift] Healing Potion
-/stopmacro [mod:shift]
+         * 0 Targ -- body is rewritten per route by the addon's /yytarget command (see
+         * WowLocationConfiguration.TargetMacroMobNames); the macro just has to exist.
 /cleartarget
-/target Fleeting
+/stopmacro [mod:shift]
+/target Mottled
         */
         public const Keys FIND_TARGET_MACRO = Keys.D0;
-        public const Keys SHIFT_HEALING_POTION = Keys.D0;
+        public const Keys SHIFT_CLEAR_TARGET = Keys.D0;
 
         /*
          * - Dyn
@@ -276,6 +276,59 @@ namespace WoWHelper.Code
             LatestControlKey = key;
 
             await PressKeyWithModifier(key, Keys.LControlKey);
+        }
+
+        #endregion
+
+        #region Chat Typing
+
+        // Types a line into chat and sends it, e.g. TypeChatLineTask("/yytarget Mottled,Scorpid").
+        // InputManager has no "type this text" call, so each character is mapped to the key
+        // that produces it on a US keyboard layout (uppercase via shift). Throws on any
+        // character that isn't mapped, rather than silently typing something else.
+        public static async Task TypeChatLineTask(string text)
+        {
+            var keys = new (Keys key, bool shift)[text.Length];
+            for (int i = 0; i < text.Length; i++)
+            {
+                keys[i] = GetKeyForChar(text[i]);
+            }
+
+            await PressKey(Keys.Enter);
+            await Task.Delay(100); // let the chat box open before typing into it
+
+            foreach (var (key, shift) in keys)
+            {
+                if (shift)
+                {
+                    await PressKeyWithModifier(key, Keys.LShiftKey);
+                }
+                else
+                {
+                    await PressKey(key);
+                }
+                await Task.Delay(15);
+            }
+
+            await PressKey(Keys.Enter);
+        }
+
+        private static (Keys key, bool shift) GetKeyForChar(char c)
+        {
+            if (c >= 'a' && c <= 'z') return (Keys.A + (c - 'a'), false);
+            if (c >= 'A' && c <= 'Z') return (Keys.A + (c - 'A'), true);
+            if (c >= '0' && c <= '9') return (Keys.D0 + (c - '0'), false);
+
+            switch (c)
+            {
+                case ' ': return (Keys.Space, false);
+                case '/': return (Keys.OemQuestion, false);
+                case ',': return (Keys.Oemcomma, false);
+                case '.': return (Keys.OemPeriod, false);
+                case '-': return (Keys.OemMinus, false);
+                case '\'': return (Keys.OemQuotes, false);
+                default: throw new System.ArgumentException($"Can't type character '{c}' -- add it to WowInput.GetKeyForChar");
+            }
         }
 
         #endregion

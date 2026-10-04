@@ -736,16 +736,13 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
-        /*
-/target Mottled
-/target Scorpid
-        */
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
         {
             Title = "Durotar Boars and Scorpions (Level 1+)",
             MinimumLevel = 1,
             MaximumLevel = 4,
             Zone = WowZone.Durotar,
+            TargetMacroMobNames = "Mottled,Scorpid",
 
             Waypoints = new List<Vector2>
             {

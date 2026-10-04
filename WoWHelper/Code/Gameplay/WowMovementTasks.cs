@@ -103,7 +103,7 @@ namespace WoWHelper
                 {
                     await EndWalkForwardTask();
                     Console.WriteLine($"Entered combat during pathfinding, clearing target");
-                    await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO); // we may have an errant target that's not attacking us
+                    await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAR_TARGET); // we may have an errant target that's not attacking us
 
                     return false;
                 }

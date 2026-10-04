@@ -59,6 +59,11 @@ namespace WoWHelper
 
             Console.WriteLine($"Using location config \"{LocationConfiguration.Title}\" (combat config {CombatConfiguration} already resolved)");
 
+            if (!string.IsNullOrEmpty(LocationConfiguration.TargetMacroMobNames))
+            {
+                await WowInput.TypeChatLineTask($"/yytarget {LocationConfiguration.TargetMacroMobNames}");
+            }
+
             return true;
         }
     }

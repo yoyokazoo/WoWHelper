@@ -72,7 +72,7 @@ namespace WoWHelper
             {
                 SlackHelper.SendMessageToChannel("Potion used!");
                 await Task.Delay(200); // there's a brief, non-gcd limiter that prevents clicking everything simultaneously
-                await WowInput.PressKeyWithShift(WowInput.SHIFT_HEALING_POTION);
+                await WowInput.PressKey(WowInput.HEALING_POTION);
             }
 
             return shouldUseHealingPotion;
@@ -111,7 +111,7 @@ namespace WoWHelper
                 if (!WorldState.CurrentTargetInCombatWithUs || (WorldState.CurrentTargetInCombatWithUs && WorldState.AttackerCount > 1))
                 {
                     Console.WriteLine($"tooFarAway || invalidTarget || outOfRange || notInLineOfSight, WorldState.CurrentTargetInCombatWithUs {WorldState.CurrentTargetInCombatWithUs}, WorldState.AttackerCount {WorldState.AttackerCount}");
-                    await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO);
+                    await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAR_TARGET);
 
                     // if it's actually too far away, waiting a bit won't matter
                     // if we have mistargeted something far away, give the attacker a bit of time to hit us before /startattack,
@@ -122,7 +122,7 @@ namespace WoWHelper
 
             if (targetUnreachable)
             {
-                await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO);
+                await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAR_TARGET);
             }
 
             if (attackerJustDied || inCombatButNotAutoAttacking || tooFarAway)
@@ -155,7 +155,7 @@ namespace WoWHelper
             }
 
             Console.WriteLine($"Target unreachable while trying to engage (notInLineOfSight {WorldState.NotInLineOfSight}, noPathAvailable {WorldState.NoPathAvailable}) -- clearing target and suppressing retarget for a bit");
-            await WowInput.PressKey(WowInput.CLEAR_TARGET_MACRO);
+            await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAR_TARGET);
             LastLineOfSightBailoutTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             return true;
         }

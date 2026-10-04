@@ -602,6 +602,14 @@ frame:SetScript("OnEvent", function(self, event, ...)
             UIErrorsFrame:AddMessage("Friendly nameplates are off! Turn them on!", 1, 0, 0, nil, 15)
         end
 
+        -- Alert if the target-finding macro is missing -- /yytarget rewrites its
+        -- body per route but never creates it (see SetTargetMacroMobs())
+        if IsTargetMacroMissing() then
+            local message = "No \"" .. TARGET_MACRO_NAME .. "\" macro! Create one!"
+            UIErrorsFrame:AddMessage(message, 1, 0, 0, nil, 15)
+            print("|cffff0000YoyokazooUI: " .. message .. "|r")
+        end
+
         -- Alert if WoW's own Key Bindings menu already claims a modifier+key combo one
         -- of our macros relies on to pick its alternate [mod:...] cast -- Ctrl+4
         -- (WowInput.WARRIOR_CTRL_SWEEPING_STRIKES, Warrior-only, Sweeping Strikes) and
@@ -833,6 +841,19 @@ SlashCmdList["YYEQUIP"] = function()
             " (score +" .. upgrade.gain .. ") (nothing was equipped)")
     else
         print("  no upgrade found")
+    end
+end
+
+-- /yytarget Mottled,Scorpid rewrites the "0 Targ" target-finding macro's
+-- /target lines (SetTargetMacroMobs(), WoWFunctions.lua). Typed by the bot
+-- itself once it has picked a farming route (WowLocationConfiguration.TargetMacroMobNames).
+SLASH_YYTARGET1 = "/yytarget"
+SlashCmdList["YYTARGET"] = function(msg)
+    local ok, reason = SetTargetMacroMobs(msg)
+    if ok then
+        print("YoyokazooUI: " .. TARGET_MACRO_NAME .. " macro now targets: " .. msg)
+    else
+        print("YoyokazooUI: couldn't update " .. TARGET_MACRO_NAME .. " macro: " .. reason)
     end
 end
 

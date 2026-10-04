@@ -402,6 +402,24 @@ durability on each refresh. Nothing on the C# side consumes it yet. The G
 byte is now full; the B byte is still reserved for the next class-agnostic
 bool.
 
+**Per-route target macro:** the `"0 Targ"` macro (`TARGET_MACRO_NAME`) (`WowInput.FIND_TARGET_MACRO`) is the bot's target finder, and
+its `/target` lines are set per route: `WowLocationConfiguration.TargetMacroMobNames`
+(comma-separated partial names, e.g. `"Mottled,Scorpid"`) gets typed into
+chat by `ResolveFarmingConfigurationTask()` as `/yytarget Mottled,Scorpid`
+(via `WowInput.TypeChatLineTask`, which maps each char to a US-layout key —
+add any new character to `GetKeyForChar`). The addon's `/yytarget`
+(`YoyokazooUI.lua`) calls `SetTargetMacroMobs()`, which `EditMacro`s the
+existing macro's body in place (keeping its name/icon/keybind) to
+`/cleartarget`, `/stopmacro [mod:shift]`, then one `/target X` per name,
+reads it back to verify, and chat-prints the result. It never creates the
+macro, and refuses in combat or over 255 chars. A missing macro is
+surfaced in-game only, not over the pixel row: `IsTargetMacroMissing()`
+drives a red `UIErrorsFrame` toast plus a red chat line on `PLAYER_ENTERING_WORLD`, alongside the
+nameplates-off alerts. Only
+`LEVEL_1_DUROTAR_BOARS_AND_SCORPS` sets `TargetMacroMobNames` so far — the
+other routes still carry their `/target` lists as comments, and routes
+without it leave the macro untouched.
+
 **Rare-change state is interval-cached.** `AreBagsFull`,
 `AreWeLowOnHealthPotions`/`Dynamite`/`Ammo`, `GearNeedsRepair`, and the
 trainer-spell scan behind G6/G7 (`GetUnlearnedTrainerSpells`, shared so the

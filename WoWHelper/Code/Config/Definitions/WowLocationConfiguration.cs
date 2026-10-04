@@ -83,6 +83,13 @@ namespace WoWHelper.Code.WorldState
         // name substrings for a target-cycling macro, not a complete/exact roster.
         public List<string> ExpectedMobNames { get; set; }
 
+        // Comma-separated /target names for the "0 Targ" target-finding macro, e.g.
+        // "Mottled,Scorpid" -> "/target Mottled" + "/target Scorpid". Typed into chat as
+        // "/yytarget Mottled,Scorpid" once this route is picked (ResolveFarmingConfigurationTask),
+        // and the addon rewrites the macro to match. Partial-name substrings, NOT
+        // ExpectedMobNames' exact roster. Null/empty leaves the macro as-is.
+        public string TargetMacroMobNames { get; set; }
+
         public List<Vector2> Waypoints { get; set; }
 
         // Optional "sell run" detour -- see WowMerchantConfiguration for the branch-off
