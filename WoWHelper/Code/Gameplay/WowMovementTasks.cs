@@ -1049,11 +1049,14 @@ namespace WoWHelper
             }
 
 
-            //float degreesDifference = WowPathfinding.GetDegreesToMoveWhileStationary(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint);
             float targetMarkerDegrees = GetBearingDegreesFromMarkerPosition(LastFindTargetMarkerPoint);
-            //Console.WriteLine($"Facing ");
             if (Math.Abs(targetMarkerDegrees) > WowPathfinding.WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES)
             {
+                if (TryGetTargetMarkerDistanceFromCenter(out double distanceFromCenter) && distanceFromCenter < 200)
+                {
+                    await EndWalkForwardTask();
+                }
+
                 await FaceTargetMarkerTask();
             }
 

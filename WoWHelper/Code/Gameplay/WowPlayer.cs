@@ -74,6 +74,7 @@ namespace WoWHelper
             CurrentPlayerMetaState = PlayerMetaState.WAITING_TO_FOCUS_ON_WINDOW;
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS_ON_WINDOW;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
+            CurrentPlayerGoal = PlayerGoal.NONE;
             CurrentWaypointIndex = -1;
             WaypointTraversalDirection = 1;
 
@@ -180,7 +181,7 @@ namespace WoWHelper
             {
                 await UpdateWorldStateAsync();
                 await EveryWorldStateUpdateTasks();
-                UpdatePlayerGoal();
+                await UpdatePlayerGoalTask();
 
                 switch (CurrentPlayerMetaState)
                 {
@@ -211,67 +212,93 @@ namespace WoWHelper
                 return true;
         }
 
-        public void UpdatePlayerGoal()
+        public async Task UpdatePlayerGoalTask()
         {
-            // TODO refactor this method: each state transition should happen in a more structured manner with an Initialize and a Cleanup or some such
-            // (set starting state, key up movement keys, etc.
-
             if (WorldState.IsInCombat)
             {
-                CurrentPlayerGoal = PlayerGoal.FIGHT;
+                await SetPlayerGoalTask(PlayerGoal.FIGHT);
                 return;
             }
 
             if (LogoutTriggered)
             {
-                if (CurrentPlayerGoal != PlayerGoal.LOG_OUT)
-                {
-                    CurrentLogoutState = LogoutState.STARTING_LOGOUT;
-                }
-
-                CurrentPlayerGoal = PlayerGoal.LOG_OUT;
+                await SetPlayerGoalTask(PlayerGoal.LOG_OUT);
                 return;
             }
 
             if (!WorldState.AllSkillsKnownForThisLevel && WorldState.CanAffordToTrainAllSkills)
             {
-                CurrentPlayerGoal = PlayerGoal.TRAIN;
+                await SetPlayerGoalTask(PlayerGoal.TRAIN);
                 return;
             }
 
             if (WorldState.BagsAreFull)
             {
-                CurrentPlayerGoal = PlayerGoal.SELL;
+                await SetPlayerGoalTask(PlayerGoal.SELL);
                 return;
             }
 
             // if (needs to travel to a new location)
             // {
-            // CurrentPlayerGoal = PlayerGoal.TRAVEL;
+            // await SetPlayerGoalTask(PlayerGoal.TRAVEL);
             // return;
             // }
 
             // if (WorldState.GearNeedsRepair)
             // {
-            // CurrentPlayerGoal = PlayerGoal.REPAIR;
+            // await SetPlayerGoalTask(PlayerGoal.REPAIR);
             // return;
             // }
 
             // if (WorldState.HearthInWrongLocation)
             // {
-            // CurrentPlayerGoal = PlayerGoal.SET_HEARTH;
+            // await SetPlayerGoalTask(PlayerGoal.SET_HEARTH);
             // return;
             // }
 
-            if (CurrentPlayerGoal != PlayerGoal.FIND_ENEMY_TARGET)
-            {
-                CurrentWaypointIndex = -1;
-                WaypointTraversalDirection = 1;
+            await SetPlayerGoalTask(PlayerGoal.FIND_ENEMY_TARGET);
+        }
 
-                CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
+        // The only place CurrentPlayerGoal should change. Re-selecting the current goal (every tick) is a no-op;
+        // an actual change runs the old goal's ExitGoalTask cleanup, then the new goal's EnterGoalTask setup.
+        public async Task SetPlayerGoalTask(PlayerGoal newGoal)
+        {
+            if (newGoal == CurrentPlayerGoal)
+            {
+                return;
             }
 
-            CurrentPlayerGoal = PlayerGoal.FIND_ENEMY_TARGET;
+            Console.WriteLine($"Goal change: {CurrentPlayerGoal} -> {newGoal}");
+            await ExitGoalTask(CurrentPlayerGoal);
+            CurrentPlayerGoal = newGoal;
+            await EnterGoalTask(newGoal);
+        }
+
+        private async Task EnterGoalTask(PlayerGoal goal)
+        {
+            switch (goal)
+            {
+                case PlayerGoal.LOG_OUT:
+                    CurrentLogoutState = LogoutState.STARTING_LOGOUT;
+                    break;
+                case PlayerGoal.FIND_ENEMY_TARGET:
+                    CurrentWaypointIndex = -1;
+                    WaypointTraversalDirection = 1;
+                    CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
+                    break;
+            }
+
+            await Task.CompletedTask;
+        }
+
+        private async Task ExitGoalTask(PlayerGoal goal)
+        {
+            switch (goal)
+            {
+                case PlayerGoal.FIND_ENEMY_TARGET:
+                    await KeyUpMovementKeys();
+                    break;
+            }
         }
 
         public async Task ExecuteGoalTask()
@@ -317,7 +344,6 @@ namespace WoWHelper
 
         public async Task PlayerFindEnemyTargetGoalTask()
         {
-            await TargetEnemyTask();
             UpdateCurrentFindEnemyTargetState();
 
             switch (CurrentFindEnemyTargetState)
@@ -347,11 +373,7 @@ namespace WoWHelper
 
                     break;
                 case FindEnemyTargetState.WALK_TO_WAYPOINT:
-                    // TODO: return true if we can intersect with the waypoint by holding down forward.
-                    // if we can't, AKA we're close to the WP, but not close enough to be on it and it's inside our
-                    // 0.42 radius circle, return false so we can stop walking forward, re-face, then re-walk forward.
-                    // In general our navigation threshold should be set such that this is impossible, and our NPC waypoints
-                    // we'll set tight thresholds
+                    await TargetEnemyTask();
                     await WalkToWaypointTask();
 
                     float targetDistance = Vector2.Distance(WorldState.PlayerLocation, CurrentWaypoint);
@@ -374,12 +396,45 @@ namespace WoWHelper
                     {
                         CurrentFindEnemyTargetState = FindEnemyTargetState.FACE_WAYPOINT;
                     }
+
+                    if (TargetMarkerIsWithinMeleeRangeFromCenter())
+                    {
+                        CurrentFindEnemyTargetState = FindEnemyTargetState.ENGAGE_TARGETED_ENEMY;
+                    }
                     break;
                 case FindEnemyTargetState.ENGAGE_TARGETED_ENEMY:
-                    Console.WriteLine($"Not yet implemented {CurrentFindEnemyTargetState}");
-                    Environment.Exit(0);
+                    // TODO: actually implement this
+                    await EndWalkForwardTask();
+                    await StartAttackTask();
+                    await FaceTargetMarkerTask();
                     break;
             }
+        }
+
+        public bool TryGetTargetMarkerDistanceFromCenter(out double distanceFromCenter)
+        {
+            if (LastFindTargetMarkerPoint == null)
+            {
+                distanceFromCenter = 0;
+                return false;
+            }
+
+            double xComp = LastFindTargetMarkerPoint.X - (ScreenConfiguration.Resolution.Width / 2);
+            double yComp = LastFindTargetMarkerPoint.Y - (ScreenConfiguration.Resolution.Height / 2);
+            distanceFromCenter = Math.Sqrt((xComp * xComp) + (yComp * yComp));
+            Console.WriteLine($"xComp {xComp}, yComp {yComp}, distanceFromCenter {distanceFromCenter}");
+            return true;
+        }
+
+        public bool TargetMarkerIsWithinMeleeRangeFromCenter()
+        {
+            if(TryGetTargetMarkerDistanceFromCenter(out double distanceFromCenter))
+            {
+                double meleeDistancePixels = 120; // Probably screenConfig dependent
+                return distanceFromCenter <= meleeDistancePixels;
+            }
+
+            return false;
         }
 
         public async Task TargetEnemyTask()
@@ -416,7 +471,8 @@ namespace WoWHelper
         public void UpdateCurrentFindEnemyTargetState()
         {
             if (!GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetMarkerTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS) &&
-                TryFindTargetMarkerOnScreen())
+                TryFindTargetMarkerOnScreen() &&
+                CanEngageTarget())
             {
                 CurrentFindEnemyTargetState = FindEnemyTargetState.WALK_TO_TARGETED_ENEMY;
                 return;

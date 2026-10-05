@@ -64,6 +64,8 @@
 
         public enum PlayerGoal
         {
+            // Starting value only, so the first real goal picked is always a transition and runs its EnterGoalTask setup.
+            NONE,
             FIGHT,
             FIND_ENEMY_TARGET,
             LOG_OUT,
