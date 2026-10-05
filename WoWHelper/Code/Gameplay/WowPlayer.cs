@@ -312,17 +312,18 @@ namespace WoWHelper
                 case PlayerGoal.FIND_ENEMY_TARGET:
                     await PlayerFindEnemyTargetGoalTask();
                     break;
-                case PlayerGoal.SELL:
-                    Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
-                    break;
                 case PlayerGoal.LOG_OUT:
                     await PlayerLogoutGoalTask();
                     break;
+                case PlayerGoal.SELL:
                 case PlayerGoal.TRAVEL:
                 case PlayerGoal.SET_HEARTH:
                 case PlayerGoal.REPAIR:
                 case PlayerGoal.TRAIN:
-                    Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
+                    string errorMessage = $"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}";
+                    SlackHelper.SendMessageToChannel(errorMessage);
+                    await Task.Delay(500);
+                    Environment.Exit(0);
                     break;
             }
         }
