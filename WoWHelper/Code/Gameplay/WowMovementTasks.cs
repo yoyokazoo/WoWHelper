@@ -555,8 +555,9 @@ namespace WoWHelper
 
         // Signed bearing in degrees from the player's own screen position to a target marker
         // position (see WowScreenCapture.FindTargetMarkerOnScreen / UIFunctions.lua's target-marker
-        // section): 0 = dead ahead, positive = turn right by that many degrees, negative =
-        // turn left. There is no addon-legal way to read a target's actual position/bearing
+        // section): 0 = dead ahead, positive = turn left by that many degrees, negative =
+        // turn right (same convention as WowPathfinding.GetDegreesToMoveWhileStationary and
+        // TurnByKeyboardTask). There is no addon-legal way to read a target's actual position/bearing
         // in this client (UnitPosition, C_Map.GetPlayerMapPosition, and even nameplate frame
         // measurement are all blocked), so this is derived purely from the marker's on-screen
         // position relative to screen center: since the player is run with the camera pitched
@@ -572,10 +573,10 @@ namespace WoWHelper
             float dx = markerPosition.X - (resolution.Width / 2f);
             float dy = markerPosition.Y - (resolution.Height / 2f);
 
-            // atan2(dx, -dy): 0 degrees when dx=0 and the marker is above center (straight
-            // ahead); increases toward +90 as the marker moves right of center, toward +/-180
-            // as it approaches directly behind, and toward -90 as it moves left of center.
-            return (float)(Math.Atan2(dx, -dy) * 180.0 / Math.PI);
+            // atan2(-dx, -dy): 0 degrees when dx=0 and the marker is above center (straight
+            // ahead); increases toward +90 as the marker moves left of center, toward +/-180
+            // as it approaches directly behind, and toward -90 as it moves right of center.
+            return (float)(Math.Atan2(-dx, -dy) * 180.0 / Math.PI);
         }
 
         // Scans for the target marker and returns its bearing (see
@@ -605,8 +606,7 @@ namespace WoWHelper
                 return false;
             }
 
-            // Bearing is positive = turn right; TurnByKeyboardTask takes positive = turn left.
-            int turnMillis = await TurnByKeyboardTask(-bearing.Value);
+            int turnMillis = await TurnByKeyboardTask(bearing.Value);
 
             Console.WriteLine($"DEBUG TurnToFaceTargetMarkerTask: bearing {bearing.Value:0.0} degrees -> held turn key {turnMillis}ms");
 
@@ -1014,6 +1014,13 @@ namespace WoWHelper
             await TurnByKeyboardTask(degreesDifference.Value);
         }
 
+        // TODO: do we ever need to stop here? If so, is this the place to do it or a level higher?
+        public async Task FaceTargetMarkerTask()
+        {
+            float targetMarkerDegrees = GetBearingDegreesFromMarkerPosition(LastFindTargetMarkerPoint);
+            await TurnByKeyboardTask(targetMarkerDegrees);
+        }
+
         public bool WalkingForward = false;
         public async Task WalkToWaypointTask()
         {
@@ -1027,6 +1034,30 @@ namespace WoWHelper
             {
                 await FaceWaypointTask();
             }
+        }
+
+        public async Task<bool> WalkToTargetMarkerTask()
+        {
+            if (!WalkingForward)
+            {
+                await StartWalkForwardTask();
+            }
+
+            if(!TryFindTargetMarkerOnScreen())
+            {
+                return false;
+            }
+
+
+            //float degreesDifference = WowPathfinding.GetDegreesToMoveWhileStationary(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint);
+            float targetMarkerDegrees = GetBearingDegreesFromMarkerPosition(LastFindTargetMarkerPoint);
+            //Console.WriteLine($"Facing ");
+            if (Math.Abs(targetMarkerDegrees) > WowPathfinding.WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES)
+            {
+                await FaceTargetMarkerTask();
+            }
+
+            return true;
         }
 
         private async Task<int> TurnByKeyboardTask(float degreesToMove)

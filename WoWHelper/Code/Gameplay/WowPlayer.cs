@@ -280,6 +280,7 @@ namespace WoWHelper
             {
                 case PlayerGoal.FIGHT:
                     Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
+                    Environment.Exit(0);
                     break;
                 case PlayerGoal.FIND_ENEMY_TARGET:
                     await PlayerFindEnemyTargetGoalTask();
@@ -367,8 +368,12 @@ namespace WoWHelper
 
                     break;
                 case FindEnemyTargetState.WALK_TO_TARGETED_ENEMY:
-                    Console.WriteLine($"Not yet implemented {CurrentFindEnemyTargetState}");
-                    Environment.Exit(0);
+                    //await StartAttackTask();
+                    var canStillSeeTargetMarker = await WalkToTargetMarkerTask();
+                    if (!canStillSeeTargetMarker)
+                    {
+                        CurrentFindEnemyTargetState = FindEnemyTargetState.FACE_WAYPOINT;
+                    }
                     break;
                 case FindEnemyTargetState.ENGAGE_TARGETED_ENEMY:
                     Console.WriteLine($"Not yet implemented {CurrentFindEnemyTargetState}");

@@ -162,8 +162,6 @@ namespace WoWHelper
 
         public async Task<bool> StartAttackTask()
         {
-            await Task.Delay(0);
-
             // always kick things off with /startattack
             await WowInput.PressKey(WowInput.START_ATTACK);
 
