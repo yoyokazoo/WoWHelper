@@ -170,7 +170,6 @@ namespace WoWHelper
                 if (await UseHealingPotionTask())
                 {
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    potionUsed = true;
                     continue;
                 }
 

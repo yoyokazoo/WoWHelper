@@ -64,7 +64,6 @@ namespace WoWHelper
                 if (await UseHealingPotionTask())
                 {
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    potionUsed = true;
                     continue;
                 }
 
@@ -185,136 +184,135 @@ namespace WoWHelper
             bool startOfCombatWiggled = false;
 
             await StartAttackTask();
-                await UpdateWorldStateAsync();
+            await UpdateWorldStateAsync();
 
-                await EveryWorldStateUpdateTasks();
+            await EveryWorldStateUpdateTasks();
 
-                // First do our "Make sure we're not standing around doing nothing" checks
-                if (await MeleeMakeSureWeAreAttackingEnemyTask())
-                {
-                    return;
-                }
-
-                // Next, check if we need to pop any big cooldowns
-                if (!tooManyAttackersActionsTaken && await WarriorTooManyAttackersTask())
-                {
-                    tooManyAttackersActionsTaken = true;
+            // First do our "Make sure we're not standing around doing nothing" checks
+            if (await MeleeMakeSureWeAreAttackingEnemyTask())
+            {
                 return;
-                }
+            }
 
-                // Just in case, if for some reason things are going really poorly, try to pop retal regardless
-                if (!tooManyAttackersActionsTaken && WarriorShouldEmergencyRetaliate())
-                {
-                    SlackHelper.SendMessageToChannel($"{WowPlayerConstants.EMERGENCY_HP_THRESHOLD}% Retal popped, not sure what went wrong!");
+            // Next, check if we need to pop any big cooldowns
+            if (!tooManyAttackersActionsTaken && await WarriorTooManyAttackersTask())
+            {
+                tooManyAttackersActionsTaken = true;
+                return;
+            }
 
-                    // cast retaliation once GCD is cooled down
-                    await WaitForGlobalCooldownTask();
-                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION);
+            // Just in case, if for some reason things are going really poorly, try to pop retal regardless
+            if (!tooManyAttackersActionsTaken && WarriorShouldEmergencyRetaliate())
+            {
+                SlackHelper.SendMessageToChannel($"{WowPlayerConstants.EMERGENCY_HP_THRESHOLD}% Retal popped, not sure what went wrong!");
 
-                    tooManyAttackersActionsTaken = true;
+                // cast retaliation once GCD is cooled down
+                await WaitForGlobalCooldownTask();
+                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION);
 
-                    LogoutReason = $"Got down to {WowPlayerConstants.EMERGENCY_HP_THRESHOLD}% somehow";
-                    LogoutTriggered = true;
+                tooManyAttackersActionsTaken = true;
+
+                LogoutReason = $"Got down to {WowPlayerConstants.EMERGENCY_HP_THRESHOLD}% somehow";
+                LogoutTriggered = true;
 
                 return;
-                }
+            }
 
-                if (!thrownDynamite && await ThrowDynamiteTask())
-                {
-                    DynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    thrownDynamite = true;
+            if (!thrownDynamite && await ThrowDynamiteTask())
+            {
+                DynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                thrownDynamite = true;
                 return;
-                }
+            }
 
-                if (await UseHealingPotionTask())
-                {
-                    HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    potionUsed = true;
+            if (await UseHealingPotionTask())
+            {
+                HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 return;
-                }
+            }
 
-                if (!startOfCombatWiggled && PreviousWorldState.TargetHpPercent == 100 && WorldState.TargetHpPercent < 100)
-                {
-                    await StartOfCombatWiggle();
-                    startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
-                }
+            if (!startOfCombatWiggled && PreviousWorldState.TargetHpPercent == 100 && WorldState.TargetHpPercent < 100)
+            {
+                await StartOfCombatWiggle();
+                startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
+            }
 
-                if (WarriorShouldOpenWithBerserkerRage())
-                {
-                    await WarriorStartOfCombatBerserkerRage();
-                    BerserkerRageTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                }
+            if (WarriorShouldOpenWithBerserkerRage())
+            {
+                await WarriorStartOfCombatBerserkerRage();
+                BerserkerRageTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            }
 
-                if (WarriorShouldCastBattleShout(classState))
+            if (WarriorShouldCastBattleShout(classState))
+            {
+                if (WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
                 {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
+                    await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT);
+                }
+            }
+            else if (WarriorShouldCastSweepingStrikes(classState))
+            {
+                if (WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                {
+                    await WowInput.PressKeyWithControl(WowInput.WARRIOR_CTRL_SWEEPING_STRIKES);
+                }
+            }
+            else if (WarriorShouldCastOverpower(classState))
+            {
+                if (WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
+                {
+                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_OVERPOWER);
+                }
+            }
+            else if (WarriorShouldCastExecute(classState))
+            {
+                if (WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST)
+                {
+                    await WowInput.PressKey(WowInput.WARRIOR_EXECUTE);
+                }
+            }
+            else if (WarriorShouldCastSunderArmor(classState))
+            {
+                if (WorldState.ResourcePercent >= WowGameplayConstants.SUNDER_ARMOR_RAGE_COST)
+                {
+                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_SUNDER_ARMOR);
+                }
+            }
+            else if (WarriorShouldCastRend(classState))
+            {
+                if (WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
+                {
+                    await WowInput.PressKey(WowInput.WARRIOR_REND);
+                }
+            }
+            else if (WarriorShouldCastMortalStrikeOrBloodthirst(classState))
+            {
+                if (WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
+                {
+                    await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
+                }
+            }
+            else if (WorldState.AttackerCount > 1)
+            {
+                if (WarriorShouldCastCleave(classState))
+                {
+                    if (WorldState.ResourcePercent >= WarriorCleaveRageRequired(classState))
                     {
-                        await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT);
+                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_CLEAVE);
                     }
                 }
-                else if (WarriorShouldCastSweepingStrikes(classState))
+            }
+            else // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
+            {
+                if (WarriorShouldCastHeroicStrike(classState))
                 {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                    if (WorldState.ResourcePercent >= WarriorHeroicStrikeRageRequired(classState))
                     {
-                        await WowInput.PressKeyWithControl(WowInput.WARRIOR_CTRL_SWEEPING_STRIKES);
+                        await WowInput.PressKey(WowInput.WARRIOR_HEROIC_STRIKE);
                     }
                 }
-                else if (WarriorShouldCastOverpower(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
-                    {
-                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_OVERPOWER);
-                    }
-                }
-                else if (WarriorShouldCastExecute(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST)
-                    {
-                        await WowInput.PressKey(WowInput.WARRIOR_EXECUTE);
-                    }
-                }
-                else if (WarriorShouldCastSunderArmor(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.SUNDER_ARMOR_RAGE_COST)
-                    {
-                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_SUNDER_ARMOR);
-                    }
-                }
-                else if (WarriorShouldCastRend(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
-                    {
-                        await WowInput.PressKey(WowInput.WARRIOR_REND);
-                    }
-                }
-                else if (WarriorShouldCastMortalStrikeOrBloodthirst(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
-                    {
-                        await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
-                    }
-                }
-                else if (WorldState.AttackerCount > 1)
-                {
-                    if (WarriorShouldCastCleave(classState))
-                    {
-                        if (WorldState.ResourcePercent >= WarriorCleaveRageRequired(classState))
-                        {
-                            await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_CLEAVE);
-                        }
-                    }
-                }
-                else // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
-                {
-                    if (WarriorShouldCastHeroicStrike(classState))
-                    {
-                        if (WorldState.ResourcePercent >= WarriorHeroicStrikeRageRequired(classState))
-                        {
-                            await WowInput.PressKey(WowInput.WARRIOR_HEROIC_STRIKE);
-                        }
-                    }
-                    // TODO: Actually split out Heroic Strike and cast if we have really surplus rage
-                }
+                // TODO: Actually split out Heroic Strike and cast if we have really surplus rage
+            }
         }
 
         // Just in case, if for some reason things are going really poorly, try to pop retal regardless.
