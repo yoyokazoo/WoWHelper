@@ -71,7 +71,10 @@ namespace WoWHelper.Code.Config
             MouseDragPixelsPerDegree = 4.1f,
             MouseDragMinEffectivePixels = 4,
 
-            FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
+            MeleeRangeTargetMarkerDistance = 120,
+            TooCloseToTurnWhileWalkingTargetMarkerDistance = 200,
+
+        FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
                     new ColorPosition(1529, 217, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(1606, 219, WowScreenConfiguration.ERROR_TEXT_COLOR),

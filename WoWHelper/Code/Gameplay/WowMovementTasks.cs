@@ -1057,7 +1057,8 @@ namespace WoWHelper
             float targetMarkerDegrees = GetBearingDegreesFromMarkerPosition(LastFindTargetMarkerPoint);
             if (Math.Abs(targetMarkerDegrees) > WowPathfinding.WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES)
             {
-                if (TryGetTargetMarkerDistanceFromCenter(out double distanceFromCenter) && distanceFromCenter < 200)
+                if (TryGetTargetMarkerDistanceFromCenter(out double distanceFromCenter) && 
+                    distanceFromCenter < ScreenConfiguration.TooCloseToTurnWhileWalkingTargetMarkerDistance)
                 {
                     await EndWalkForwardTask();
                 }

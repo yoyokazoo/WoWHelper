@@ -101,6 +101,10 @@ namespace WoWHelper
         // 1920x1080 -- confirmed different (4px vs 5px), so this is per-resolution too.
         public int MouseDragMinEffectivePixels { get; set; } = 4;
 
+        // Distance in pixels from the center of the screen
+        public int MeleeRangeTargetMarkerDistance { get; set; }
+        public int TooCloseToTurnWhileWalkingTargetMarkerDistance { get; set; }
+
         // Error text detections
         public ImageMatchColorPositions FacingWrongWayPositions { get; set; }
         public ImageMatchColorPositions TooFarAwayPositions { get; set; }

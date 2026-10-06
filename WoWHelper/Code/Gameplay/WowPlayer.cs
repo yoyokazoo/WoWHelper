@@ -409,8 +409,7 @@ namespace WoWHelper
         {
             if(TryGetTargetMarkerDistanceFromCenter(out double distanceFromCenter))
             {
-                double meleeDistancePixels = 120; // Probably screenConfig dependent
-                return distanceFromCenter <= meleeDistancePixels;
+                return distanceFromCenter <= ScreenConfiguration.MeleeRangeTargetMarkerDistance;
             }
 
             return false;
