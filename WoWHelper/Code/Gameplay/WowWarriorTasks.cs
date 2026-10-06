@@ -12,7 +12,6 @@ namespace WoWHelper
         public async Task<bool> WarriorCombatLoopTask(WowWarriorClassState classState)
         {
             Console.WriteLine("Kicking off core combat loop");
-            bool thrownDynamite = false;
             bool tooManyAttackersActionsTaken = false;
             bool startOfCombatWiggled = false;
 
@@ -54,10 +53,9 @@ namespace WoWHelper
                     continue;
                 }
 
-                if (!thrownDynamite && await ThrowDynamiteTask())
+                if (await ThrowDynamiteTask())
                 {
                     DynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    thrownDynamite = true;
                     continue;
                 }
 
@@ -179,7 +177,6 @@ namespace WoWHelper
 
         public async Task WarriorSingleCombatTask(WowWarriorClassState classState)
         {
-            bool thrownDynamite = false;
             bool tooManyAttackersActionsTaken = false;
             bool startOfCombatWiggled = false;
 
@@ -218,10 +215,9 @@ namespace WoWHelper
                 return;
             }
 
-            if (!thrownDynamite && await ThrowDynamiteTask())
+            if (await ThrowDynamiteTask())
             {
                 DynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                thrownDynamite = true;
                 return;
             }
 

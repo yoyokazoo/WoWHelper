@@ -12,7 +12,6 @@ namespace WoWHelper
         public async Task<bool> ShamanCombatLoopTask(WowShamanClassState classState)
         {
             Console.WriteLine("Kicking off core combat loop");
-            bool thrownDynamite = false;
             bool emergencyActionTaken = false;
 
             bool isFacingLongRangeCaster = false;
@@ -67,17 +66,15 @@ namespace WoWHelper
                     continue;
                 }
 
-                if (!thrownDynamite && await ThrowDynamiteTask())
+                if (await ThrowDynamiteTask())
                 {
                     DynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    thrownDynamite = true;
                     continue;
                 }
 
                 if (await UseHealingPotionTask())
                 {
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    potionUsed = true;
                     continue;
                 }
 
