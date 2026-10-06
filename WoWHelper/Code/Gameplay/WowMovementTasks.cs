@@ -1043,10 +1043,8 @@ namespace WoWHelper
 
         public async Task<bool> WalkToTargetMarkerTask()
         {
-            if (!WalkingForward)
-            {
-                await StartWalkForwardTask();
-            }
+            //if (WalkingForward){ await EndWalkForwardTask(); }
+            if (!WalkingForward){ await StartWalkForwardTask(); }
 
             if(!TryFindTargetMarkerOnScreen())
             {

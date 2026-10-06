@@ -150,6 +150,9 @@ namespace WoWHelper.Code.Config
 
             SlackScreenshotCropRegion = new Rectangle(52, 1162, 827, 239),
 
+            MeleeRangeTargetMarkerDistance = 140,
+            TooCloseToTurnWhileWalkingTargetMarkerDistance = 240,
+
             FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
                     new ColorPosition(1071, 242, WowScreenConfiguration.ERROR_TEXT_COLOR),
