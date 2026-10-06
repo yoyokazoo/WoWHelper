@@ -1019,11 +1019,37 @@ namespace WoWHelper
             await TurnByKeyboardTask(degreesDifference.Value);
         }
 
-        // TODO: do we ever need to stop here? If so, is this the place to do it or a level higher?
+        // Target-marker counterpart to FaceWaypointTask: while walking, turns along the walking
+        // turning circle (WowPathfinding.GetDegreesToMoveTowardsScreenOffsetWhileWalking) so we
+        // end up facing the marker rather than undershooting; if the marker's inside that circle
+        // (unreachable while walking), stops and turns in place to its plain bearing instead.
         public async Task FaceTargetMarkerTask()
         {
-            float targetMarkerDegrees = GetBearingDegreesFromMarkerPosition(LastFindTargetMarkerPoint);
-            await TurnByKeyboardTask(targetMarkerDegrees);
+            float? degreesDifference = WalkingForward
+                ? GetDegreesToTargetMarkerWhileWalking(LastFindTargetMarkerPoint)
+                : GetBearingDegreesFromMarkerPosition(LastFindTargetMarkerPoint);
+            if (degreesDifference == null)
+            {
+                // Too tight of a turn while walking.  Stop and turn.
+                await EndWalkForwardTask();
+                degreesDifference = GetBearingDegreesFromMarkerPosition(LastFindTargetMarkerPoint);
+            }
+
+            await TurnByKeyboardTask(degreesDifference.Value);
+        }
+
+        // TooCloseToTurnWhileWalkingTargetMarkerDistance is treated as the walking turning
+        // circle's diameter on screen: a circle of radius r tangent to our heading reaches out
+        // to 2r directly to our side, so that's the closest a marker beside us can be and still
+        // be turned onto while walking.
+        private float? GetDegreesToTargetMarkerWhileWalking(Point markerPosition)
+        {
+            var resolution = ScreenConfiguration.Resolution;
+            float rightPixels = markerPosition.X - (resolution.Width / 2f);
+            float forwardPixels = (resolution.Height / 2f) - markerPosition.Y;
+            float turningRadiusPixels = ScreenConfiguration.TooCloseToTurnWhileWalkingTargetMarkerDistance / 2f;
+
+            return WowPathfinding.GetDegreesToMoveTowardsScreenOffsetWhileWalking(rightPixels, forwardPixels, turningRadiusPixels);
         }
 
         public bool WalkingForward = false;
@@ -1055,12 +1081,6 @@ namespace WoWHelper
             float targetMarkerDegrees = GetBearingDegreesFromMarkerPosition(LastFindTargetMarkerPoint);
             if (Math.Abs(targetMarkerDegrees) > WowPathfinding.WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES)
             {
-                if (TryGetTargetMarkerDistanceFromCenter(out double distanceFromCenter) && 
-                    distanceFromCenter < ScreenConfiguration.TooCloseToTurnWhileWalkingTargetMarkerDistance)
-                {
-                    await EndWalkForwardTask();
-                }
-
                 await FaceTargetMarkerTask();
             }
 

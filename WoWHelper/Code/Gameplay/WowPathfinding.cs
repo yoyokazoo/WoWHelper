@@ -120,6 +120,32 @@ namespace WoWHelper.Code
             double ty = -(target.Y - player.Y) * 0.666;
 
             double phi0 = (facingDegrees + 90) * Math.PI / 180;   // WoW deg -> math angle
+
+            return GetDegreesToTurnAlongTurningCircle(tx, ty, phi0, r, naiveDegreesToMove);
+        }
+
+        // Screen-space counterpart to GetDegreesToMoveWhileWalking, for the target marker
+        // (camera pitched straight down, so the screen is the player's own top-down frame:
+        // player at screen center, screen up = forward). rightPixels/forwardPixels are the
+        // marker's offset from screen center (forward = screen up, i.e. -Y), and
+        // turningRadiusPixels is the walking turning circle's radius in screen pixels at the
+        // current resolution/zoom. Same return convention: signed degrees (+ = left), or
+        // null if the marker is inside the turning circle -- stop walking and turn in place.
+        public static float? GetDegreesToMoveTowardsScreenOffsetWhileWalking(float rightPixels, float forwardPixels, float turningRadiusPixels)
+        {
+            float naiveDegreesToMove = (float)(Math.Atan2(-rightPixels, forwardPixels) * 180.0 / Math.PI);
+
+            // Local frame is already a standard math frame (x right, y forward), heading straight up.
+            return GetDegreesToTurnAlongTurningCircle(rightPixels, forwardPixels, Math.PI / 2, turningRadiusPixels, naiveDegreesToMove);
+        }
+
+        // Shared turning-circle math for the two walking-turn helpers above. (tx, ty) is the
+        // target relative to the player in a standard math frame (CCW = left), heading is the
+        // player's current heading in that frame (radians), r is the turning circle's radius in
+        // the same units as tx/ty, and naiveDegreesToMove is the plain turn-in-place answer,
+        // used only to pick the turn direction.
+        private static float? GetDegreesToTurnAlongTurningCircle(double tx, double ty, double phi0, double r, float naiveDegreesToMove)
+        {
             int s = naiveDegreesToMove >= 0 ? 1 : -1;               // +1 left (CCW), -1 right (CW)
 
             // Turn-circle center: r along the heading's left normal (or right, for s = -1)
