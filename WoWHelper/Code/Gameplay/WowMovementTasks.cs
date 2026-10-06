@@ -929,6 +929,11 @@ namespace WoWHelper
                 return;
             }
             
+            if (Vector2.Distance(WorldState.PlayerLocation, CurrentWaypoint) > LocationConfiguration.DistanceTolerance)
+            {
+                return;
+            }
+
             CurrentWaypointIndex += WaypointTraversalDirection;
 
             if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= LocationConfiguration.Waypoints.Count)

@@ -282,8 +282,6 @@ namespace WoWHelper
                     CurrentLogoutState = LogoutState.STARTING_LOGOUT;
                     break;
                 case PlayerGoal.FIND_ENEMY_TARGET:
-                    CurrentWaypointIndex = -1;
-                    WaypointTraversalDirection = 1;
                     CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
                     break;
             }
@@ -350,28 +348,13 @@ namespace WoWHelper
             switch (CurrentFindEnemyTargetState)
             {
                 case FindEnemyTargetState.PICK_NEXT_WAYPOINT:
-                    // TODO: May need to rethink this a bit since we'll be re-entering this
-                    // method so I think it's going to advance us through the waypoints incorrectly
                     PickNextWaypoint();
                     CurrentFindEnemyTargetState = FindEnemyTargetState.FACE_WAYPOINT;
                     Console.WriteLine($"Picked next waypoint: {CurrentWaypoint}");
                     break;
                 case FindEnemyTargetState.FACE_WAYPOINT:
-                    // TODO: debugging, remove this
-                    float desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, CurrentWaypoint);
-                    float? degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint, WalkingForward);
-                    Console.WriteLine($"Before FaceWaypointTask facing {WorldState.FacingDegrees}, aiming towards {desiredDegrees}, need to move {degreesDifference} degrees.");
-
                     await FaceWaypointTask();
                     CurrentFindEnemyTargetState = FindEnemyTargetState.WALK_TO_WAYPOINT;
-
-                    // TODO: Debugging, remove this
-                    await Task.Delay(200);
-                    await UpdateWorldStateAsync();
-                    desiredDegrees = WowPathfinding.GetDesiredDirectionInDegrees(WorldState.PlayerLocation, CurrentWaypoint);
-                    degreesDifference = WowPathfinding.GetDegreesToMove(WorldState.PlayerLocation, WorldState.FacingDegrees, CurrentWaypoint, WalkingForward);
-                    Console.WriteLine($"After FaceWaypointTask facing {WorldState.FacingDegrees}, error of {degreesDifference} degrees");
-
                     break;
                 case FindEnemyTargetState.WALK_TO_WAYPOINT:
                     await TargetEnemyTask();
@@ -384,14 +367,9 @@ namespace WoWHelper
                         Console.WriteLine($"Arrived at {CurrentWaypoint}, distance away {targetDistance}, picking next waypoint");
                         CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
                     }
-                    else
-                    {
-                        // haven't arrived yet, do nothing, we'll keep walking till the next 
-                    }
 
                     break;
                 case FindEnemyTargetState.WALK_TO_TARGETED_ENEMY:
-                    //await StartAttackTask();
                     var canStillSeeTargetMarker = await WalkToTargetMarkerTask();
                     if (!canStillSeeTargetMarker)
                     {
