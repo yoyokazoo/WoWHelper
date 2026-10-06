@@ -67,15 +67,17 @@ namespace WoWHelper
         public async Task<bool> UseHealingPotionTask()
         {
             bool shouldUseHealingPotion = WorldState.PlayerHpPercent <= WowGameplayConstants.HEALING_POTION_HP_THRESHOLD;
+            bool canUseHealingPotion = GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
 
-            if (shouldUseHealingPotion)
+            if (shouldUseHealingPotion && canUseHealingPotion)
             {
                 SlackHelper.SendMessageToChannel("Potion used!");
                 await Task.Delay(200); // there's a brief, non-gcd limiter that prevents clicking everything simultaneously
                 await WowInput.PressKey(WowInput.HEALING_POTION);
+                return true;
             }
 
-            return shouldUseHealingPotion;
+            return false;
         }
 
         public async Task<bool> MeleeMakeSureWeAreAttackingEnemyTask()

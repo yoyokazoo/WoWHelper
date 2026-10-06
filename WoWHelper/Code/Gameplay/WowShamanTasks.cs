@@ -13,7 +13,6 @@ namespace WoWHelper
         {
             Console.WriteLine("Kicking off core combat loop");
             bool thrownDynamite = false;
-            bool potionUsed = false;
             bool emergencyActionTaken = false;
 
             bool isFacingLongRangeCaster = false;
@@ -75,7 +74,7 @@ namespace WoWHelper
                     continue;
                 }
 
-                if (!potionUsed && await UseHealingPotionTask())
+                if (await UseHealingPotionTask())
                 {
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     potionUsed = true;

@@ -80,6 +80,17 @@ namespace WoWHelper
             }
         }
 
+        public async Task<bool> SingleCombatTask()
+        {
+            switch (CombatConfiguration)
+            {
+                case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorCombatLoopTask((WowWarriorClassState)ClassState);
+                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanCombatLoopTask((WowShamanClassState)ClassState);
+                case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockCombatLoopTask((WowWarlockClassState)ClassState);
+                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(CombatLoopTask)));
+            }
+        }
+
         // The real per-class logic lives in WarriorCanEngageTarget/ShamanCanEngageTarget/
         // WarlockCanEngageTarget (each in its own Wow*Tasks.cs, called there with
         // that class's own typed ClassState directly -- no dispatch needed since
