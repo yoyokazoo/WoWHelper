@@ -64,7 +64,6 @@
 
         public enum PlayerGoal
         {
-            // Starting value only, so the first real goal picked is always a transition and runs its EnterGoalTask setup.
             NONE,
             FIGHT,
             FIND_ENEMY_TARGET,
@@ -73,7 +72,18 @@
             SELL,
             TRAIN,
             TRAVEL,
-            SET_HEARTH
+            SET_HEARTH,
+            RECOVER_FROM_BATTLE
+        }
+
+        public enum BattleRecoveryState
+        {
+            LOOT_ATTEMPT_ONE,
+            LOOT_ATTEMPT_TWO,
+            SKIN_ATTEMPT_ONE,
+            SKIN_ATTEMPT_TWO,
+            STARTING_RECOVERY,
+            WAITING_FOR_RECOVERY,
         }
 
         public enum LogoutState

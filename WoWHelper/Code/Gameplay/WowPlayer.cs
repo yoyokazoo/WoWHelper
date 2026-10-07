@@ -51,6 +51,7 @@ namespace WoWHelper
         public PlayerGoal CurrentPlayerGoal { get; private set; }
         public LogoutState CurrentLogoutState { get; private set; }
         public FindEnemyTargetState CurrentFindEnemyTargetState { get; private set; }
+        public BattleRecoveryState CurrentBattleRecoveryState { get; private set; }
 
         public int CurrentWaypointIndex { get; private set; }
         public Vector2 CurrentWaypoint => LocationConfiguration.Waypoints[CurrentWaypointIndex]; 
@@ -76,6 +77,8 @@ namespace WoWHelper
             CurrentPlayerState = PlayerState.WAITING_TO_FOCUS_ON_WINDOW;
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentPlayerGoal = PlayerGoal.NONE;
+            CurrentBattleRecoveryState = BattleRecoveryState.STARTING_RECOVERY;
+
             CurrentWaypointIndex = -1;
             WaypointTraversalDirection = 1;
 
@@ -215,6 +218,11 @@ namespace WoWHelper
 
         public async Task UpdatePlayerGoalTask()
         {
+            if (!WorldState.IsBotInAValidState)
+            {
+                return;
+            }
+
             if (WorldState.IsInCombat)
             {
                 await SetPlayerGoalTask(PlayerGoal.FIGHT);
@@ -226,6 +234,14 @@ namespace WoWHelper
                 await SetPlayerGoalTask(PlayerGoal.LOG_OUT);
                 return;
             }
+
+            if (!PlayerIsBattleReady())
+            {
+                await SetPlayerGoalTask(PlayerGoal.RECOVER_FROM_BATTLE);
+                return;
+            }
+
+            //if ()
 
             //if ()
             //{
@@ -293,6 +309,9 @@ namespace WoWHelper
                 case PlayerGoal.FIGHT:
                     EmergencyCombatActionTaken = false;
                     break;
+                case PlayerGoal.RECOVER_FROM_BATTLE:
+                    CurrentBattleRecoveryState = BattleRecoveryState.LOOT_ATTEMPT_ONE;
+                    break;
             }
 
             await Task.CompletedTask;
@@ -313,7 +332,10 @@ namespace WoWHelper
             switch (CurrentPlayerGoal)
             {
                 case PlayerGoal.FIGHT:
-                    await SingleCombatTask();
+                    await PlayerSingleCombatTask();
+                    break;
+                case PlayerGoal.RECOVER_FROM_BATTLE:
+                    await PlayerRecoverFromBattleTask();
                     break;
                 case PlayerGoal.FIND_ENEMY_TARGET:
                     await PlayerFindEnemyTargetGoalTask();
@@ -349,9 +371,50 @@ namespace WoWHelper
             }
         }
 
+        public async Task PlayerRecoverFromBattleTask()
+        {
+            switch (CurrentBattleRecoveryState)
+            {
+                case BattleRecoveryState.LOOT_ATTEMPT_ONE:
+                    await WaitUnlessInCombatTask(1500);
+                    LootX = ScreenConfiguration.LootDefaultX;
+                    LootY = ScreenConfiguration.LootDefaultY;
+                    await LootTask();
+                    CurrentBattleRecoveryState = BattleRecoveryState.SKIN_ATTEMPT_ONE;
+                    break;
+                case BattleRecoveryState.SKIN_ATTEMPT_ONE:
+                    await SkinTask();
+                    CurrentBattleRecoveryState = BattleRecoveryState.LOOT_ATTEMPT_TWO;
+                    break;
+                case BattleRecoveryState.LOOT_ATTEMPT_TWO:
+                    Point lootPoint = await WowScreenCapture.CreateHeatmapForLooting(ScreenConfiguration);
+                    LootX = lootPoint.X;
+                    LootY = lootPoint.Y;
+                    await LootTask();
+                    CurrentBattleRecoveryState = BattleRecoveryState.SKIN_ATTEMPT_TWO;
+                    break;
+                case BattleRecoveryState.SKIN_ATTEMPT_TWO:
+                    await SkinTask();
+                    CurrentBattleRecoveryState = BattleRecoveryState.STARTING_RECOVERY;
+                    break;
+                case BattleRecoveryState.STARTING_RECOVERY:
+                    await StartBattleReadyTask();
+                    CurrentBattleRecoveryState = BattleRecoveryState.WAITING_FOR_RECOVERY;
+                    break;
+                case BattleRecoveryState.WAITING_FOR_RECOVERY:
+                    if (await WaitUntilBattleReadyTask())
+                    {
+                        await ScootForwardsTask();
+                        await SetPlayerGoalTask(PlayerGoal.NONE);
+                    }
+                    break;
+            }
+        }
+
         public async Task PlayerFindEnemyTargetGoalTask()
         {
             UpdateCurrentFindEnemyTargetState();
+            Console.WriteLine($"PlayerFindEnemyTargetGoalTask, CurrentFindEnemyTargetState = {CurrentFindEnemyTargetState}, Walking? {WalkingForward}");
 
             switch (CurrentFindEnemyTargetState)
             {

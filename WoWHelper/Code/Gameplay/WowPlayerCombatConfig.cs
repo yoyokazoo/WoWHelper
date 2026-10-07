@@ -47,6 +47,15 @@ namespace WoWHelper
             }
         }
 
+        public bool PlayerIsBattleReady()
+        {
+            switch (CombatConfiguration)
+            {
+                case Code.Gameplay.WowCombatConfiguration.Warrior: return WarriorIsBattleReady();
+                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(WaitUntilBattleReadyTask)));
+            }
+        }
+
         public async Task<bool> StartEngageTask()
         {
             switch (CombatConfiguration)
@@ -80,7 +89,7 @@ namespace WoWHelper
             }
         }
 
-        public async Task SingleCombatTask()
+        public async Task PlayerSingleCombatTask()
         {
             switch (CombatConfiguration)
             {

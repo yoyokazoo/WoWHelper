@@ -828,6 +828,7 @@ namespace WoWHelper
 
         public async Task<bool> ScootForwardsTask()
         {
+            WalkingForward = false;
             Keyboard.KeyDown(WowInput.MOVE_FORWARD);
             await Task.Delay(100);
             Keyboard.KeyUp(WowInput.MOVE_FORWARD);
@@ -853,6 +854,7 @@ namespace WoWHelper
             Keyboard.KeyDown(WowInput.MOVE_FORWARD);
             await Task.Delay(20);
             Keyboard.KeyUp(WowInput.MOVE_FORWARD);
+            WalkingForward = false;
 
             return true;
         }
@@ -906,6 +908,7 @@ namespace WoWHelper
 
         public async Task<bool> KeyUpMovementKeys()
         {
+            WalkingForward = false;
             Keyboard.KeyUp(WowInput.MOVE_FORWARD);
             Keyboard.KeyUp(WowInput.MOVE_BACK);
             Keyboard.KeyUp(WowInput.TURN_LEFT);

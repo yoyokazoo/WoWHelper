@@ -260,6 +260,14 @@ namespace WoWHelper
             return battleReady;
         }
 
+        public bool WarriorIsBattleReady()
+        {
+            bool hpRecovered = WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD;
+            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+            bool battleReady = hpRecovered && potionIsCooledDown;
+            return battleReady;
+        }
+
         public async Task<bool> WarriorKickOffEngageTask(WowWarriorClassState classState)
         {
             await Task.Delay(0);
