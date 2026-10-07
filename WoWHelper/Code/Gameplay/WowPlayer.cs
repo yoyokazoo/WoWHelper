@@ -38,6 +38,7 @@ namespace WoWHelper
         public int LootY { get; private set; }
         public int? MostRecentTargetMarkerX { get; private set; }
         public int? MostRecentTargetMarkerY { get; private set; }
+        public bool EmergencyCombatActionTaken { get; private set; }
 
         public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }
@@ -289,6 +290,9 @@ namespace WoWHelper
                 case PlayerGoal.FIND_ENEMY_TARGET:
                     CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
                     break;
+                case PlayerGoal.FIGHT:
+                    EmergencyCombatActionTaken = false;
+                    break;
             }
 
             await Task.CompletedTask;
@@ -309,8 +313,7 @@ namespace WoWHelper
             switch (CurrentPlayerGoal)
             {
                 case PlayerGoal.FIGHT:
-                    Console.WriteLine($"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}");
-                    Environment.Exit(0);
+                    await SingleCombatTask();
                     break;
                 case PlayerGoal.FIND_ENEMY_TARGET:
                     await PlayerFindEnemyTargetGoalTask();

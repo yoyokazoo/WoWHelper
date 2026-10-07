@@ -80,13 +80,13 @@ namespace WoWHelper
             }
         }
 
-        public async Task<bool> SingleCombatTask()
+        public async Task SingleCombatTask()
         {
             switch (CombatConfiguration)
             {
-                case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorCombatLoopTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanCombatLoopTask((WowShamanClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockCombatLoopTask((WowWarlockClassState)ClassState);
+                case Code.Gameplay.WowCombatConfiguration.Warrior: { await WarriorSingleCombatTask((WowWarriorClassState)ClassState); return; }
+                case Code.Gameplay.WowCombatConfiguration.Shaman: { await ShamanCombatLoopTask((WowShamanClassState)ClassState); return; }
+                case Code.Gameplay.WowCombatConfiguration.Warlock: { await WarlockCombatLoopTask((WowWarlockClassState)ClassState); return; }
                 default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(CombatLoopTask)));
             }
         }

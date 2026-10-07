@@ -11,180 +11,13 @@ namespace WoWHelper
     {
         public async Task<bool> WarriorCombatLoopTask(WowWarriorClassState classState)
         {
-            Console.WriteLine("Kicking off core combat loop");
-            bool tooManyAttackersActionsTaken = false;
-            bool startOfCombatWiggled = false;
-
-            await StartAttackTask();
-
-            do
-            {
-                await UpdateWorldStateAsync();
-
-                await EveryWorldStateUpdateTasks();
-
-                // First do our "Make sure we're not standing around doing nothing" checks
-                if (await MeleeMakeSureWeAreAttackingEnemyTask())
-                {
-                    continue;
-                }
-
-                // Next, check if we need to pop any big cooldowns
-                if (!tooManyAttackersActionsTaken && await WarriorTooManyAttackersTask())
-                {
-                    tooManyAttackersActionsTaken = true;
-                    continue;
-                }
-
-                // Just in case, if for some reason things are going really poorly, try to pop retal regardless
-                if (!tooManyAttackersActionsTaken && WarriorShouldEmergencyRetaliate())
-                {
-                    SlackHelper.SendMessageToChannel($"{WowPlayerConstants.EMERGENCY_HP_THRESHOLD}% Retal popped, not sure what went wrong!");
-
-                    // cast retaliation once GCD is cooled down
-                    await WaitForGlobalCooldownTask();
-                    await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION);
-
-                    tooManyAttackersActionsTaken = true;
-
-                    LogoutReason = $"Got down to {WowPlayerConstants.EMERGENCY_HP_THRESHOLD}% somehow";
-                    LogoutTriggered = true;
-
-                    continue;
-                }
-
-                if (await ThrowDynamiteTask())
-                {
-                    DynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    continue;
-                }
-
-                if (await UseHealingPotionTask())
-                {
-                    HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    continue;
-                }
-
-                /*
-                if (!healingTrinketUsed && await WarriorUseDiamondFlaskTask())
-                {
-                    healingTrinketUsed = true;
-                    continue;
-                }
-                */
-
-                if (!startOfCombatWiggled && PreviousWorldState.TargetHpPercent == 100 && WorldState.TargetHpPercent < 100)
-                {
-                    await StartOfCombatWiggle();
-                    startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
-                }
-
-                // TODO: so we don't spam, something like this?
-                //if (!WorldState.GCDCooledDown)
-                //{
-                //    continue;
-                //}
-
-                if (WarriorShouldOpenWithBerserkerRage())
-                {
-                    await WarriorStartOfCombatBerserkerRage();
-                    BerserkerRageTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                }
-
-                // Finally, if we've made it this far, do standard combat actions. This chain
-                // picks ONE ability by priority based purely on game state (is the buff up,
-                // is the proc available, does the target already have the debuff, ...) --
-                // the WarriorShouldCastX checks deliberately don't look at rage. The rage
-                // check happens inside the chosen branch: if we can't afford the ability
-                // we've picked, we do nothing this tick and wait for rage to build, rather
-                // than falling through to something cheaper.
-                // Otherwise a 30-rage Mortal Strike/Bloodthirst coming off cooldown would
-                // keep getting starved by 15-rage fillers spent the moment they're affordable.
-                if (WarriorShouldCastBattleShout(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
-                    {
-                        await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT);
-                    }
-                }
-                else if (WarriorShouldCastSweepingStrikes(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
-                    {
-                        await WowInput.PressKeyWithControl(WowInput.WARRIOR_CTRL_SWEEPING_STRIKES);
-                    }
-                }
-                else if (WarriorShouldCastOverpower(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
-                    {
-                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_OVERPOWER);
-                    }
-                }
-                else if (WarriorShouldCastExecute(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST)
-                    {
-                        await WowInput.PressKey(WowInput.WARRIOR_EXECUTE);
-                    }
-                }
-                else if (WarriorShouldCastSunderArmor(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.SUNDER_ARMOR_RAGE_COST)
-                    {
-                        await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_SUNDER_ARMOR);
-                    }
-                }
-                else if (WarriorShouldCastRend(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
-                    {
-                        await WowInput.PressKey(WowInput.WARRIOR_REND);
-                    }
-                }
-                else if (WarriorShouldCastMortalStrikeOrBloodthirst(classState))
-                {
-                    if (WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
-                    {
-                        await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
-                    }
-                }
-                else if (WorldState.AttackerCount > 1)
-                {
-                    if (WarriorShouldCastCleave(classState))
-                    {
-                        if (WorldState.ResourcePercent >= WarriorCleaveRageRequired(classState))
-                        {
-                            await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_CLEAVE);
-                        }
-                    }
-                }
-                else // TODO: 0 attackers can happen if I forget to turn enemy nameplates on
-                {
-                    if (WarriorShouldCastHeroicStrike(classState))
-                    {
-                        if (WorldState.ResourcePercent >= WarriorHeroicStrikeRageRequired(classState))
-                        {
-                            await WowInput.PressKey(WowInput.WARRIOR_HEROIC_STRIKE);
-                        }
-                    }
-                    // TODO: Actually split out Heroic Strike and cast if we have really surplus rage
-                }
-            } while (WorldState.IsInCombat);
+            await WarriorSingleCombatTask(classState);
 
             return true;
         }
 
         public async Task WarriorSingleCombatTask(WowWarriorClassState classState)
         {
-            bool tooManyAttackersActionsTaken = false;
-            bool startOfCombatWiggled = false;
-
-            await StartAttackTask();
-            await UpdateWorldStateAsync();
-
-            await EveryWorldStateUpdateTasks();
-
             // First do our "Make sure we're not standing around doing nothing" checks
             if (await MeleeMakeSureWeAreAttackingEnemyTask())
             {
@@ -192,26 +25,8 @@ namespace WoWHelper
             }
 
             // Next, check if we need to pop any big cooldowns
-            if (!tooManyAttackersActionsTaken && await WarriorTooManyAttackersTask())
+            if (await WarriorEmergencyActionTask())
             {
-                tooManyAttackersActionsTaken = true;
-                return;
-            }
-
-            // Just in case, if for some reason things are going really poorly, try to pop retal regardless
-            if (!tooManyAttackersActionsTaken && WarriorShouldEmergencyRetaliate())
-            {
-                SlackHelper.SendMessageToChannel($"{WowPlayerConstants.EMERGENCY_HP_THRESHOLD}% Retal popped, not sure what went wrong!");
-
-                // cast retaliation once GCD is cooled down
-                await WaitForGlobalCooldownTask();
-                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION);
-
-                tooManyAttackersActionsTaken = true;
-
-                LogoutReason = $"Got down to {WowPlayerConstants.EMERGENCY_HP_THRESHOLD}% somehow";
-                LogoutTriggered = true;
-
                 return;
             }
 
@@ -225,12 +40,6 @@ namespace WoWHelper
             {
                 HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 return;
-            }
-
-            if (!startOfCombatWiggled && PreviousWorldState.TargetHpPercent == 100 && WorldState.TargetHpPercent < 100)
-            {
-                await StartOfCombatWiggle();
-                startOfCombatWiggled = true; // maybe not necessary? if they keep going to 100 maybe they're evading and it's good to keep backing up?
             }
 
             if (WarriorShouldOpenWithBerserkerRage())
@@ -311,12 +120,6 @@ namespace WoWHelper
             }
         }
 
-        // Just in case, if for some reason things are going really poorly, try to pop retal regardless.
-        public bool WarriorShouldEmergencyRetaliate()
-        {
-            return WorldState.PlayerHpPercent <= WowPlayerConstants.EMERGENCY_HP_THRESHOLD;
-        }
-
         // Fear-casters are worth opening on preemptively, rather than reacting once feared.
         public bool WarriorShouldOpenWithBerserkerRage()
         {
@@ -329,7 +132,9 @@ namespace WoWHelper
 
         public bool WarriorShouldCastBattleShout(WowWarriorClassState classState)
         {
-            return !classState.BattleShoutActive;
+            // rather than pass a custom bool for a spell that will be trained 5m into the character's life, let's just hack this one
+            bool knowsBattleShout = WorldState.PlayerLevel >= 3 || WorldState.AllSkillsKnownForThisLevel;
+            return !classState.BattleShoutActive && knowsBattleShout;
         }
 
         // Only below Battle Shout in priority. Sweeping Strikes makes the next
@@ -525,40 +330,28 @@ namespace WoWHelper
             }
         }
 
-        public async Task<bool> WarriorTooManyAttackersTask()
+        public async Task<bool> WarriorEmergencyActionTask()
         {
             bool tooManyAttackers = WorldState.AttackerCount >= WowPlayerConstants.TOO_MANY_ATTACKERS_THRESHOLD;
+            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowPlayerConstants.EMERGENCY_HP_THRESHOLD;
+            bool takeEmergencyAction = !EmergencyCombatActionTaken && (tooManyAttackers || emergencyHpThreshold);
 
-            if (tooManyAttackers)
+            if (takeEmergencyAction)
             {
-                SlackHelper.SendMessageToChannel($"TOO MANY ATTACKERS HELP");
+                EmergencyCombatActionTaken = true;
+                string emergencyMessage = tooManyAttackers ? $"TOO MANY ATTACKERS HELP" : $"EMERGENCY HP THRESHOLD HIT {WorldState.PlayerHpPercent}";
+                SlackHelper.SendMessageToChannel(emergencyMessage);
 
                 // cast retaliation once GCD is cooled down
                 await WaitForGlobalCooldownTask();
                 await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION);
 
-                LogoutReason = "Got into a Retaliation situation, logging off for safety";
+                LogoutReason = $"Got into a Retaliation situation ({emergencyMessage}), logging off for safety";
                 LogoutTriggered = true;
             }
 
-            return tooManyAttackers;
+            return takeEmergencyAction;
         }
-
-        /*
-        public async Task<bool> WarriorUseDiamondFlaskTask()
-        {
-            bool shouldUseDiamondFlask = WorldState.AttackerCount > 1 &&
-                !GeneralHelpers.CurrentTimeInsideDuration(HealingTrinketTime, WowGameplayConstants.DIAMOND_FLASK_COOLDOWN_MILLIS);
-
-            if (shouldUseDiamondFlask)
-            {
-                HealingTrinketTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_HEALING_TRINKET);
-            }
-
-            return shouldUseDiamondFlask;
-        }
-        */
 
         public async Task<bool> WarriorStartOfCombatBerserkerRage()
         {
