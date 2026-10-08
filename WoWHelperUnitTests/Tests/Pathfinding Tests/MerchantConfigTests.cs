@@ -29,7 +29,7 @@ namespace WoWHelperUnitTests
             {
                 Vector2 branchPoint = location.MerchantConfig.Waypoints[0];
 
-                bool matchesRouteWaypoint = location.Waypoints
+                bool matchesRouteWaypoint = location.Route.Waypoints
                     .Any(w => Vector2.Distance(w, branchPoint) <= WowPlayerConstants.MERCHANT_BRANCH_POINT_EPSILON);
 
                 Assert.IsTrue(matchesRouteWaypoint,

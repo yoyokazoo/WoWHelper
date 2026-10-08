@@ -5,7 +5,7 @@ namespace WoWHelper.Code.WorldState
 {
     // Optional per-route "sell run" -- see WowLocationConfiguration.MerchantConfig. Waypoints[0]
     // MUST equal (within WowPlayerConstants.MERCHANT_BRANCH_POINT_EPSILON) one of the owning
-    // WowLocationConfiguration's own Waypoints -- that's the point PathfindingLoopTask branches
+    // WowLocationConfiguration's own Route.Waypoints -- that's the point PathfindingLoopTask branches
     // off from when WorldState.BagsAreFull. Waypoints[^1] is the merchant's exact standing spot,
     // walked to with the much tighter MERCHANT_FINAL_WAYPOINT_TOLERANCE since
     // WowPlayer.MerchantRunStepTask's INTERACTING_WITH_MERCHANT phase (WowMovementTasks.cs)

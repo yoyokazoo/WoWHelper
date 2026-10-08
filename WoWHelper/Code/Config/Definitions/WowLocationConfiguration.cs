@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Numerics;
 
 namespace WoWHelper.Code.WorldState
 {
@@ -32,12 +31,6 @@ namespace WoWHelper.Code.WorldState
 
     public class WowLocationConfiguration
     {
-        public enum WaypointTraversalMethod
-        {
-            CIRCULAR, // go from start -> end, then restart at start
-            LINEAR // go from start -> end -> start
-        }
-
         public enum WaypointTargetFindMethod
         {
             TAB, // only use tab, only gets a narrow cone in front
@@ -61,12 +54,9 @@ namespace WoWHelper.Code.WorldState
         public string Title { get; set; }
         public int MinimumLevel { get; set; } // for validation -- character should be at least this level before starting
         public int MaximumLevel { get; set; } // Level to log off at
-        public WowZone Zone { get; set; } // for validation -- character should be in this zone before starting
 
         public EngagementMethod EngageMethod { get; set; }
-        public WaypointTraversalMethod TraversalMethod { get; set; }
         public WaypointTargetFindMethod TargetFindMethod { get; set; }
-        public float DistanceTolerance { get; set; }
 
         // Whether PathfindingLoopTask is allowed to leave the waypoint route to walk
         // towards a targeted mob that's out of pull range (the target-marker chase -- see
@@ -90,7 +80,8 @@ namespace WoWHelper.Code.WorldState
         // ExpectedMobNames' exact roster. Null/empty leaves the macro as-is.
         public string TargetMacroMobNames { get; set; }
 
-        public List<Vector2> Waypoints { get; set; }
+        // Waypoints, traversal method, distance tolerance and zone -- see WowRoutes.cs.
+        public WowRoute Route { get; set; }
 
         // Optional "sell run" detour -- see WowMerchantConfiguration for the branch-off
         // contract. Null (default) for routes that just log out on full bags instead.
@@ -98,18 +89,12 @@ namespace WoWHelper.Code.WorldState
 
         public WowLocationConfiguration()
         {
-            TraversalMethod = WaypointTraversalMethod.CIRCULAR;
             TargetFindMethod = WaypointTargetFindMethod.ALTERNATE;
-            DistanceTolerance = 0.2f;
 
             EngageMethod = EngagementMethod.Charge;
             ChaseOutOfRangeTargets = true;
 
             MaximumLevel = 61;
-
-            // Default to Unknown, not the implicit Durotar (enum value 0) -- a config that
-            // forgets to set Zone should fail loudly/obviously, not silently claim Durotar.
-            Zone = WowZone.Unknown;
 
             ExpectedMobNames = new List<string>();
         }

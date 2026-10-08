@@ -54,7 +54,7 @@ namespace WoWHelper
         public BattleRecoveryState CurrentBattleRecoveryState { get; private set; }
 
         public int CurrentWaypointIndex { get; private set; }
-        public Vector2 CurrentWaypoint => LocationConfiguration.Waypoints[CurrentWaypointIndex]; 
+        public Vector2 CurrentWaypoint => LocationConfiguration.Route.Waypoints[CurrentWaypointIndex]; 
         public int WaypointTraversalDirection { get; private set; }
 
         public bool IsOnMerchantRun { get; private set; }
@@ -433,7 +433,7 @@ namespace WoWHelper
                     await WalkToWaypointTask();
 
                     float targetDistance = Vector2.Distance(WorldState.PlayerLocation, CurrentWaypoint);
-                    bool arrived = targetDistance <= LocationConfiguration.DistanceTolerance;
+                    bool arrived = targetDistance <= LocationConfiguration.Route.DistanceTolerance;
                     if (arrived)
                     {
                         Console.WriteLine($"Arrived at {CurrentWaypoint}, distance away {targetDistance}, picking next waypoint");

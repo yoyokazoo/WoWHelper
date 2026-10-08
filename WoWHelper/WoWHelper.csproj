@@ -142,9 +142,11 @@
     <Compile Include="Code\Config\Definitions\WowCombatConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowLocationConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowMerchantConfiguration.cs" />
+    <Compile Include="Code\Config\Definitions\WowRoute.cs" />
     <Compile Include="Code\Config\Definitions\CreatureConfig.cs" />
     <Compile Include="Code\Config\Definitions\WowLevelingConfiguration.cs" />
     <Compile Include="Code\Config\Data\WowLocationConfigs.cs" />
+    <Compile Include="Code\Config\Data\WowRoutes.cs" />
     <Compile Include="Code\Config\Data\WowLevelingConfigs.cs" />
     <Compile Include="Code\Gameplay\WowCommonCombatTasks.cs" />
     <Compile Include="Code\Gameplay\WowConfigResolutionTasks.cs" />

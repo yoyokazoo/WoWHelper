@@ -111,7 +111,8 @@ MUST stay in sync with the `WowZone` enum in `WowLocationConfiguration.cs`
 (`Unknown = 255`) — two independent hardcoded tables that have to agree,
 same class of coupling as everything else in this contract. Each
 `WowLocationConfiguration` in `WowLocationConfigs.cs` also carries a `Zone`
-(plus `Title` and `MinimumLevel`), for validating the character is in the
+(on its `Route` — see the `Config/` bullet below — plus its own `Title` and
+`MinimumLevel`), for validating the character is in the
 right place/level before a farming route starts — `CurrentZone` is the
 runtime half of that check. That validation (plus a third check: is the
 player near *any* of the route's own waypoints, via
@@ -618,7 +619,7 @@ of truth — edits should be made here, not in the WoW install directory.
   (default `true`, set in the constructor) — `false` skips the scan and the
   chase entirely, for routes where straying off the waypoints risks getting
   hung up on geometry or wandering into something dangerous (currently
-  `LEVEL_53_NORTH_FELWOOD` and `LEVEL_34_SHIMMERING_FLATS_WAYPOINTS`).
+  `LEVEL_53_NORTH_FELWOOD` and `LEVEL_34_SHIMMERING_FLATS`).
 - **`Config/`** — per-location farming routes/waypoints
   (`WowLocationConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
@@ -643,7 +644,7 @@ of truth — edits should be made here, not in the WoW install directory.
   `WowLevelingConfiguration`) is a per-level leveling plan: the
   `LocationConfigs` acceptable for gaining XP/money at that level (one entry
   spans every starting zone — the goal logic picks by matching each
-  location's `Zone` to `WorldState.CurrentZone`) and `TrainerConfigs`
+  location's `Route.Zone` to `WorldState.CurrentZone`) and `TrainerConfigs`
   (stubbed as plain name strings for now), looked up via
   `WowLevelingConfigs.GetFor(class, level)`. `Class` defaults to `null`
   (any class); a class-specific entry is possible and `GetFor` prefers it
@@ -654,10 +655,16 @@ of truth — edits should be made here, not in the WoW install directory.
   for money vs. grind for XP, off the `MultiBoolTwo` G6/G7 bits) is still to
   be written. Each `WowLocationConfiguration` carries a
   `Title`
-  (human-readable, includes the minimum level), `MinimumLevel`, and `Zone`
-  (`WowZone` enum, `WowLocationConfiguration.cs`) — see the zone ID
+  (human-readable, includes the minimum level), `MinimumLevel`, and a
+  `Route` (`WowRoute`, `Config/Definitions/WowRoute.cs`): the route's
+  `Waypoints`, `TraversalMethod` (`WowRoute.WaypointTraversalMethod`,
+  `CIRCULAR`/`LINEAR`), `DistanceTolerance`, and `Zone` (`WowZone` enum,
+  still declared in `WowLocationConfiguration.cs`) — see the zone ID
   note in the color-encoding contract above for how `Zone` ties to
-  `WowWorldState.CurrentZone` — plus `ExpectedMobNames` and the
+  `WowWorldState.CurrentZone`. Every route lives in
+  `Config/Data/WowRoutes.cs`, named after its location config plus `_ROUTE`
+  (e.g. `LEVEL_53_NORTH_FELWOOD_ROUTE` for `LEVEL_53_NORTH_FELWOOD`). Each
+  location config also has `ExpectedMobNames` and the
   `AllMobsInZoneAreNatureImmune()` helper built on it; see "Expected mob
   roster" above. `Config/Definitions/CreatureConfig.cs` is the C# mirror of
   the Lua addon's `CreatureConfig.lua` name lists that `ExpectedMobNames`
@@ -669,7 +676,7 @@ of truth — edits should be made here, not in the WoW install directory.
   It's a `Name` (human-readable label only — **not** fed into any macro, see
   below) plus a `List<Vector2> Waypoints`: `Waypoints[0]` MUST equal (within
   `WowPlayerConstants.MERCHANT_BRANCH_POINT_EPSILON`) one of the owning
-  route's own `Waypoints` — that's the point the bot branches off from —
+  route's own `Route.Waypoints` — that's the point the bot branches off from —
   and `Waypoints[^1]` is the merchant's exact standing spot. Enforced by
   `WoWHelperUnitTests/Tests/Pathfinding Tests/MerchantConfigTests.cs` rather
   than at runtime, same as the mob-roster/nature-immunity checks above.
@@ -689,7 +696,7 @@ of truth — edits should be made here, not in the WoW install directory.
   via `MoveTowardsPointTask` (the same rotate/strafe/walk logic
   `MoveTowardsWaypointTask` uses for the main route, extracted to take an
   arbitrary point/tolerance instead of always reading
-  `LocationConfiguration.Waypoints[CurrentWaypointIndex]`), with
+  `LocationConfiguration.Route.Waypoints[CurrentWaypointIndex]`), with
   every leg but the final one using `MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE`
   and the final approach using the much tighter
   `MERCHANT_FINAL_WAYPOINT_TOLERANCE` — the final waypoint is exactly where

@@ -68,7 +68,7 @@
         public const float MERCHANT_BRANCH_POINT_EPSILON = 0.01f;
 
         // Tolerance for every leg of a merchant run except the final approach -- same as
-        // WowLocationConfiguration.DistanceTolerance's own default, since these are ordinary
+        // WowRoute.DistanceTolerance's own default, since these are ordinary
         // waypoint-to-waypoint hops.
         public const float MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE = 0.2f;
 

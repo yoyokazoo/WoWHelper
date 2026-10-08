@@ -269,7 +269,7 @@ namespace WoWHelper
                 return LogoutTriggered;
             }
 
-            float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, LocationConfiguration.Waypoints);
+            float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, LocationConfiguration.Route.Waypoints);
 
             // Checked first so a wrong-zone/under-level/too-far-away start gives the clearest
             // possible reason, rather than getting masked behind some other logout condition
@@ -281,10 +281,10 @@ namespace WoWHelper
             }
             // Zone.Unknown means this route's config forgot to set Zone -- skip the check rather
             // than have a misconfigured route always immediately abort every session.
-            else if (LocationConfiguration.Zone != WowZone.Unknown && WorldState.CurrentZone != LocationConfiguration.Zone)
+            else if (LocationConfiguration.Route.Zone != WowZone.Unknown && WorldState.CurrentZone != LocationConfiguration.Route.Zone)
             {
                 LogoutTriggered = true;
-                LogoutReason = $"Wrong zone for this route (currently {WorldState.CurrentZone}, expected {LocationConfiguration.Zone})";
+                LogoutReason = $"Wrong zone for this route (currently {WorldState.CurrentZone}, expected {LocationConfiguration.Route.Zone})";
             }
             else if (closestWaypointDistance > WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT)
             {
