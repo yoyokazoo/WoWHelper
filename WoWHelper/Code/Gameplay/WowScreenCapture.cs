@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
 using WindowsGameAutomationTools.Images;
@@ -23,18 +24,31 @@ namespace WoWHelper
         // and WowMovementTasks.TurnToFaceTargetMarkerTask.
         public static Point? FindTargetMarkerOnScreen(WowScreenConfiguration screenConfig)
         {
+            return FindTargetMarkerOnScreen(screenConfig, out _, out _);
+        }
+
+        // Same as above, also reporting how long the full-screen capture and the color scan
+        // each took (for WowPlayer.MeasureFindTargetMarkerTimingTask).
+        public static Point? FindTargetMarkerOnScreen(WowScreenConfiguration screenConfig, out double captureMillis, out double scanMillis)
+        {
             var resolution = screenConfig.Resolution;
             var fullScreenRect = new Rectangle(0, 0, resolution.Width, resolution.Height);
 
+            var stopwatch = Stopwatch.StartNew();
             using (Bitmap fullBmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(fullScreenRect))
             {
+                captureMillis = stopwatch.Elapsed.TotalMilliseconds;
+
+                stopwatch.Restart();
                 Point? centroid = BitmapDifferenceVisualizer.FindColorCentroid(fullBmp, WowScreenConfiguration.TARGET_MARKER_COLOR);
+                scanMillis = stopwatch.Elapsed.TotalMilliseconds;
 
                 // TEMP DEBUG (WalkIntoMeleeRangeTask troubleshooting): confirm whether the
                 // marker is actually being found at all, and where -- remove once resolved.
-                Console.WriteLine(centroid == null
+                Console.WriteLine((centroid == null
                     ? $"DEBUG FindTargetMarkerOnScreen: marker NOT found (color {WowScreenConfiguration.TARGET_MARKER_COLOR}, resolution {resolution})"
-                    : $"DEBUG FindTargetMarkerOnScreen: marker found at {centroid.Value}");
+                    : $"DEBUG FindTargetMarkerOnScreen: marker found at {centroid.Value}")
+                    + $" -- capture {captureMillis:0.0}ms, scan {scanMillis:0.0}ms");
 
                 return centroid;
             }

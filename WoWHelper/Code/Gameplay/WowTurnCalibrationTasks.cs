@@ -1,6 +1,7 @@
 using InputManager;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -149,6 +150,43 @@ namespace WoWHelper
             {
                 Keyboard.KeyUp(key);
             }
+        }
+
+        // Calls WowScreenCapture.FindTargetMarkerOnScreen `iterations` times and prints
+        // mean/std dev/min/max for the capture, the scan, and the total. Run it once with a
+        // target marked on screen and once with no target -- the scan has no early exit, so
+        // the two should come out about the same.
+        public async Task<bool> MeasureFindTargetMarkerTimingTask(int iterations = 50)
+        {
+            var captureSamples = new List<float>();
+            var scanSamples = new List<float>();
+            int foundCount = 0;
+
+            for (int i = 0; i < iterations; i++)
+            {
+                Point? marker = WowScreenCapture.FindTargetMarkerOnScreen(ScreenConfiguration, out double captureMillis, out double scanMillis);
+                captureSamples.Add((float)captureMillis);
+                scanSamples.Add((float)scanMillis);
+                if (marker != null)
+                {
+                    foundCount++;
+                }
+
+                // Brief yield so back-to-back captures don't skew each other.
+                await Task.Delay(50);
+            }
+
+            Console.WriteLine($"FindTargetMarkerOnScreen timing at {ScreenConfiguration.Resolution}: n={iterations}, marker found {foundCount}/{iterations}");
+            PrintTimingStats("  capture", captureSamples);
+            PrintTimingStats("  scan   ", scanSamples);
+            PrintTimingStats("  total  ", captureSamples.Zip(scanSamples, (c, s) => c + s).ToList());
+            return true;
+        }
+
+        private static void PrintTimingStats(string label, List<float> samples)
+        {
+            var stats = ComputeStats(samples);
+            Console.WriteLine($"{label}: mean {stats.mean:0.0}ms, std dev {stats.stdDev:0.0}ms, min {stats.min:0.0}ms, max {stats.max:0.0}ms");
         }
 
         // Stats on the magnitude turned (sign stripped, so left and right are comparable),

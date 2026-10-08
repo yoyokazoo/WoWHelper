@@ -1026,8 +1026,13 @@ namespace WoWHelper
         // turning circle (WowPathfinding.GetDegreesToMoveTowardsScreenOffsetWhileWalking) so we
         // end up facing the marker rather than undershooting; if the marker's inside that circle
         // (unreachable while walking), stops and turns in place to its plain bearing instead.
-        public async Task FaceTargetMarkerTask()
+        public async Task FaceTargetMarkerTask(bool refreshTargetMarker = false)
         {
+            if (refreshTargetMarker && !TryFindTargetMarkerOnScreen())
+            {
+                return;
+            }
+
             float? degreesDifference = WalkingForward
                 ? GetDegreesToTargetMarkerWhileWalking(LastFindTargetMarkerPoint)
                 : GetBearingDegreesFromMarkerPosition(LastFindTargetMarkerPoint);
@@ -1039,6 +1044,10 @@ namespace WoWHelper
             }
 
             await TurnByKeyboardTask(degreesDifference.Value);
+
+            // TODO: Turn this debug off, since it requires a full on rescan
+
+            //Console.WriteLine($"ASDFASDF.  FaceTargetMarkerTask WalkingForward = {WalkingForward}, degreesDifference = {degreesDifference.Value}, after turn, ");
         }
 
         // TooCloseToTurnWhileWalkingTargetMarkerDistance is treated as the walking turning
@@ -1067,6 +1076,12 @@ namespace WoWHelper
             if (Math.Abs(degreesDifference) > WowPathfinding.WAYPOINT_DEGREE_TOLERANCE_MAX_DEGREES)
             {
                 await FaceWaypointTask();
+            }
+
+            if (!GeneralHelpers.CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
+            {
+                LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                await WowInput.PressKey(WowInput.JUMP);
             }
         }
 

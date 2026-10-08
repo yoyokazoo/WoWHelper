@@ -175,7 +175,7 @@ namespace WoWHelper
         {
             await FocusOnWindowTask();
             await UpdateWorldStateAsync();
-            await MouseTurnRateSweepTask(startPixels: 1, stepPixels: 1);
+            await MeasureFindTargetMarkerTimingTask();
             return true;
         }
 
@@ -305,6 +305,7 @@ namespace WoWHelper
                     break;
                 case PlayerGoal.FIND_ENEMY_TARGET:
                     CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
+                    LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     break;
                 case PlayerGoal.FIGHT:
                     EmergencyCombatActionTaken = false;
@@ -456,7 +457,7 @@ namespace WoWHelper
                     // TODO: actually implement this
                     await EndWalkForwardTask();
                     await StartAttackTask();
-                    await FaceTargetMarkerTask();
+                    await FaceTargetMarkerTask(refreshTargetMarker: true);
                     break;
             }
         }
