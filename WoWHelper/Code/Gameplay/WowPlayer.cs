@@ -175,7 +175,7 @@ namespace WoWHelper
         {
             await FocusOnWindowTask();
             await UpdateWorldStateAsync();
-            await MeasureFindTargetMarkerTimingTask();
+            await MouseTurnRateSweepTask(startPixels: 1, stepPixels: 1);
             return true;
         }
 

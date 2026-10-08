@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Net;
 using System.Runtime.InteropServices;
 
 public static class BitmapDifferenceVisualizer
@@ -19,47 +18,70 @@ public static class BitmapDifferenceVisualizer
         return output;
     }
 
-    public static List<Point> FindHotspots(IReadOnlyList<Bitmap> bitmaps, int ignoreXMin, int ignoreXMax, int ignoreYMin, int ignoreYMax)
+    // Samples every `step`th pixel (outside the ignore rectangle) and returns the ones whose
+    // color changes at any point across the frames.
+    public static List<Point> FindHotspots(IReadOnlyList<Bitmap> bitmaps, int ignoreXMin, int ignoreXMax, int ignoreYMin, int ignoreYMax, int step = 3)
     {
         int width = bitmaps[0].Width;
         int height = bitmaps[0].Height;
 
-        int widthStep = 3;// 5;
-        int heightStep = 3;// 5;
-
-        int count = bitmaps.Count;
+        int[][] frames = new int[bitmaps.Count][];
+        for (int i = 0; i < bitmaps.Count; i++)
+        {
+            frames[i] = CopyPixelsArgb(bitmaps[i]);
+        }
 
         List<Point> output = new List<Point>();
 
-        Color firstColor = Color.White;
-        for (int x = 0; x < width; x += widthStep)
+        for (int x = 0; x < width; x += step)
         {
-            for (int y = 0; y < height; y += heightStep)
+            for (int y = 0; y < height; y += step)
             {
                 if (x >= ignoreXMin && x <= ignoreXMax && y >= ignoreYMin && y <= ignoreYMax)
                 {
                     continue;
                 }
 
-                for (int bmpIndex = 0; bmpIndex < count; bmpIndex++)
+                int index = y * width + x;
+                int firstColor = frames[0][index];
+                for (int i = 1; i < frames.Length; i++)
                 {
-                    if (bmpIndex == 0)
+                    if (frames[i][index] != firstColor)
                     {
-                        firstColor = bitmaps[bmpIndex].GetPixel(x, y);
-                    }
-                    else
-                    {
-                        if (firstColor != bitmaps[bmpIndex].GetPixel(x, y))
-                        {
-                            output.Add(new Point(x, y));
-                            break;
-                        }
+                        output.Add(new Point(x, y));
+                        break;
                     }
                 }
             }
         }
 
         return output;
+    }
+
+    // Copies a bitmap's pixels into a row-major int[] (index y * width + x), one ARGB int per
+    // pixel, comparable to Color.ToArgb(). Reading via LockBits is ~10-30x faster than
+    // Bitmap.GetPixel; locking as Format32bppArgb makes GDI+ convert if the bitmap is in some
+    // other format, and copying row by row skips any stride padding.
+    private static int[] CopyPixelsArgb(Bitmap bmp)
+    {
+        int width = bmp.Width;
+        int height = bmp.Height;
+        int[] pixels = new int[width * height];
+
+        BitmapData data = bmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+        try
+        {
+            for (int y = 0; y < height; y++)
+            {
+                Marshal.Copy(data.Scan0 + y * data.Stride, pixels, y * width, width);
+            }
+        }
+        finally
+        {
+            bmp.UnlockBits(data);
+        }
+
+        return pixels;
     }
 
     /// <summary>
@@ -157,23 +179,40 @@ public static class BitmapDifferenceVisualizer
     /// solid NxN square, a handful of exact-match hits toward its interior is expected even
     /// stepping across the bitmap rather than checking every pixel (cheaper over a
     /// near-full-screen capture, same tradeoff FindHotspots above makes).
+    ///
+    /// Reads pixels via LockBits like CopyPixelsArgb, but copies out only the sampled rows,
+    /// one at a time into a reused buffer -- this runs on a full-screen capture every few
+    /// hundred ms, so it avoids allocating a whole-screen array each call.
     /// </summary>
     public static Point? FindColorCentroid(Bitmap bmp, Color markerColor, int step = 4)
     {
         long sumX = 0, sumY = 0;
         int count = 0;
+        int width = bmp.Width;
+        int height = bmp.Height;
+        int markerArgb = markerColor.ToArgb();
 
-        for (int x = 0; x < bmp.Width; x += step)
+        BitmapData data = bmp.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+        try
         {
-            for (int y = 0; y < bmp.Height; y += step)
+            int[] row = new int[width];
+            for (int y = 0; y < height; y += step)
             {
-                if (bmp.GetPixel(x, y) == markerColor)
+                Marshal.Copy(data.Scan0 + y * data.Stride, row, 0, width);
+                for (int x = 0; x < width; x += step)
                 {
-                    sumX += x;
-                    sumY += y;
-                    count++;
+                    if (row[x] == markerArgb)
+                    {
+                        sumX += x;
+                        sumY += y;
+                        count++;
+                    }
                 }
             }
+        }
+        finally
+        {
+            bmp.UnlockBits(data);
         }
 
         if (count == 0)
