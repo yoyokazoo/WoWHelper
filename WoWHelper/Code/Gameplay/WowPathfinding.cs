@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using WoWHelper.Code.WorldState;
 
 namespace WoWHelper.Code
 {
@@ -266,6 +267,12 @@ namespace WoWHelper.Code
             }
 
             return closestDistance;
+        }
+
+        public static WowNPCConfiguration PickNPCToSellTo()
+        {
+            // TODO: implement!
+            return WowNPCConfigs.VALLEY_OF_TRIALS_MERCHANT;
         }
     }
 }

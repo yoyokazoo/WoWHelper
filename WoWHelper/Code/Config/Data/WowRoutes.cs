@@ -119,6 +119,19 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute BOARS_AND_SCORPS_TO_MERCHANT_ROUTE = new WowRoute
+        {
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(44.19f, 66.23f),
+                new Vector2(44.31f, 67.14f),
+                new Vector2(43.81f, 67.96f),
+                new Vector2(42.58f, 67.34f),
+            },
+        };
+
         #endregion
 
         #region Mulgore

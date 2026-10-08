@@ -134,6 +134,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Code\Config\Data\WowNPCConfigs.cs" />
+    <Compile Include="Code\Config\Definitions\WowNPCConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowScreenConfiguration.cs" />
     <Compile Include="Code\Config\Data\WowScreenConfigs.cs" />
     <Compile Include="Code\Constants\WowGameplayConstants.cs" />
