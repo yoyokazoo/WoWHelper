@@ -1013,15 +1013,32 @@ AreBagsFull = CacheOnInterval(function()
     return GetTotalFreeBagSlots() == 0
 end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
+-- Auto-sell modes, selectable via the /yyconfig "Auto-sell" selector
+-- (YoyokazooUI.lua). GetAutoSellMode() (YoyokazooUI.lua) returns the current
+-- one, defaulting to "off".
+--   off       -- never sell anything.
+--   allowlist -- quality 0 (gray) junk, plus quality 1 (white) items on
+--                AUTO_SELL_ALLOWLIST_ITEM_NAMES.
+--   blocklist -- everything quality 0-2 (gray/white/green) except items on
+--                AUTO_SELL_BLOCKLIST_ITEM_NAMES.
+AUTO_SELL_MODE_CHOICES = {
+    { id = "off",       label = "Off" },
+    { id = "allowlist", label = "Allowlist" },
+    { id = "blocklist", label = "Blocklist" },
+}
+
+-- Highest item quality blocklist mode will sell (2 = Uncommon/green).
+local AUTO_SELL_BLOCKLIST_MAX_QUALITY = 2
+
 -- Item names, beyond plain quality-0 (Poor/gray) junk, that are also worth
--- auto-selling to an open merchant -- e.g. cooking/fishing byproducts that
--- vendor for a few silver and are otherwise just dead bag space. Matched by
--- name (via GetItemInfo(itemID), the same name the tooltip shows) rather
--- than item ID -- unlike DYNAMITE_ITEM_CHOICES/HEALING_POTION_ITEM_CHOICES
--- above, this is a short, manually-curated whitelist rather than a
--- runtime-selectable /yyconfig choice, so there's no id-keyed selector UI
--- to match against. Add more names here as they come up.
-AUTO_SELL_WHITELIST_ITEM_NAMES = {
+-- auto-selling to an open merchant in "allowlist" mode -- e.g. cooking/fishing
+-- byproducts that vendor for a few silver and are otherwise just dead bag
+-- space. Matched by name (via GetItemInfo(itemID), the same name the tooltip
+-- shows) rather than item ID -- unlike DYNAMITE_ITEM_CHOICES/
+-- HEALING_POTION_ITEM_CHOICES above, this is a short, manually-curated list
+-- rather than a runtime-selectable /yyconfig choice, so there's no id-keyed
+-- selector UI to match against. Add more names here as they come up.
+AUTO_SELL_ALLOWLIST_ITEM_NAMES = {
     "Tangy Clam Meat",
     "Raw Bristle Whisker Catfish",
     "Turtle Meat",
@@ -1042,12 +1059,24 @@ AUTO_SELL_WHITELIST_ITEM_NAMES = {
     "Heavy Kodo Meat",
 }
 
-local function IsAutoSellWhitelistedByName(itemName)
+-- Item names "blocklist" mode never sells, even though they're quality 0-2.
+-- Matched by name, same as the allowlist above. Add more names here as they
+-- come up.
+AUTO_SELL_BLOCKLIST_ITEM_NAMES = {
+    "Minor Healing Potion",
+    "Lesser Healing Potion",
+    "Healing Potion",
+    "Greater Healing Potion",
+    "Superior Healing Potion",
+    "Major Healing Potion",
+}
+
+local function IsItemNameInList(itemName, list)
     if not itemName then
         return false
     end
 
-    for _, name in ipairs(AUTO_SELL_WHITELIST_ITEM_NAMES) do
+    for _, name in ipairs(list) do
         if name == itemName then
             return true
         end
@@ -1102,17 +1131,14 @@ function AutoSellDescribeItemInfo(itemInfo)
     return table.concat(parts, ", ")
 end
 
--- Whether a single bag slot's item should be auto-sold to an open merchant:
--- plain quality 0 (Poor/gray) junk, or a quality 1 (Common/white) item on
--- AUTO_SELL_WHITELIST_ITEM_NAMES above. itemInfo is the table returned by
+-- Whether a single bag slot's item should be auto-sold to an open merchant
+-- under the given mode (an AUTO_SELL_MODE_CHOICES id -- see there for what
+-- each mode sells). itemInfo is the table returned by
 -- C_Container.GetContainerItemInfo(bag, slot) (see GetFreeSlotsInBag() above
 -- for the same API) -- hasNoValue items (quest items, etc, which a vendor
--- won't buy regardless of quality) are skipped even if gray. Not yet
--- confirmed live against this client's actual itemInfo table shape -- flip
--- AUTO_SELL_DEBUG on above and read the per-slot dumps rather than guessing
--- at the field names.
-function ShouldAutoSellItem(itemInfo)
-    if not itemInfo then
+-- won't buy regardless of quality) are skipped in every mode.
+function ShouldAutoSellItem(itemInfo, mode)
+    if not itemInfo or mode == "off" then
         return false
     end
 
@@ -1121,34 +1147,73 @@ function ShouldAutoSellItem(itemInfo)
         return false
     end
 
-    if itemInfo.quality == 0 then
-        AutoSellDebugPrint("    QUEUED: quality 0 (gray junk)")
-        return true
+    local quality = itemInfo.quality
+    if type(quality) ~= "number" then
+        AutoSellDebugPrint("    skipped: quality=" .. tostring(quality) .. " (" .. type(quality) .. ")")
+        return false
     end
 
-    if itemInfo.quality == 1 then
-        -- GetItemInfo returns nil for an item the client hasn't cached yet;
-        -- that shows up as name=nil here rather than as a silent non-match.
-        local itemName = GetItemInfo(itemInfo.itemID)
-        local whitelisted = IsAutoSellWhitelistedByName(itemName)
-        AutoSellDebugPrint("    quality 1, name=" .. tostring(itemName) .. " -- " ..
-            (whitelisted and "QUEUED (whitelisted)" or "skipped (not whitelisted)"))
-        return whitelisted
+    -- GetItemInfo returns nil for an item the client hasn't cached yet; that
+    -- shows up as name=nil here rather than as a silent non-match.
+    local itemName = GetItemInfo(itemInfo.itemID)
+
+    if mode == "allowlist" then
+        if quality == 0 then
+            AutoSellDebugPrint("    QUEUED: quality 0 (gray junk)")
+            return true
+        end
+
+        if quality == 1 then
+            local allowed = IsItemNameInList(itemName, AUTO_SELL_ALLOWLIST_ITEM_NAMES)
+            AutoSellDebugPrint("    quality 1, name=" .. tostring(itemName) .. " -- " ..
+                (allowed and "QUEUED (allowlisted)" or "skipped (not allowlisted)"))
+            return allowed
+        end
+
+        AutoSellDebugPrint("    skipped: quality " .. quality .. " never sold in allowlist mode")
+        return false
     end
 
-    AutoSellDebugPrint("    skipped: quality=" .. tostring(itemInfo.quality) ..
-        " (" .. type(itemInfo.quality) .. ")")
+    if mode == "blocklist" then
+        if quality > AUTO_SELL_BLOCKLIST_MAX_QUALITY then
+            AutoSellDebugPrint("    skipped: quality " .. quality .. " above blocklist max " ..
+                AUTO_SELL_BLOCKLIST_MAX_QUALITY)
+            return false
+        end
+
+        -- An uncached name can't be checked against the blocklist, so don't
+        -- risk selling something that's on it.
+        if not itemName then
+            AutoSellDebugPrint("    skipped: name not cached, can't check blocklist")
+            return false
+        end
+
+        local blocked = IsItemNameInList(itemName, AUTO_SELL_BLOCKLIST_ITEM_NAMES)
+        AutoSellDebugPrint("    quality " .. quality .. ", name=" .. itemName .. " -- " ..
+            (blocked and "skipped (blocklisted)" or "QUEUED"))
+        return not blocked
+    end
+
+    AutoSellDebugPrint("    skipped: unknown auto-sell mode " .. tostring(mode))
     return false
 end
 
 -- Scans bags 0-4 (backpack + equipped bags -- same range GetTotalFreeBagSlots()
--- above uses) for everything ShouldAutoSellItem() flags, returning a flat list
--- of { bag = ..., slot = ... } entries to sell. Doesn't sell anything itself --
--- see the queued, one-per-tick sell loop in YoyokazooUI.lua's MERCHANT_SHOW
--- handling (selling everything in a single loop iteration is known to
--- silently drop some sells).
-function FindAutoSellQueue()
+-- above uses) for everything ShouldAutoSellItem() flags under the given mode
+-- (defaults to the current /yyconfig one), returning a flat list of
+-- { bag = ..., slot = ..., quality = ... } entries to sell, ordered all grays
+-- first, then whites, then greens. Doesn't sell anything itself -- see the
+-- queued, one-per-tick sell loop in YoyokazooUI.lua's MERCHANT_SHOW handling
+-- (selling everything in a single loop iteration is known to silently drop
+-- some sells).
+function FindAutoSellQueue(mode)
+    mode = mode or GetAutoSellMode()
     local queue = {}
+
+    if mode == "off" then
+        AutoSellDebugPrint("auto-sell mode is off -- nothing queued")
+        return queue
+    end
 
     if not (C_Container and C_Container.GetContainerItemInfo and C_Container.GetContainerNumSlots) then
         AutoSellDebugPrint("C_Container.GetContainerItemInfo/GetContainerNumSlots missing -- " ..
@@ -1164,13 +1229,25 @@ function FindAutoSellQueue()
             if itemInfo ~= nil then
                 AutoSellDebugPrint("  " .. bag .. ":" .. slot .. " " .. AutoSellDescribeItemInfo(itemInfo))
             end
-            if ShouldAutoSellItem(itemInfo) then
-                table.insert(queue, { bag = bag, slot = slot })
+            if ShouldAutoSellItem(itemInfo, mode) then
+                table.insert(queue, { bag = bag, slot = slot, quality = itemInfo.quality })
             end
         end
     end
 
-    AutoSellDebugPrint("scan finished: " .. #queue .. " slot(s) queued")
+    -- table.sort isn't stable, so tie-break on bag/slot to keep scan order
+    -- within a quality tier.
+    table.sort(queue, function(a, b)
+        if a.quality ~= b.quality then
+            return a.quality < b.quality
+        end
+        if a.bag ~= b.bag then
+            return a.bag < b.bag
+        end
+        return a.slot < b.slot
+    end)
+
+    AutoSellDebugPrint("scan finished (" .. mode .. "): " .. #queue .. " slot(s) queued")
 
     return queue
 end

@@ -820,20 +820,26 @@ of truth — edits should be made here, not in the WoW install directory.
   (class-specific dispatchers — see "Class split" above). The
   `IsTargetCasterMob`/`IsTargetRunnerMob`/`IsTargetFireImmune` checks here
   read their name lists from `CreatureConfig.lua`. Also holds the
-  merchant-auto-sell logic: `AUTO_SELL_WHITELIST_ITEM_NAMES` (currently
-  cooking/fishing byproducts — `"Tangy Clam Meat"`, `"Raw Bristle Whisker
-  Catfish"`, `"Turtle Meat"` — and skinning/leatherworking materials —
-  `"Light Leather"`, `"Medium Leather"`, `"Light Hide"`, `"Medium Hide"`,
-  `"Heavy Hide"`) is a short, manually-curated list of quality-1
-  (Common/white) item names worth selling despite not being gray junk —
-  matched by name (`GetItemInfo(itemID)`) rather than item ID, unlike
-  `DYNAMITE_ITEM_CHOICES`/`HEALING_POTION_ITEM_CHOICES` below, since this
-  isn't a runtime-selectable `/yyconfig` choice; `ShouldAutoSellItem(itemInfo)`
-  flags a single `C_Container.GetContainerItemInfo(bag, slot)` result — plain
-  quality 0 (Poor/gray) junk, or a whitelisted quality 1 item, skipping
-  anything `hasNoValue` (quest items, etc.) — and `FindAutoSellQueue()` scans
-  bags 0-4 for everything it flags, returning the `{ bag, slot }` list that
-  `YoyokazooUI.lua`'s `MERCHANT_SHOW` handler sells from (see below).
+  merchant-auto-sell logic. `AUTO_SELL_MODE_CHOICES` defines three modes
+  (picked via the `/yyconfig` "Auto-sell" selector, see below): `"off"`
+  sells nothing; `"allowlist"` sells quality 0 (Poor/gray) junk plus any
+  quality 1 (Common/white) item named in `AUTO_SELL_ALLOWLIST_ITEM_NAMES`
+  (a short, manually-curated list of cooking/fishing byproducts and
+  skinning/leatherworking materials); `"blocklist"` sells everything
+  quality 0-2 (gray/white/green) *except* items named in
+  `AUTO_SELL_BLOCKLIST_ITEM_NAMES` (currently just the healing-potion
+  tiers), and skips any item whose name isn't cached yet since it can't be
+  checked against the blocklist. Both lists match by name
+  (`GetItemInfo(itemID)`) rather than item ID, unlike
+  `DYNAMITE_ITEM_CHOICES`/`HEALING_POTION_ITEM_CHOICES` below, since they
+  aren't runtime-selectable `/yyconfig` choices. `ShouldAutoSellItem(itemInfo, mode)`
+  flags a single `C_Container.GetContainerItemInfo(bag, slot)` result under
+  a mode, skipping anything `hasNoValue` (quest items, etc.) in every mode,
+  and `FindAutoSellQueue(mode)` (mode defaults to the current `/yyconfig`
+  one) scans bags 0-4 for everything it flags, returning a
+  `{ bag, slot, quality }` list sorted grays first, then whites, then greens,
+  which `YoyokazooUI.lua`'s `MERCHANT_SHOW` handler sells from in that order
+  (see below).
 - **`WarriorFunctions.lua`** / **`ShamanFunctions.lua`**
   / **`WarlockFunctions.lua`**
   — that class's specific checks (e.g. `TargetHasRend`, `CanCastMortalStrikeOrBloodthirst`,
@@ -975,13 +981,15 @@ of truth — edits should be made here, not in the WoW install directory.
   here, so there's no toggle/config for it — unlike the
   reference addon this was modeled on (KyrosKrane Sylvanblade's "Annoying
   Pop-up Remover"), which exposes it as a user-toggleable option.
-  Also auto-sells junk to an open merchant, then auto-repairs: on
-  `MERCHANT_SHOW`, if the `/yyconfig` "Auto-sell junk" checkbox
-  (`YoyokazooUIDB.autoSellJunk`, `IsAutoSellJunkEnabled()` — defaults **on**,
-  unlike the logout toggles above, since selling junk has no downside the way
-  an unwanted auto-logout would) is enabled, `WoWFunctions.lua`'s
+  Also auto-sells to an open merchant, then auto-repairs: on
+  `MERCHANT_SHOW`, if the `/yyconfig` "Auto-sell" selector
+  (`YoyokazooUIDB.autoSellMode`, `GetAutoSellMode()`/`IsAutoSellEnabled()` —
+  `"off"`/`"allowlist"`/`"blocklist"`, see `AUTO_SELL_MODE_CHOICES` above;
+  defaults to **off**; it replaced an older `autoSellJunk` boolean, whose "on"
+  behavior is now `"allowlist"` — the stale field is cleared on load, not
+  migrated) isn't off, `WoWFunctions.lua`'s
   `FindAutoSellQueue()` builds the list of bag slots to sell (an empty list if
-  the checkbox is off); `SellNextAutoSellQueueItem()` sells one slot every
+  it's off); `SellNextAutoSellQueueItem()` sells one slot every
   `AUTO_SELL_TICK_SECONDS` (0.2s, via chained `C_Timer.After` calls —
   `C_Container.UseContainerItem(bag, slot)` sells an item only while a
   merchant window is open). `MERCHANT_SHOW` fires before Blizzard's own
@@ -999,9 +1007,8 @@ of truth — edits should be made here, not in the WoW install directory.
   `UseContainerItem` on a closed merchant would use/equip the item instead of
   selling it. This is Lua-only, like the "Dynamite item"/"Healing potion"
   selectors — the bot doesn't need to know it happened, so nothing here
-  reaches the pixel row. Purely quality-based (0 = gray, always sold; 1 =
-  white, sold only if on `WoWFunctions.lua`'s `AUTO_SELL_WHITELIST_ITEM_NAMES`
-  whitelist) — the bag scan against this client's actual
+  reaches the pixel row. `/yysell allowlist`/`/yysell blocklist` dry-runs a
+  specific mode regardless of the saved one. The bag scan against this client's actual
   `C_Container.GetContainerItemInfo` table shape (`quality`/`hasNoValue`
   field names) is confirmed live (see the comment above
   `ShouldAutoSellItem()`); the root cause of auto-sell not doing anything was
@@ -1012,23 +1019,23 @@ of truth — edits should be made here, not in the WoW install directory.
   Once the sell queue is exhausted (empty or not — see below),
   `FinishAutoSellVisit()` runs the repair step: if the `/yyconfig`
   "Auto-repair" checkbox (`YoyokazooUIDB.autoRepairEnabled`,
-  `IsAutoRepairEnabled()` — defaults **on**, same "no downside" reasoning as
-  auto-sell junk) is enabled and `CanMerchantRepair()` is true, it reads
+  `IsAutoRepairEnabled()` — defaults **on**, since repairing has no
+  downside) is enabled and `CanMerchantRepair()` is true, it reads
   `GetRepairAllCost()` and calls `RepairAllItems()` only if that cost is
   affordable (`<= GetMoney()`) — a merchant with no repair vendor, or one the
   player can't afford full repairs at, is left alone rather than partially
-  repairing. Auto-repair is independent of auto-sell junk — it runs whether
-  or not that checkbox is on, since a merchant with nothing in our bags worth
+  repairing. Auto-repair is independent of the auto-sell mode — it runs whatever
+  that is set to, since a merchant with nothing in our bags worth
   selling might still be the one we need repairs from; `SellNextAutoSellQueueItem`
   is still always called on `MERCHANT_SHOW` (with an empty queue if
   auto-sell is off or nothing was queued) specifically so the repair check
   goes through the exact same `MerchantFrame`-shown wait/retry as selling,
   rather than adding a second, separately-timed path that risks hitting the
-  same show-race on unverified ground — except when both checkboxes are off,
+  same show-race on unverified ground — except when auto-sell and auto-repair are both off,
   which skips the wait/retry loop entirely since there'd be nothing for it to
   do. The merchant window is only auto-closed (`CloseMerchant()`) if
   something was actually sold or repaired this visit; if neither happened
-  (both toggles off, nothing queued and nothing needing repair, or repair
+  (both off, nothing queued and nothing needing repair, or repair
   unaffordable) the window is left open exactly as the player left it. The
   whole path stays instrumented, off by default: `AUTO_SELL_DEBUG` (a global
   in `WoWFunctions.lua`, currently **false**, shared by both files rather

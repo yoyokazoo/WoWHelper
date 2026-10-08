@@ -78,20 +78,22 @@ if YoyokazooUIDB.logoutOnFullBags == nil then
     YoyokazooUIDB.logoutOnFullBags = false
 end
 
--- Auto-sell junk to an open merchant (see the MERCHANT_SHOW handling below) --
--- defaults ON, unlike the two above, since selling gray/whitelisted junk has
--- no downside the way an unwanted auto-logout would. Lua-only, like the
--- dynamite item/healing potion selectors -- never piped to the C# side via
--- GetMultiBoolTwo, since the bot doesn't need to know it happened.
-if YoyokazooUIDB.autoSellJunk == nil then
-    YoyokazooUIDB.autoSellJunk = true
+-- Auto-sell to an open merchant (see the MERCHANT_SHOW handling below) --
+-- "off"/"allowlist"/"blocklist", see AUTO_SELL_MODE_CHOICES (WoWFunctions.lua).
+-- Defaults to "off". Lua-only, like the dynamite item/healing potion
+-- selectors -- never piped to the C# side via GetMultiBoolTwo, since the bot
+-- doesn't need to know it happened. Replaced the old autoSellJunk boolean
+-- (its "on" behavior is now "allowlist"); the stale field is dropped rather
+-- than migrated, so everyone starts from the new "off" default.
+YoyokazooUIDB.autoSellJunk = nil
+if YoyokazooUIDB.autoSellMode == nil then
+    YoyokazooUIDB.autoSellMode = "off"
 end
 
 -- Auto-repair equipment at an open merchant, once the auto-sell pass (if any)
--- is done -- see the MERCHANT_SHOW handling below. Same "defaults ON, no
--- downside" reasoning as autoSellJunk above: repairing durability has no
--- unwanted side effect the way an unwanted auto-logout would. Independent of
--- autoSellJunk -- it runs whether or not that toggle is on, since a merchant
+-- is done -- see the MERCHANT_SHOW handling below. Defaults ON: repairing
+-- durability has no unwanted side effect the way an unwanted auto-logout
+-- would. Independent of autoSellMode -- it runs whatever that's set to, since a merchant
 -- with nothing sellable in our bags might still be the one we need repairs
 -- from.
 if YoyokazooUIDB.autoRepairEnabled == nil then
@@ -142,8 +144,12 @@ function IsLogoutOnFullBagsEnabled()
     return YoyokazooUIDB.logoutOnFullBags
 end
 
-function IsAutoSellJunkEnabled()
-    return YoyokazooUIDB.autoSellJunk
+function GetAutoSellMode()
+    return YoyokazooUIDB.autoSellMode
+end
+
+function IsAutoSellEnabled()
+    return GetAutoSellMode() ~= "off"
 end
 
 function IsAutoRepairEnabled()
@@ -501,21 +507,21 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- same MerchantFrame-shown wait selling gets, instead of a second,
         -- unverified timing path.
         local queue = {}
-        if IsAutoSellJunkEnabled() then
+        if IsAutoSellEnabled() then
             queue = FindAutoSellQueue()
         end
 
         AutoSellDebugPrint("MERCHANT_SHOW (generation " .. generation ..
-            "), autoSellJunk=" .. tostring(IsAutoSellJunkEnabled()) ..
+            "), autoSellMode=" .. tostring(GetAutoSellMode()) ..
             ", autoRepair=" .. tostring(IsAutoRepairEnabled()) ..
             ", queued=" .. #queue ..
             ", MerchantFrame shown=" .. tostring(MerchantFrame and MerchantFrame:IsShown()))
 
-        -- Both toggles off means there's nothing this feature would ever do
+        -- Auto-sell off and auto-repair off means there's nothing this feature would ever do
         -- at this merchant -- skip the MerchantFrame-shown wait/retry loop
         -- entirely rather than polling for up to MERCHANT_NOT_SHOWN_MAX_RETRIES
         -- ticks for no reason every time a merchant window opens.
-        if IsAutoSellJunkEnabled() or IsAutoRepairEnabled() then
+        if IsAutoSellEnabled() or IsAutoRepairEnabled() then
             SellNextAutoSellQueueItem(queue, 1, generation)
         else
             AutoSellDebugPrint("auto-sell and auto-repair are both OFF -- doing nothing")
@@ -798,11 +804,20 @@ end
 -- wrong: both /yyconfig toggles, whether this addon's frame is actually
 -- registered for MERCHANT_SHOW, whether the MerchantFrame is up right now,
 -- and (if a merchant is open) whether it can repair and what that would
--- currently cost.
+-- currently cost. "/yysell allowlist" or "/yysell blocklist" previews that
+-- mode instead of the current /yyconfig one.
 SLASH_YYSELL1 = "/yysell"
-SlashCmdList["YYSELL"] = function()
-    print("YoyokazooUI: auto-sell dry run --")
-    print("  autoSellJunk (/yyconfig) = " .. tostring(IsAutoSellJunkEnabled()))
+SlashCmdList["YYSELL"] = function(msg)
+    local mode = GetAutoSellMode()
+    local requested = strtrim(msg or ""):lower()
+    for _, choice in ipairs(AUTO_SELL_MODE_CHOICES) do
+        if choice.id == requested then
+            mode = requested
+        end
+    end
+
+    print("YoyokazooUI: auto-sell dry run (mode " .. mode .. ") --")
+    print("  autoSellMode (/yyconfig) = " .. tostring(GetAutoSellMode()))
     print("  autoRepairEnabled (/yyconfig) = " .. tostring(IsAutoRepairEnabled()))
     print("  registered for MERCHANT_SHOW = " .. tostring(frame:IsEventRegistered("MERCHANT_SHOW")))
     print("  MerchantFrame shown = " .. tostring(MerchantFrame and MerchantFrame:IsShown()))
@@ -816,10 +831,13 @@ SlashCmdList["YYSELL"] = function()
     -- off -- printing them is the entire point of asking for it by hand.
     local wasDebug = AUTO_SELL_DEBUG
     AUTO_SELL_DEBUG = true
-    local queue = FindAutoSellQueue()
+    local queue = FindAutoSellQueue(mode)
     AUTO_SELL_DEBUG = wasDebug
 
     print("  would sell " .. #queue .. " slot(s) (nothing was sold)")
+    if mode == "off" then
+        print("  (try /yysell allowlist or /yysell blocklist to preview a mode)")
+    end
 end
 
 -- /yyequip is a debug dry run of auto-equip, same idea as /yysell above: runs
@@ -858,7 +876,7 @@ SlashCmdList["YYTARGET"] = function(msg)
 end
 
 -- /yyconfig toggles the run-specific settings menu (CreateSettingsMenu(), UIFunctions.lua)
--- -- "log out on low dynamite"/"log out on full bags"/"auto-sell junk"/"auto-repair"/
+-- -- "log out on low dynamite"/"log out on full bags"/"auto-sell mode"/"auto-repair"/
 -- "auto-equip upgrades"/"dynamite item"/"healing potion"/"desired world buff" for now, more can be added to the
 -- options list below as they come up. Built once, lazily, on first use rather than
 -- unconditionally at load time like the debug frame above, since there's no reason to pay
@@ -886,11 +904,21 @@ SlashCmdList["YYCONFIG"] = function()
                 end,
             },
             {
-                label = "Auto-sell junk",
-                get = IsAutoSellJunkEnabled,
-                set = function(value)
-                    YoyokazooUIDB.autoSellJunk = value
-                    print("YoyokazooUI: Auto-sell junk " .. (value and "ON" or "OFF") .. " (saved).")
+                label = "Auto-sell",
+                type = "selector",
+                choices = AUTO_SELL_MODE_CHOICES,
+                get = GetAutoSellMode,
+                set = function(id)
+                    YoyokazooUIDB.autoSellMode = id
+
+                    local chosenLabel = tostring(id)
+                    for _, choice in ipairs(AUTO_SELL_MODE_CHOICES) do
+                        if choice.id == id then
+                            chosenLabel = choice.label
+                            break
+                        end
+                    end
+                    print("YoyokazooUI: Auto-sell set to " .. chosenLabel .. " (saved).")
                 end,
             },
             {
