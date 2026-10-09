@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using WoWHelper.Code.WorldState;
 
@@ -267,6 +268,28 @@ namespace WoWHelper.Code
             }
 
             return closestDistance;
+        }
+
+        // TODO: DynamicRoute class?
+        public static void FindRoute(WowPlayer wowPlayer)
+        {
+
+        }
+
+        public static WowRoute FindRouteClosestToPlayer(WowPlayer wowPlayer)
+        {
+            // TODO: implement
+            return WowLocationConfigs.LEVEL_1_DUROTAR_BOARS_AND_SCORPS.Route;
+        }
+
+        public static List<WowRoute> GetAllSafeLocationConfigurationRoutes(WowPlayer wowPlayer)
+        {
+            var safeConfigs = WowLocationConfigs.ALL_LOCATIONS
+                .Where(config => (config.MinimumLevel <= 0 || wowPlayer.WorldState.PlayerLevel >= config.MinimumLevel))
+                .Select(config => config.Route)
+                .ToList();
+
+            return safeConfigs;
         }
 
         public static WowNPCConfiguration PickNPCToSellTo()
