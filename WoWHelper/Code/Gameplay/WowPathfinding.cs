@@ -311,7 +311,9 @@ namespace WoWHelper.Code
                     throw new Exception($"Routes expected to have an intersection but don't ({routes[i]}) and ({routes[i+1]})");
                 }
 
-                waypoints.AddRange(CreatePartialWaypointsFromRoute(routes[i], startingWaypoint, endingWaypoint));
+                var partialWaypoints = CreatePartialWaypointsFromRoute(routes[i], startingWaypoint, endingWaypoint);
+                waypoints.AddRange(i == 0 ? partialWaypoints : partialWaypoints.Skip(1));
+
                 startingWaypoint = endingWaypoint;
             }
 
