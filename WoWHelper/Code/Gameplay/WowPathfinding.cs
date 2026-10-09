@@ -271,9 +271,60 @@ namespace WoWHelper.Code
         }
 
         // TODO: DynamicRoute class?
-        public static void FindRoute(WowPlayer wowPlayer)
+        /*
+        public static void FindRoute(WowPlayer wowPlayer, Vector2 targetLocation)
         {
+            WowRoute startingRoute = FindRouteClosestToPlayer(wowPlayer);
+            List<WowRoute> safeRoutes = GetAllSafeRoutes(wowPlayer);
 
+
+        }
+        */
+
+        public static List<Vector2> CreatePartialWaypointsFromRoute(WowRoute route, Vector2 startingWaypoint, Vector2 endingWaypoint)
+        {
+            if (!route.Waypoints.Contains(startingWaypoint) || !route.Waypoints.Contains(endingWaypoint))
+            {
+                throw new Exception($"Starting Waypoint ({startingWaypoint}) or Ending Waypoint ({endingWaypoint}) missing from route ({route.Waypoints})");
+            }
+
+            List<Vector2> partialWaypoints = new List<Vector2>();
+            int startingIndex = route.Waypoints.IndexOf(startingWaypoint);
+            int endingIndex = route.Waypoints.IndexOf(endingWaypoint);
+            int direction = 1;
+
+            if (route.TraversalMethod == WowRoute.WaypointTraversalMethod.LINEAR)
+            {
+                if (endingIndex < startingIndex) direction = -1;
+                for (int i = startingIndex; i != endingIndex + direction; i += direction)
+                {
+                    partialWaypoints.Add(route.Waypoints[i]);
+                }
+                return partialWaypoints;
+            }
+            else if (route.TraversalMethod == WowRoute.WaypointTraversalMethod.CIRCULAR)
+            {
+                int forwardDiff = (endingIndex - startingIndex) % route.Waypoints.Count;
+                int backwardDiff = (startingIndex - endingIndex) % route.Waypoints.Count;
+
+                if (forwardDiff > backwardDiff) direction = -1;
+                for (int i = startingIndex; i != endingIndex + direction; i += direction)
+                {
+                    i %= route.Waypoints.Count;
+                    partialWaypoints.Add(route.Waypoints[i]);
+                }
+                return partialWaypoints;
+            }
+            
+            throw new NotImplementedException($"Unhandled TraversalMethod {route.TraversalMethod}");
+        }
+
+        public static List<Vector2> CreateCustomWaypointsFromRoutes(WowPlayer wowPlayer, Vector2 targetLocation)
+        {
+            WowRoute startingRoute = FindRouteClosestToPlayer(wowPlayer);
+            List<WowRoute> safeRoutes = GetAllSafeRoutes(wowPlayer);
+
+            return new List<Vector2>();
         }
 
         public static WowRoute FindRouteClosestToPlayer(WowPlayer wowPlayer)
@@ -282,14 +333,14 @@ namespace WoWHelper.Code
             return WowLocationConfigs.LEVEL_1_DUROTAR_BOARS_AND_SCORPS.Route;
         }
 
-        public static List<WowRoute> GetAllSafeLocationConfigurationRoutes(WowPlayer wowPlayer)
+        public static List<WowRoute> GetAllSafeRoutes(WowPlayer wowPlayer)
         {
-            var safeConfigs = WowLocationConfigs.ALL_LOCATIONS
-                .Where(config => (config.MinimumLevel <= 0 || wowPlayer.WorldState.PlayerLevel >= config.MinimumLevel))
-                .Select(config => config.Route)
-                .ToList();
+            List<WowRoute> safeRoutes = new List<WowRoute>();
+            safeRoutes.AddRange(WowRoutes.ALL_WALKING_ROUTES);
+            safeRoutes.AddRange(WowLocationConfigs.ALL_LOCATIONS.Select(config => config.Route));
+            safeRoutes.Where(route => route.MinimumLevel <= 0 || wowPlayer.WorldState.PlayerLevel >= route.MinimumLevel);
 
-            return safeConfigs;
+            return safeRoutes;
         }
 
         public static WowNPCConfiguration PickNPCToSellTo()

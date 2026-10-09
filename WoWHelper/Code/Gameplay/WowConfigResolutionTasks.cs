@@ -38,7 +38,7 @@ namespace WoWHelper
             }
 
             var matchingConfigs = WowLocationConfigs.ALL_LOCATIONS.Where(config =>
-                (config.MinimumLevel <= 0 || WorldState.PlayerLevel >= config.MinimumLevel) &&
+                (config.Route.MinimumLevel <= 0 || WorldState.PlayerLevel >= config.Route.MinimumLevel) &&
                 (WorldState.PlayerLevel < config.MaximumLevel) && 
                 (config.Route.Zone == WowZone.Unknown || WorldState.CurrentZone == config.Route.Zone) &&
                 WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, config.Route.Waypoints) <= WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT

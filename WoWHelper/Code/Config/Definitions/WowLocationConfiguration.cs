@@ -52,7 +52,6 @@ namespace WoWHelper.Code.WorldState
 
         // Human-readable name, including the minimum level, e.g. "Durotar Imps (Level 4+)".
         public string Title { get; set; }
-        public int MinimumLevel { get; set; } // for validation -- character should be at least this level before starting
         public int MaximumLevel { get; set; } // Level to log off at
 
         public EngagementMethod EngageMethod { get; set; }
@@ -80,7 +79,7 @@ namespace WoWHelper.Code.WorldState
         // ExpectedMobNames' exact roster. Null/empty leaves the macro as-is.
         public string TargetMacroMobNames { get; set; }
 
-        // Waypoints, traversal method, distance tolerance and zone -- see WowRoutes.cs.
+        // Waypoints, traversal method, distance tolerance, zone and minimum level -- see WowRoutes.cs.
         public WowRoute Route { get; set; }
 
         // Optional "sell run" detour -- see WowMerchantConfiguration for the branch-off

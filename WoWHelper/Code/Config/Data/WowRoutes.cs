@@ -19,6 +19,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_11_DUROTAR_COAST_ROUTE = new WowRoute
         {
+            MinimumLevel = 11,
             Zone = WowZone.Durotar,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
 
@@ -38,6 +39,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_9_DUROTAR_SKULL_ROCK_COAST_ROUTE = new WowRoute
         {
+            MinimumLevel = 9,
             Zone = WowZone.Durotar,
 
             Waypoints = new List<Vector2>
@@ -66,6 +68,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE = new WowRoute
         {
+            MinimumLevel = 6,
             Zone = WowZone.Durotar,
 
             Waypoints = new List<Vector2>
@@ -95,6 +98,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_4_DUROTAR_IMPS_ROUTE = new WowRoute
         {
+            MinimumLevel = 4,
             Zone = WowZone.Durotar,
 
             Waypoints = new List<Vector2>
@@ -110,6 +114,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_1_DUROTAR_BOARS_AND_SCORPS_ROUTE = new WowRoute
         {
+            MinimumLevel = 1,
             Zone = WowZone.Durotar,
 
             Waypoints = new List<Vector2>
@@ -143,6 +148,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_10_MULGORE_MIXED_BEASTS_ROUTE = new WowRoute
         {
+            MinimumLevel = 10,
             Zone = WowZone.Mulgore,
 
             Waypoints = new List<Vector2>
@@ -158,6 +164,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_8_MULGORE_MIXED_BEASTS_ROUTE = new WowRoute
         {
+            MinimumLevel = 8,
             Zone = WowZone.Mulgore,
 
             Waypoints = new List<Vector2>
@@ -174,6 +181,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_6_MULGORE_BATTLEBOARS_ROUTE = new WowRoute
         {
+            MinimumLevel = 6,
             Zone = WowZone.Mulgore,
 
             Waypoints = new List<Vector2>
@@ -190,6 +198,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_4_MULGORE_MOUNTAIN_COUGARS_ROUTE = new WowRoute
         {
+            MinimumLevel = 4,
             Zone = WowZone.Mulgore,
 
             Waypoints = new List<Vector2>
@@ -206,6 +215,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_1_MULGORE_PLAINSTRIDERS_ROUTE = new WowRoute
         {
+            MinimumLevel = 1,
             Zone = WowZone.Mulgore,
 
             Waypoints = new List<Vector2>
@@ -224,6 +234,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_17_NORTHERN_BARRENS_ROUTE = new WowRoute
         {
+            MinimumLevel = 17,
             Zone = WowZone.TheBarrens,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
 
@@ -244,6 +255,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_13_BARRENS_ENTRANCE_ROUTE = new WowRoute
         {
+            MinimumLevel = 13,
             Zone = WowZone.TheBarrens,
 
             Waypoints = new List<Vector2>
@@ -265,6 +277,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_20_ZORAMGAR_ROUTE = new WowRoute
         {
+            MinimumLevel = 20,
             Zone = WowZone.Ashenvale,
 
             Waypoints = new List<Vector2>
@@ -305,6 +318,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_26_STONETALON_CHARRED_FOREST_ROUTE = new WowRoute
         {
+            MinimumLevel = 26,
             Zone = WowZone.StonetalonMountains,
 
             Waypoints = new List<Vector2>
@@ -324,6 +338,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_23_STONETALON_ROUTE = new WowRoute
         {
+            MinimumLevel = 23,
             Zone = WowZone.StonetalonMountains,
 
             Waypoints = new List<Vector2>
@@ -350,6 +365,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_29_HILLSBRAD_RIVER_ROUTE = new WowRoute
         {
+            MinimumLevel = 29,
             Zone = WowZone.HillsbradFoothills,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
             DistanceTolerance = 0.3f,
@@ -375,6 +391,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_34_SHIMMERING_FLATS_ROUTE = new WowRoute
         {
+            MinimumLevel = 34,
             Zone = WowZone.ThousandNeedles,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
 
@@ -399,6 +416,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_36_KODO_GRAVEYARD_ROUTE = new WowRoute
         {
+            MinimumLevel = 36,
             Zone = WowZone.Desolace,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
 
@@ -431,6 +449,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_41_TANARIS_TURTLES_ROUTE = new WowRoute
         {
+            MinimumLevel = 41,
             Zone = WowZone.Tanaris,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
 
@@ -453,6 +472,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_46_FERALAS_HIPPOGRYPHS_ROUTE = new WowRoute
         {
+            MinimumLevel = 46,
             Zone = WowZone.Feralas,
             DistanceTolerance = 0.06f,
 
@@ -483,6 +503,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_53_NORTH_FELWOOD_ROUTE = new WowRoute
         {
+            MinimumLevel = 53,
             Zone = WowZone.Felwood,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
             DistanceTolerance = 0.06f,
@@ -509,6 +530,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_50_FELWOOD_SOUTH_ROUTE = new WowRoute
         {
+            MinimumLevel = 50,
             Zone = WowZone.Felwood,
             DistanceTolerance = 0.06f,
 
@@ -551,6 +573,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL_ROUTE = new WowRoute
         {
+            MinimumLevel = 56,
             Zone = WowZone.WesternPlaguelands,
             DistanceTolerance = 0.1f,
 
@@ -577,6 +600,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_58_SILITHUS_RUMBLERS_ROUTE = new WowRoute
         {
+            MinimumLevel = 58,
             Zone = WowZone.Silithus,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
             DistanceTolerance = 0.1f,
@@ -603,6 +627,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_53_ASZHARA_SATYR_CIRCLE_ROUTE = new WowRoute
         {
+            MinimumLevel = 53,
             Zone = WowZone.Azshara,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
             DistanceTolerance = 0.06f,
@@ -629,6 +654,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_57_WINTERSPRING_YETIS_ROUTE = new WowRoute
         {
+            MinimumLevel = 57,
             Zone = WowZone.Winterspring,
             DistanceTolerance = 0.1f,
 
@@ -652,6 +678,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_55_WINTERSPRING_LAKE_ROUTE = new WowRoute
         {
+            MinimumLevel = 56,
             Zone = WowZone.Winterspring,
             DistanceTolerance = 0.06f,
 
@@ -682,6 +709,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_6_TIRISFAL_ZOMBIES_ROUTE = new WowRoute
         {
+            MinimumLevel = 6,
             Zone = WowZone.TirisfalGlades,
 
             Waypoints = new List<Vector2>
@@ -704,6 +732,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_4_TIRISFAL_ANIMALS_ROUTE = new WowRoute
         {
+            MinimumLevel = 4,
             Zone = WowZone.TirisfalGlades,
 
             Waypoints = new List<Vector2>
@@ -721,6 +750,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_1_TIRISFAL_UNDEAD_ROUTE = new WowRoute
         {
+            MinimumLevel = 1,
             Zone = WowZone.TirisfalGlades,
 
             Waypoints = new List<Vector2>

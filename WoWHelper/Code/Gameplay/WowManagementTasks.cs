@@ -234,7 +234,7 @@ namespace WoWHelper
                 // reached) -- a config that was already eligible before this level-up isn't
                 // "new" news, so it's left out to keep the message short.
                 List<string> newlyEligibleConfigTitles = WowLocationConfigs.ALL_LOCATIONS
-                    .Where(config => config.MinimumLevel == WorldState.PlayerLevel)
+                    .Where(config => config.Route.MinimumLevel == WorldState.PlayerLevel)
                     .Select(config => config.Title)
                     .ToList();
                 if (newlyEligibleConfigTitles.Count > 0)
@@ -274,10 +274,10 @@ namespace WoWHelper
             // Checked first so a wrong-zone/under-level/too-far-away start gives the clearest
             // possible reason, rather than getting masked behind some other logout condition
             // that also happens to be true on the very first tick.
-            if (LocationConfiguration.MinimumLevel > 0 && WorldState.PlayerLevel < LocationConfiguration.MinimumLevel)
+            if (LocationConfiguration.Route.MinimumLevel > 0 && WorldState.PlayerLevel < LocationConfiguration.Route.MinimumLevel)
             {
                 LogoutTriggered = true;
-                LogoutReason = $"Below minimum level for this route (level {WorldState.PlayerLevel}, need {LocationConfiguration.MinimumLevel}+)";
+                LogoutReason = $"Below minimum level for this route (level {WorldState.PlayerLevel}, need {LocationConfiguration.Route.MinimumLevel}+)";
             }
             // Zone.Unknown means this route's config forgot to set Zone -- skip the check rather
             // than have a misconfigured route always immediately abort every session.

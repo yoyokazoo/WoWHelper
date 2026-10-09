@@ -111,8 +111,8 @@ MUST stay in sync with the `WowZone` enum in `WowLocationConfiguration.cs`
 (`Unknown = 255`) — two independent hardcoded tables that have to agree,
 same class of coupling as everything else in this contract. Each
 `WowLocationConfiguration` in `WowLocationConfigs.cs` also carries a `Zone`
-(on its `Route` — see the `Config/` bullet below — plus its own `Title` and
-`MinimumLevel`), for validating the character is in the
+and `MinimumLevel` (both on its `Route` — see the `Config/` bullet below),
+for validating the character is in the
 right place/level before a farming route starts — `CurrentZone` is the
 runtime half of that check. That validation (plus a third check: is the
 player near *any* of the route's own waypoints, via
@@ -655,10 +655,10 @@ of truth — edits should be made here, not in the WoW install directory.
   for money vs. grind for XP, off the `MultiBoolTwo` G6/G7 bits) is still to
   be written. Each `WowLocationConfiguration` carries a
   `Title`
-  (human-readable, includes the minimum level), `MinimumLevel`, and a
+  (human-readable, includes the minimum level) and a
   `Route` (`WowRoute`, `Config/Definitions/WowRoute.cs`): the route's
   `Waypoints`, `TraversalMethod` (`WowRoute.WaypointTraversalMethod`,
-  `CIRCULAR`/`LINEAR`), `DistanceTolerance`, and `Zone` (`WowZone` enum,
+  `CIRCULAR`/`LINEAR`), `DistanceTolerance`, `MinimumLevel`, and `Zone` (`WowZone` enum,
   still declared in `WowLocationConfiguration.cs`) — see the zone ID
   note in the color-encoding contract above for how `Zone` ties to
   `WowWorldState.CurrentZone`. Every route lives in

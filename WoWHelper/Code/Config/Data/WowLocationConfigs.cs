@@ -15,7 +15,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_58_SILITHUS_RUMBLERS = new WowLocationConfiguration
         {
             Title = "Silithus Rumblers (Level 58+)",
-            MinimumLevel = 58,
             Route = WowRoutes.LEVEL_58_SILITHUS_RUMBLERS_ROUTE,
             ExpectedMobNames = new List<string> { "Desert Rumbler" },
         };
@@ -26,7 +25,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_57_WINTERSPRING_YETIS = new WowLocationConfiguration
         {
             Title = "Winterspring Yetis (Level 57+)",
-            MinimumLevel = 57,
             Route = WowRoutes.LEVEL_57_WINTERSPRING_YETIS_ROUTE,
         };
 
@@ -37,7 +35,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL = new WowLocationConfiguration
         {
             Title = "Dalton's Tears Frontside, Western Plaguelands (Level 56+)",
-            MinimumLevel = 56,
             Route = WowRoutes.LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL_ROUTE,
             EngageMethod = EngagementMethod.Pull,
         };
@@ -52,7 +49,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_55_WINTERSPRING_LAKE = new WowLocationConfiguration
         {
             Title = "Winterspring Lake (Level 56+)",
-            MinimumLevel = 56,
             Route = WowRoutes.LEVEL_55_WINTERSPRING_LAKE_ROUTE,
         };
 
@@ -65,7 +61,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_53_ASZHARA_SATYR_CIRCLE = new WowLocationConfiguration
         {
             Title = "Azshara (Level 53+)",
-            MinimumLevel = 53,
             Route = WowRoutes.LEVEL_53_ASZHARA_SATYR_CIRCLE_ROUTE,
         };
 
@@ -78,7 +73,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_53_NORTH_FELWOOD = new WowLocationConfiguration
         {
             Title = "North Felwood (Level 53+)",
-            MinimumLevel = 53,
             Route = WowRoutes.LEVEL_53_NORTH_FELWOOD_ROUTE,
             ChaseOutOfRangeTargets = false, // Tall cliffs nearby, can't risk it
         };
@@ -93,7 +87,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_50_FELWOOD_SOUTH = new WowLocationConfiguration
         {
             Title = "South Felwood (Level 50+)",
-            MinimumLevel = 50,
             Route = WowRoutes.LEVEL_50_FELWOOD_SOUTH_ROUTE,
         };
 
@@ -110,7 +103,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_46_FERALAS_HIPPOGRYPHS = new WowLocationConfiguration
         {
             Title = "Feralas Hippogryphs (Level 46+)",
-            MinimumLevel = 46,
             Route = WowRoutes.LEVEL_46_FERALAS_HIPPOGRYPHS_ROUTE,
         };
 
@@ -120,7 +112,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_41_TANARIS_TURTLES = new WowLocationConfiguration
         {
             Title = "Tanaris Turtles (Level 41+)",
-            MinimumLevel = 41,
             MaximumLevel = 48,
             Route = WowRoutes.LEVEL_41_TANARIS_TURTLES_ROUTE,
 
@@ -153,7 +144,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_36_KODO_GRAVEYARD = new WowLocationConfiguration
         {
             Title = "Kodo Graveyard, Desolace (Level 36+)",
-            MinimumLevel = 36,
             MaximumLevel = 43,
             Route = WowRoutes.LEVEL_36_KODO_GRAVEYARD_ROUTE,
             EngageMethod = EngagementMethod.Pull,
@@ -182,7 +172,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS = new WowLocationConfiguration
         {
             Title = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
-            MinimumLevel = 34,
             MaximumLevel = 38,
             Route = WowRoutes.LEVEL_34_SHIMMERING_FLATS_ROUTE,
             ChaseOutOfRangeTargets = false, // the ship wreck here is easy to get stuck on
@@ -198,7 +187,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_29_HILLSBRAD_RIVER = new WowLocationConfiguration
         {
             Title = "Hillsbrad River (Level 29+)",
-            MinimumLevel = 29,
             MaximumLevel = 35,
             Route = WowRoutes.LEVEL_29_HILLSBRAD_RIVER_ROUTE,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
@@ -228,7 +216,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_26_STONETALON_CHARRED_FOREST = new WowLocationConfiguration
         {
             Title = "North Stonetalon (Level 26+)",
-            MinimumLevel = 26,
             MaximumLevel = 29,
             Route = WowRoutes.LEVEL_26_STONETALON_CHARRED_FOREST_ROUTE,
         };
@@ -240,7 +227,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_23_STONETALON = new WowLocationConfiguration
         {
             Title = "Stonetalon Mountains (Level 23+)",
-            MinimumLevel = 23,
             MaximumLevel = 28,
             Route = WowRoutes.LEVEL_23_STONETALON_ROUTE,
         };
@@ -252,7 +238,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_20_ZORAMGAR = new WowLocationConfiguration
         {
             Title = "Zoram'gar, Ashenvale (Level 20+)",
-            MinimumLevel = 20,
             MaximumLevel = 25,
             Route = WowRoutes.LEVEL_20_ZORAMGAR_ROUTE,
         };
@@ -271,7 +256,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS = new WowLocationConfiguration
         {
             Title = "Northern Barrens (Level 17+)",
-            MinimumLevel = 17,
             MaximumLevel = 21,
             Route = WowRoutes.LEVEL_17_NORTHERN_BARRENS_ROUTE,
         };
@@ -284,7 +268,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE = new WowLocationConfiguration
         {
             Title = "Barrens Entrance (Level 13+)",
-            MinimumLevel = 13,
             MaximumLevel = 18,
             Route = WowRoutes.LEVEL_13_BARRENS_ENTRANCE_ROUTE,
         };
@@ -298,7 +281,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST = new WowLocationConfiguration
         {
             Title = "Durotar Coast (Level 11+)",
-            MinimumLevel = 11,
             MaximumLevel = 14,
             Route = WowRoutes.LEVEL_11_DUROTAR_COAST_ROUTE,
         };
@@ -316,7 +298,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_9_DUROTAR_SKULL_ROCK_COAST = new WowLocationConfiguration
         {
             Title = "Durotar Skull Rock Coast (Level 9+)",
-            MinimumLevel = 9,
             MaximumLevel = 12,
             Route = WowRoutes.LEVEL_9_DUROTAR_SKULL_ROCK_COAST_ROUTE,
         };
@@ -328,7 +309,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration
         {
             Title = "Durotar Boar Razor Hill Loop (Level 6+)",
-            MinimumLevel = 6,
             MaximumLevel = 10,
             Route = WowRoutes.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE,
         };
@@ -340,7 +320,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration
         {
             Title = "Durotar Imps (Level 4+)",
-            MinimumLevel = 4,
             MaximumLevel = 7,
             Route = WowRoutes.LEVEL_4_DUROTAR_IMPS_ROUTE,
         };
@@ -348,7 +327,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
         {
             Title = "Durotar Boars and Scorpions (Level 1+)",
-            MinimumLevel = 1,
             MaximumLevel = 4,
             Route = WowRoutes.LEVEL_1_DUROTAR_BOARS_AND_SCORPS_ROUTE,
             TargetMacroMobNames = "Mottled,Scorpid",
@@ -379,7 +357,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_10_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
         {
             Title = "Mulgore Mixed Beasts (Level 10+)",
-            MinimumLevel = 10,
             MaximumLevel = 13,
             Route = WowRoutes.LEVEL_10_MULGORE_MIXED_BEASTS_ROUTE,
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
@@ -391,7 +368,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_8_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
         {
             Title = "Mulgore Mixed Beasts (Level 8+)",
-            MinimumLevel = 8,
             MaximumLevel = 10,
             Route = WowRoutes.LEVEL_8_MULGORE_MIXED_BEASTS_ROUTE,
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
@@ -403,7 +379,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_6_MULGORE_BATTLEBOARS = new WowLocationConfiguration
         {
             Title = "Mulgore Battleboars (Level 6+)",
-            MinimumLevel = 6,
             MaximumLevel = 8,
             Route = WowRoutes.LEVEL_6_MULGORE_BATTLEBOARS_ROUTE,
         };
@@ -414,7 +389,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_4_MULGORE_MOUNTAIN_COUGARS = new WowLocationConfiguration
         {
             Title = "Mulgore Mountain Cougars (Level 4+)",
-            MinimumLevel = 4,
             MaximumLevel = 6,
             Route = WowRoutes.LEVEL_4_MULGORE_MOUNTAIN_COUGARS_ROUTE,
         };
@@ -425,7 +399,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
         {
             Title = "Mulgore Plainstriders (Level 1+)",
-            MinimumLevel = 1,
             MaximumLevel = 4,
             Route = WowRoutes.LEVEL_1_MULGORE_PLAINSTRIDERS_ROUTE,
         };
@@ -443,7 +416,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_6_TIRISFAL_ZOMBIES = new WowLocationConfiguration
         {
             Title = "Tirisfal Zombies (Level 6+)",
-            MinimumLevel = 6,
             MaximumLevel = 10,
             Route = WowRoutes.LEVEL_6_TIRISFAL_ZOMBIES_ROUTE,
         };
@@ -455,7 +427,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_4_TIRISFAL_ANIMALS = new WowLocationConfiguration
         {
             Title = "Tirisfal Bats and Wolves (Level 4+)",
-            MinimumLevel = 4,
             MaximumLevel = 7,
             Route = WowRoutes.LEVEL_4_TIRISFAL_ANIMALS_ROUTE,
         };
@@ -470,7 +441,6 @@ namespace WoWHelper.Code.WorldState
         public static readonly WowLocationConfiguration LEVEL_1_TIRISFAL_UNDEAD = new WowLocationConfiguration
         {
             Title = "Tirisfal Zombies (Level 1+)",
-            MinimumLevel = 1,
             MaximumLevel = 4,
             Route = WowRoutes.LEVEL_1_TIRISFAL_UNDEAD_ROUTE,
         };

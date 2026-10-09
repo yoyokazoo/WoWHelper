@@ -4,8 +4,8 @@ using System.Numerics;
 namespace WoWHelper.Code.WorldState
 {
     // A farming route's path: the waypoints to walk, how to walk them, how close counts as
-    // "arrived", and which zone they're in. Every instance lives in WowRoutes.cs; each
-    // WowLocationConfiguration points at its own one via its Route property.
+    // "arrived", which zone they're in, and the minimum level to run it. Every instance lives
+    // in WowRoutes.cs; each WowLocationConfiguration points at its own one via its Route property.
     public class WowRoute
     {
         public enum WaypointTraversalMethod
@@ -15,6 +15,7 @@ namespace WoWHelper.Code.WorldState
         }
 
         public WowZone Zone { get; set; } // for validation -- character should be in this zone before starting
+        public int MinimumLevel { get; set; } // for validation -- character should be at least this level before starting
         public WaypointTraversalMethod TraversalMethod { get; set; }
         public float DistanceTolerance { get; set; }
 
