@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SlackAPI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -280,6 +281,66 @@ namespace WoWHelper.Code
 
         }
         */
+
+        public static Vector2 GetWaypointClosestToPlayer(WowPlayer wowPlayer, WowRoute route)
+        {
+            return route.Waypoints
+                .Select(waypoint => (dist: Vector2.Distance(wowPlayer.WorldState.PlayerLocation, waypoint), waypoint))
+                .OrderBy(t => t.dist)
+                .First()
+                .waypoint;
+        }
+
+        public static List<Vector2> GetWaypointsToTarget(WowPlayer wowPlayer)
+        {
+            List<Vector2> waypoints = new List<Vector2>();
+            Vector2 startingWaypoint = Vector2.Zero;
+            Vector2 endingWaypoint = Vector2.Zero;
+
+            List<WowRoute> routes = GetRoutesToTarget();
+
+            for (int i = 0; i < routes.Count - 1; i++)
+            {
+                if (i == 0)
+                {
+                    startingWaypoint = GetWaypointClosestToPlayer(wowPlayer, routes[i]);
+                }
+
+                if (!TryGetInstersectingWaypoint(routes[i], routes[i+1], out endingWaypoint))
+                {
+                    throw new Exception($"Routes expected to have an intersection but don't ({routes[i]}) and ({routes[i+1]})");
+                }
+
+                waypoints.AddRange(CreatePartialWaypointsFromRoute(routes[i], startingWaypoint, endingWaypoint));
+                startingWaypoint = endingWaypoint;
+            }
+
+            return waypoints;
+        }
+
+        public static List<WowRoute> GetRoutesToTarget()
+        {
+            List<WowRoute> routes = new List<WowRoute>();
+
+            routes.Add(WowLocationConfigs.LEVEL_1_DUROTAR_BOARS_AND_SCORPS.Route);
+            routes.Add(WowRoutes.BOARS_AND_SCORPS_TO_MERCHANT_ROUTE);
+            routes.Add(WowNPCConfigs.VALLEY_OF_TRIALS_MERCHANT.Route);
+
+            return routes;
+        }
+
+        public static bool TryGetInstersectingWaypoint(WowRoute firstRoute, WowRoute secondRoute, out Vector2 intersectingWaypoint)
+        {
+            var intersection = firstRoute.Waypoints.Intersect(secondRoute.Waypoints);
+            if (intersection.Any())
+            {
+                intersectingWaypoint = intersection.First();
+                return true;
+            }
+
+            intersectingWaypoint = Vector2.Zero;
+            return false;
+        }
 
         public static List<Vector2> CreatePartialWaypointsFromRoute(WowRoute route, Vector2 startingWaypoint, Vector2 endingWaypoint)
         {

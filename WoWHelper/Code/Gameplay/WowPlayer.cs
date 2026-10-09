@@ -175,7 +175,10 @@ namespace WoWHelper
         {
             await FocusOnWindowTask();
             await UpdateWorldStateAsync();
-            await MouseTurnRateSweepTask(startPixels: 1, stepPixels: 1);
+            await Task.Delay(4000);
+            //await MouseTurnRateSweepTask(startPixels: 1, stepPixels: 1);
+            var asdf = WowPathfinding.GetWaypointsToTarget(this);
+            Console.WriteLine(String.Join(",", asdf));
             return true;
         }
 

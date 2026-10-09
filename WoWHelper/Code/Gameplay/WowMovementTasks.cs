@@ -956,15 +956,19 @@ namespace WoWHelper
             }
         }
 
-        public void PickStartingWaypoint()
+        public int GetClosestWaypointIndex()
         {
-            // we've never picked a waypoint yet, so find the closest one
-            Vector2 playerLocation = new Vector2(WorldState.MapX, WorldState.MapY);
-            CurrentWaypointIndex = LocationConfiguration.Route.Waypoints
-                .Select((p, i) => (dist: Vector2.Distance(playerLocation, p), index: i))
+            return LocationConfiguration.Route.Waypoints
+                .Select((p, i) => (dist: Vector2.Distance(WorldState.PlayerLocation, p), index: i))
                 .OrderBy(t => t.dist)
                 .First()
                 .index;
+        }
+
+        public void PickStartingWaypoint()
+        {
+            // we've never picked a waypoint yet, so find the closest one
+            CurrentWaypointIndex = GetClosestWaypointIndex();
 
             // Circular always goes in the same direction, so if you interrupt and restart, you'll still be going the same direction.
             // For linear let's do our best guess to pick the best direction

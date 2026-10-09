@@ -15,8 +15,7 @@ namespace WoWHelper.Code.WorldState
     public class WowNPCConfiguration
     {
         public string Name { get; set; }
-        public WowZone Zone { get; set; }
-        public Vector2 Location { get; set; }
+        public WowRoute Route { get; set; }
         public NPCRoles Roles { get; set; }
     }
 }
