@@ -23,7 +23,9 @@ namespace WoWHelper.Code.WorldState
 
         public WowRoute()
         {
-            TraversalMethod = WaypointTraversalMethod.CIRCULAR;
+            // LINEAR, not CIRCULAR -- walking routes (A -> B and back) are far more common to
+            // author than loops, which have to set CIRCULAR explicitly.
+            TraversalMethod = WaypointTraversalMethod.LINEAR;
             DistanceTolerance = 0.2f;
 
             // Default to Unknown, not the implicit Durotar (enum value 0) -- a route that

@@ -21,7 +21,6 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 11,
             Zone = WowZone.Durotar,
-            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
 
             Waypoints = new List<Vector2>
             {
@@ -41,6 +40,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 9,
             Zone = WowZone.Durotar,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -70,6 +70,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 6,
             Zone = WowZone.Durotar,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -100,6 +101,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 4,
             Zone = WowZone.Durotar,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -116,6 +118,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 1,
             Zone = WowZone.Durotar,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -150,6 +153,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 10,
             Zone = WowZone.Mulgore,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -166,6 +170,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 8,
             Zone = WowZone.Mulgore,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -183,6 +188,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 6,
             Zone = WowZone.Mulgore,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -200,6 +206,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 4,
             Zone = WowZone.Mulgore,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -217,6 +224,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 1,
             Zone = WowZone.Mulgore,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -236,7 +244,6 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 17,
             Zone = WowZone.TheBarrens,
-            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
 
             Waypoints = new List<Vector2>
             {
@@ -257,6 +264,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 13,
             Zone = WowZone.TheBarrens,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -279,6 +287,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 20,
             Zone = WowZone.Ashenvale,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -320,6 +329,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 26,
             Zone = WowZone.StonetalonMountains,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -340,6 +350,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 23,
             Zone = WowZone.StonetalonMountains,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -367,7 +378,6 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 29,
             Zone = WowZone.HillsbradFoothills,
-            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
             DistanceTolerance = 0.3f,
 
             Waypoints = new List<Vector2>
@@ -393,7 +403,6 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 34,
             Zone = WowZone.ThousandNeedles,
-            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
 
             Waypoints = new List<Vector2>
             {
@@ -418,7 +427,6 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 36,
             Zone = WowZone.Desolace,
-            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
 
             Waypoints = new List<Vector2>
             {
@@ -451,7 +459,6 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 41,
             Zone = WowZone.Tanaris,
-            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
 
             Waypoints = new List<Vector2>
             {
@@ -474,6 +481,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 46,
             Zone = WowZone.Feralas,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -505,7 +513,6 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 53,
             Zone = WowZone.Felwood,
-            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -532,6 +539,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 50,
             Zone = WowZone.Felwood,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -575,6 +583,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 56,
             Zone = WowZone.WesternPlaguelands,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
             DistanceTolerance = 0.1f,
 
             Waypoints = new List<Vector2>
@@ -602,7 +611,6 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 58,
             Zone = WowZone.Silithus,
-            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
             DistanceTolerance = 0.1f,
 
             Waypoints = new List<Vector2>
@@ -629,7 +637,6 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 53,
             Zone = WowZone.Azshara,
-            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -656,6 +663,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 57,
             Zone = WowZone.Winterspring,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
             DistanceTolerance = 0.1f,
 
             Waypoints = new List<Vector2>
@@ -680,6 +688,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 56,
             Zone = WowZone.Winterspring,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -711,6 +720,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 6,
             Zone = WowZone.TirisfalGlades,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -734,6 +744,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 4,
             Zone = WowZone.TirisfalGlades,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {
@@ -752,6 +763,7 @@ namespace WoWHelper.Code.WorldState
         {
             MinimumLevel = 1,
             Zone = WowZone.TirisfalGlades,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
             {

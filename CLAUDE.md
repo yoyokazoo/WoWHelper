@@ -658,7 +658,8 @@ of truth — edits should be made here, not in the WoW install directory.
   (human-readable, includes the minimum level) and a
   `Route` (`WowRoute`, `Config/Definitions/WowRoute.cs`): the route's
   `Waypoints`, `TraversalMethod` (`WowRoute.WaypointTraversalMethod`,
-  `CIRCULAR`/`LINEAR`), `DistanceTolerance`, `MinimumLevel`, and `Zone` (`WowZone` enum,
+  `CIRCULAR`/`LINEAR` — defaults to `LINEAR`, so loop routes must set
+  `CIRCULAR` explicitly), `DistanceTolerance`, `MinimumLevel`, and `Zone` (`WowZone` enum,
   still declared in `WowLocationConfiguration.cs`) — see the zone ID
   note in the color-encoding contract above for how `Zone` ties to
   `WowWorldState.CurrentZone`. Every route lives in
