@@ -304,13 +304,13 @@ namespace WoWHelper.Code
             }
             else if (route.TraversalMethod == WowRoute.WaypointTraversalMethod.CIRCULAR)
             {
-                int forwardDiff = (endingIndex - startingIndex) % route.Waypoints.Count;
-                int backwardDiff = (startingIndex - endingIndex) % route.Waypoints.Count;
+                int forwardDiff = ((endingIndex - startingIndex) + route.Waypoints.Count) % route.Waypoints.Count;
+                int backwardDiff = ((startingIndex - endingIndex) + route.Waypoints.Count) % route.Waypoints.Count;
 
                 if (forwardDiff > backwardDiff) direction = -1;
                 for (int i = startingIndex; i != endingIndex + direction; i += direction)
                 {
-                    i %= route.Waypoints.Count;
+                    i = (i + route.Waypoints.Count) % route.Waypoints.Count;
                     partialWaypoints.Add(route.Waypoints[i]);
                 }
                 return partialWaypoints;
