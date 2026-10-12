@@ -286,13 +286,13 @@ namespace WoWHelper.Code
 
         // Top-level method should always take a route as the desired destination
         // Pathfinding helpers will be the ones to figure out which point is intersecting and shoot for that specifically
-        public static List<Vector2> GetWaypointsToTarget(WowPlayer wowPlayer)
+        public static List<Vector2> GetWaypointsToTarget(WowPlayer wowPlayer, WowRoute targetRoute)
         {
             List<Vector2> waypoints = new List<Vector2>();
             Vector2 startingWaypoint = Vector2.Zero;
             Vector2 endingWaypoint = Vector2.Zero;
 
-            List<WowRoute> routes = GetRoutesToTarget();
+            List<WowRoute> routes = GetRoutesToTarget(targetRoute);
 
             for (int i = 0; i < routes.Count - 1; i++)
             {
@@ -315,10 +315,11 @@ namespace WoWHelper.Code
             return waypoints;
         }
 
-        public static List<WowRoute> GetRoutesToTarget()
+        public static List<WowRoute> GetRoutesToTarget(WowRoute targetRoute)
         {
             List<WowRoute> routes = new List<WowRoute>();
 
+            // TODO: ASDFASDF IMPLEMENT THIS
             routes.Add(WowLocationConfigs.LEVEL_1_DUROTAR_BOARS_AND_SCORPS.Route);
             routes.Add(WowRoutes.BOARS_AND_SCORPS_TO_MERCHANT_ROUTE);
             routes.Add(WowNPCConfigs.VALLEY_OF_TRIALS_MERCHANT.Route);
@@ -355,14 +356,6 @@ namespace WoWHelper.Code
                 .OrderBy(t => t.dist)
                 .First()
                 .waypoint;
-        }
-
-        public static List<Vector2> CreateCustomWaypointsFromRoutes(WowPlayer wowPlayer, Vector2 targetLocation)
-        {
-            WowRoute startingRoute = FindRouteClosestToPlayer(wowPlayer);
-            List<WowRoute> safeRoutes = GetAllSafeRoutes(wowPlayer);
-
-            return new List<Vector2>();
         }
 
         public static List<WowRoute> GetAllSafeRoutes(WowPlayer wowPlayer)
