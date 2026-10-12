@@ -520,6 +520,45 @@ namespace WoWHelper
             return true;
         }
 
+        public async Task SetLogoutVariablesAndSlack(string message)
+        {
+            Console.WriteLine(message);
+            SlackHelper.SendMessageToChannel(message);
+            await Task.Delay(500);
+            LogoutTriggered = true;
+            LogoutReason = message;
+        }
+
+        public async Task<NPCRoles> PickRequiredRolesForNPCBasedOnGoalTask()
+        {
+            switch(CurrentPlayerGoal)
+            {
+                case PlayerGoal.TRAIN:
+                    return NPCRoles.Train;
+                    break;
+                case PlayerGoal.SELL:
+                    return NPCRoles.Sell;
+                    break;
+                case PlayerGoal.REPAIR:
+                    return NPCRoles.Repair;
+                    break;
+                default:
+                    string message = $"Unable to find required roles for CurrentPlayerGoal: {CurrentPlayerGoal}";
+                    await SetLogoutVariablesAndSlack(message);
+                    return NPCRoles.None;
+                    break;
+
+            }
+        }
+
+        // never end a sentence with a preposition at
+        public async Task PickNPCToInteractWithTask()
+        {
+            NPCRoles requiredRoles = await PickRequiredRolesForNPCBasedOnGoalTask();
+
+
+            //var validNPCs = WowNPCConfigs.ALL_NPCS
+        }
 
         public async Task<bool> CupidTradeLoopTask()
         {

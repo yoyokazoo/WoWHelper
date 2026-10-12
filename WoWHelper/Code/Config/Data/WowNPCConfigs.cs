@@ -5,6 +5,12 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowNPCConfigs
     {
+        public static readonly List<WowNPCConfiguration> ALL_NPCS = new List<WowNPCConfiguration>()
+        {
+            VALLEY_OF_TRIALS_MERCHANT,
+            VALLEY_OF_TRIALS_WARRIOR_TRAINER,
+        };
+
         public static readonly WowNPCConfiguration VALLEY_OF_TRIALS_MERCHANT = new WowNPCConfiguration
         {
             Name = "Duokna",
