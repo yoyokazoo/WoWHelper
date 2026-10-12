@@ -282,6 +282,11 @@ namespace WoWHelper.Code
         }
         */
 
+
+        // Top-level method should always take a route as the desired destination
+        // Pathfinding helpers will be the ones to figure out which point is intersecting and shoot for that specifically
+
+
         public static Vector2 GetWaypointClosestToPlayer(WowPlayer wowPlayer, WowRoute route)
         {
             return route.Waypoints

@@ -43,11 +43,9 @@ namespace WoWHelper
                     ? $"No location config matches the player's current level ({WorldState.PlayerLevel}), zone"
                     : $"{matchingConfigs.Count} location configs all match (level {WorldState.PlayerLevel}, zone {WorldState.CurrentZone}): {string.Join(", ", matchingConfigs.Select(c => c.Title))} -- can't pick automatically";
 
-                Console.WriteLine($"Aborting startup: {reason}");
-                string message = $"WoWHelper startup aborted: {reason}";
-                SlackHelper.SendMessageToChannel(message);
-                LogoutTriggered = true;
-                LogoutReason = message;
+                // Returning false exits the process right away, so wait for the Slack send.
+                SetLogoutVariablesAndSlack($"WoWHelper startup aborted: {reason}");
+                await Task.Delay(500);
                 return false;
             }
 

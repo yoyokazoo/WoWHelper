@@ -252,7 +252,7 @@ namespace WoWHelper
             //if(true)
             {
                 string warningMessage = tooManyAttackers ? "TOO MANY ATTACKERS HELP" : $"Emergency HP Threshold hit ({WorldState.PlayerHpPercent})";
-                SlackHelper.SendMessageToChannel(warningMessage);
+                SetLogoutVariablesAndSlack($"Got into an emergency situation ({warningMessage}), logging off for safety");
 
                 // Figure out what to do here.  War stomp? Magma Totem? War stomp -> ghost wolf -> run to safety?
                 // Stoneskin totem for now
@@ -263,8 +263,6 @@ namespace WoWHelper
                 await WaitForGlobalCooldownTask();
                 await ThrowTargetDummyTask();
 
-                LogoutReason = $"Got into an emergency situation ({warningMessage}), logging off for safety";
-                LogoutTriggered = true;
                 return true;
             }
 

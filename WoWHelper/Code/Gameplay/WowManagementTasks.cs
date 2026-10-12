@@ -134,9 +134,7 @@ namespace WoWHelper
             // waiting for the CHECK_FOR_LOGOUT state, since we want out the moment it's seen.
             if (WorldState.LogoffMobSeen && !LogoutTriggered)
             {
-                LogoutTriggered = true;
-                LogoutReason = "Logoff-if-seen mob spotted (see LOGOFF_IF_SEEN_MOB_NAMES in CreatureConfig.lua)";
-                SlackHelper.SendMessageToChannel($"Logging out, Logoff-if-seen mob spotted!");
+                SetLogoutVariablesAndSlack("Logoff-if-seen mob spotted (see LOGOFF_IF_SEEN_MOB_NAMES in CreatureConfig.lua)");
             }
 
             // Bail if latency's been sustained above 300ms for 10 straight cycles (10
@@ -144,9 +142,7 @@ namespace WoWHelper
             // constants). Same "spot it once, trigger logout" pattern as LogoffMobSeen above.
             if (WorldState.HighLatency && !LogoutTriggered)
             {
-                LogoutTriggered = true;
-                LogoutReason = "High latency sustained for 10+ seconds (see HasHighLatency() in WoWFunctions.lua)";
-                SlackHelper.SendMessageToChannel($"Logging out, high latency detected!");
+                SetLogoutVariablesAndSlack("High latency sustained for 10+ seconds (see HasHighLatency() in WoWFunctions.lua)");
             }
 
             // Bail if we've been in combat for 30+ seconds with nothing actually happening
@@ -263,9 +259,7 @@ namespace WoWHelper
             // trying to validate a route we were never told.
             if (LocationConfiguration == null)
             {
-                LogoutTriggered = true;
-                LogoutReason = "LocationConfiguration was never resolved (bot likely started mid-combat, before RESOLVE_FARMING_CONFIGURATION got a chance to run) -- logging out rather than guessing a route";
-                await Task.Delay(0);
+                SetLogoutVariablesAndSlack("LocationConfiguration was never resolved (bot likely started mid-combat, before RESOLVE_FARMING_CONFIGURATION got a chance to run) -- logging out rather than guessing a route");
                 return LogoutTriggered;
             }
 

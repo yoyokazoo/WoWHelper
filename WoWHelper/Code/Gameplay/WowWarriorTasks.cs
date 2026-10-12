@@ -348,14 +348,11 @@ namespace WoWHelper
             {
                 EmergencyCombatActionTaken = true;
                 string emergencyMessage = tooManyAttackers ? $"TOO MANY ATTACKERS HELP" : $"EMERGENCY HP THRESHOLD HIT {WorldState.PlayerHpPercent}";
-                SlackHelper.SendMessageToChannel(emergencyMessage);
+                SetLogoutVariablesAndSlack($"Got into a Retaliation situation ({emergencyMessage}), logging off for safety");
 
                 // cast retaliation once GCD is cooled down
                 await WaitForGlobalCooldownTask();
                 await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_RETALIATION);
-
-                LogoutReason = $"Got into a Retaliation situation ({emergencyMessage}), logging off for safety";
-                LogoutTriggered = true;
             }
 
             return takeEmergencyAction;

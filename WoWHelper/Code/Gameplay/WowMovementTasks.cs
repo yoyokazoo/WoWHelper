@@ -177,10 +177,8 @@ namespace WoWHelper
 
                     if (!stationaryAlertSent && !GeneralHelpers.CurrentTimeInsideDuration(lastLocationChangeTime, WowPathfinding.STATIONARY_MILLIS_BEFORE_ALERT))
                     {
-                        //SlackHelper.SendMessageToChannel($"Haven't moved in a long time.  Something wrong?");
                         //stationaryAlertSent = true;
-                        LogoutTriggered = true;
-                        LogoutReason = "Stuck for a long time, couldn't wiggle out";
+                        SetLogoutVariablesAndSlack("Stuck for a long time, couldn't wiggle out");
                         await EndWalkForwardTask();
                         return true;
                     }
@@ -208,9 +206,7 @@ namespace WoWHelper
                 {
                     if (!GeneralHelpers.CurrentTimeInsideDuration(MerchantRunStartTime, WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS))
                     {
-                        Console.WriteLine($"Merchant run still unfinished after {WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS / 1000}s (phase {CurrentMerchantRunPhase}), logging out");
-                        LogoutTriggered = true;
-                        LogoutReason = $"Merchant run took longer than {WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS / 60000} minutes (stuck in {CurrentMerchantRunPhase})";
+                        SetLogoutVariablesAndSlack($"Merchant run took longer than {WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS / 60000} minutes (stuck in {CurrentMerchantRunPhase})");
                         await EndWalkForwardTask();
                         return true;
                     }
@@ -300,10 +296,7 @@ namespace WoWHelper
                 }
             }
 
-            SlackHelper.SendMessageToChannel($"Haven't found a target in ~4 minutes.  Something wrong?");
-            Console.WriteLine("Exited Pathfinding loop.  Too many loops without a successful target find.");
-            LogoutTriggered = true;
-            LogoutReason = "4 minutes without finding a target";
+            SetLogoutVariablesAndSlack("Haven't found a target in ~4 minutes.  Something wrong?");
             await EndWalkForwardTask();
 
             return true;
