@@ -369,7 +369,7 @@ namespace WoWHelper
             switch(CurrentInteractWithNPCState)
             {
                 case InteractWithNPCState.PICK_NPC_TO_INTERACT_WITH:
-                    await PickNPCToInteractWithTask();
+                    PickNPCToInteractWith();
                     CurrentInteractWithNPCState = InteractWithNPCState.BUILD_ROUTE_TO_NPC;
                     break;
                 case InteractWithNPCState.BUILD_ROUTE_TO_NPC:

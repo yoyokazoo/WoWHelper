@@ -520,41 +520,35 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task SetLogoutVariablesAndSlack(string message)
+        public void SetLogoutVariablesAndSlack(string message)
         {
             Console.WriteLine(message);
             SlackHelper.SendMessageToChannel(message);
-            await Task.Delay(500);
             LogoutTriggered = true;
             LogoutReason = message;
         }
 
-        public async Task<NPCRoles> PickRequiredRolesForNPCBasedOnGoalTask()
+        public NPCRoles PickRequiredRolesForNPCBasedOnGoal()
         {
             switch(CurrentPlayerGoal)
             {
                 case PlayerGoal.TRAIN:
                     return NPCRoles.Train;
-                    break;
                 case PlayerGoal.SELL:
                     return NPCRoles.Sell;
-                    break;
                 case PlayerGoal.REPAIR:
                     return NPCRoles.Repair;
-                    break;
                 default:
                     string message = $"Unable to find required roles for CurrentPlayerGoal: {CurrentPlayerGoal}";
-                    await SetLogoutVariablesAndSlack(message);
+                    SetLogoutVariablesAndSlack(message);
                     return NPCRoles.None;
-                    break;
-
             }
         }
 
         // never end a sentence with a preposition at
-        public async Task PickNPCToInteractWithTask()
+        public void PickNPCToInteractWith()
         {
-            NPCRoles requiredRoles = await PickRequiredRolesForNPCBasedOnGoalTask();
+            NPCRoles requiredRoles = PickRequiredRolesForNPCBasedOnGoal();
 
 
             //var validNPCs = WowNPCConfigs.ALL_NPCS
