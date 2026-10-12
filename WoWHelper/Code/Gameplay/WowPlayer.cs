@@ -178,7 +178,8 @@ namespace WoWHelper
             await UpdateWorldStateAsync();
             await Task.Delay(4000);
             //await MouseTurnRateSweepTask(startPixels: 1, stepPixels: 1);
-            var asdf = WowPathfinding.GetWaypointsToTarget(this);
+            //var asdf = WowPathfinding.GetWaypointsToTarget(this);
+            var asdf = WowPathfinding.FindRouteClosestToPlayer(this);
             Console.WriteLine(String.Join(",", asdf));
             return true;
         }

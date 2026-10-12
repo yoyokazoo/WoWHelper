@@ -10,11 +10,6 @@ namespace WoWHelper.Code.WorldState
     // class's fields are all initialized before first access from another class).
     public static class WowRoutes
     {
-        public static readonly List<WowRoute> ALL_WALKING_ROUTES = new List<WowRoute>
-        {
-            BOARS_AND_SCORPS_TO_MERCHANT_ROUTE
-        };
-
         #region Durotar
 
         public static readonly WowRoute LEVEL_11_DUROTAR_COAST_ROUTE = new WowRoute
@@ -778,5 +773,10 @@ namespace WoWHelper.Code.WorldState
         };
 
         #endregion
+
+        public static readonly List<WowRoute> ALL_WALKING_ROUTES = new List<WowRoute>
+        {
+            BOARS_AND_SCORPS_TO_MERCHANT_ROUTE
+        };
     }
 }
