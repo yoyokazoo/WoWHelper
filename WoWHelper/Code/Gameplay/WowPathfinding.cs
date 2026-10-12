@@ -292,15 +292,16 @@ namespace WoWHelper.Code
             Vector2 startingWaypoint = Vector2.Zero;
             Vector2 endingWaypoint = Vector2.Zero;
 
-            List<WowRoute> routes = GetRoutesToTarget(targetRoute);
+            List<WowRoute> routes = GetRoutesToTarget(wowPlayer, targetRoute);
+            startingWaypoint = GetWaypointClosestToPlayer(wowPlayer, routes[0]);
+
+            if (routes.Count == 1)
+            {
+                return new List<Vector2> { startingWaypoint };
+            }
 
             for (int i = 0; i < routes.Count - 1; i++)
             {
-                if (i == 0)
-                {
-                    startingWaypoint = GetWaypointClosestToPlayer(wowPlayer, routes[i]);
-                }
-
                 if (!TryGetInstersectingWaypoint(routes[i], routes[i + 1], out endingWaypoint))
                 {
                     throw new Exception($"Routes expected to have an intersection but don't ({routes[i]}) and ({routes[i + 1]})");
@@ -315,16 +316,53 @@ namespace WoWHelper.Code
             return waypoints;
         }
 
-        public static List<WowRoute> GetRoutesToTarget(WowRoute targetRoute)
+        // Breadth-first search over the safe routes in the player's current zone, where two
+        // routes are connected if they share a waypoint (TryGetInstersectingWaypoint). Returns
+        // the chain with the fewest route hops, starting with the route closest to the player
+        // and ending with targetRoute, e.g.
+        // LEVEL_1_DUROTAR_BOARS_AND_SCORPS -> BOARS_AND_SCORPS_TO_MERCHANT -> VALLEY_OF_TRIALS_MERCHANT.
+        public static List<WowRoute> GetRoutesToTarget(WowPlayer wowPlayer, WowRoute targetRoute)
         {
-            List<WowRoute> routes = new List<WowRoute>();
+            WowRoute startingRoute = FindRouteClosestToPlayer(wowPlayer);
 
-            // TODO: ASDFASDF IMPLEMENT THIS
-            routes.Add(WowLocationConfigs.LEVEL_1_DUROTAR_BOARS_AND_SCORPS.Route);
-            routes.Add(WowRoutes.BOARS_AND_SCORPS_TO_MERCHANT_ROUTE);
-            routes.Add(WowNPCConfigs.VALLEY_OF_TRIALS_MERCHANT.Route);
+            List<WowRoute> eligibleRoutes = GetAllSafeRoutes(wowPlayer)
+                .Where(route => route.Zone == wowPlayer.WorldState.CurrentZone)
+                .ToList();
 
-            return routes;
+            // Each visited route maps to the route we reached it from (null for the start).
+            Dictionary<WowRoute, WowRoute> previousRoute = new Dictionary<WowRoute, WowRoute> { { startingRoute, null } };
+            Queue<WowRoute> routesToVisit = new Queue<WowRoute>();
+            routesToVisit.Enqueue(startingRoute);
+
+            while (routesToVisit.Count > 0)
+            {
+                WowRoute currentRoute = routesToVisit.Dequeue();
+
+                if (currentRoute == targetRoute)
+                {
+                    List<WowRoute> routes = new List<WowRoute>();
+                    for (WowRoute route = targetRoute; route != null; route = previousRoute[route])
+                    {
+                        routes.Add(route);
+                    }
+                    routes.Reverse();
+                    return routes;
+                }
+
+                foreach (WowRoute nextRoute in eligibleRoutes)
+                {
+                    if (!previousRoute.ContainsKey(nextRoute) && TryGetInstersectingWaypoint(currentRoute, nextRoute, out _))
+                    {
+                        previousRoute[nextRoute] = currentRoute;
+                        routesToVisit.Enqueue(nextRoute);
+                    }
+                }
+            }
+
+            // TODO: actually pipe this type of failure back up to the loop so we can handle logout properly
+            string message = $"Unable to find a chain of intersecting routes from {startingRoute} to {targetRoute} in {wowPlayer.WorldState.CurrentZone}";
+            Console.WriteLine(message);
+            throw new Exception(message);
         }
 
         public static WowRoute FindRouteClosestToPlayer(WowPlayer wowPlayer)
@@ -363,9 +401,10 @@ namespace WoWHelper.Code
             List<WowRoute> safeRoutes = new List<WowRoute>();
             safeRoutes.AddRange(WowRoutes.ALL_WALKING_ROUTES);
             safeRoutes.AddRange(WowLocationConfigs.ALL_LOCATIONS.Select(config => config.Route));
-            safeRoutes.Where(route => route.MinimumLevel <= 0 || wowPlayer.WorldState.PlayerLevel >= route.MinimumLevel);
-
-            return safeRoutes;
+            safeRoutes.AddRange(WowNPCConfigs.ALL_NPCS.Select(config => config.Route));
+            return safeRoutes
+                .Where(route => route.MinimumLevel <= 0 || wowPlayer.WorldState.PlayerLevel >= route.MinimumLevel)
+                .ToList();
         }
 
         public static bool TryGetInstersectingWaypoint(WowRoute firstRoute, WowRoute secondRoute, out Vector2 intersectingWaypoint)

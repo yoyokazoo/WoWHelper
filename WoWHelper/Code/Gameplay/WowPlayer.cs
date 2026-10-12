@@ -179,7 +179,7 @@ namespace WoWHelper
             await Task.Delay(4000);
             //await MouseTurnRateSweepTask(startPixels: 1, stepPixels: 1);
             //var asdf = WowPathfinding.GetWaypointsToTarget(this);
-            var asdf = WowPathfinding.FindRouteClosestToPlayer(this);
+            var asdf = WowPathfinding.GetRoutesToTarget(this, WowNPCConfigs.VALLEY_OF_TRIALS_MERCHANT.Route);
             Console.WriteLine(String.Join(",", asdf));
             return true;
         }

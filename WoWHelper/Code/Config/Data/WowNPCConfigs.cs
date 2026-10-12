@@ -5,16 +5,11 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowNPCConfigs
     {
-        public static readonly List<WowNPCConfiguration> ALL_NPCS = new List<WowNPCConfiguration>()
-        {
-            VALLEY_OF_TRIALS_MERCHANT,
-            VALLEY_OF_TRIALS_WARRIOR_TRAINER,
-        };
-
         public static readonly WowNPCConfiguration VALLEY_OF_TRIALS_MERCHANT = new WowNPCConfiguration
         {
             Name = "Duokna",
             Route = new WowRoute {
+                Name = "Valley of Trials Merchant",
                 Zone = WowZone.Durotar,
                 Waypoints = new List<Vector2> { new Vector2(42.58f, 67.34f) } 
             },
@@ -27,10 +22,17 @@ namespace WoWHelper.Code.WorldState
             Class = Gameplay.WowCombatConfiguration.Warrior,
             Route = new WowRoute
             {
+                Name = "Valley of Trials Warrior Trainer",
                 Zone = WowZone.Durotar,
                 Waypoints = new List<Vector2> { new Vector2(42.58f, 67.34f) }
             },
             Roles = NPCRoles.Train
+        };
+
+        public static readonly List<WowNPCConfiguration> ALL_NPCS = new List<WowNPCConfiguration>()
+        {
+            VALLEY_OF_TRIALS_MERCHANT,
+            VALLEY_OF_TRIALS_WARRIOR_TRAINER,
         };
     }
 }
