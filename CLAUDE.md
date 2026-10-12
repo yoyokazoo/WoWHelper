@@ -1089,6 +1089,14 @@ of truth — edits should be made here, not in the WoW install directory.
   stats/scores/skip reasons, and `/yyequip` is a dry run with it forced on.
   Lua-only; nothing reaches the pixel row.
 
+  Also auto-picks a class trainer's training gossip option: on `GOSSIP_SHOW`,
+  `FindTrainerGossipOption()` (`WoWFunctions.lua`) scans
+  `C_GossipInfo.GetOptions()` for a name matching the Lua pattern
+  `^i require .+ training%.?$` (lowercased), and the handler selects it a
+  frame later via `C_GossipInfo.SelectOption(gossipOptionID)` (falling back
+  to `SelectOptionByIndex`). Holding Shift when the gossip opens skips it
+  (e.g. to unlearn talents). Confirmed working live. The trainer window itself (buying skills) isn't automated yet. Lua-only.
+
 ## Tests (`WoWHelperUnitTests/`)
 
 MSTest project. Feeds real captured `Source Images/*.bmp` screenshots (trade

@@ -29,29 +29,25 @@ namespace WoWHelper
         {
             await Task.Delay(0);
 
-            if (ClassState == null)
-            {
-                string reason = "Could not determine player's class from the addon (unsupported class, or the addon isn't loaded/rendering yet)";
-                Console.WriteLine($"Aborting startup: {reason}");
-                SlackHelper.SendMessageToChannel($"WoWHelper startup aborted: {reason}");
-                return false;
-            }
-
             var matchingConfigs = WowLocationConfigs.ALL_LOCATIONS.Where(config =>
                 (config.Route.MinimumLevel <= 0 || WorldState.PlayerLevel >= config.Route.MinimumLevel) &&
-                (WorldState.PlayerLevel < config.MaximumLevel) && 
-                (config.Route.Zone == WowZone.Unknown || WorldState.CurrentZone == config.Route.Zone) &&
-                WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, config.Route.Waypoints) <= WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT
+                (WorldState.PlayerLevel < config.MaximumLevel)
             ).ToList();
+            
+            // TODO: add requirement that zone is reachable through pathfinding
+            // TODO: use the new config to determine?
 
             if (matchingConfigs.Count != 1)
             {
                 string reason = matchingConfigs.Count == 0
-                    ? $"No location config matches the player's current level ({WorldState.PlayerLevel}), zone ({WorldState.CurrentZone}), and position -- nowhere close enough to any route's waypoints"
+                    ? $"No location config matches the player's current level ({WorldState.PlayerLevel}), zone"
                     : $"{matchingConfigs.Count} location configs all match (level {WorldState.PlayerLevel}, zone {WorldState.CurrentZone}): {string.Join(", ", matchingConfigs.Select(c => c.Title))} -- can't pick automatically";
 
                 Console.WriteLine($"Aborting startup: {reason}");
-                SlackHelper.SendMessageToChannel($"WoWHelper startup aborted: {reason}");
+                string message = $"WoWHelper startup aborted: {reason}";
+                SlackHelper.SendMessageToChannel(message);
+                LogoutTriggered = true;
+                LogoutReason = message;
                 return false;
             }
 

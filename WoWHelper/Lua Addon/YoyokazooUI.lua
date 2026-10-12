@@ -243,6 +243,7 @@ frame:RegisterEvent("MERCHANT_CLOSED")
 frame:RegisterEvent("BAG_UPDATE_DELAYED")
 frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 frame:RegisterEvent("EQUIP_BIND_CONFIRM")
+frame:RegisterEvent("GOSSIP_SHOW")
 -- No AUTOEQUIP_BIND_CONFIRM: that event doesn't exist on this client
 -- (RegisterEvent throws "unknown event" -- confirmed live), and an error here
 -- aborts the rest of this file's load.
@@ -491,6 +492,27 @@ frame:SetScript("OnEvent", function(self, event, ...)
             StaticPopup_Hide("EQUIP_BIND")
             -- Deferred a frame for the same reason ConfirmLootSlot is above.
             RunNextFrame(function() EquipPendingItem(slot) end)
+        end
+    end
+
+    if event == "GOSSIP_SHOW" then
+        -- Class trainers open a gossip menu first; pick its "I require
+        -- <Class> training." option (FindTrainerGossipOption,
+        -- WoWFunctions.lua) so the trainer window opens on its own. Hold
+        -- Shift while right-clicking the NPC to skip this and get the menu
+        -- as normal (e.g. to unlearn talents).
+        if not IsShiftKeyDown() then
+            local option, index = FindTrainerGossipOption()
+            if option then
+                -- Deferred a frame like ConfirmLootSlot/EquipPendingItem above.
+                RunNextFrame(function()
+                    if option.gossipOptionID then
+                        C_GossipInfo.SelectOption(option.gossipOptionID)
+                    elseif C_GossipInfo.SelectOptionByIndex then
+                        C_GossipInfo.SelectOptionByIndex(option.orderIndex or index)
+                    end
+                end)
+            end
         end
     end
 

@@ -1856,3 +1856,37 @@ end
 
 -- CanChargeTargetColor() and IsAnyNextSwingSpellQueuedColor() moved to
 -- WarriorFunctions.lua.
+
+-- Auto-pick the "I require <Class> training." gossip option when talking to a
+-- class trainer, so the trainer window opens without anyone clicking the
+-- gossip menu (class trainers show a gossip menu first -- training, unlearn
+-- talents, etc.). Driven by GOSSIP_SHOW in YoyokazooUI.lua. Lua-only;
+-- nothing reaches the pixel row. Confirmed working live.
+
+-- Case-insensitive, any class name in the middle, trailing period optional.
+-- Lua patterns, not regex: "%." is a literal period, ".+" is one or more of
+-- anything.
+local TRAINER_GOSSIP_PATTERN = "^i require .+ training%.?$"
+
+function IsTrainerGossipOptionText(text)
+    if type(text) ~= "string" then
+        return false
+    end
+    return string.lower(text):match(TRAINER_GOSSIP_PATTERN) ~= nil
+end
+
+-- Returns the matching C_GossipInfo.GetOptions() entry and its position in
+-- that list, or nil if this gossip menu has no "I require * training." option.
+function FindTrainerGossipOption()
+    if not (C_GossipInfo and C_GossipInfo.GetOptions) then
+        return nil
+    end
+
+    for i, option in ipairs(C_GossipInfo.GetOptions() or {}) do
+        if type(option) == "table" and IsTrainerGossipOptionText(option.name) then
+            return option, i
+        end
+    end
+
+    return nil
+end

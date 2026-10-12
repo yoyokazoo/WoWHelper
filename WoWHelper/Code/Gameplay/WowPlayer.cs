@@ -52,6 +52,7 @@ namespace WoWHelper
         public LogoutState CurrentLogoutState { get; private set; }
         public FindEnemyTargetState CurrentFindEnemyTargetState { get; private set; }
         public BattleRecoveryState CurrentBattleRecoveryState { get; private set; }
+        public InteractWithNPCState CurrentInteractWithNPCState { get; private set; }
 
         public int CurrentWaypointIndex { get; private set; }
         public Vector2 CurrentWaypoint => LocationConfiguration.Route.Waypoints[CurrentWaypointIndex]; 
@@ -200,6 +201,7 @@ namespace WoWHelper
                         break;
                     case PlayerMetaState.RESOLVE_FARMING_CONFIGURATION:
                         Console.WriteLine("Auto-detecting combat/location config from live game state");
+                        // TODO: not the right place to do this
                         CurrentPlayerMetaState = await GeneralHelpers.ChangeStateBasedOnTaskResult(ResolveFarmingConfigurationTask(),
                             PlayerMetaState.EXECUTING_GOAL,
                             PlayerMetaState.EXITING);
@@ -347,15 +349,30 @@ namespace WoWHelper
                 case PlayerGoal.LOG_OUT:
                     await PlayerLogoutGoalTask();
                     break;
+                case PlayerGoal.TRAIN:
+                    await PlayerInteractWithNPCTask();
+                    break;
                 case PlayerGoal.SELL:
                 case PlayerGoal.TRAVEL:
                 case PlayerGoal.SET_HEARTH:
                 case PlayerGoal.REPAIR:
-                case PlayerGoal.TRAIN:
                     string errorMessage = $"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}";
                     SlackHelper.SendMessageToChannel(errorMessage);
                     await Task.Delay(500);
                     Environment.Exit(0);
+                    break;
+            }
+        }
+
+        public async Task PlayerInteractWithNPCTask()
+        {
+            switch(CurrentInteractWithNPCState)
+            {
+                case InteractWithNPCState.PICK_NPC_TO_INTERACT_WITH:
+                case InteractWithNPCState.BUILD_ROUTE_TO_NPC:
+                case InteractWithNPCState.NAVIGATE_ROUTE_TO_NPC:
+                case InteractWithNPCState.INTERACT_WITH_NPC:
+
                     break;
             }
         }

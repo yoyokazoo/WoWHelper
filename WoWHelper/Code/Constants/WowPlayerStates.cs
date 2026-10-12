@@ -100,5 +100,13 @@
             WALK_TO_TARGETED_ENEMY,
             ENGAGE_TARGETED_ENEMY
         }
+
+        public enum InteractWithNPCState
+        {
+            PICK_NPC_TO_INTERACT_WITH,
+            BUILD_ROUTE_TO_NPC,
+            NAVIGATE_ROUTE_TO_NPC,
+            INTERACT_WITH_NPC
+        }
     }
 }

@@ -14,5 +14,17 @@ namespace WoWHelper.Code.WorldState
             },
             Roles = NPCRoles.Sell
         };
+
+        public static readonly WowNPCConfiguration VALLEY_OF_TRIALS_WARRIOR_TRAINER = new WowNPCConfiguration
+        {
+            Name = "Frang",
+            Class = Gameplay.WowCombatConfiguration.Warrior,
+            Route = new WowRoute
+            {
+                Zone = WowZone.Durotar,
+                Waypoints = new List<Vector2> { new Vector2(42.58f, 67.34f) }
+            },
+            Roles = NPCRoles.Train
+        };
     }
 }
