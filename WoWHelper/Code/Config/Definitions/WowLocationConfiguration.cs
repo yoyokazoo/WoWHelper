@@ -50,8 +50,6 @@ namespace WoWHelper.Code.WorldState
             Pull // shoot bow/gun (Warrior) or cast a pull spell -- lightning bolt, shadow bolt, etc. (Shaman/Warlock)
         }
 
-        // Human-readable name, including the minimum level, e.g. "Durotar Imps (Level 4+)".
-        public string Title { get; set; }
         public int MaximumLevel { get; set; } // Level to log off at
 
         public EngagementMethod EngageMethod { get; set; }
@@ -79,7 +77,7 @@ namespace WoWHelper.Code.WorldState
         // ExpectedMobNames' exact roster. Null/empty leaves the macro as-is.
         public string TargetMacroMobNames { get; set; }
 
-        // Waypoints, traversal method, distance tolerance, zone and minimum level -- see WowRoutes.cs.
+        // Name, waypoints, traversal method, distance tolerance, zone and minimum level -- see WowRoutes.cs.
         public WowRoute Route { get; set; }
 
         // Optional "sell run" detour -- see WowMerchantConfiguration for the branch-off

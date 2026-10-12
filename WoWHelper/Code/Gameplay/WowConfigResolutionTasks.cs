@@ -41,7 +41,7 @@ namespace WoWHelper
             {
                 string reason = matchingConfigs.Count == 0
                     ? $"No location config matches the player's current level ({WorldState.PlayerLevel}), zone"
-                    : $"{matchingConfigs.Count} location configs all match (level {WorldState.PlayerLevel}, zone {WorldState.CurrentZone}): {string.Join(", ", matchingConfigs.Select(c => c.Title))} -- can't pick automatically";
+                    : $"{matchingConfigs.Count} location configs all match (level {WorldState.PlayerLevel}, zone {WorldState.CurrentZone}): {string.Join(", ", matchingConfigs.Select(c => c.Route.Name))} -- can't pick automatically";
 
                 // Returning false exits the process right away, so wait for the Slack send.
                 SetLogoutVariablesAndSlack($"WoWHelper startup aborted: {reason}");
@@ -51,7 +51,7 @@ namespace WoWHelper
 
             LocationConfiguration = matchingConfigs[0];
 
-            Console.WriteLine($"Using location config \"{LocationConfiguration.Title}\" (combat config {CombatConfiguration} already resolved)");
+            Console.WriteLine($"Using location config \"{LocationConfiguration.Route.Name}\" (combat config {CombatConfiguration} already resolved)");
 
             if (!string.IsNullOrEmpty(LocationConfiguration.TargetMacroMobNames))
             {

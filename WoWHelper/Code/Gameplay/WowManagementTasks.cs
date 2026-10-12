@@ -231,7 +231,7 @@ namespace WoWHelper
                 // "new" news, so it's left out to keep the message short.
                 List<string> newlyEligibleConfigTitles = WowLocationConfigs.ALL_LOCATIONS
                     .Where(config => config.Route.MinimumLevel == WorldState.PlayerLevel)
-                    .Select(config => config.Title)
+                    .Select(config => config.Route.Name)
                     .ToList();
                 if (newlyEligibleConfigTitles.Count > 0)
                 {

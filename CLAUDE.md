@@ -654,10 +654,9 @@ of truth — edits should be made here, not in the WoW install directory.
   reads it yet — the goal-setting logic (train vs. grind
   for money vs. grind for XP, off the `MultiBoolTwo` G6/G7 bits) is still to
   be written. Each `WowLocationConfiguration` carries a
-  `Title`
-  (human-readable, includes the minimum level) and a
   `Route` (`WowRoute`, `Config/Definitions/WowRoute.cs`): the route's
-  `Waypoints`, `TraversalMethod` (`WowRoute.WaypointTraversalMethod`,
+  `Name` (human-readable, includes the minimum level — it used to be
+  `WowLocationConfiguration.Title`), `Waypoints`, `TraversalMethod` (`WowRoute.WaypointTraversalMethod`,
   `CIRCULAR`/`LINEAR` — defaults to `LINEAR`, so loop routes must set
   `CIRCULAR` explicitly), `DistanceTolerance`, `MinimumLevel`, and `Zone` (`WowZone` enum,
   still declared in `WowLocationConfiguration.cs`) — see the zone ID

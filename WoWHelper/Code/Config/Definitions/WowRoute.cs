@@ -14,6 +14,8 @@ namespace WoWHelper.Code.WorldState
             LINEAR // go from start -> end -> start
         }
 
+        // Human-readable name, including the minimum level, e.g. "Durotar Imps (Level 4+)".
+        public string Name { get; set; }
         public WowZone Zone { get; set; } // for validation -- character should be in this zone before starting
         public int MinimumLevel { get; set; } // for validation -- character should be at least this level before starting
         public WaypointTraversalMethod TraversalMethod { get; set; }
@@ -31,6 +33,11 @@ namespace WoWHelper.Code.WorldState
             // Default to Unknown, not the implicit Durotar (enum value 0) -- a route that
             // forgets to set Zone should fail loudly/obviously, not silently claim Durotar.
             Zone = WowZone.Unknown;
+        }
+
+        public override string ToString()
+        {
+            return $"WowRoute ({(string.IsNullOrEmpty(Name) ? "NO NAME" : Name)})";
         }
     }
 }

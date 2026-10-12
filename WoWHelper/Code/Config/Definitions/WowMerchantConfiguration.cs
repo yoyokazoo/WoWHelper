@@ -12,7 +12,7 @@ namespace WoWHelper.Code.WorldState
     // right-clicks screen-center to open the vendor and needs to actually be standing on it.
     public class WowMerchantConfiguration
     {
-        // Human-readable label only (like WowLocationConfiguration.Title) -- NOT fed into the
+        // Human-readable label only (like WowRoute.Name) -- NOT fed into the
         // CTRL_TARGET_MERCHANT macro. That macro's /target line is a single fixed in-game
         // macro the player configures themselves; it can't be parameterized per-route from C#.
         public string Name { get; set; }
