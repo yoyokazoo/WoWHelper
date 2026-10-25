@@ -544,8 +544,17 @@ namespace WoWHelper
         {
             NPCRoles requiredRoles = PickRequiredRolesForNPCBasedOnGoal();
 
+            var validNPCs = WowNPCConfigs.ALL_NPCS
+                .Where(npc => npc.Roles.HasFlag(requiredRoles) && npc.Route.Zone.Equals(WorldState.CurrentZone));
 
-            //var validNPCs = WowNPCConfigs.ALL_NPCS
+            if (!validNPCs.Any())
+            {
+                SetLogoutVariablesAndSlack($"Can't find valid NPC with roles {requiredRoles}");
+                return;
+            }
+
+            CurrentNPCTarget = validNPCs.First();
+            Console.WriteLine($"Picked NPC to target: {CurrentNPCTarget}");
         }
 
         public async Task<bool> CupidTradeLoopTask()

@@ -54,6 +54,8 @@ namespace WoWHelper
         public BattleRecoveryState CurrentBattleRecoveryState { get; private set; }
         public InteractWithNPCState CurrentInteractWithNPCState { get; private set; }
 
+        public WowNPCConfiguration CurrentNPCTarget {  get; private set; }
+
         public int CurrentWaypointIndex { get; private set; }
         public Vector2 CurrentWaypoint => LocationConfiguration.Route.Waypoints[CurrentWaypointIndex]; 
         public int WaypointTraversalDirection { get; private set; }
@@ -367,6 +369,7 @@ namespace WoWHelper
 
         public async Task PlayerInteractWithNPCTask()
         {
+            Console.WriteLine($"Inside PlayerInteractWithNPCTask, CurrentInteractWithNPCState = {CurrentInteractWithNPCState}");
             switch(CurrentInteractWithNPCState)
             {
                 case InteractWithNPCState.PICK_NPC_TO_INTERACT_WITH:

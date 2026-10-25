@@ -20,5 +20,10 @@ namespace WoWHelper.Code.WorldState
         public WowCombatConfiguration Class { get; set; } = WowCombatConfiguration.Unknown;
         public WowRoute Route { get; set; }
         public NPCRoles Roles { get; set; }
+
+        public override string ToString()
+        {
+            return $"WowNPC: {Name}, {Route.Zone}";
+        }
     }
 }
