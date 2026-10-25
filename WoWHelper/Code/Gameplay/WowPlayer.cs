@@ -56,6 +56,7 @@ namespace WoWHelper
 
         public WowNPCConfiguration CurrentNPCTarget {  get; private set; }
 
+        public List<Vector2> CurrentRoute {  get; private set; }
         public int CurrentWaypointIndex { get; private set; }
         public Vector2 CurrentWaypoint => LocationConfiguration.Route.Waypoints[CurrentWaypointIndex]; 
         public int WaypointTraversalDirection { get; private set; }
@@ -373,11 +374,17 @@ namespace WoWHelper
             switch(CurrentInteractWithNPCState)
             {
                 case InteractWithNPCState.PICK_NPC_TO_INTERACT_WITH:
-                    PickNPCToInteractWith();
+                    CurrentNPCTarget = PickNPCToInteractWith();
+                    Console.WriteLine($"Picked NPC to target: {CurrentNPCTarget}");
                     CurrentInteractWithNPCState = InteractWithNPCState.BUILD_ROUTE_TO_NPC;
                     break;
                 case InteractWithNPCState.BUILD_ROUTE_TO_NPC:
+                    CurrentRoute = WowPathfinding.GetWaypointsToTarget(this, CurrentNPCTarget.Route);
+                    Console.WriteLine($"Picked Route: {CurrentRoute}");
+                    CurrentInteractWithNPCState = InteractWithNPCState.NAVIGATE_ROUTE_TO_NPC;
+                    break;
                 case InteractWithNPCState.NAVIGATE_ROUTE_TO_NPC:
+                    break;
                 case InteractWithNPCState.INTERACT_WITH_NPC:
 
                     break;

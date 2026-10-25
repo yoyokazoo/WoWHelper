@@ -540,7 +540,7 @@ namespace WoWHelper
         }
 
         // never end a sentence with a preposition at
-        public void PickNPCToInteractWith()
+        public WowNPCConfiguration PickNPCToInteractWith()
         {
             NPCRoles requiredRoles = PickRequiredRolesForNPCBasedOnGoal();
 
@@ -550,11 +550,10 @@ namespace WoWHelper
             if (!validNPCs.Any())
             {
                 SetLogoutVariablesAndSlack($"Can't find valid NPC with roles {requiredRoles}");
-                return;
+                return WowNPCConfigs.ALL_NPCS.First();
             }
 
-            CurrentNPCTarget = validNPCs.First();
-            Console.WriteLine($"Picked NPC to target: {CurrentNPCTarget}");
+            return validNPCs.First();
         }
 
         public async Task<bool> CupidTradeLoopTask()
