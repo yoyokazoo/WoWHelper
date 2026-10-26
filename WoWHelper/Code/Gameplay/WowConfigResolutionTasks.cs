@@ -50,8 +50,9 @@ namespace WoWHelper
             }
 
             LocationConfiguration = matchingConfigs[0];
+            CurrentRoute = LocationConfiguration.Route;
 
-            Console.WriteLine($"Using location config \"{LocationConfiguration.Route.Name}\" (combat config {CombatConfiguration} already resolved)");
+            Console.WriteLine($"Using location config \"{CurrentRoute.Name}\" (combat config {CombatConfiguration} already resolved)");
 
             if (!string.IsNullOrEmpty(LocationConfiguration.TargetMacroMobNames))
             {

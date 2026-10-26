@@ -8,6 +8,8 @@ namespace WoWHelper.Code.WorldState
     // in WowRoutes.cs; each WowLocationConfiguration points at its own one via its Route property.
     public class WowRoute
     {
+        public const float DEFAULT_DISTANCE_TOLERANCE = 0.2f;
+
         public enum WaypointTraversalMethod
         {
             CIRCULAR, // go from start -> end, then restart at start
@@ -28,7 +30,7 @@ namespace WoWHelper.Code.WorldState
             // LINEAR, not CIRCULAR -- walking routes (A -> B and back) are far more common to
             // author than loops, which have to set CIRCULAR explicitly.
             TraversalMethod = WaypointTraversalMethod.LINEAR;
-            DistanceTolerance = 0.2f;
+            DistanceTolerance = DEFAULT_DISTANCE_TOLERANCE;
 
             // Default to Unknown, not the implicit Durotar (enum value 0) -- a route that
             // forgets to set Zone should fail loudly/obviously, not silently claim Durotar.

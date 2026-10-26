@@ -263,22 +263,22 @@ namespace WoWHelper
                 return LogoutTriggered;
             }
 
-            float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, LocationConfiguration.Route.Waypoints);
+            float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, CurrentRoute.Waypoints);
 
             // Checked first so a wrong-zone/under-level/too-far-away start gives the clearest
             // possible reason, rather than getting masked behind some other logout condition
             // that also happens to be true on the very first tick.
-            if (LocationConfiguration.Route.MinimumLevel > 0 && WorldState.PlayerLevel < LocationConfiguration.Route.MinimumLevel)
+            if (CurrentRoute.MinimumLevel > 0 && WorldState.PlayerLevel < CurrentRoute.MinimumLevel)
             {
                 LogoutTriggered = true;
-                LogoutReason = $"Below minimum level for this route (level {WorldState.PlayerLevel}, need {LocationConfiguration.Route.MinimumLevel}+)";
+                LogoutReason = $"Below minimum level for this route (level {WorldState.PlayerLevel}, need {CurrentRoute.MinimumLevel}+)";
             }
             // Zone.Unknown means this route's config forgot to set Zone -- skip the check rather
             // than have a misconfigured route always immediately abort every session.
-            else if (LocationConfiguration.Route.Zone != WowZone.Unknown && WorldState.CurrentZone != LocationConfiguration.Route.Zone)
+            else if (CurrentRoute.Zone != WowZone.Unknown && WorldState.CurrentZone != CurrentRoute.Zone)
             {
                 LogoutTriggered = true;
-                LogoutReason = $"Wrong zone for this route (currently {WorldState.CurrentZone}, expected {LocationConfiguration.Route.Zone})";
+                LogoutReason = $"Wrong zone for this route (currently {WorldState.CurrentZone}, expected {CurrentRoute.Zone})";
             }
             else if (closestWaypointDistance > WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT)
             {

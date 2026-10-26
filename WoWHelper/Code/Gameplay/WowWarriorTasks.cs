@@ -332,7 +332,7 @@ namespace WoWHelper
                 case WowLocationConfiguration.EngagementMethod.Pull: return classState.CanShootTarget;
                 default: throw new System.NotImplementedException(
                     $"{nameof(WarriorCanEngageTarget)}: EngageMethod \"{LocationConfiguration.EngageMethod}\" (from location " +
-                    $"\"{LocationConfiguration?.Route?.Name}\") isn't supported for Warrior -- only Charge/Pull " +
+                    $"\"{CurrentRoute?.Name}\") isn't supported for Warrior -- only Charge/Pull " +
                     $"are. This route's EngageMethod likely wasn't set up for this class -- see " +
                     $"WowConfigResolutionTasks.ResolveFarmingConfigurationTask.");
             }

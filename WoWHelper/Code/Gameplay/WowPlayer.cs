@@ -56,9 +56,9 @@ namespace WoWHelper
 
         public WowNPCConfiguration CurrentNPCTarget {  get; private set; }
 
-        public List<Vector2> CurrentRoute {  get; private set; }
+        public WowRoute CurrentRoute {  get; private set; }
         public int CurrentWaypointIndex { get; private set; }
-        public Vector2 CurrentWaypoint => LocationConfiguration.Route.Waypoints[CurrentWaypointIndex]; 
+        public Vector2 CurrentWaypoint => CurrentRoute.Waypoints[CurrentWaypointIndex]; 
         public int WaypointTraversalDirection { get; private set; }
 
         public bool IsOnMerchantRun { get; private set; }
@@ -182,8 +182,8 @@ namespace WoWHelper
             await Task.Delay(4000);
             //await MouseTurnRateSweepTask(startPixels: 1, stepPixels: 1);
             //var asdf = WowPathfinding.GetWaypointsToTarget(this);
-            var asdf = WowPathfinding.GetRoutesToTarget(this, WowNPCConfigs.VALLEY_OF_TRIALS_MERCHANT.Route);
-            Console.WriteLine(String.Join(",", asdf));
+            //var asdf = WowPathfinding.GetRoutesToTarget(this, WowNPCConfigs.VALLEY_OF_TRIALS_MERCHANT.Route);
+            //Console.WriteLine(String.Join(",", asdf));
             return true;
         }
 
@@ -379,8 +379,8 @@ namespace WoWHelper
                     CurrentInteractWithNPCState = InteractWithNPCState.BUILD_ROUTE_TO_NPC;
                     break;
                 case InteractWithNPCState.BUILD_ROUTE_TO_NPC:
-                    CurrentRoute = WowPathfinding.GetWaypointsToTarget(this, CurrentNPCTarget.Route);
-                    Console.WriteLine($"Picked Route: {CurrentRoute}");
+                    CurrentRoute = WowPathfinding.GetRouteToTarget(this, CurrentNPCTarget.Route);
+                    Console.WriteLine($"Picked Route: {String.Join(",", CurrentRoute.Waypoints)}");
                     CurrentInteractWithNPCState = InteractWithNPCState.NAVIGATE_ROUTE_TO_NPC;
                     break;
                 case InteractWithNPCState.NAVIGATE_ROUTE_TO_NPC:
@@ -467,7 +467,7 @@ namespace WoWHelper
                     await WalkToWaypointTask();
 
                     float targetDistance = Vector2.Distance(WorldState.PlayerLocation, CurrentWaypoint);
-                    bool arrived = targetDistance <= LocationConfiguration.Route.DistanceTolerance;
+                    bool arrived = targetDistance <= CurrentRoute.DistanceTolerance;
                     if (arrived)
                     {
                         Console.WriteLine($"Arrived at {CurrentWaypoint}, distance away {targetDistance}, picking next waypoint");

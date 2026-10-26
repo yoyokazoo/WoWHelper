@@ -283,10 +283,24 @@ namespace WoWHelper.Code
         }
         */
 
+        public static WowRoute GetRouteToTarget(WowPlayer wowPlayer, WowRoute targetRoute)
+        {
+            List<Vector2> waypoints = GetWaypointsToTarget(wowPlayer, targetRoute);
+
+            return new WowRoute
+            {
+                Name = "Dynamic Route",
+                Waypoints = waypoints,
+                Zone = targetRoute.Zone,
+                TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+                MinimumLevel = 0,
+                DistanceTolerance = WowRoute.DEFAULT_DISTANCE_TOLERANCE
+            };
+        }
 
         // Top-level method should always take a route as the desired destination
         // Pathfinding helpers will be the ones to figure out which point is intersecting and shoot for that specifically
-        public static List<Vector2> GetWaypointsToTarget(WowPlayer wowPlayer, WowRoute targetRoute)
+        private static List<Vector2> GetWaypointsToTarget(WowPlayer wowPlayer, WowRoute targetRoute)
         {
             List<Vector2> waypoints = new List<Vector2>();
             Vector2 startingWaypoint = Vector2.Zero;
@@ -321,7 +335,7 @@ namespace WoWHelper.Code
         // the chain with the fewest route hops, starting with the route closest to the player
         // and ending with targetRoute, e.g.
         // LEVEL_1_DUROTAR_BOARS_AND_SCORPS -> BOARS_AND_SCORPS_TO_MERCHANT -> VALLEY_OF_TRIALS_MERCHANT.
-        public static List<WowRoute> GetRoutesToTarget(WowPlayer wowPlayer, WowRoute targetRoute)
+        private static List<WowRoute> GetRoutesToTarget(WowPlayer wowPlayer, WowRoute targetRoute)
         {
             WowRoute startingRoute = FindRouteClosestToPlayer(wowPlayer);
 
@@ -365,7 +379,7 @@ namespace WoWHelper.Code
             throw new Exception(message);
         }
 
-        public static WowRoute FindRouteClosestToPlayer(WowPlayer wowPlayer)
+        private static WowRoute FindRouteClosestToPlayer(WowPlayer wowPlayer)
         {
             var safeRoutes = GetAllSafeRoutes(wowPlayer);
             var routesInZone = safeRoutes.Where(route => route.Zone == wowPlayer.WorldState.CurrentZone).ToList();
@@ -387,7 +401,7 @@ namespace WoWHelper.Code
             return closestRoute;
         }
 
-        public static Vector2 GetWaypointClosestToPlayer(WowPlayer wowPlayer, WowRoute route)
+        private static Vector2 GetWaypointClosestToPlayer(WowPlayer wowPlayer, WowRoute route)
         {
             return route.Waypoints
                 .Select(waypoint => (dist: Vector2.Distance(wowPlayer.WorldState.PlayerLocation, waypoint), waypoint))
@@ -396,7 +410,7 @@ namespace WoWHelper.Code
                 .waypoint;
         }
 
-        public static List<WowRoute> GetAllSafeRoutes(WowPlayer wowPlayer)
+        private static List<WowRoute> GetAllSafeRoutes(WowPlayer wowPlayer)
         {
             List<WowRoute> safeRoutes = new List<WowRoute>();
             safeRoutes.AddRange(WowRoutes.ALL_WALKING_ROUTES);
@@ -407,7 +421,7 @@ namespace WoWHelper.Code
                 .ToList();
         }
 
-        public static bool TryGetInstersectingWaypoint(WowRoute firstRoute, WowRoute secondRoute, out Vector2 intersectingWaypoint)
+        private static bool TryGetInstersectingWaypoint(WowRoute firstRoute, WowRoute secondRoute, out Vector2 intersectingWaypoint)
         {
             var intersection = firstRoute.Waypoints.Intersect(secondRoute.Waypoints);
             if (intersection.Any())
@@ -420,7 +434,7 @@ namespace WoWHelper.Code
             return false;
         }
 
-        public static List<Vector2> CreatePartialWaypointsFromRoute(WowRoute route, Vector2 startingWaypoint, Vector2 endingWaypoint)
+        private static List<Vector2> CreatePartialWaypointsFromRoute(WowRoute route, Vector2 startingWaypoint, Vector2 endingWaypoint)
         {
             if (!route.Waypoints.Contains(startingWaypoint) || !route.Waypoints.Contains(endingWaypoint))
             {

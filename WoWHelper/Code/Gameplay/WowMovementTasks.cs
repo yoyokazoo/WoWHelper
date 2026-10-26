@@ -309,7 +309,7 @@ namespace WoWHelper
         {
             return await MoveTowardsPointTask(
                 CurrentWaypoint,
-                LocationConfiguration.Route.DistanceTolerance);
+                CurrentRoute.DistanceTolerance);
         }
 
         // Same rotate-or-strafe-and-walk-or-arrive logic MoveTowardsWaypointTask uses, against
@@ -925,20 +925,20 @@ namespace WoWHelper
                 return;
             }
             
-            if (Vector2.Distance(WorldState.PlayerLocation, CurrentWaypoint) > LocationConfiguration.Route.DistanceTolerance)
+            if (Vector2.Distance(WorldState.PlayerLocation, CurrentWaypoint) > CurrentRoute.DistanceTolerance)
             {
                 return;
             }
 
             CurrentWaypointIndex += WaypointTraversalDirection;
 
-            if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= LocationConfiguration.Route.Waypoints.Count)
+            if (CurrentWaypointIndex < 0 || CurrentWaypointIndex >= CurrentRoute.Waypoints.Count)
             {
-                if (LocationConfiguration.Route.TraversalMethod == WowRoute.WaypointTraversalMethod.CIRCULAR)
+                if (CurrentRoute.TraversalMethod == WowRoute.WaypointTraversalMethod.CIRCULAR)
                 {
                     CurrentWaypointIndex = 0;
                 }
-                else if (LocationConfiguration.Route.TraversalMethod == WowRoute.WaypointTraversalMethod.LINEAR)
+                else if (CurrentRoute.TraversalMethod == WowRoute.WaypointTraversalMethod.LINEAR)
                 {
                     // since we detect this when we've gone out of bounds, switch direction.
                     // first addition puts us back in bounds, but we know we're already there, so do a second addition
@@ -951,7 +951,7 @@ namespace WoWHelper
 
         public int GetClosestWaypointIndex()
         {
-            return LocationConfiguration.Route.Waypoints
+            return CurrentRoute.Waypoints
                 .Select((p, i) => (dist: Vector2.Distance(WorldState.PlayerLocation, p), index: i))
                 .OrderBy(t => t.dist)
                 .First()
@@ -965,33 +965,33 @@ namespace WoWHelper
 
             // Circular always goes in the same direction, so if you interrupt and restart, you'll still be going the same direction.
             // For linear let's do our best guess to pick the best direction
-            if (LocationConfiguration.Route.TraversalMethod == WowRoute.WaypointTraversalMethod.LINEAR)
+            if (CurrentRoute.TraversalMethod == WowRoute.WaypointTraversalMethod.LINEAR)
             {
                 if (CurrentWaypointIndex == 0)
                 {
                     WaypointTraversalDirection = 1;
                 }
-                else if (CurrentWaypointIndex == LocationConfiguration.Route.Waypoints.Count - 1)
+                else if (CurrentWaypointIndex == CurrentRoute.Waypoints.Count - 1)
                 {
                     WaypointTraversalDirection = -1;
                 }
                 else
                 {
-                    var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(CurrentWaypoint, LocationConfiguration.Route.Waypoints[CurrentWaypointIndex + 1]);
-                    var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(CurrentWaypoint, LocationConfiguration.Route.Waypoints[CurrentWaypointIndex - 1]);
+                    var forwardDegrees = WowPathfinding.GetDesiredDirectionInDegrees(CurrentWaypoint, CurrentRoute.Waypoints[CurrentWaypointIndex + 1]);
+                    var backwardsDegrees = WowPathfinding.GetDesiredDirectionInDegrees(CurrentWaypoint, CurrentRoute.Waypoints[CurrentWaypointIndex - 1]);
                     var facingDegrees = WorldState.FacingDegrees;
                     var forwardDiff = WowPathfinding.GetDegreesToMoveWhileStationary(facingDegrees, forwardDegrees);
                     var backwardsDiff = WowPathfinding.GetDegreesToMoveWhileStationary(facingDegrees, backwardsDegrees);
-                    Console.WriteLine($"At {CurrentWaypoint}, picking direction to start LINEAR path.  {forwardDiff} to {LocationConfiguration.Route.Waypoints[CurrentWaypointIndex + 1]}, {backwardsDiff} to {LocationConfiguration.Route.Waypoints[CurrentWaypointIndex - 1]}");
+                    Console.WriteLine($"At {CurrentWaypoint}, picking direction to start LINEAR path.  {forwardDiff} to {CurrentRoute.Waypoints[CurrentWaypointIndex + 1]}, {backwardsDiff} to {CurrentRoute.Waypoints[CurrentWaypointIndex - 1]}");
 
                     if (Math.Abs(backwardsDiff) < Math.Abs(forwardDiff))
                     {
-                        Console.WriteLine($"Math.Abs(backwardsDiff) < Math.Abs(forwardDiff), so we chose {LocationConfiguration.Route.Waypoints[CurrentWaypointIndex - 1]}");
+                        Console.WriteLine($"Math.Abs(backwardsDiff) < Math.Abs(forwardDiff), so we chose {CurrentRoute.Waypoints[CurrentWaypointIndex - 1]}");
                         WaypointTraversalDirection = -1;
                     }
                     else
                     {
-                        Console.WriteLine($"Math.Abs(backwardsDiff) >= Math.Abs(forwardDiff), so we chose {LocationConfiguration.Route.Waypoints[CurrentWaypointIndex + 1]}");
+                        Console.WriteLine($"Math.Abs(backwardsDiff) >= Math.Abs(forwardDiff), so we chose {CurrentRoute.Waypoints[CurrentWaypointIndex + 1]}");
                         WaypointTraversalDirection = 1;
                     }
 
