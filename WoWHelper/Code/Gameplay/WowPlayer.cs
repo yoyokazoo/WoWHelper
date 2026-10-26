@@ -53,6 +53,7 @@ namespace WoWHelper
         public FindEnemyTargetState CurrentFindEnemyTargetState { get; private set; }
         public BattleRecoveryState CurrentBattleRecoveryState { get; private set; }
         public InteractWithNPCState CurrentInteractWithNPCState { get; private set; }
+        public NavigateToEndOfCurrentRouteState CurrentNavigateToEndOfCurrentRouteState { get; private set; }
 
         public WowNPCConfiguration CurrentNPCTarget {  get; private set; }
 
@@ -329,12 +330,7 @@ namespace WoWHelper
 
         private async Task ExitGoalTask(PlayerGoal goal)
         {
-            switch (goal)
-            {
-                case PlayerGoal.FIND_ENEMY_TARGET:
-                    await KeyUpMovementKeys();
-                    break;
-            }
+            await KeyUpMovementKeys();
         }
 
         public async Task ExecuteGoalTask()
@@ -382,8 +378,13 @@ namespace WoWHelper
                     CurrentRoute = WowPathfinding.GetRouteToTarget(this, CurrentNPCTarget.Route);
                     Console.WriteLine($"Picked Route: {String.Join(",", CurrentRoute.Waypoints)}");
                     CurrentInteractWithNPCState = InteractWithNPCState.NAVIGATE_ROUTE_TO_NPC;
+
+                    // Manually set the initial waypoint
+                    CurrentWaypointIndex = 0;
+                    CurrentNavigateToEndOfCurrentRouteState = NavigateToEndOfCurrentRouteState.FACE_WAYPOINT;
                     break;
                 case InteractWithNPCState.NAVIGATE_ROUTE_TO_NPC:
+                    await NavigateToEndOfCurrentRouteTask();
                     break;
                 case InteractWithNPCState.INTERACT_WITH_NPC:
 
@@ -442,6 +443,49 @@ namespace WoWHelper
                         await ScootForwardsTask();
                         await SetPlayerGoalTask(PlayerGoal.NONE);
                     }
+                    break;
+            }
+        }
+
+        public async Task NavigateToEndOfCurrentRouteTask()
+        {
+            Console.WriteLine($"NavigateToEndOfCurrentRouteTask, CurrentNavigateToEndOfCurrentRouteState = {CurrentNavigateToEndOfCurrentRouteState}");
+
+            switch (CurrentNavigateToEndOfCurrentRouteState)
+            {
+                case NavigateToEndOfCurrentRouteState.PICK_NEXT_WAYPOINT:
+                    PickNextWaypoint();
+                    CurrentNavigateToEndOfCurrentRouteState = NavigateToEndOfCurrentRouteState.FACE_WAYPOINT;
+                    Console.WriteLine($"Picked next waypoint: {CurrentWaypoint}");
+                    break;
+                case NavigateToEndOfCurrentRouteState.FACE_WAYPOINT:
+                    await FaceWaypointTask();
+                    CurrentNavigateToEndOfCurrentRouteState = NavigateToEndOfCurrentRouteState.WALK_TO_WAYPOINT;
+                    break;
+                case NavigateToEndOfCurrentRouteState.WALK_TO_WAYPOINT:
+                    await WalkToWaypointTask();
+
+                    float targetDistance = Vector2.Distance(WorldState.PlayerLocation, CurrentWaypoint);
+                    bool isFinalWaypointInRoute = CurrentWaypointIndex == CurrentRoute.Waypoints.Count - 1;
+                    float distanceTolerance = isFinalWaypointInRoute ? WowPlayerConstants.NPC_FINAL_WAYPOINT_TOLERANCE : CurrentRoute.DistanceTolerance;
+                    bool arrived = targetDistance <= distanceTolerance;
+                    if (arrived)
+                    {
+                        if (isFinalWaypointInRoute)
+                        {
+                            Console.WriteLine($"Arrived at {CurrentWaypoint}, last waypoint in route");
+                            CurrentNavigateToEndOfCurrentRouteState = NavigateToEndOfCurrentRouteState.ARRIVED_AT_END_OF_ROUTE;
+                            await EndWalkForwardTask();
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Arrived at {CurrentWaypoint}, distance away {targetDistance}, picking next waypoint");
+                            CurrentNavigateToEndOfCurrentRouteState = NavigateToEndOfCurrentRouteState.PICK_NEXT_WAYPOINT;
+                        }
+                    }
+
+                    break;
+                case NavigateToEndOfCurrentRouteState.ARRIVED_AT_END_OF_ROUTE:
                     break;
             }
         }

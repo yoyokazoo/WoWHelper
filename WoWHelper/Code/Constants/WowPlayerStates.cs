@@ -101,6 +101,14 @@
             ENGAGE_TARGETED_ENEMY
         }
 
+        public enum NavigateToEndOfCurrentRouteState
+        {
+            PICK_NEXT_WAYPOINT,
+            FACE_WAYPOINT,
+            WALK_TO_WAYPOINT,
+            ARRIVED_AT_END_OF_ROUTE
+        }
+
         public enum InteractWithNPCState
         {
             PICK_NPC_TO_INTERACT_WITH,

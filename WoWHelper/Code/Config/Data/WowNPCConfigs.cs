@@ -24,7 +24,7 @@ namespace WoWHelper.Code.WorldState
             {
                 Name = "Valley of Trials Warrior Trainer",
                 Zone = WowZone.Durotar,
-                Waypoints = new List<Vector2> { new Vector2(42.58f, 67.34f) }
+                Waypoints = new List<Vector2> { new Vector2(42.89f, 69.44f) }
             },
             Roles = NPCRoles.Train
         };

@@ -76,7 +76,7 @@
         // waypoint is the merchant's exact standing spot, and CTRL_TARGET_MERCHANT + a
         // center-screen right-click only lands on the vendor's model if we actually stopped
         // right next to it, not just "in the neighborhood."
-        public const float MERCHANT_FINAL_WAYPOINT_TOLERANCE = 0.02f;
+        public const float NPC_FINAL_WAYPOINT_TOLERANCE = 0.02f;
 
         // How long MerchantRunStepTask's WAITING_FOR_AUTO_SELL phase waits for the addon's
         // existing MERCHANT_SHOW auto-sell handler (YoyokazooUI.lua) to empty the bags before

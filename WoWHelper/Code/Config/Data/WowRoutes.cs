@@ -146,6 +146,20 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute BOARS_AND_SCORPS_TO_WARRIOR_TRAINER_ROUTE = new WowRoute
+        {
+            Name = "Durotar Boars and Scorpions to Warrior Trainer",
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(44.19f, 66.23f),
+                new Vector2(44.33f, 67.07f),
+                new Vector2(43.44f, 68.62f),
+                new Vector2(42.89f, 69.44f)
+            },
+        };
+
         #endregion
 
         #region Mulgore
@@ -807,7 +821,8 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly List<WowRoute> ALL_WALKING_ROUTES = new List<WowRoute>
         {
-            BOARS_AND_SCORPS_TO_MERCHANT_ROUTE
+            BOARS_AND_SCORPS_TO_MERCHANT_ROUTE,
+            BOARS_AND_SCORPS_TO_WARRIOR_TRAINER_ROUTE
         };
     }
 }

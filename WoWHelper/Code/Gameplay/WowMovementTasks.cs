@@ -390,7 +390,7 @@ namespace WoWHelper
                 case MerchantRunPhase.WALKING_TO_MERCHANT:
                     bool isFinalLeg = CurrentMerchantWaypointIndex == merchant.Waypoints.Count - 1;
                     float approachTolerance = isFinalLeg
-                        ? WowPlayerConstants.MERCHANT_FINAL_WAYPOINT_TOLERANCE
+                        ? WowPlayerConstants.NPC_FINAL_WAYPOINT_TOLERANCE
                         : WowPlayerConstants.MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE;
 
                     if (await MoveTowardsPointTask(merchant.Waypoints[CurrentMerchantWaypointIndex], approachTolerance, useMouseRotation: true))

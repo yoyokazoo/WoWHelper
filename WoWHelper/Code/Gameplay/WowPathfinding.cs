@@ -272,17 +272,6 @@ namespace WoWHelper.Code
             return closestDistance;
         }
 
-        // TODO: DynamicRoute class?
-        /*
-        public static void FindRoute(WowPlayer wowPlayer, Vector2 targetLocation)
-        {
-            WowRoute startingRoute = FindRouteClosestToPlayer(wowPlayer);
-            List<WowRoute> safeRoutes = GetAllSafeRoutes(wowPlayer);
-
-
-        }
-        */
-
         public static WowRoute GetRouteToTarget(WowPlayer wowPlayer, WowRoute targetRoute)
         {
             List<Vector2> waypoints = GetWaypointsToTarget(wowPlayer, targetRoute);
