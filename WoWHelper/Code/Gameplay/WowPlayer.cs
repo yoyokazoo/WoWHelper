@@ -385,9 +385,19 @@ namespace WoWHelper
                     break;
                 case InteractWithNPCState.NAVIGATE_ROUTE_TO_NPC:
                     await NavigateToEndOfCurrentRouteTask();
+                    if (CurrentNavigateToEndOfCurrentRouteState == NavigateToEndOfCurrentRouteState.ARRIVED_AT_END_OF_ROUTE)
+                    {
+                        CurrentInteractWithNPCState = InteractWithNPCState.INTERACT_WITH_NPC;
+                    }
                     break;
                 case InteractWithNPCState.INTERACT_WITH_NPC:
-
+                    Mouse.Move(ScreenConfiguration.Resolution.Width / 2, ScreenConfiguration.Resolution.Height / 2);
+                    Mouse.PressButton(Mouse.MouseKeys.Right);
+                    await WaitUnlessInCombatTask(WowPlayerConstants.NPC_INTERACT_WAIT_MILLIS);
+                    CurrentInteractWithNPCState = InteractWithNPCState.DONE_INTERACTING_WITH_NPC;
+                    break;
+                case InteractWithNPCState.DONE_INTERACTING_WITH_NPC:
+                    Console.WriteLine($"Shouldn't actually be here maybe? New goal should have been picked");
                     break;
             }
         }

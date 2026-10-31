@@ -114,7 +114,8 @@
             PICK_NPC_TO_INTERACT_WITH,
             BUILD_ROUTE_TO_NPC,
             NAVIGATE_ROUTE_TO_NPC,
-            INTERACT_WITH_NPC
+            INTERACT_WITH_NPC,
+            DONE_INTERACTING_WITH_NPC
         }
     }
 }

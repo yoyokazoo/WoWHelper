@@ -421,7 +421,7 @@ namespace WoWHelper
                     // walking back either way: if the vendor window got interrupted before
                     // selling finished, bags stay full and the branch-off check in
                     // PathfindingLoopTask will simply retry on the next lap.
-                    await WaitUnlessInCombatTask(WowPlayerConstants.MERCHANT_AUTO_SELL_WAIT_MILLIS);
+                    await WaitUnlessInCombatTask(WowPlayerConstants.NPC_INTERACT_WAIT_MILLIS);
                     CurrentMerchantWaypointIndex = Math.Max(merchant.Waypoints.Count - 2, 0);
                     CurrentMerchantRunPhase = MerchantRunPhase.WALKING_BACK_TO_ROUTE;
                     break;
