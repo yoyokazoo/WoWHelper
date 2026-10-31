@@ -218,10 +218,6 @@ namespace WoWHelper
 
         public void AlertOnLevelUp()
         {
-            // ping on level up. Guarded on LocationConfiguration being resolved -- this task
-            // runs every tick, including the handful before RESOLVE_FARMING_CONFIGURATION has
-            // picked one (see WowPlayer.ResolveFarmingConfigurationTask), during which
-            // LocationConfiguration.MaximumLevel below would throw.
             if (LocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
             {
                 string levelUpMessage = $"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!";

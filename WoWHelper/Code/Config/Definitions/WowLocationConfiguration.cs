@@ -72,7 +72,7 @@ namespace WoWHelper.Code.WorldState
 
         // Comma-separated /target names for the "0 Targ" target-finding macro, e.g.
         // "Mottled,Scorpid" -> "/target Mottled" + "/target Scorpid". Typed into chat as
-        // "/yytarget Mottled,Scorpid" once this route is picked (ResolveFarmingConfigurationTask),
+        // "/yytarget Mottled,Scorpid" once this route is picked,
         // and the addon rewrites the macro to match. Partial-name substrings, NOT
         // ExpectedMobNames' exact roster. Null/empty leaves the macro as-is.
         public string TargetMacroMobNames { get; set; }

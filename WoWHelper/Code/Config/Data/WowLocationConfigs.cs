@@ -417,15 +417,6 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
-        // Every location config eligible for WowPlayer.ResolveFarmingConfigurationTask's
-        // automatic startup selection (matched by player level/zone/waypoint-proximity --
-        // see that method). Deliberately an explicit list rather than reflecting over all
-        // static fields on this class, so a route can be pulled out of auto-selection
-        // (still being tuned, temporarily unsafe, etc.) without deleting its definition
-        // above -- add new routes here once they're ready to be auto-picked. Declared last
-        // in the class, after every field it references -- C# runs static field
-        // initializers in declaration order, so this list would silently collect nulls if
-        // it were declared before them.
         public static readonly List<WowLocationConfiguration> ALL_LOCATIONS = new List<WowLocationConfiguration>
         {
             LEVEL_58_SILITHUS_RUMBLERS,
@@ -447,17 +438,17 @@ namespace WoWHelper.Code.WorldState
             LEVEL_13_BARRENS_ENTRANCE,
             LEVEL_11_DUROTAR_COAST,
             LEVEL_9_DUROTAR_SKULL_ROCK_COAST,
-            //LEVEL_6_TIRISFAL_ZOMBIES,
+            LEVEL_6_TIRISFAL_ZOMBIES,
             LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
             LEVEL_4_DUROTAR_IMPS,
-            //LEVEL_10_MULGORE_MIXED_BEASTS,
-            //LEVEL_8_MULGORE_MIXED_BEASTS,
-            //LEVEL_6_MULGORE_BATTLEBOARS,
-            //LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
-            //LEVEL_4_TIRISFAL_ANIMALS,
-            //LEVEL_1_MULGORE_PLAINSTRIDERS,
+            LEVEL_10_MULGORE_MIXED_BEASTS,
+            LEVEL_8_MULGORE_MIXED_BEASTS,
+            LEVEL_6_MULGORE_BATTLEBOARS,
+            LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
+            LEVEL_4_TIRISFAL_ANIMALS,
+            LEVEL_1_MULGORE_PLAINSTRIDERS,
             LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
-            //LEVEL_1_TIRISFAL_UNDEAD,
+            LEVEL_1_TIRISFAL_UNDEAD,
         };
     }
 }

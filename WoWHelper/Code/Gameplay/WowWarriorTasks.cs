@@ -333,8 +333,7 @@ namespace WoWHelper
                 default: throw new System.NotImplementedException(
                     $"{nameof(WarriorCanEngageTarget)}: EngageMethod \"{LocationConfiguration.EngageMethod}\" (from location " +
                     $"\"{CurrentRoute?.Name}\") isn't supported for Warrior -- only Charge/Pull " +
-                    $"are. This route's EngageMethod likely wasn't set up for this class -- see " +
-                    $"WowConfigResolutionTasks.ResolveFarmingConfigurationTask.");
+                    $"are. This route's EngageMethod likely wasn't set up for this class.");
             }
         }
 

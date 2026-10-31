@@ -10,58 +10,6 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        // Runs once, during the RESOLVE_FARMING_CONFIGURATION player state (after the
-        // window is focused). Picks LocationConfiguration from WowLocationConfigs.ALL_LOCATIONS
-        // by filtering to configs the player currently satisfies (level, zone, and close
-        // enough to one of the route's own waypoints -- the same three checks
-        // SetLogoutVariablesTask uses to keep validating an already-chosen route). If
-        // exactly one config matches, that's unambiguous and we use it. If zero or more
-        // than one match, there's no safe automatic choice -- alert on Slack and let the
-        // caller fail the state transition (CoreGameplayLoopTask sends it straight to
-        // EXITING_CORE_GAMEPLAY_LOOP, which exits the process) rather than guessing.
-        //
-        // Combat config resolution (ResolveCombatConfiguration above) runs continuously
-        // and independently of this state, so by the time we get here ClassState should
-        // already be set -- unless the addon genuinely never rendered a real row
-        // (unsupported class, addon not loaded, still on the login screen after focusing
-        // the window, etc.), which is still a real reason to abort startup.
-        public async Task<bool> ResolveFarmingConfigurationTask()
-        {
-            await Task.Delay(0);
-
-            var matchingConfigs = WowLocationConfigs.ALL_LOCATIONS.Where(config =>
-                (config.Route.MinimumLevel <= 0 || WorldState.PlayerLevel >= config.Route.MinimumLevel) &&
-                (WorldState.PlayerLevel < config.MaximumLevel)
-            ).ToList();
-            
-            // TODO: add requirement that zone is reachable through pathfinding
-            // TODO: use the new config to determine?
-
-            if (matchingConfigs.Count != 1)
-            {
-                string reason = matchingConfigs.Count == 0
-                    ? $"No location config matches the player's current level ({WorldState.PlayerLevel}), zone"
-                    : $"{matchingConfigs.Count} location configs all match (level {WorldState.PlayerLevel}, zone {WorldState.CurrentZone}): {string.Join(", ", matchingConfigs.Select(c => c.Route.Name))} -- can't pick automatically";
-
-                // Returning false exits the process right away, so wait for the Slack send.
-                SetLogoutVariablesAndSlack($"WoWHelper startup aborted: {reason}");
-                await Task.Delay(500);
-                return false;
-            }
-
-            LocationConfiguration = matchingConfigs[0];
-            CurrentRoute = LocationConfiguration.Route;
-
-            Console.WriteLine($"Using location config \"{CurrentRoute.Name}\" (combat config {CombatConfiguration} already resolved)");
-
-            if (!string.IsNullOrEmpty(LocationConfiguration.TargetMacroMobNames))
-            {
-                await WowInput.TypeChatLineTask($"/yytarget {LocationConfiguration.TargetMacroMobNames}");
-            }
-
-            return true;
-        }
-
         public async Task<bool> TryPickFarmingLocationConfig()
         {
             var levelingConfig = WowLevelingConfigs.GetFor(CombatConfiguration, WorldState.PlayerLevel);

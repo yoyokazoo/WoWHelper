@@ -5,7 +5,6 @@
         public enum PlayerMetaState
         {
             WAITING_TO_FOCUS_ON_WINDOW,
-            RESOLVE_FARMING_CONFIGURATION,
             EXECUTING_GOAL,
             EXITING
         }

@@ -204,15 +204,6 @@ namespace WoWHelper
                             PlayerMetaState.EXECUTING_GOAL,
                             PlayerMetaState.WAITING_TO_FOCUS_ON_WINDOW);
                         break;
-                        /*
-                    case PlayerMetaState.RESOLVE_FARMING_CONFIGURATION:
-                        Console.WriteLine("Auto-detecting combat/location config from live game state");
-                        // TODO: not the right place to do this
-                        CurrentPlayerMetaState = await GeneralHelpers.ChangeStateBasedOnTaskResult(ResolveFarmingConfigurationTask(),
-                            PlayerMetaState.EXECUTING_GOAL,
-                            PlayerMetaState.EXITING);
-                        break;
-                        */
                     case PlayerMetaState.EXECUTING_GOAL:
                         Console.WriteLine($"EXECUTING_GOAL, current goal: {CurrentPlayerGoal}");
                         await ExecuteGoalTask();

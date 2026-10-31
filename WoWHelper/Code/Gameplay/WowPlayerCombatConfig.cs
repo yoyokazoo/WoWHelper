@@ -18,8 +18,7 @@ namespace WoWHelper
         // Shared message builder for all six dispatchers below, so the explanation of
         // *why* an unhandled CombatConfiguration is possible only needs to be written
         // (and kept in sync) once. Unknown (-1) is the value CombatConfiguration
-        // starts with -- see the enum's own comment -- meaning either
-        // ResolveFarmingConfigurationTask hasn't run yet or it failed; anything else
+        // starts with; anything else
         // unhandled means a class was added to WowCombatConfiguration without adding a
         // case to this dispatcher.
         private string UnhandledCombatConfigurationMessage(string dispatcherName) =>
