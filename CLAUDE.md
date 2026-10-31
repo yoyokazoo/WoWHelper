@@ -1094,7 +1094,23 @@ of truth — edits should be made here, not in the WoW install directory.
   `^i require .+ training%.?$` (lowercased), and the handler selects it a
   frame later via `C_GossipInfo.SelectOption(gossipOptionID)` (falling back
   to `SelectOptionByIndex`). Holding Shift when the gossip opens skips it
-  (e.g. to unlearn talents). Confirmed working live. The trainer window itself (buying skills) isn't automated yet. Lua-only.
+  (e.g. to unlearn talents). Confirmed working live. Lua-only.
+
+  Then auto-trains: on `TRAINER_SHOW`, if the `/yyconfig` "Auto-train
+  skills" checkbox (`YoyokazooUIDB.autoTrainSkills`,
+  `IsAutoTrainSkillsEnabled()`, defaults **on**) is enabled, Shift isn't
+  held, and it's not a profession trainer (`IsTradeskillTrainer()` — buying
+  an apprentice profession would spend a profession slot),
+  `TrainNextAffordableSkill()` (`YoyokazooUI.lua`) buys one service per
+  `AUTO_TRAIN_TICK_SECONDS` (0.3s) via `BuyTrainerService`, re-scanning
+  each tick with `FindNextAffordableTrainerService()` (`WoWFunctions.lua` —
+  first row with category `"available"` and cost `<= GetMoney()`; forces
+  the trainer's "available" filter on) since a purchase shifts the rows.
+  Same generation-counter guard as auto-sell (`autoTrainGeneration`, bumped
+  on `TRAINER_SHOW`/`TRAINER_CLOSED`). The G6/G7 trainer-spell cache isn't
+  invalidated, so those bits can lag up to 60s after training. Not
+  confirmed live yet — `AUTO_TRAIN_DEBUG` (`WoWFunctions.lua`, currently
+  **on**) prints every row scanned; turn it off once confirmed.
 
 ## Tests (`WoWHelperUnitTests/`)
 

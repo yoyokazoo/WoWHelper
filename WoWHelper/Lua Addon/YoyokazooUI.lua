@@ -107,6 +107,12 @@ if YoyokazooUIDB.autoEquipUpgrades == nil then
     YoyokazooUIDB.autoEquipUpgrades = true
 end
 
+-- Auto-train every affordable skill when a class trainer's window opens (see
+-- the TRAINER_SHOW handling below). Defaults ON. Lua-only.
+if YoyokazooUIDB.autoTrainSkills == nil then
+    YoyokazooUIDB.autoTrainSkills = true
+end
+
 -- Which dynamite-tier item AreWeLowOnDynamite() (WoWFunctions.lua) checks the bag
 -- count of -- selectable via the /yyconfig "Dynamite item" selector below instead
 -- of being hardcoded. Defaults to Dense Dynamite (18641), what it used to be
@@ -158,6 +164,10 @@ end
 
 function IsAutoEquipUpgradesEnabled()
     return YoyokazooUIDB.autoEquipUpgrades
+end
+
+function IsAutoTrainSkillsEnabled()
+    return YoyokazooUIDB.autoTrainSkills
 end
 
 -- Read by AreWeLowOnDynamite() (WoWFunctions.lua). Not piped to the C# side at
@@ -244,6 +254,8 @@ frame:RegisterEvent("BAG_UPDATE_DELAYED")
 frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 frame:RegisterEvent("EQUIP_BIND_CONFIRM")
 frame:RegisterEvent("GOSSIP_SHOW")
+frame:RegisterEvent("TRAINER_SHOW")
+frame:RegisterEvent("TRAINER_CLOSED")
 -- No AUTOEQUIP_BIND_CONFIRM: that event doesn't exist on this client
 -- (RegisterEvent throws "unknown event" -- confirmed live), and an error here
 -- aborts the rest of this file's load.
@@ -433,6 +445,52 @@ local function SellNextAutoSellQueueItem(queue, index, generation, notShownRetri
     end)
 end
 
+-- Auto-train (see the TRAINER_SHOW/TRAINER_CLOSED handling below): buys one
+-- skill every AUTO_TRAIN_TICK_SECONDS, re-scanning the trainer list each
+-- tick (FindNextAffordableTrainerService, WoWFunctions.lua) since a purchase
+-- shifts the rows. Same generation-counter guard as auto-sell, so a chain
+-- from a trainer window that's since closed never fires a stale buy.
+-- The first scan waits one tick too, rather than running synchronously in
+-- TRAINER_SHOW, in case the service list isn't populated yet on that frame
+-- (same kind of race MERCHANT_SHOW had); an empty list retries a few times.
+local AUTO_TRAIN_TICK_SECONDS = 0.3
+local AUTO_TRAIN_EMPTY_LIST_MAX_RETRIES = 5
+local autoTrainGeneration = 0
+
+local function TrainNextAffordableSkill(generation, boughtCount, emptyRetries)
+    if generation ~= autoTrainGeneration then
+        AutoTrainDebugPrint("tick bailed: stale generation (trainer closed)")
+        return
+    end
+
+    if InCombatLockdown() then
+        AutoTrainDebugPrint("stopping: in combat")
+        return
+    end
+
+    if (GetNumTrainerServices() or 0) == 0 and emptyRetries < AUTO_TRAIN_EMPTY_LIST_MAX_RETRIES then
+        AutoTrainDebugPrint("service list empty -- retry " .. (emptyRetries + 1) .. "/" .. AUTO_TRAIN_EMPTY_LIST_MAX_RETRIES)
+        C_Timer.After(AUTO_TRAIN_TICK_SECONDS, function()
+            TrainNextAffordableSkill(generation, boughtCount, emptyRetries + 1)
+        end)
+        return
+    end
+
+    local index, name, rank, cost = FindNextAffordableTrainerService()
+    if not index then
+        print("YoyokazooUI: auto-train done (" .. boughtCount .. " skill(s) learned).")
+        return
+    end
+
+    print("YoyokazooUI: training " .. tostring(name) .. " " .. tostring(rank or "") ..
+        " (" .. GetCoinText(cost, " ") .. ")")
+    BuyTrainerService(index)
+
+    C_Timer.After(AUTO_TRAIN_TICK_SECONDS, function()
+        TrainNextAffordableSkill(generation, boughtCount + 1, emptyRetries)
+    end)
+end
+
 frame:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_WHISPER" then
         lastWhisperTime = GetTime()
@@ -514,6 +572,29 @@ frame:SetScript("OnEvent", function(self, event, ...)
                 end)
             end
         end
+    end
+
+    if event == "TRAINER_SHOW" then
+        autoTrainGeneration = autoTrainGeneration + 1
+        local generation = autoTrainGeneration
+
+        -- Shift skips it, same as the gossip auto-pick above.
+        if not IsAutoTrainSkillsEnabled() then
+            AutoTrainDebugPrint("TRAINER_SHOW: auto-train is OFF in /yyconfig")
+        elseif IsShiftKeyDown() then
+            AutoTrainDebugPrint("TRAINER_SHOW: Shift held -- skipping")
+        elseif not IsClassTrainerOpen() then
+            AutoTrainDebugPrint("TRAINER_SHOW: profession trainer -- skipping")
+        else
+            AutoTrainDebugPrint("TRAINER_SHOW (generation " .. generation .. ")")
+            C_Timer.After(AUTO_TRAIN_TICK_SECONDS, function()
+                TrainNextAffordableSkill(generation, 0, 0)
+            end)
+        end
+    end
+
+    if event == "TRAINER_CLOSED" then
+        autoTrainGeneration = autoTrainGeneration + 1
     end
 
     if event == "MERCHANT_SHOW" then
@@ -899,7 +980,7 @@ end
 
 -- /yyconfig toggles the run-specific settings menu (CreateSettingsMenu(), UIFunctions.lua)
 -- -- "log out on low dynamite"/"log out on full bags"/"auto-sell mode"/"auto-repair"/
--- "auto-equip upgrades"/"dynamite item"/"healing potion"/"desired world buff" for now, more can be added to the
+-- "auto-equip upgrades"/"auto-train skills"/"dynamite item"/"healing potion"/"desired world buff" for now, more can be added to the
 -- options list below as they come up. Built once, lazily, on first use rather than
 -- unconditionally at load time like the debug frame above, since there's no reason to pay
 -- for it on a run that never opens the menu.
@@ -957,6 +1038,14 @@ SlashCmdList["YYCONFIG"] = function()
                 set = function(value)
                     YoyokazooUIDB.autoEquipUpgrades = value
                     print("YoyokazooUI: Auto-equip upgrades " .. (value and "ON" or "OFF") .. " (saved).")
+                end,
+            },
+            {
+                label = "Auto-train skills",
+                get = IsAutoTrainSkillsEnabled,
+                set = function(value)
+                    YoyokazooUIDB.autoTrainSkills = value
+                    print("YoyokazooUI: Auto-train skills " .. (value and "ON" or "OFF") .. " (saved).")
                 end,
             },
             {

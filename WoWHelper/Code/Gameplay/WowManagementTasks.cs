@@ -556,6 +556,13 @@ namespace WoWHelper
             return validNPCs.First();
         }
 
+        public async Task InteractWithNPCTask()
+        {
+            Mouse.Move(ScreenConfiguration.Resolution.Width / 2, ScreenConfiguration.Resolution.Height / 2);
+            Mouse.PressButton(Mouse.MouseKeys.Right);
+            await WaitUnlessInCombatTask(WowPlayerConstants.NPC_INTERACT_WAIT_MILLIS);
+        }
+
         public async Task<bool> CupidTradeLoopTask()
         {
             Console.WriteLine("Kicking off cupid trade loop");

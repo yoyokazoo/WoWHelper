@@ -1890,3 +1890,60 @@ function FindTrainerGossipOption()
 
     return nil
 end
+
+-- Auto-train at a class trainer: once the trainer window is open (TRAINER_SHOW
+-- in YoyokazooUI.lua), buy every skill the trainer lists as "available" that
+-- we can afford, one per tick. Class trainers only -- IsTradeskillTrainer()
+-- trainers are skipped, since buying e.g. "Apprentice Skinning" would spend a
+-- profession slot. Lua-only; nothing reaches the pixel row.
+--
+-- GetTrainerServiceInfo/GetTrainerServiceCost's exact return shapes on this
+-- client build aren't verified live yet (see the top of CLAUDE.md) --
+-- AUTO_TRAIN_DEBUG prints every row the scan sees and why it was or wasn't
+-- picked. Defaults ON until it's confirmed working; flip it off after.
+AUTO_TRAIN_DEBUG = true
+
+function AutoTrainDebugPrint(message)
+    if AUTO_TRAIN_DEBUG then
+        print("YoyokazooUI auto-train: " .. message)
+    end
+end
+
+function IsClassTrainerOpen()
+    if IsTradeskillTrainer and IsTradeskillTrainer() then
+        return false
+    end
+    return true
+end
+
+-- Returns the index, name, rank and cost of the first affordable "available"
+-- trainer service, or nil if there's nothing left we can buy. Re-scanned
+-- after every purchase rather than building a queue up front: buying a
+-- service removes/reorders rows, so indices from an earlier scan go stale.
+function FindNextAffordableTrainerService()
+    -- The trainer list is filtered by the window's own Available/Unavailable/
+    -- Used checkboxes; if "available" is unchecked, those rows aren't listed
+    -- at all.
+    if GetTrainerServiceTypeFilter and SetTrainerServiceTypeFilter
+        and not GetTrainerServiceTypeFilter("available") then
+        AutoTrainDebugPrint("\"available\" filter was off -- turning it on")
+        SetTrainerServiceTypeFilter("available", 1)
+    end
+
+    local money = GetMoney()
+    local numServices = GetNumTrainerServices() or 0
+    AutoTrainDebugPrint("scanning " .. numServices .. " service row(s), money " .. money)
+
+    for i = 1, numServices do
+        local name, rank, category = GetTrainerServiceInfo(i)
+        local cost = GetTrainerServiceCost(i)
+        AutoTrainDebugPrint("  " .. i .. ": " .. tostring(name) .. " (" .. tostring(rank) .. ") category=" ..
+            tostring(category) .. " cost=" .. tostring(cost))
+
+        if category == "available" and type(cost) == "number" and cost <= money then
+            return i, name, rank, cost
+        end
+    end
+
+    return nil
+end
