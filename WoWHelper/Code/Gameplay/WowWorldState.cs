@@ -112,19 +112,6 @@ namespace WoWHelper
         // WoWFunctions.lua. Refreshed by the addon only once a minute.
         public bool GearNeedsRepair { get; private set; }
 
-        // Which of the three bot-supported classes the player is playing, decoded from
-        // MultiBoolOne's B byte (b2/b4 -- see GetMultiBoolOne() in WoWFunctions.lua) for
-        // Warrior/Shaman, plus MultiBoolTwo's R4 (see UpdateMultiBoolTwo below) for
-        // Warlock -- that byte was already fully packed (b1-b8) by the time Warlock
-        // support was added, so its bit lives in MultiBoolTwo's reserved space instead.
-        // (b3 is reserved/unused -- previously Mage, removed along with Mage support; not
-        // reused, to avoid confusing anything that might expect the old bit meaning.)
-        // Null if none of those bits are set -- an unsupported class, or the addon hasn't
-        // rendered a real row yet (e.g. still on the login screen). Reuses
-        // WowCombatConfiguration rather than a separate "player class" enum since the two
-        // are currently exactly 1:1 (each supported class has exactly one rotation).
-        // Used by WowPlayer.ResolveFarmingConfigurationTask to auto-pick
-        // CombatConfiguration at startup instead of it being hardcoded.
         public WowCombatConfiguration? PlayerClass { get; private set; }
 
         // Red Error Text in middle of screen

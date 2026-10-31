@@ -16,6 +16,7 @@ namespace WoWHelper
     {
         private const float MEANINGFUL_LOCATION_CHANGE_AMOUNT = 0.15f;
 
+        /*
         public async Task<bool> PathfindingLoopTask()
         {
             Console.WriteLine("Kicking off core pathfinding loop");
@@ -442,6 +443,7 @@ namespace WoWHelper
                     break;
             }
         }
+        */
 
         // How long to wait after a mouse turn before reading FacingDegrees back out, so the
         // addon's pixel row has repainted with the post-turn heading. Without it, a stale

@@ -17,20 +17,15 @@ namespace WoWHelper.Code.WorldState
         // pushing class differences into the addon (e.g. the per-class trainer tables behind
         // AllSkillsKnownForThisLevel) over adding class-specific entries here.
         public WowCombatConfiguration? Class { get; set; }
-        public int Level { get; set; }
+        public List<int> Levels { get; set; }
 
         public List<WowLocationConfiguration> LocationConfigs { get; set; }
-
-        // TODO: stub -- just a human-readable trainer name for now. Will need at least a
-        // zone and a route to the trainer (see WowMerchantConfiguration for the shape the
-        // merchant detour uses) once training is actually automated.
-        public List<string> TrainerConfigs { get; set; }
 
         public WowLevelingConfiguration()
         {
             Class = null;
+            Levels = new List<int>();
             LocationConfigs = new List<WowLocationConfiguration>();
-            TrainerConfigs = new List<string>();
         }
     }
 }

@@ -660,11 +660,6 @@ namespace WoWHelper
                         break;
                 }
             }
-
-            Console.WriteLine("Exited Core Gameplay");
-            Environment.Exit(0);
-
-            return true;
         }
     }
 }
