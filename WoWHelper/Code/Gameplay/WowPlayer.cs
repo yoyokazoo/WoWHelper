@@ -491,6 +491,12 @@ namespace WoWHelper
             }
         }
 
+        public bool PlayerIsWithinSafeWalkingDistanceOfCurrentFarmingConfig()
+        {
+            float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, CurrentRoute.Waypoints);
+            return closestWaypointDistance <= WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT;
+        }
+
         public async Task PlayerFindEnemyTargetGoalTask()
         {
             UpdateCurrentFindEnemyTargetState();
@@ -501,9 +507,12 @@ namespace WoWHelper
                 case FindEnemyTargetState.PICK_FARMING_LOCATION_CONFIG:
                     await PickFarmingLocationConfig();
                     CurrentFindEnemyTargetState = FindEnemyTargetState.NAVIGATE_TO_FARMING_LOCATION;
+                    if (PlayerIsWithinSafeWalkingDistanceOfCurrentFarmingConfig())
+                    {
+                        CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
+                    }
                     break;
                 case FindEnemyTargetState.NAVIGATE_TO_FARMING_LOCATION:
-                    //PickNextWaypoint();
                     CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
                     //Console.WriteLine($"Picked next waypoint: {CurrentWaypoint}");
                     break;

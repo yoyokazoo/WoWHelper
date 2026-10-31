@@ -253,13 +253,13 @@ namespace WoWHelper
             // see WowConfigResolutionTasks.cs) never got a chance to run. Every check below
             // reads LocationConfiguration unconditionally, so log out now rather than NRE
             // trying to validate a route we were never told.
+
+            // TODO: I think this can be removed since we've refactored
             if (FarmingLocationConfiguration == null)
             {
                 SetLogoutVariablesAndSlack("LocationConfiguration was never resolved (bot likely started mid-combat, before RESOLVE_FARMING_CONFIGURATION got a chance to run) -- logging out rather than guessing a route");
                 return LogoutTriggered;
             }
-
-            float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, CurrentRoute.Waypoints);
 
             // Checked first so a wrong-zone/under-level/too-far-away start gives the clearest
             // possible reason, rather than getting masked behind some other logout condition
@@ -275,11 +275,6 @@ namespace WoWHelper
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Wrong zone for this route (currently {WorldState.CurrentZone}, expected {CurrentRoute.Zone})";
-            }
-            else if (closestWaypointDistance > WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT)
-            {
-                LogoutTriggered = true;
-                LogoutReason = $"Too far from this route's waypoints (closest is {closestWaypointDistance:0.00}, allowed {WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT:0.00})";
             }
             // LogoutOnLowDynamiteEnabled is toggled live in-game via the addon's
             // /yyconfig menu (YoyokazooUI.lua) -- see WowWorldState.LogoutOnLowDynamiteEnabled.
