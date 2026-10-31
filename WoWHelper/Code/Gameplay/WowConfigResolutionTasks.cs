@@ -26,11 +26,11 @@ namespace WoWHelper
                 return false;
             }
 
-            if (LocationConfiguration != null && newLocationConfig != LocationConfiguration)
+            if (FarmingLocationConfiguration != null && newLocationConfig != FarmingLocationConfiguration)
             {
-                if (!string.IsNullOrEmpty(LocationConfiguration.TargetMacroMobNames))
+                if (!string.IsNullOrEmpty(FarmingLocationConfiguration.TargetMacroMobNames))
                 {
-                    await WowInput.TypeChatLineTask($"/yytarget {LocationConfiguration.TargetMacroMobNames}");
+                    await WowInput.TypeChatLineTask($"/yytarget {FarmingLocationConfiguration.TargetMacroMobNames}");
                 }
                 else
                 {
@@ -39,8 +39,8 @@ namespace WoWHelper
                 }
             }
 
-            LocationConfiguration = newLocationConfig;
-            CurrentRoute = LocationConfiguration.Route;
+            FarmingLocationConfiguration = newLocationConfig;
+            CurrentRoute = FarmingLocationConfiguration.Route;
 
             Console.WriteLine($"Picked farming location config \"{CurrentRoute.Name}\"");
             return true;

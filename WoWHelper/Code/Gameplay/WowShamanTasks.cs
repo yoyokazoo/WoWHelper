@@ -154,7 +154,7 @@ namespace WoWHelper
             // this runs inside the combat loop, which can be reached with it still unresolved
             // if the bot was (re)started mid-fight (see "Automatic farming-config resolution"
             // in CLAUDE.md).
-            if (LocationConfiguration != null && LocationConfiguration.AllMobsInZoneAreNatureImmune())
+            if (FarmingLocationConfiguration != null && FarmingLocationConfiguration.AllMobsInZoneAreNatureImmune())
             {
                 return false;
             }

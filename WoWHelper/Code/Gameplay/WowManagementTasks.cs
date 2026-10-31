@@ -218,7 +218,7 @@ namespace WoWHelper
 
         public void AlertOnLevelUp()
         {
-            if (LocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
+            if (FarmingLocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
             {
                 string levelUpMessage = $"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!";
 
@@ -236,10 +236,10 @@ namespace WoWHelper
 
                 SlackHelper.SendMessageToChannel(levelUpMessage);
 
-                if (LocationConfiguration.MaximumLevel == WorldState.PlayerLevel)
+                if (FarmingLocationConfiguration.MaximumLevel == WorldState.PlayerLevel)
                 {
                     LogoutTriggered = true;
-                    LogoutReason = $"Reached log out level {LocationConfiguration.MaximumLevel}";
+                    LogoutReason = $"Reached log out level {FarmingLocationConfiguration.MaximumLevel}";
                 }
             }
         }
@@ -253,7 +253,7 @@ namespace WoWHelper
             // see WowConfigResolutionTasks.cs) never got a chance to run. Every check below
             // reads LocationConfiguration unconditionally, so log out now rather than NRE
             // trying to validate a route we were never told.
-            if (LocationConfiguration == null)
+            if (FarmingLocationConfiguration == null)
             {
                 SetLogoutVariablesAndSlack("LocationConfiguration was never resolved (bot likely started mid-combat, before RESOLVE_FARMING_CONFIGURATION got a chance to run) -- logging out rather than guessing a route");
                 return LogoutTriggered;
@@ -300,7 +300,7 @@ namespace WoWHelper
             // merely low). Only Warrior can actually run out of ammo, so gate on class too.
             else if (WorldState.LowOnAmmo &&
                 CombatConfiguration == Code.Gameplay.WowCombatConfiguration.Warrior &&
-                LocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
+                FarmingLocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Ammo";

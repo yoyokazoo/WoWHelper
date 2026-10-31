@@ -71,7 +71,7 @@ namespace WoWHelper
         public string LogoutReason { get; private set; }
         public Bitmap LogoutBitmap { get; private set; }
 
-        public WowLocationConfiguration LocationConfiguration { get; private set; }
+        public WowLocationConfiguration FarmingLocationConfiguration { get; private set; }
         public WowCombatConfiguration CombatConfiguration { get; private set; }
         public WowScreenConfiguration ScreenConfiguration { get; private set; }
 
@@ -91,7 +91,7 @@ namespace WoWHelper
             CurrentMerchantRunPhase = MerchantRunPhase.WALKING_TO_MERCHANT;
             CurrentMerchantWaypointIndex = 0;
 
-            LocationConfiguration = null;
+            FarmingLocationConfiguration = null;
             CombatConfiguration = WowCombatConfiguration.Unknown;
             ScreenConfiguration = screenConfiguration;
 
@@ -576,15 +576,15 @@ namespace WoWHelper
             LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             FindTargetCount++;
 
-            if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.TAB)
+            if (FarmingLocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.TAB)
             {
                 await WowInput.PressKey(WowInput.TAB_TARGET);
             }
-            else if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
+            else if (FarmingLocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
             {
                 await WowInput.PressKey(WowInput.FIND_TARGET_MACRO);
             }
-            else if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
+            else if (FarmingLocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
             {
                 if (FindTargetCount % 2 == 0)
                 {
