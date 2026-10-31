@@ -307,7 +307,7 @@ namespace WoWHelper
                     CurrentLogoutState = LogoutState.STARTING_LOGOUT;
                     break;
                 case PlayerGoal.FIND_ENEMY_TARGET:
-                    CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
+                    CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_FARMING_LOCATION_CONFIG;
                     LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     break;
                 case PlayerGoal.FIGHT:
@@ -498,6 +498,15 @@ namespace WoWHelper
 
             switch (CurrentFindEnemyTargetState)
             {
+                case FindEnemyTargetState.PICK_FARMING_LOCATION_CONFIG:
+                    await PickFarmingLocationConfig();
+                    CurrentFindEnemyTargetState = FindEnemyTargetState.NAVIGATE_TO_FARMING_LOCATION;
+                    break;
+                case FindEnemyTargetState.NAVIGATE_TO_FARMING_LOCATION:
+                    //PickNextWaypoint();
+                    CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
+                    //Console.WriteLine($"Picked next waypoint: {CurrentWaypoint}");
+                    break;
                 case FindEnemyTargetState.PICK_NEXT_WAYPOINT:
                     PickNextWaypoint();
                     CurrentFindEnemyTargetState = FindEnemyTargetState.FACE_WAYPOINT;

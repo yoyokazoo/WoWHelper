@@ -10,7 +10,7 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        public async Task<bool> TryPickFarmingLocationConfig()
+        public async Task PickFarmingLocationConfig()
         {
             var levelingConfig = WowLevelingConfigs.GetFor(CombatConfiguration, WorldState.PlayerLevel);
 
@@ -20,10 +20,10 @@ namespace WoWHelper
 
             var newLocationConfig = matchingLocationConfigs.FirstOrDefault();
 
-            if (newLocationConfig != null)
+            if (newLocationConfig == null)
             {
                 SetLogoutVariablesAndSlack($"Couldn't find a suitable farming location config!");
-                return false;
+                return;
             }
 
             if (FarmingLocationConfiguration != null && newLocationConfig != FarmingLocationConfiguration)
@@ -34,8 +34,8 @@ namespace WoWHelper
                 }
                 else
                 {
-                    SetLogoutVariablesAndSlack($"Couldn't find a suitable farming location config!");
-                    return false;
+                    SetLogoutVariablesAndSlack($"Location Config isn't set up properly, TargetMacroMobNames must be filled out!");
+                    return;
                 }
             }
 
@@ -43,7 +43,6 @@ namespace WoWHelper
             CurrentRoute = FarmingLocationConfiguration.Route;
 
             Console.WriteLine($"Picked farming location config \"{CurrentRoute.Name}\"");
-            return true;
         }
     }
 }
