@@ -205,6 +205,27 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute VALLEY_OF_TRIALS_TO_RAZOR_HILL_LOOP = new WowRoute
+        {
+            Name = "Valley of Trials to Razor Hill Loop",
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(43.81f, 67.96f),
+                new Vector2(43.80f, 68.36f),
+                new Vector2(46.51f, 68.22f),
+                new Vector2(47.74f, 67.38f),
+                new Vector2(48.59f, 68.03f),
+                new Vector2(48.69f, 69.18f),
+                new Vector2(49.16f, 69.30f),
+                new Vector2(49.44f, 68.22f),
+                new Vector2(50.10f, 68.49f),
+                new Vector2(51.82f, 68.13f),
+                new Vector2(51.82f, 66.99f),
+            }
+        };
+
         #endregion
 
         #region Mulgore
@@ -869,7 +890,8 @@ namespace WoWHelper.Code.WorldState
             BOARS_AND_SCORPS_TO_MERCHANT_ROUTE,
             BOARS_AND_SCORPS_TO_WARRIOR_TRAINER_ROUTE,
             BOARS_AND_SCORPS_TO_IMPS,
-            BOARS_AND_SCORPS_TO_SCORPS
+            BOARS_AND_SCORPS_TO_SCORPS,
+            VALLEY_OF_TRIALS_TO_RAZOR_HILL_LOOP
         };
     }
 }
