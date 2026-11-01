@@ -391,8 +391,13 @@ one per class file, entries `{ level, name, spellId, cost }`): any entry
 with `level <= UnitLevel("player")` whose rank-specific `spellId` isn't
 known (`IsPlayerSpell`) is unlearned; G7 compares their summed copper cost
 against `GetMoney()` (base cost, ignoring trainer rep discounts; true when
-nothing's unlearned). Only Warrior levels 1-2 are filled in so far (Battle
-Shout); Shaman/Warlock tables are empty, so they always read "all known".
+nothing's unlearned). An entry may also carry `requiresSpellId`: it only
+counts once the player knows that spell — for later ranks of talent- or
+quest-granted abilities (Mortal Strike/Bloodthirst/Shield Slam/Intercept),
+which the trainer only offers if rank 1 is already known. Warrior is filled
+in for levels 1-60 (sourced from the WhatsTraining addon's data; quest
+spells, talent rank 1s, and weapon skills deliberately excluded);
+Shaman/Warlock tables are empty, so they always read "all known".
 G8 is `WowWorldState.GearNeedsRepair` (`GearNeedsRepair()`,
 `WoWFunctions.lua`): true if a melee weapon (main hand, or an off-hand
 *weapon* — shields count as armor) is at "yellow" durability or worse

@@ -8,10 +8,121 @@
 
 -- Class trainer spells, read by AllSkillsKnownForThisLevel()/
 -- CanAffordToTrainAllSkills() in WoWFunctions.lua. spellId is the specific
--- rank trained at that level; cost is in copper. Only levels 1-2 so far
--- (Warrior has nothing new at level 2). Not yet verified live.
+-- rank trained at that level; cost is in copper (base, before rep discount).
+-- Levels 1-60, sourced from the WhatsTraining addon's Classes/Vanilla/
+-- Warrior.lua (Wowhead blocks automated fetches). Not yet verified live.
+--
+-- Deliberately absent: quest-granted spells (Defensive Stance/Sunder Armor
+-- rank 1/Taunt at 10, Berserker Stance/Intercept rank 1 at 30), talent rank
+-- 1s, and weapon skills (weapon masters, not class trainers). Later ranks of
+-- talent/quest spells carry requiresSpellId (see GetUnlearnedTrainerSpells
+-- in WoWFunctions.lua) so a character without the talent/quest isn't stuck
+-- reading "unlearned" forever.
+local MORTAL_STRIKE_R1 = 12294
+local BLOODTHIRST_R1 = 23881
+local SHIELD_SLAM_R1 = 23922
+local INTERCEPT_R1 = 20252
 WARRIOR_TRAINER_SPELLS = {
-    { level = 1, name = "Battle Shout", spellId = 6673, cost = 10 },
+    { level = 1,  name = "Battle Shout",          spellId = 6673,  cost = 10 },
+    { level = 4,  name = "Charge",                spellId = 100,   cost = 100 },
+    { level = 4,  name = "Rend",                  spellId = 772,   cost = 100 },
+    { level = 6,  name = "Parry",                 spellId = 3127,  cost = 100 },
+    { level = 6,  name = "Thunder Clap",          spellId = 6343,  cost = 100 },
+    { level = 8,  name = "Hamstring",             spellId = 1715,  cost = 200 },
+    { level = 8,  name = "Heroic Strike (R2)",    spellId = 284,   cost = 200 },
+    { level = 10, name = "Bloodrage",             spellId = 2687,  cost = 600 },
+    { level = 10, name = "Rend (R2)",             spellId = 6546,  cost = 600 },
+    { level = 12, name = "Battle Shout (R2)",     spellId = 5242,  cost = 1000 },
+    { level = 12, name = "Overpower",             spellId = 7384,  cost = 1000 },
+    { level = 12, name = "Shield Bash",           spellId = 72,    cost = 1000 },
+    { level = 14, name = "Demoralizing Shout",    spellId = 1160,  cost = 1500 },
+    { level = 14, name = "Revenge",               spellId = 6572,  cost = 1500 },
+    { level = 16, name = "Heroic Strike (R3)",    spellId = 285,   cost = 2000 },
+    { level = 16, name = "Mocking Blow",          spellId = 694,   cost = 2000 },
+    { level = 16, name = "Shield Block",          spellId = 2565,  cost = 2000 },
+    { level = 18, name = "Disarm",                spellId = 676,   cost = 3000 },
+    { level = 18, name = "Thunder Clap (R2)",     spellId = 8198,  cost = 3000 },
+    { level = 20, name = "Cleave",                spellId = 845,   cost = 4000 },
+    { level = 20, name = "Dual Wield",            spellId = 674,   cost = 4000 },
+    { level = 20, name = "Rend (R3)",             spellId = 6547,  cost = 4000 },
+    { level = 20, name = "Retaliation",           spellId = 20230, cost = 4000 },
+    { level = 22, name = "Battle Shout (R3)",     spellId = 6192,  cost = 6000 },
+    { level = 22, name = "Sunder Armor (R2)",     spellId = 7405,  cost = 6000 },
+    { level = 22, name = "Intimidating Shout",    spellId = 5246,  cost = 6000 },
+    { level = 24, name = "Demoralizing Shout (R2)", spellId = 6190, cost = 8000 },
+    { level = 24, name = "Execute",               spellId = 5308,  cost = 8000 },
+    { level = 24, name = "Heroic Strike (R4)",    spellId = 1608,  cost = 8000 },
+    { level = 24, name = "Revenge (R2)",          spellId = 6574,  cost = 8000 },
+    { level = 26, name = "Challenging Shout",     spellId = 1161,  cost = 10000 },
+    { level = 26, name = "Charge (R2)",           spellId = 6178,  cost = 10000 },
+    { level = 26, name = "Mocking Blow (R2)",     spellId = 7400,  cost = 10000 },
+    { level = 28, name = "Overpower (R2)",        spellId = 7887,  cost = 11000 },
+    { level = 28, name = "Shield Wall",           spellId = 871,   cost = 11000 },
+    { level = 28, name = "Thunder Clap (R3)",     spellId = 8204,  cost = 11000 },
+    { level = 30, name = "Cleave (R2)",           spellId = 7369,  cost = 12000 },
+    { level = 30, name = "Rend (R4)",             spellId = 6548,  cost = 12000 },
+    { level = 30, name = "Slam",                  spellId = 1464,  cost = 12000 },
+    { level = 32, name = "Battle Shout (R4)",     spellId = 11549, cost = 14000 },
+    { level = 32, name = "Berserker Rage",        spellId = 18499, cost = 14000 },
+    { level = 32, name = "Execute (R2)",          spellId = 20658, cost = 14000 },
+    { level = 32, name = "Hamstring (R2)",        spellId = 7372,  cost = 14000 },
+    { level = 32, name = "Heroic Strike (R5)",    spellId = 11564, cost = 14000 },
+    { level = 32, name = "Shield Bash (R2)",      spellId = 1671,  cost = 14000 },
+    { level = 34, name = "Demoralizing Shout (R3)", spellId = 11554, cost = 16000 },
+    { level = 34, name = "Revenge (R3)",          spellId = 7379,  cost = 16000 },
+    { level = 34, name = "Sunder Armor (R3)",     spellId = 8380,  cost = 16000 },
+    { level = 36, name = "Mocking Blow (R3)",     spellId = 7402,  cost = 18000 },
+    { level = 36, name = "Whirlwind",             spellId = 1680,  cost = 18000 },
+    { level = 38, name = "Pummel",                spellId = 6552,  cost = 20000 },
+    { level = 38, name = "Slam (R2)",             spellId = 8820,  cost = 20000 },
+    { level = 38, name = "Thunder Clap (R4)",     spellId = 8205,  cost = 20000 },
+    { level = 40, name = "Cleave (R3)",           spellId = 11608, cost = 22000 },
+    { level = 40, name = "Execute (R3)",          spellId = 20660, cost = 22000 },
+    { level = 40, name = "Heroic Strike (R6)",    spellId = 11565, cost = 22000 },
+    { level = 40, name = "Plate Mail",            spellId = 750,   cost = 22000 },
+    { level = 40, name = "Rend (R5)",             spellId = 11572, cost = 22000 },
+    { level = 42, name = "Battle Shout (R5)",     spellId = 11550, cost = 32000 },
+    { level = 42, name = "Intercept (R2)",        spellId = 20616, cost = 32000, requiresSpellId = INTERCEPT_R1 },
+    { level = 44, name = "Demoralizing Shout (R4)", spellId = 11555, cost = 34000 },
+    { level = 44, name = "Overpower (R3)",        spellId = 11584, cost = 34000 },
+    { level = 44, name = "Revenge (R4)",          spellId = 11600, cost = 34000 },
+    { level = 46, name = "Charge (R3)",           spellId = 11578, cost = 36000 },
+    { level = 46, name = "Mocking Blow (R4)",     spellId = 20559, cost = 36000 },
+    { level = 46, name = "Slam (R3)",             spellId = 11604, cost = 36000 },
+    { level = 46, name = "Sunder Armor (R4)",     spellId = 11596, cost = 36000 },
+    { level = 48, name = "Bloodthirst (R2)",      spellId = 23892, cost = 2000,  requiresSpellId = BLOODTHIRST_R1 },
+    { level = 48, name = "Execute (R4)",          spellId = 20661, cost = 40000 },
+    { level = 48, name = "Heroic Strike (R7)",    spellId = 11566, cost = 40000 },
+    -- WhatsTraining lists 200 for these two, almost certainly a typo for
+    -- 2000 (Bloodthirst R2 above is 2000, and all three R3s/R4s match).
+    { level = 48, name = "Mortal Strike (R2)",    spellId = 21551, cost = 2000,  requiresSpellId = MORTAL_STRIKE_R1 },
+    { level = 48, name = "Shield Slam (R2)",      spellId = 23923, cost = 2000,  requiresSpellId = SHIELD_SLAM_R1 },
+    { level = 48, name = "Thunder Clap (R5)",     spellId = 11580, cost = 40000 },
+    { level = 50, name = "Cleave (R4)",           spellId = 11609, cost = 42000 },
+    { level = 50, name = "Recklessness",          spellId = 1719,  cost = 42000 },
+    { level = 50, name = "Rend (R6)",             spellId = 11573, cost = 42000 },
+    { level = 52, name = "Battle Shout (R6)",     spellId = 11551, cost = 54000 },
+    { level = 52, name = "Intercept (R3)",        spellId = 20617, cost = 54000, requiresSpellId = INTERCEPT_R1 },
+    { level = 52, name = "Shield Bash (R3)",      spellId = 1672,  cost = 54000 },
+    { level = 54, name = "Bloodthirst (R3)",      spellId = 23893, cost = 2800,  requiresSpellId = BLOODTHIRST_R1 },
+    { level = 54, name = "Demoralizing Shout (R5)", spellId = 11556, cost = 56000 },
+    { level = 54, name = "Hamstring (R3)",        spellId = 7373,  cost = 56000 },
+    { level = 54, name = "Mortal Strike (R3)",    spellId = 21552, cost = 2800,  requiresSpellId = MORTAL_STRIKE_R1 },
+    { level = 54, name = "Revenge (R5)",          spellId = 11601, cost = 56000 },
+    { level = 54, name = "Shield Slam (R3)",      spellId = 23924, cost = 2800,  requiresSpellId = SHIELD_SLAM_R1 },
+    { level = 54, name = "Slam (R4)",             spellId = 11605, cost = 56000 },
+    { level = 56, name = "Execute (R5)",          spellId = 20662, cost = 58000 },
+    { level = 56, name = "Heroic Strike (R8)",    spellId = 11567, cost = 58000 },
+    { level = 56, name = "Mocking Blow (R5)",     spellId = 20560, cost = 58000 },
+    { level = 58, name = "Pummel (R2)",           spellId = 6554,  cost = 60000 },
+    { level = 58, name = "Sunder Armor (R5)",     spellId = 11597, cost = 60000 },
+    { level = 58, name = "Thunder Clap (R6)",     spellId = 11581, cost = 60000 },
+    { level = 60, name = "Bloodthirst (R4)",      spellId = 23894, cost = 3100,  requiresSpellId = BLOODTHIRST_R1 },
+    { level = 60, name = "Cleave (R5)",           spellId = 20569, cost = 62000 },
+    { level = 60, name = "Mortal Strike (R4)",    spellId = 21553, cost = 3100,  requiresSpellId = MORTAL_STRIKE_R1 },
+    { level = 60, name = "Overpower (R4)",        spellId = 11585, cost = 62000 },
+    { level = 60, name = "Rend (R7)",             spellId = 11574, cost = 62000 },
+    { level = 60, name = "Shield Slam (R4)",      spellId = 23925, cost = 3100,  requiresSpellId = SHIELD_SLAM_R1 },
 }
 
 -- Overpower rank 1, 7384 (GetSpellCooldown is queried by name, so rank 1's ID

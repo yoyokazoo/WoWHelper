@@ -226,6 +226,17 @@ namespace WoWHelper.Code.WorldState
             }
         };
 
+        public static readonly WowRoute RAZOR_HILL_LOOP_TO_RAZOR_HILL = new WowRoute
+        {
+            Name = "Razor Hill Loop To Razor Hill",
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(53.74f, 47.89f),
+            }
+        };
+
         #endregion
 
         #region Mulgore

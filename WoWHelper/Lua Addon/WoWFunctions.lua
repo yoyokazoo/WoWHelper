@@ -1556,7 +1556,10 @@ end
 -- Every class trainer spell the player should have learned by their current
 -- level and hasn't yet. Each class file holds its own trainer table
 -- (WARRIOR_TRAINER_SPELLS etc. -- distinct global names, since addon globals
--- are one flat namespace) of { level, name, spellId, cost (copper) } entries.
+-- are one flat namespace) of { level, name, spellId, cost (copper) } entries,
+-- plus an optional requiresSpellId: the entry only counts once the player
+-- knows that spell (talent- or quest-granted rank 1s, whose later ranks the
+-- trainer only offers if you already have it).
 -- Matched by spell ID (rank-specific) rather than IsSpellKnownByName(), since
 -- a later rank of an already-known spell is still something to go train.
 -- There's no addon API for "what can I train" without a trainer window open,
@@ -1588,7 +1591,11 @@ local GetUnlearnedTrainerSpells = CacheOnInterval(function()
 
     local playerLevel = UnitLevel("player")
     for _, spell in ipairs(trainerSpells) do
-        if spell.level <= playerLevel and not PlayerKnowsSpellId(spell.spellId) then
+        -- requiresSpellId gates talent/quest-only ranks (e.g. Mortal Strike
+        -- rank 2 needs the talent's rank 1): without it the entry is never
+        -- trainable, so it mustn't count as "unlearned" forever.
+        local gateMet = spell.requiresSpellId == nil or PlayerKnowsSpellId(spell.requiresSpellId)
+        if spell.level <= playerLevel and gateMet and not PlayerKnowsSpellId(spell.spellId) then
             table.insert(unlearned, spell)
         end
     end
