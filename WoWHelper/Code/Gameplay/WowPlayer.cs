@@ -514,10 +514,6 @@ namespace WoWHelper
                 case FindEnemyTargetState.PICK_FARMING_LOCATION_CONFIG:
                     await PickFarmingLocationConfig();
                     CurrentFindEnemyTargetState = FindEnemyTargetState.BUILD_ROUTE_TO_FARMING_LOCATION;
-                    if (PlayerIsWithinSafeWalkingDistanceOfCurrentFarmingConfig())
-                    {
-                        CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
-                    }
                     break;
                 case FindEnemyTargetState.BUILD_ROUTE_TO_FARMING_LOCATION:
                     CurrentRoute = WowPathfinding.GetRouteToTarget(this, FarmingLocationConfiguration.Route);
