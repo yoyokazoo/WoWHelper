@@ -568,14 +568,26 @@ namespace WoWHelper
 
                     if (TargetMarkerIsWithinMeleeRangeFromCenter())
                     {
-                        CurrentFindEnemyTargetState = FindEnemyTargetState.ENGAGE_TARGETED_ENEMY;
+                        CurrentFindEnemyTargetState = FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY;
                     }
                     break;
-                case FindEnemyTargetState.ENGAGE_TARGETED_ENEMY:
+                case FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY:
                     // TODO: actually implement this
-                    await EndWalkForwardTask();
-                    await StartAttackTask();
-                    await FaceTargetMarkerTask(refreshTargetMarker: true);
+                    //await EndWalkForwardTask();
+                    //await StartAttackTask();
+                    //await FaceTargetMarkerTask(refreshTargetMarker: true);
+                    await StartEngageTask();
+                    CurrentFindEnemyTargetState = FindEnemyTargetState.EXECUTE_ENGAGE_TARGETED_ENEMY;
+                    break;
+                case FindEnemyTargetState.EXECUTE_ENGAGE_TARGETED_ENEMY:
+                    // TODO: actually implement this
+                    //await EndWalkForwardTask();
+                    //await StartAttackTask();
+                    //await FaceTargetMarkerTask(refreshTargetMarker: true);
+                    if (!await ExecuteEngageTask())
+                    {
+                        CurrentFindEnemyTargetState = FindEnemyTargetState.FACE_WAYPOINT;
+                    }
                     break;
             }
         }
@@ -638,6 +650,8 @@ namespace WoWHelper
 
         public void UpdateCurrentFindEnemyTargetState()
         {
+            // TODO: These first 4 levels are really funky, try and figure out a cleaner way to handle it all... or not
+            /*
             if (!GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetMarkerTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS) &&
                 TryFindTargetMarkerOnScreen() &&
                 CanEngageTarget())
@@ -645,14 +659,13 @@ namespace WoWHelper
                 CurrentFindEnemyTargetState = FindEnemyTargetState.WALK_TO_TARGETED_ENEMY;
                 return;
             }
+            */
 
-            /*
             if (CanEngageTarget())
             {
-                CurrentFindEnemyTargetState = FindEnemyTargetState.ENGAGE_TARGETED_ENEMY;
+                CurrentFindEnemyTargetState = FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY;
                 return;
             }
-            */
         }
 
         public bool TryFindTargetMarkerOnScreen()

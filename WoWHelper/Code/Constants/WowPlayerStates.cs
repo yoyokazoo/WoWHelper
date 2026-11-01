@@ -100,7 +100,8 @@
             FACE_WAYPOINT,
             WALK_TO_WAYPOINT,
             WALK_TO_TARGETED_ENEMY,
-            ENGAGE_TARGETED_ENEMY
+            START_ENGAGE_TARGETED_ENEMY,
+            EXECUTE_ENGAGE_TARGETED_ENEMY
         }
 
         public enum NavigateToEndOfCurrentRouteState

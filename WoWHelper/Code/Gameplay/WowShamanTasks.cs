@@ -330,7 +330,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> ShamanFaceCorrectDirectionToEngageTask(WowShamanClassState classState)
+        public async Task<bool> ShamanExecuteEngageTask(WowShamanClassState classState)
         {
             EngageAttempts++;
 

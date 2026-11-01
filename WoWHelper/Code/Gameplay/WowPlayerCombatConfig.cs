@@ -66,14 +66,14 @@ namespace WoWHelper
             }
         }
 
-        public async Task<bool> WaitUntilEngageTask()
+        public async Task<bool> ExecuteEngageTask()
         {
             switch (CombatConfiguration)
             {
-                case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorFaceCorrectDirectionToEngageTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanFaceCorrectDirectionToEngageTask((WowShamanClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockFaceCorrectDirectionToEngageTask((WowWarlockClassState)ClassState);
-                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(WaitUntilEngageTask)));
+                case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorExecuteEngageTask((WowWarriorClassState)ClassState);
+                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanExecuteEngageTask((WowShamanClassState)ClassState);
+                case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockExecuteEngageTask((WowWarlockClassState)ClassState);
+                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(ExecuteEngageTask)));
             }
         }
 

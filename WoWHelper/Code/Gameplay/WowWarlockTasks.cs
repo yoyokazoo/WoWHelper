@@ -76,7 +76,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> WarlockFaceCorrectDirectionToEngageTask(WowWarlockClassState classState)
+        public async Task<bool> WarlockExecuteEngageTask(WowWarlockClassState classState)
         {
             EngageAttempts++;
 

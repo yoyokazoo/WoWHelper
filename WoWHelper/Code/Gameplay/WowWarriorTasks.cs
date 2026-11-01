@@ -276,7 +276,7 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> WarriorFaceCorrectDirectionToEngageTask(WowWarriorClassState classState)
+        public async Task<bool> WarriorExecuteEngageTask(WowWarriorClassState classState)
         {
             EngageAttempts++;
 
@@ -319,6 +319,11 @@ namespace WoWHelper
         // WowWarriorClassState.
         public bool WarriorCanEngageTarget(WowWarriorClassState classState)
         {
+            if (FarmingLocationConfiguration == null)
+            {
+                return false;
+            }
+
             switch (FarmingLocationConfiguration.EngageMethod)
             {
                 case WowLocationConfiguration.EngagementMethod.Charge:
