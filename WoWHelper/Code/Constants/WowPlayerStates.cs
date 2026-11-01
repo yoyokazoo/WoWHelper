@@ -94,6 +94,7 @@
         public enum FindEnemyTargetState
         {
             PICK_FARMING_LOCATION_CONFIG,
+            BUILD_ROUTE_TO_FARMING_LOCATION,
             NAVIGATE_TO_FARMING_LOCATION,
             PICK_NEXT_WAYPOINT,
             FACE_WAYPOINT,

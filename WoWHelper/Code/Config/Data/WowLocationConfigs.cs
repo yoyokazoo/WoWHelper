@@ -293,14 +293,11 @@ namespace WoWHelper.Code.WorldState
             Route = WowRoutes.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE,
         };
 
-        /*
-/target Scorpid
-/target Vile
-        */
         public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration
         {
             MaximumLevel = 7,
             Route = WowRoutes.LEVEL_4_DUROTAR_IMPS_ROUTE,
+            TargetMacroMobNames = "Scorpid,Vile",
         };
 
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration

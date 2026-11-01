@@ -185,6 +185,9 @@ namespace WoWHelper
             //var asdf = WowPathfinding.GetWaypointsToTarget(this);
             //var asdf = WowPathfinding.GetRoutesToTarget(this, WowNPCConfigs.VALLEY_OF_TRIALS_MERCHANT.Route);
             //Console.WriteLine(String.Join(",", asdf));
+            var (boarsAndScorpsWaypoint, impsWaypoint, distance) = WowPathfinding.GetClosestWaypointsBetweenRoutes(
+                WowRoutes.LEVEL_1_DUROTAR_BOARS_AND_SCORPS_ROUTE, WowRoutes.LEVEL_4_DUROTAR_IMPS_ROUTE);
+            Console.WriteLine($"Closest waypoints: boars and scorps {boarsAndScorpsWaypoint}, imps {impsWaypoint}, distance {distance}");
             return true;
         }
 
@@ -369,7 +372,6 @@ namespace WoWHelper
                     break;
                 case InteractWithNPCState.BUILD_ROUTE_TO_NPC:
                     CurrentRoute = WowPathfinding.GetRouteToTarget(this, CurrentNPCTarget.Route);
-                    Console.WriteLine($"Picked Route: {String.Join(",", CurrentRoute.Waypoints)}");
                     CurrentInteractWithNPCState = InteractWithNPCState.NAVIGATE_ROUTE_TO_NPC;
 
                     // Manually set the initial waypoint
@@ -493,6 +495,11 @@ namespace WoWHelper
 
         public bool PlayerIsWithinSafeWalkingDistanceOfCurrentFarmingConfig()
         {
+            if (FarmingLocationConfiguration == null)
+            {
+                return false;
+            }
+
             float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, CurrentRoute.Waypoints);
             return closestWaypointDistance <= WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT;
         }
@@ -506,15 +513,29 @@ namespace WoWHelper
             {
                 case FindEnemyTargetState.PICK_FARMING_LOCATION_CONFIG:
                     await PickFarmingLocationConfig();
-                    CurrentFindEnemyTargetState = FindEnemyTargetState.NAVIGATE_TO_FARMING_LOCATION;
+                    CurrentFindEnemyTargetState = FindEnemyTargetState.BUILD_ROUTE_TO_FARMING_LOCATION;
                     if (PlayerIsWithinSafeWalkingDistanceOfCurrentFarmingConfig())
                     {
                         CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
                     }
                     break;
+                case FindEnemyTargetState.BUILD_ROUTE_TO_FARMING_LOCATION:
+                    CurrentRoute = WowPathfinding.GetRouteToTarget(this, FarmingLocationConfiguration.Route);
+                    CurrentFindEnemyTargetState = FindEnemyTargetState.NAVIGATE_TO_FARMING_LOCATION;
+
+                    // Manually set the initial waypoint
+                    CurrentWaypointIndex = 0;
+                    CurrentNavigateToEndOfCurrentRouteState = NavigateToEndOfCurrentRouteState.FACE_WAYPOINT;
+                    break;
                 case FindEnemyTargetState.NAVIGATE_TO_FARMING_LOCATION:
-                    CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
-                    //Console.WriteLine($"Picked next waypoint: {CurrentWaypoint}");
+                    await NavigateToEndOfCurrentRouteTask();
+                    if (CurrentNavigateToEndOfCurrentRouteState == NavigateToEndOfCurrentRouteState.ARRIVED_AT_END_OF_ROUTE)
+                    {
+                        // Restore CurrentRoute and WaypointIndex
+                        CurrentRoute = FarmingLocationConfiguration.Route;
+                        CurrentWaypointIndex = -1;
+                        CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
+                    }
                     break;
                 case FindEnemyTargetState.PICK_NEXT_WAYPOINT:
                     PickNextWaypoint();

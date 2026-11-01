@@ -26,11 +26,11 @@ namespace WoWHelper
                 return;
             }
 
-            if (FarmingLocationConfiguration != null && newLocationConfig != FarmingLocationConfiguration)
+            if (newLocationConfig != FarmingLocationConfiguration)
             {
-                if (!string.IsNullOrEmpty(FarmingLocationConfiguration.TargetMacroMobNames))
+                if (!string.IsNullOrEmpty(newLocationConfig.TargetMacroMobNames))
                 {
-                    await WowInput.TypeChatLineTask($"/yytarget {FarmingLocationConfiguration.TargetMacroMobNames}");
+                    await WowInput.TypeChatLineTask($"/yytarget {newLocationConfig.TargetMacroMobNames}");
                 }
                 else
                 {

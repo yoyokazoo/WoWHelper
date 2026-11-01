@@ -276,6 +276,8 @@ namespace WoWHelper.Code
         {
             List<Vector2> waypoints = GetWaypointsToTarget(wowPlayer, targetRoute);
 
+            Console.WriteLine($"Built route to target: {String.Join(",", waypoints)}");
+
             return new WowRoute
             {
                 Name = "Dynamic Route",
@@ -421,6 +423,38 @@ namespace WoWHelper.Code
 
             intersectingWaypoint = Vector2.Zero;
             return false;
+        }
+
+        // Brute-force O(n*m) search for the pair of waypoints (one from each route) nearest each
+        // other. Waypoint-to-waypoint only -- doesn't consider points along the segments between
+        // waypoints. Distance is 0 when the routes share a waypoint (see TryGetInstersectingWaypoint).
+        public static (Vector2 firstWaypoint, Vector2 secondWaypoint, float distance) GetClosestWaypointsBetweenRoutes(WowRoute firstRoute, WowRoute secondRoute)
+        {
+            if (firstRoute.Waypoints == null || firstRoute.Waypoints.Count == 0 ||
+                secondRoute.Waypoints == null || secondRoute.Waypoints.Count == 0)
+            {
+                throw new ArgumentException($"Both routes need at least one waypoint ({firstRoute}) and ({secondRoute})");
+            }
+
+            Vector2 closestFirst = firstRoute.Waypoints[0];
+            Vector2 closestSecond = secondRoute.Waypoints[0];
+            float closestDistance = float.MaxValue;
+
+            foreach (Vector2 first in firstRoute.Waypoints)
+            {
+                foreach (Vector2 second in secondRoute.Waypoints)
+                {
+                    float distance = Vector2.Distance(first, second);
+                    if (distance < closestDistance)
+                    {
+                        closestFirst = first;
+                        closestSecond = second;
+                        closestDistance = distance;
+                    }
+                }
+            }
+
+            return (closestFirst, closestSecond, closestDistance);
         }
 
         private static List<Vector2> CreatePartialWaypointsFromRoute(WowRoute route, Vector2 startingWaypoint, Vector2 endingWaypoint)
