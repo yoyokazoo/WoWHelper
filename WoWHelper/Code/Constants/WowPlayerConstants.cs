@@ -58,7 +58,7 @@
         // LEVEL_1_MULGORE_PLAINSTRIDERS, ~5.77) rather than per-config, so it's one constant --
         // deliberately the full gap, not half of it, since the player is starting manually and
         // can be given some wiggle room. If a future route's own gaps exceed this, widen it.
-        public const float MAX_DISTANCE_FROM_ROUTE_WAYPOINT = 5.8f;
+        public const float MAX_DISTANCE_FROM_ROUTE_WAYPOINT = 3.0f;
 
         // How close two Vector2s (a route waypoint and WowMerchantConfiguration.Waypoints[0])
         // need to be to count as "the same point" -- matched by position, not waypoint index,

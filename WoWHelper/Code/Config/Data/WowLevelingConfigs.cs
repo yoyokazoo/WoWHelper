@@ -24,7 +24,8 @@ namespace WoWHelper.Code.WorldState
 
             LocationConfigs = new List<WowLocationConfiguration>
             {
-                WowLocationConfigs.LEVEL_4_DUROTAR_IMPS,
+                //WowLocationConfigs.LEVEL_4_DUROTAR_IMPS, // Too crowded
+                WowLocationConfigs.LEVEL_4_DUROTAR_SCORPS,
                 WowLocationConfigs.LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
                 WowLocationConfigs.LEVEL_4_TIRISFAL_ANIMALS,
             },

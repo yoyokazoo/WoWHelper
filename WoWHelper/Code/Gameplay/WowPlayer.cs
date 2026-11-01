@@ -186,7 +186,7 @@ namespace WoWHelper
             //var asdf = WowPathfinding.GetRoutesToTarget(this, WowNPCConfigs.VALLEY_OF_TRIALS_MERCHANT.Route);
             //Console.WriteLine(String.Join(",", asdf));
             var (boarsAndScorpsWaypoint, impsWaypoint, distance) = WowPathfinding.GetClosestWaypointsBetweenRoutes(
-                WowRoutes.LEVEL_1_DUROTAR_BOARS_AND_SCORPS_ROUTE, WowRoutes.LEVEL_4_DUROTAR_IMPS_ROUTE);
+                WowRoutes.LEVEL_1_DUROTAR_BOARS_AND_SCORPS_ROUTE, WowRoutes.LEVEL_4_DUROTAR_SCORPS_ROUTE);
             Console.WriteLine($"Closest waypoints: boars and scorps {boarsAndScorpsWaypoint}, imps {impsWaypoint}, distance {distance}");
             return true;
         }
@@ -346,9 +346,9 @@ namespace WoWHelper
                     await PlayerLogoutGoalTask();
                     break;
                 case PlayerGoal.TRAIN:
+                case PlayerGoal.SELL:
                     await PlayerInteractWithNPCTask();
                     break;
-                case PlayerGoal.SELL:
                 case PlayerGoal.TRAVEL:
                 case PlayerGoal.SET_HEARTH:
                 case PlayerGoal.REPAIR:

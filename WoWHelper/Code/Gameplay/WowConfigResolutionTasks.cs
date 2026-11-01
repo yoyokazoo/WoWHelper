@@ -41,6 +41,7 @@ namespace WoWHelper
 
             FarmingLocationConfiguration = newLocationConfig;
             CurrentRoute = FarmingLocationConfiguration.Route;
+            CurrentWaypointIndex = -1;
 
             Console.WriteLine($"Picked farming location config \"{CurrentRoute.Name}\"");
         }

@@ -95,6 +95,24 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute LEVEL_4_DUROTAR_SCORPS_ROUTE = new WowRoute
+        {
+            Name = "Durotar Scorps (Level 4+)",
+            MinimumLevel = 4,
+            Zone = WowZone.Durotar,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(41.28f, 66.41f),
+                new Vector2(41.00f, 67.47f),
+                new Vector2(41.21f, 68.20f),
+                new Vector2(40.11f, 68.01f),
+                new Vector2(40.19f, 66.75f),
+                new Vector2(40.71f, 66.17f),
+            },
+        };
+
         public static readonly WowRoute LEVEL_4_DUROTAR_IMPS_ROUTE = new WowRoute
         {
             Name = "Durotar Imps (Level 4+)",
@@ -170,6 +188,20 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(44.29f, 62.22f),
                 new Vector2(44.32f, 60.94f),
                 new Vector2(44.36f, 58.71f),
+            },
+        };
+
+        public static readonly WowRoute BOARS_AND_SCORPS_TO_SCORPS = new WowRoute
+        {
+            Name = "Durotar Boars and Scorpions to Imps",
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(40.71f, 66.17f),
+                new Vector2(40.60f, 65.42f),
+                new Vector2(40.85f, 64.59f),
+                new Vector2(41.03f, 64.58f),
             },
         };
 
@@ -836,7 +868,8 @@ namespace WoWHelper.Code.WorldState
         {
             BOARS_AND_SCORPS_TO_MERCHANT_ROUTE,
             BOARS_AND_SCORPS_TO_WARRIOR_TRAINER_ROUTE,
-            BOARS_AND_SCORPS_TO_IMPS
+            BOARS_AND_SCORPS_TO_IMPS,
+            BOARS_AND_SCORPS_TO_SCORPS
         };
     }
 }

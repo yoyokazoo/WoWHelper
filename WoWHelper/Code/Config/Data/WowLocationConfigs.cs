@@ -301,6 +301,13 @@ namespace WoWHelper.Code.WorldState
             ChaseOutOfRangeTargets = true,
         };
 
+        public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_SCORPS = new WowLocationConfiguration
+        {
+            MaximumLevel = 7,
+            Route = WowRoutes.LEVEL_4_DUROTAR_SCORPS_ROUTE,
+            TargetMacroMobNames = "Scorpid",
+        };
+
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
         {
             MaximumLevel = 4,
@@ -438,12 +445,13 @@ namespace WoWHelper.Code.WorldState
             LEVEL_9_DUROTAR_SKULL_ROCK_COAST,
             LEVEL_6_TIRISFAL_ZOMBIES,
             LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
-            LEVEL_4_DUROTAR_IMPS,
             LEVEL_10_MULGORE_MIXED_BEASTS,
             LEVEL_8_MULGORE_MIXED_BEASTS,
             LEVEL_6_MULGORE_BATTLEBOARS,
             LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
             LEVEL_4_TIRISFAL_ANIMALS,
+            //LEVEL_4_DUROTAR_IMPS, // Too crowded
+            LEVEL_4_DUROTAR_SCORPS,
             LEVEL_1_MULGORE_PLAINSTRIDERS,
             LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
             LEVEL_1_TIRISFAL_UNDEAD,
