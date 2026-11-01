@@ -185,8 +185,10 @@ namespace WoWHelper
             //var asdf = WowPathfinding.GetWaypointsToTarget(this);
             //var asdf = WowPathfinding.GetRoutesToTarget(this, WowNPCConfigs.VALLEY_OF_TRIALS_MERCHANT.Route);
             //Console.WriteLine(String.Join(",", asdf));
+            Vector2? startingPoint = null;
+            startingPoint = new Vector2(43.80f, 68.36f);
             var (boarsAndScorpsWaypoint, impsWaypoint, distance) = WowPathfinding.GetClosestWaypointsBetweenRoutes(
-                WowRoutes.LEVEL_1_DUROTAR_BOARS_AND_SCORPS_ROUTE, WowRoutes.LEVEL_4_DUROTAR_SCORPS_ROUTE);
+                WowRoutes.BOARS_AND_SCORPS_TO_MERCHANT_ROUTE, WowRoutes.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE, startingPoint);
             Console.WriteLine($"Closest waypoints: boars and scorps {boarsAndScorpsWaypoint}, imps {impsWaypoint}, distance {distance}");
             return true;
         }

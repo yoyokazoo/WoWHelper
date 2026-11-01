@@ -283,14 +283,12 @@ namespace WoWHelper.Code.WorldState
             Route = WowRoutes.LEVEL_9_DUROTAR_SKULL_ROCK_COAST_ROUTE,
         };
 
-        /*
-/target Dire
-/target Clattering
-        */
         public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration
         {
             MaximumLevel = 10,
             Route = WowRoutes.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE,
+            TargetMacroMobNames = "Dire,Clattering",
+            ChaseOutOfRangeTargets = true,
         };
 
         public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration

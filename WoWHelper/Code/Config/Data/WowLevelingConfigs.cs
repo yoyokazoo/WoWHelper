@@ -18,9 +18,9 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
-        public static readonly WowLevelingConfiguration LEVEL_4_THRU_8 = new WowLevelingConfiguration
+        public static readonly WowLevelingConfiguration LEVEL_4_THRU_6 = new WowLevelingConfiguration
         {
-            Levels = new List<int> { 4, 5, 6, 7, 8 },
+            Levels = new List<int> { 4, 5, 6 },
 
             LocationConfigs = new List<WowLocationConfiguration>
             {
@@ -31,10 +31,23 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowLevelingConfiguration LEVEL_7_THRU_9 = new WowLevelingConfiguration
+        {
+            Levels = new List<int> { 7, 8, 9 },
+
+            LocationConfigs = new List<WowLocationConfiguration>
+            {
+                WowLocationConfigs.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
+                WowLocationConfigs.LEVEL_6_MULGORE_BATTLEBOARS,
+                WowLocationConfigs.LEVEL_6_TIRISFAL_ZOMBIES,
+            },
+        };
+
         public static readonly List<WowLevelingConfiguration> ALL_LEVELING_CONFIGS = new List<WowLevelingConfiguration>
         {
             LEVEL_1_THRU_3,
-            LEVEL_4_THRU_8,
+            LEVEL_4_THRU_6,
+            LEVEL_7_THRU_9,
         };
 
         // A config specific to this class wins over an any-class (Class == null) one at the

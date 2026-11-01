@@ -298,6 +298,12 @@ namespace WoWHelper.Code
             Vector2 endingWaypoint = Vector2.Zero;
 
             List<WowRoute> routes = GetRoutesToTarget(wowPlayer, targetRoute);
+
+            if (routes.Count == 0)
+            {
+                return waypoints;
+            }
+
             startingWaypoint = GetWaypointClosestToPlayer(wowPlayer, routes[0]);
 
             if (routes.Count == 1)
@@ -309,7 +315,8 @@ namespace WoWHelper.Code
             {
                 if (!TryGetInstersectingWaypoint(routes[i], routes[i + 1], out endingWaypoint))
                 {
-                    throw new Exception($"Routes expected to have an intersection but don't ({routes[i]}) and ({routes[i + 1]})");
+                    wowPlayer.SetLogoutVariablesAndSlack($"Routes expected to have an intersection but don't ({routes[i]}) and ({routes[i + 1]})");
+                    return waypoints;
                 }
 
                 var partialWaypoints = CreatePartialWaypointsFromRoute(routes[i], startingWaypoint, endingWaypoint);
@@ -364,10 +371,9 @@ namespace WoWHelper.Code
                 }
             }
 
-            // TODO: actually pipe this type of failure back up to the loop so we can handle logout properly
             string message = $"Unable to find a chain of intersecting routes from {startingRoute} to {targetRoute} in {wowPlayer.WorldState.CurrentZone}";
-            Console.WriteLine(message);
-            throw new Exception(message);
+            wowPlayer.SetLogoutVariablesAndSlack(message);
+            return new List<WowRoute>();
         }
 
         private static WowRoute FindRouteClosestToPlayer(WowPlayer wowPlayer)
@@ -383,10 +389,9 @@ namespace WoWHelper.Code
 
             if (closestRoute == null)
             {
-                // TODO: actually pipe this type of failure back up to the loop so we can handle logout properly
                 string message = $"Unable to find route close enough to player in FindRouteClosestToPlayer, player location {wowPlayer.WorldState.PlayerLocation} in {wowPlayer.WorldState.CurrentZone}";
-                Console.WriteLine(message);
-                throw new Exception(message);
+                wowPlayer.SetLogoutVariablesAndSlack(message);
+                return new WowRoute();
             }
 
             return closestRoute;
@@ -428,12 +433,24 @@ namespace WoWHelper.Code
         // Brute-force O(n*m) search for the pair of waypoints (one from each route) nearest each
         // other. Waypoint-to-waypoint only -- doesn't consider points along the segments between
         // waypoints. Distance is 0 when the routes share a waypoint (see TryGetInstersectingWaypoint).
-        public static (Vector2 firstWaypoint, Vector2 secondWaypoint, float distance) GetClosestWaypointsBetweenRoutes(WowRoute firstRoute, WowRoute secondRoute)
+        //
+        // If startingPoint is given, the pair is instead each route's own waypoint closest to
+        // startingPoint (picked independently per route), and distance is still the distance
+        // between those two waypoints.
+        public static (Vector2 firstWaypoint, Vector2 secondWaypoint, float distance) GetClosestWaypointsBetweenRoutes(WowRoute firstRoute, WowRoute secondRoute, Vector2? startingPoint = null)
         {
             if (firstRoute.Waypoints == null || firstRoute.Waypoints.Count == 0 ||
                 secondRoute.Waypoints == null || secondRoute.Waypoints.Count == 0)
             {
                 throw new ArgumentException($"Both routes need at least one waypoint ({firstRoute}) and ({secondRoute})");
+            }
+
+            if (startingPoint.HasValue)
+            {
+                Vector2 point = startingPoint.Value;
+                Vector2 firstNearPoint = firstRoute.Waypoints.OrderBy(waypoint => Vector2.Distance(point, waypoint)).First();
+                Vector2 secondNearPoint = secondRoute.Waypoints.OrderBy(waypoint => Vector2.Distance(point, waypoint)).First();
+                return (firstNearPoint, secondNearPoint, Vector2.Distance(firstNearPoint, secondNearPoint));
             }
 
             Vector2 closestFirst = firstRoute.Waypoints[0];
