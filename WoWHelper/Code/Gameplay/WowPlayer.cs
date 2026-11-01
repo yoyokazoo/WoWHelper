@@ -661,7 +661,9 @@ namespace WoWHelper
             }
             */
 
-            if (CanEngageTarget())
+            if (CanEngageTarget() && 
+                CurrentFindEnemyTargetState != FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY && 
+                CurrentFindEnemyTargetState != FindEnemyTargetState.EXECUTE_ENGAGE_TARGETED_ENEMY)
             {
                 CurrentFindEnemyTargetState = FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY;
                 return;

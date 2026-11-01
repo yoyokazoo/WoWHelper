@@ -50,7 +50,7 @@ namespace WoWHelper
         {
             switch (CombatConfiguration)
             {
-                case Code.Gameplay.WowCombatConfiguration.Warrior: return WarriorIsBattleReady();
+                case Code.Gameplay.WowCombatConfiguration.Warrior: return WarriorIsBattleReady((WowWarriorClassState)ClassState);
                 default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(WaitUntilBattleReadyTask)));
             }
         }

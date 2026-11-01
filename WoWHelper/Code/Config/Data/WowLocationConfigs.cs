@@ -298,6 +298,7 @@ namespace WoWHelper.Code.WorldState
             MaximumLevel = 7,
             Route = WowRoutes.LEVEL_4_DUROTAR_IMPS_ROUTE,
             TargetMacroMobNames = "Scorpid,Vile",
+            ChaseOutOfRangeTargets = true,
         };
 
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration

@@ -260,7 +260,7 @@ namespace WoWHelper
             return battleReady;
         }
 
-        public bool WarriorIsBattleReady()
+        public bool WarriorIsBattleReady(WowWarriorClassState classState)
         {
             bool hpRecovered = WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD;
             bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
@@ -272,6 +272,7 @@ namespace WoWHelper
         {
             await Task.Delay(0);
             EngageAttempts = 1;
+            await EndWalkForwardTask();
             await TurnToFaceTargetMarkerTask();
             return true;
         }
@@ -314,9 +315,6 @@ namespace WoWHelper
             return true;
         }
 
-        // Replaces the old shared CanEngageTarget() for the Warrior case --
-        // both fields it needs (CanChargeTarget, CanShootTarget) live only on
-        // WowWarriorClassState.
         public bool WarriorCanEngageTarget(WowWarriorClassState classState)
         {
             if (FarmingLocationConfiguration == null)
