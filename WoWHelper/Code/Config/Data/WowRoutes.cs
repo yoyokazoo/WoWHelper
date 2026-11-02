@@ -267,8 +267,43 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(53.96f, 42.97f),
                 new Vector2(54.07f, 42.44f),
                 new Vector2(54.19f, 42.47f),
+            },
+            DistanceTolerance = 0.04f
+        };
+
+        public static readonly WowRoute RAZOR_HILL_TO_ORG_ENTRANCE = new WowRoute
+        {
+            Name = "Razor Hill To Org Entrance",
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(52.55f, 42.21f),
+                new Vector2(52.35f, 39.17f),
+                new Vector2(52.41f, 33.23f),
+                new Vector2(50.33f, 29.81f),
+                new Vector2(48.61f, 28.66f),
+                new Vector2(47.61f, 23.55f),
+                new Vector2(46.72f, 22.40f),
+                new Vector2(46.19f, 17.12f),
+                new Vector2(45.55f, 12.36f),
             }
         };
+
+        // Need to implement cross-zone pathing to work with Org
+        /*
+        public static readonly WowRoute ORG_ENTRANCE_TO_SKINNING_TRAINER = new WowRoute
+        {
+            Name = "Org Entrance to Skinning Trainer",
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(45.55f, 12.36f),
+                new Vector2(48.73f, 
+            }
+        };
+        */
 
         #endregion
 

@@ -536,7 +536,9 @@ namespace WoWHelper
             NPCRoles requiredRoles = PickRequiredRolesForNPCBasedOnGoal();
 
             var validNPCs = WowNPCConfigs.ALL_NPCS
-                .Where(npc => npc.Roles.HasFlag(requiredRoles) && npc.Route.Zone.Equals(WorldState.CurrentZone));
+                .Where(npc => npc.Roles.HasFlag(requiredRoles) && 
+                    npc.Route.Zone.Equals(WorldState.CurrentZone) &&
+                    npc.MaximumLevel >= WorldState.PlayerLevel);
 
             if (!validNPCs.Any())
             {

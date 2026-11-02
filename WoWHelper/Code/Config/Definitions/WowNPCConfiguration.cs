@@ -21,6 +21,7 @@ namespace WoWHelper.Code.WorldState
         public WowCombatConfiguration Class { get; set; } = WowCombatConfiguration.Unknown;
         public WowRoute Route { get; set; }
         public NPCRoles Roles { get; set; }
+        public int MaximumLevel { get; set; } = 60;
 
         public override string ToString()
         {

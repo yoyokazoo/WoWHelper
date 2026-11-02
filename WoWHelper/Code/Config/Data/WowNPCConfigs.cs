@@ -26,7 +26,8 @@ namespace WoWHelper.Code.WorldState
                 Zone = WowZone.Durotar,
                 Waypoints = new List<Vector2> { new Vector2(42.89f, 69.44f) }
             },
-            Roles = NPCRoles.Train
+            Roles = NPCRoles.Train,
+            MaximumLevel = 6,
         };
 
         public static readonly WowNPCConfiguration RAZOR_HILL_MERCHANT = new WowNPCConfiguration
@@ -49,7 +50,7 @@ namespace WoWHelper.Code.WorldState
             {
                 Name = "Valley of Trials Warrior Trainer",
                 Zone = WowZone.Durotar,
-                Waypoints = new List<Vector2> { new Vector2(42.89f, 69.44f) }
+                Waypoints = new List<Vector2> { new Vector2(54.19f, 42.47f), }
             },
             Roles = NPCRoles.Train
         };
@@ -59,6 +60,7 @@ namespace WoWHelper.Code.WorldState
             VALLEY_OF_TRIALS_MERCHANT,
             VALLEY_OF_TRIALS_WARRIOR_TRAINER,
             RAZOR_HILL_WARRIOR_TRAINER,
+            RAZOR_HILL_MERCHANT,
         };
     }
 }
