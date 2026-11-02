@@ -974,6 +974,7 @@ namespace WoWHelper.Code.WorldState
             RAZOR_HILL_LOOP_TO_RAZOR_HILL,
             RAZOR_HILL_TO_MERCHANT,
             RAZOR_HILL_TO_WARRIOR_TRAINER,
+            RAZOR_HILL_TO_ORG_ENTRANCE
         };
     }
 }

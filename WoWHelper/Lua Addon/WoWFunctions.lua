@@ -1069,6 +1069,7 @@ AUTO_SELL_BLOCKLIST_ITEM_NAMES = {
     "Greater Healing Potion",
     "Superior Healing Potion",
     "Major Healing Potion",
+    "Skinning Knife",
 }
 
 local function IsItemNameInList(itemName, list)
