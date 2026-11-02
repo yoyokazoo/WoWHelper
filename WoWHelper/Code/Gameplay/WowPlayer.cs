@@ -564,6 +564,8 @@ namespace WoWHelper
                         CurrentFindEnemyTargetState = FindEnemyTargetState.FACE_WAYPOINT;
                     }
 
+                    // Probably want some way of getting out of this state, but is this the right one?  CanEngageTarget
+                    // will skip out of this already
                     if (TargetMarkerIsWithinMeleeRangeFromCenter())
                     {
                         CurrentFindEnemyTargetState = FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY;
@@ -648,22 +650,31 @@ namespace WoWHelper
 
         public void UpdateCurrentFindEnemyTargetState()
         {
-            // TODO: These first 4 levels are really funky, try and figure out a cleaner way to handle it all... or not
-            /*
-            if (!GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetMarkerTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS) &&
-                TryFindTargetMarkerOnScreen() &&
-                CanEngageTarget())
+            // TODO: These first 4 levels where Warrior doesn't have charge are really funky, try and figure out a cleaner way to handle it all... or not
+
+            if (FarmingLocationConfiguration == null)
             {
-                CurrentFindEnemyTargetState = FindEnemyTargetState.WALK_TO_TARGETED_ENEMY;
                 return;
             }
-            */
 
-            if (CanEngageTarget() && 
-                CurrentFindEnemyTargetState != FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY && 
-                CurrentFindEnemyTargetState != FindEnemyTargetState.EXECUTE_ENGAGE_TARGETED_ENEMY)
+            // Already engaging a target? Stay the course
+            if (CurrentFindEnemyTargetState == FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY ||
+                CurrentFindEnemyTargetState == FindEnemyTargetState.EXECUTE_ENGAGE_TARGETED_ENEMY)
+            {
+                return;
+            }
+
+            if (CanEngageTarget())
             {
                 CurrentFindEnemyTargetState = FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY;
+                return;
+            }
+
+            if (FarmingLocationConfiguration.ChaseOutOfRangeTargets &&
+                !GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetMarkerTime, PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS) &&
+                TryFindTargetMarkerOnScreen())
+            {
+                CurrentFindEnemyTargetState = FindEnemyTargetState.WALK_TO_TARGETED_ENEMY;
                 return;
             }
         }
