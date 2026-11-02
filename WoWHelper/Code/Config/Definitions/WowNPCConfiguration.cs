@@ -12,6 +12,7 @@ namespace WoWHelper.Code.WorldState
         Sell = 1 << 0,   // 1
         Repair = 1 << 1, // 2
         Train = 1 << 2,  // 4
+        Arrows = 1 << 3, // 8
     }
 
     public class WowNPCConfiguration

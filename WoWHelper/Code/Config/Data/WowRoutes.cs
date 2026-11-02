@@ -234,6 +234,39 @@ namespace WoWHelper.Code.WorldState
             Waypoints = new List<Vector2>
             {
                 new Vector2(53.74f, 47.89f),
+                new Vector2(52.98f, 47.02f),
+                new Vector2(52.61f, 45.56f),
+                new Vector2(52.47f, 44.34f),
+                new Vector2(52.74f, 42.58f),
+                new Vector2(52.55f, 42.21f),
+            }
+        };
+
+        public static readonly WowRoute RAZOR_HILL_TO_MERCHANT = new WowRoute
+        {
+            Name = "Razor Hill To Merchant",
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(52.55f, 42.21f),
+                new Vector2(52.98f, 41.03f),
+            }
+        };
+
+        public static readonly WowRoute RAZOR_HILL_TO_WARRIOR_TRAINER = new WowRoute
+        {
+            Name = "Razor Hill To Warrior Trainer",
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(52.74f, 42.58f),
+                new Vector2(53.71f, 42.52f),
+                new Vector2(53.84f, 42.96f),
+                new Vector2(53.96f, 42.97f),
+                new Vector2(54.07f, 42.44f),
+                new Vector2(54.19f, 42.47f),
             }
         };
 
@@ -902,7 +935,10 @@ namespace WoWHelper.Code.WorldState
             BOARS_AND_SCORPS_TO_WARRIOR_TRAINER_ROUTE,
             BOARS_AND_SCORPS_TO_IMPS,
             BOARS_AND_SCORPS_TO_SCORPS,
-            VALLEY_OF_TRIALS_TO_RAZOR_HILL_LOOP
+            VALLEY_OF_TRIALS_TO_RAZOR_HILL_LOOP,
+            RAZOR_HILL_LOOP_TO_RAZOR_HILL,
+            RAZOR_HILL_TO_MERCHANT,
+            RAZOR_HILL_TO_WARRIOR_TRAINER,
         };
     }
 }

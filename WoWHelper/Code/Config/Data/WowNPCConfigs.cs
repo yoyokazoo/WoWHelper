@@ -29,10 +29,36 @@ namespace WoWHelper.Code.WorldState
             Roles = NPCRoles.Train
         };
 
+        public static readonly WowNPCConfiguration RAZOR_HILL_MERCHANT = new WowNPCConfiguration
+        {
+            Name = "??? razor hill merchant",
+            Route = new WowRoute
+            {
+                Name = "Valley of Trials Merchant",
+                Zone = WowZone.Durotar,
+                Waypoints = new List<Vector2> { new Vector2(42.58f, 67.34f) }
+            },
+            Roles = NPCRoles.Sell | NPCRoles.Repair | NPCRoles.Arrows
+        };
+
+        public static readonly WowNPCConfiguration RAZOR_HILL_WARRIOR_TRAINER = new WowNPCConfiguration
+        {
+            Name = "??? Razor hill warrior trainer",
+            Class = Gameplay.WowCombatConfiguration.Warrior,
+            Route = new WowRoute
+            {
+                Name = "Valley of Trials Warrior Trainer",
+                Zone = WowZone.Durotar,
+                Waypoints = new List<Vector2> { new Vector2(42.89f, 69.44f) }
+            },
+            Roles = NPCRoles.Train
+        };
+
         public static readonly List<WowNPCConfiguration> ALL_NPCS = new List<WowNPCConfiguration>()
         {
             VALLEY_OF_TRIALS_MERCHANT,
             VALLEY_OF_TRIALS_WARRIOR_TRAINER,
+            RAZOR_HILL_WARRIOR_TRAINER,
         };
     }
 }
