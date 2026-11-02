@@ -243,7 +243,7 @@ namespace WoWHelper
                 return;
             }
 
-            if (!PlayerIsBattleReady())
+            if (!BattleRecoveryIsFinished())
             {
                 await SetPlayerGoalTask(PlayerGoal.RECOVER_FROM_BATTLE);
                 return;
@@ -452,6 +452,12 @@ namespace WoWHelper
             }
         }
 
+        // Right now we exit battle recovery without skinning or looting if we took no damage.  Might be worth waiting till we get to the end?
+        public bool BattleRecoveryIsFinished()
+        {
+            return PlayerIsBattleReady() && CurrentPlayerGoal != PlayerGoal.RECOVER_FROM_BATTLE;
+        }
+
         public async Task NavigateToEndOfCurrentRouteTask()
         {
             Console.WriteLine($"NavigateToEndOfCurrentRouteTask, CurrentNavigateToEndOfCurrentRouteState = {CurrentNavigateToEndOfCurrentRouteState}");
@@ -568,7 +574,8 @@ namespace WoWHelper
                     // will skip out of this already
                     if (TargetMarkerIsWithinMeleeRangeFromCenter())
                     {
-                        CurrentFindEnemyTargetState = FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY;
+                        await StartAttackTask();
+                        //CurrentFindEnemyTargetState = FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY;
                     }
                     break;
                 case FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY:

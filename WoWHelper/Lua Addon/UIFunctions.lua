@@ -710,8 +710,9 @@ YoyokazooUIDB = YoyokazooUIDB or {}
 -- the moment it became the target) -- not every nameplate, unlike an
 -- earlier prototype -- to keep the search unambiguous, and only if that
 -- target isn't tapped by someone else (see ShouldMarkCurrentTarget below).
--- Old markers on a previous target are left in place (harmless clutter, the
--- color only matters while actively searching for the CURRENT target).
+-- At most one marker is ever shown: retargeting hides the previous one, and
+-- so does the target's plate disappearing (NAME_PLATE_UNIT_REMOVED, plus a
+-- polling reconcile as a backstop).
 --------------------------------------------------
 local NAMEPLATE_MARKER_SIZE = 12
 local NAMEPLATE_MARKER_COLOR = { 1, 0, 1 } -- magenta -- keep in sync with
@@ -724,6 +725,14 @@ local NAMEPLATE_MARKER_COLOR = { 1, 0, 1 } -- magenta -- keep in sync with
 -- marker left visible from an old target could be found by the search
 -- instead of the actual current target's.
 local currentlyShownMarker = nil
+-- The plate currentlyShownMarker is anchored to. The marker is parented to
+-- UIParent (not the plate -- see AddTargetMarker), so it does NOT hide when
+-- its plate hides: when the target walks out of nameplate range the plate is
+-- hidden/recycled but the marker would otherwise stay frozen on screen at the
+-- plate's last position (or follow the plate onto whatever unit it gets
+-- recycled for). Tracked so NAME_PLATE_UNIT_REMOVED and the OnUpdate
+-- reconcile below can tell whether the marker is still on the right plate.
+local currentMarkerPlate = nil
 
 local function AddTargetMarker(plate)
     if not plate.wowHelperTargetMarker then
@@ -754,6 +763,7 @@ local function AddTargetMarker(plate)
 
     plate.wowHelperTargetMarker:Show()
     currentlyShownMarker = plate.wowHelperTargetMarker
+    currentMarkerPlate = plate
 end
 
 local function HideCurrentMarker()
@@ -761,6 +771,7 @@ local function HideCurrentMarker()
         currentlyShownMarker:Hide()
         currentlyShownMarker = nil
     end
+    currentMarkerPlate = nil
 end
 
 -- A target tagged by someone outside our group gets no marker at all. The
@@ -796,21 +807,34 @@ end
 local targetMarkerFrame = CreateFrame("Frame")
 targetMarkerFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
 targetMarkerFrame:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+targetMarkerFrame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
 targetMarkerFrame:SetScript("OnEvent", function(self, event, unit)
     if event == "PLAYER_TARGET_CHANGED" then
         MarkCurrentTargetPlate()
     elseif event == "NAME_PLATE_UNIT_ADDED" and UnitIsUnit(unit, "target") then
         MarkCurrentTargetPlate()
+    elseif event == "NAME_PLATE_UNIT_REMOVED" and currentMarkerPlate then
+        -- The target's plate going away (e.g. it moved out of nameplate
+        -- range) doesn't hide the marker on its own, since the marker isn't
+        -- parented to the plate. Check both the unit and the plate itself,
+        -- in case either lookup is unreliable mid-removal; the OnUpdate
+        -- reconcile below is the backstop if both miss.
+        local removedPlate = C_NamePlate and C_NamePlate.GetNamePlateForUnit and C_NamePlate.GetNamePlateForUnit(unit)
+        if UnitIsUnit(unit, "target") or removedPlate == currentMarkerPlate then
+            HideCurrentMarker()
+        end
     end
 end)
 
 -- The events above only fire when the target or its nameplate changes, but
 -- the tap-denied check in ShouldMarkCurrentTarget() can flip on an
 -- already-marked target (someone else tags the mob while we're walking
--- towards it). Rather than depend on exactly which UNIT_* event the client
--- fires for a tap change on the "target" token, just poll: if the marker's
--- showing on a target we shouldn't be marking anymore, drop it. Cheap (a
--- couple of unit queries) and far slower than the pixel row's own redraw.
+-- towards it), and a missed/out-of-order nameplate event could leave the
+-- marker on a plate that no longer belongs to the target. Rather than depend
+-- on exactly which events the client fires, just poll: re-derive where the
+-- marker should be (the target's current plate, or nowhere) and fix it up if
+-- it's anywhere else. Cheap (a couple of unit queries) and far slower than
+-- the pixel row's own redraw.
 local TARGET_MARKER_RECHECK_INTERVAL = 0.1
 local targetMarkerRecheckElapsed = 0
 targetMarkerFrame:SetScript("OnUpdate", function(self, elapsed)
@@ -818,7 +842,19 @@ targetMarkerFrame:SetScript("OnUpdate", function(self, elapsed)
     if targetMarkerRecheckElapsed < TARGET_MARKER_RECHECK_INTERVAL then return end
     targetMarkerRecheckElapsed = 0
 
-    if currentlyShownMarker and not ShouldMarkCurrentTarget() then
-        HideCurrentMarker()
+    if not ShouldMarkCurrentTarget() then
+        if currentlyShownMarker then
+            HideCurrentMarker()
+        end
+        return
+    end
+
+    local plate = C_NamePlate and C_NamePlate.GetNamePlateForUnit and C_NamePlate.GetNamePlateForUnit("target")
+    if not plate or not plate:IsShown() then
+        if currentlyShownMarker then
+            HideCurrentMarker()
+        end
+    elseif plate ~= currentMarkerPlate or not currentlyShownMarker then
+        AddTargetMarker(plate)
     end
 end)

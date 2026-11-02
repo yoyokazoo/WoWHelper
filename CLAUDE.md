@@ -619,7 +619,14 @@ of truth — edits should be made here, not in the WoW install directory.
   target/nameplate events plus a 0.1s `OnUpdate` re-check for tags that land
   after targeting), specifically so this chase can't run after someone else's
   kill — a tapped mob is also "not engageable," which is indistinguishable
-  from "out of range" on the C# side.
+  from "out of range" on the C# side. The marker is its own `UIParent`-parented
+  frame merely *anchored* to the plate (so it draws on top), which means it
+  does **not** auto-hide with its plate — `UIFunctions.lua` tracks the plate
+  it's on (`currentMarkerPlate`) and hides it on `NAME_PLATE_UNIT_REMOVED`,
+  and the 0.1s `OnUpdate` reconcile re-checks that the marker sits on the
+  target's *current* shown plate (or nowhere). Without that, a target walking
+  out of nameplate range left the marker frozen on screen at the plate's last
+  position.
   Per-route opt-out: `WowLocationConfiguration.ChaseOutOfRangeTargets`
   (default `true`, set in the constructor) — `false` skips the scan and the
   chase entirely, for routes where straying off the waypoints risks getting
