@@ -555,6 +555,19 @@ of truth — edits should be made here, not in the WoW install directory.
   if that cast ever fails, `ClassState` and `CombatConfiguration` have gone
   out of sync, and throwing immediately there is intentional — silently
   reading the wrong class's state would be worse.
+- **Stuck detection** (`StuckRecoveryTask`, `WowMovementTasks.cs`) — its own
+  small sub-state machine (`StuckRecoveryState`: `NOT_STUCK` → `JUMPED` →
+  `WIGGLED_LEFT` → `WIGGLED_RIGHT` → `GAVE_UP`, one step per
+  `WowPathfinding.STATIONARY_MILLIS_*` threshold), called at the top of the walk
+  helpers (`WalkToWaypointTask`, `WalkToTargetMarkerTask`) rather than being a
+  state in any goal's enum — so every walking state gets it, and it only runs
+  while walking. "Stationary" = within `MEANINGFUL_LOCATION_CHANGE_AMOUNT` of the
+  anchor point. If it goes `STUCK_CHECK_STALE_MILLIS` without being called (we
+  weren't walking — combat, NPC interaction, etc.) the next call starts a fresh
+  episode, so intentional standing-still never needs special-casing. Giving up
+  just sets `LogoutTriggered`; `UpdatePlayerGoalTask` picks `LOG_OUT` next tick.
+  This replaces the loop-local stuck detection in the old (commented-out)
+  `PathfindingLoopTask`.
 - **`Gameplay/WowPathfinding.cs`** — pure-math helpers for waypoint following
   (facing/turn-direction math, angle tolerance that tightens near a waypoint,
   lateral-distance-from-path calc). No side effects, unit-testable.

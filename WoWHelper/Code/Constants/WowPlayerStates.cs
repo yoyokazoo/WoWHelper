@@ -85,6 +85,19 @@
             WAITING_FOR_RECOVERY,
         }
 
+        // Drives StuckRecoveryTask (WowMovementTasks.cs) -- the jump -> wiggle left -> wiggle
+        // right -> give up escalation run from inside the walk helpers (WalkToWaypointTask /
+        // WalkToTargetMarkerTask). Each value is the last escalation step already taken
+        // during the current stuck episode.
+        public enum StuckRecoveryState
+        {
+            NOT_STUCK,
+            JUMPED,
+            WIGGLED_LEFT,
+            WIGGLED_RIGHT,
+            GAVE_UP
+        }
+
         public enum LogoutState
         {
             STARTING_LOGOUT,

@@ -1063,9 +1063,90 @@ namespace WoWHelper
             return WowPathfinding.GetDegreesToMoveTowardsScreenOffsetWhileWalking(rightPixels, forwardPixels, turningRadiusPixels);
         }
 
+        // If StuckRecoveryTask goes longer than this without being called, we weren't in a
+        // walking state in between (combat, NPC interaction, goal change, looting...), so the
+        // next call starts a fresh stuck episode instead of measuring against a stale anchor.
+        // Comfortably longer than a normal tick, including a blocking AvoidObstacle wiggle.
+        private const int STUCK_CHECK_STALE_MILLIS = 6000;
+
+        // Re-anchors stuck detection at our current position with a fresh clock, and
+        // re-arms the full jump -> wiggle -> wiggle -> give-up escalation.
+        private void ResetStuckDetection()
+        {
+            StuckAnchor = WorldState.PlayerLocation;
+            StuckAnchorTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            CurrentStuckRecoveryState = StuckRecoveryState.NOT_STUCK;
+        }
+
+        // One tick of stuck detection/recovery, called at the top of every walk helper
+        // (WalkToWaypointTask, WalkToTargetMarkerTask) -- so it only ever runs while we're
+        // actually trying to walk, and standing still anywhere else never counts as stuck.
+        //
+        // "Stationary" means we haven't moved MEANINGFUL_LOCATION_CHANGE_AMOUNT away from the
+        // anchor point, not merely "position didn't change tick-to-tick" -- small jitter from a
+        // jump or wiggle would otherwise reset the clock before the escalation ever got far
+        // enough to reach its next step.
+        //
+        // Escalates one step at a time as the stationary time crosses each
+        // WowPathfinding.STATIONARY_MILLIS_* threshold (see StuckRecoveryState). Giving up just
+        // sets LogoutTriggered -- UpdatePlayerGoalTask switches to PlayerGoal.LOG_OUT on the
+        // next tick.
+        //
+        // Returns true if it took a recovery action this tick, in which case the caller should
+        // end its tick there, since our position/walking state changed out from under it.
+        public async Task<bool> StuckRecoveryTask()
+        {
+            long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+
+            if (now - LastStuckCheckTime > STUCK_CHECK_STALE_MILLIS ||
+                Vector2.Distance(WorldState.PlayerLocation, StuckAnchor) >= MEANINGFUL_LOCATION_CHANGE_AMOUNT)
+            {
+                ResetStuckDetection();
+            }
+            LastStuckCheckTime = now;
+
+            long stationaryMillis = now - StuckAnchorTime;
+            switch (CurrentStuckRecoveryState)
+            {
+                case StuckRecoveryState.NOT_STUCK when stationaryMillis >= WowPathfinding.STATIONARY_MILLIS_BEFORE_JUMP:
+                    Console.WriteLine($"Stuck at {StuckAnchor} for {stationaryMillis}ms, jumping");
+                    await AvoidObstacleByJumping();
+                    CurrentStuckRecoveryState = StuckRecoveryState.JUMPED;
+                    break;
+                case StuckRecoveryState.JUMPED when stationaryMillis >= WowPathfinding.STATIONARY_MILLIS_BEFORE_WIGGLE:
+                    Console.WriteLine($"Stuck at {StuckAnchor} for {stationaryMillis}ms, wiggling left");
+                    await AvoidObstacle(left: true);
+                    CurrentStuckRecoveryState = StuckRecoveryState.WIGGLED_LEFT;
+                    break;
+                case StuckRecoveryState.WIGGLED_LEFT when stationaryMillis >= WowPathfinding.STATIONARY_MILLIS_BEFORE_SECOND_WIGGLE:
+                    Console.WriteLine($"Stuck at {StuckAnchor} for {stationaryMillis}ms, wiggling right");
+                    await AvoidObstacle(left: false);
+                    CurrentStuckRecoveryState = StuckRecoveryState.WIGGLED_RIGHT;
+                    break;
+                case StuckRecoveryState.WIGGLED_RIGHT when stationaryMillis >= WowPathfinding.STATIONARY_MILLIS_BEFORE_ALERT:
+                    Console.WriteLine($"Stuck at {StuckAnchor} for {stationaryMillis}ms, giving up");
+                    await EndWalkForwardTask();
+                    SetLogoutVariablesAndSlack("Stuck for a long time, couldn't wiggle out");
+                    CurrentStuckRecoveryState = StuckRecoveryState.GAVE_UP;
+                    break;
+                default:
+                    return false;
+            }
+
+            // The recovery action itself may have taken seconds (AvoidObstacle blocks ~4s), so
+            // don't let that count against the staleness check on the next call.
+            LastStuckCheckTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            return true;
+        }
+
         public bool WalkingForward = false;
         public async Task WalkToWaypointTask()
         {
+            if (await StuckRecoveryTask())
+            {
+                return;
+            }
+
             if (!WalkingForward)
             {
                 await StartWalkForwardTask();
@@ -1086,6 +1167,14 @@ namespace WoWHelper
 
         public async Task<bool> WalkToTargetMarkerTask()
         {
+            // Took a recovery action this tick -- stay in WALK_TO_TARGETED_ENEMY and re-check
+            // the marker next tick. (Same escalation as waypoint walking for now; abandoning the
+            // target instead of wiggling may turn out to be the better move here.)
+            if (await StuckRecoveryTask())
+            {
+                return true;
+            }
+
             //if (WalkingForward){ await EndWalkForwardTask(); }
             if (!WalkingForward){ await StartWalkForwardTask(); }
 

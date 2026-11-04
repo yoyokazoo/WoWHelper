@@ -52,6 +52,7 @@ namespace WoWHelper
         public LogoutState CurrentLogoutState { get; private set; }
         public FindEnemyTargetState CurrentFindEnemyTargetState { get; private set; }
         public BattleRecoveryState CurrentBattleRecoveryState { get; private set; }
+        public StuckRecoveryState CurrentStuckRecoveryState { get; private set; }
         public InteractWithNPCState CurrentInteractWithNPCState { get; private set; }
         public NavigateToEndOfCurrentRouteState CurrentNavigateToEndOfCurrentRouteState { get; private set; }
 
@@ -66,6 +67,11 @@ namespace WoWHelper
         public MerchantRunPhase CurrentMerchantRunPhase { get; private set; }
         public int CurrentMerchantWaypointIndex { get; private set; }
         public long MerchantRunStartTime { get; private set; }
+
+        // Stuck detection -- see StuckRecoveryTask (WowMovementTasks.cs)
+        public Vector2 StuckAnchor { get; private set; }
+        public long StuckAnchorTime { get; private set; }
+        public long LastStuckCheckTime { get; private set; }
 
         public bool LogoutTriggered { get; private set; }
         public string LogoutReason { get; private set; }
@@ -83,6 +89,8 @@ namespace WoWHelper
             CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentPlayerGoal = PlayerGoal.NONE;
             CurrentBattleRecoveryState = BattleRecoveryState.STARTING_RECOVERY;
+            CurrentStuckRecoveryState = StuckRecoveryState.NOT_STUCK;
+            LastStuckCheckTime = 0; // guarantees the first StuckRecoveryTask call starts a fresh episode
 
             CurrentWaypointIndex = -1;
             WaypointTraversalDirection = 1;
