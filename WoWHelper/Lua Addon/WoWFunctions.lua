@@ -1580,10 +1580,31 @@ local function GetClassTrainerSpells()
     return nil
 end
 
+-- "Rend (R2)" -> "Rend"; names without a rank suffix are returned as-is.
+local function TrainerSpellBaseName(name)
+    return (name:gsub(" %(R%d+%)$", ""))
+end
+
+-- Learning a higher rank replaces the lower one in Classic's spellbook, so
+-- IsPlayerSpell(lowerRankId) reads false afterwards (confirmed live: after
+-- training Rend R2, Rend R1 read as unlearned). A rank therefore counts as
+-- known if it, or any later entry for the same spell (tables are ordered by
+-- level, so later = higher rank), is known.
+function TrainerSpellRankKnown(trainerSpells, index)
+    local baseName = TrainerSpellBaseName(trainerSpells[index].name)
+    for j = index, #trainerSpells do
+        local other = trainerSpells[j]
+        if TrainerSpellBaseName(other.name) == baseName and PlayerKnowsSpellId(other.spellId) then
+            return true
+        end
+    end
+    return false
+end
+
 -- Interval-cached (see CacheOnInterval) and shared by both G6/G7 below, so the
 -- two always refresh together off the same snapshot. Means a level-up or a
 -- trainer visit can take up to a minute to show up -- fine for goal-setting.
-local GetUnlearnedTrainerSpells = CacheOnInterval(function()
+local function ComputeUnlearnedTrainerSpells()
     local unlearned = {}
     local trainerSpells = GetClassTrainerSpells()
     if not trainerSpells then
@@ -1591,18 +1612,41 @@ local GetUnlearnedTrainerSpells = CacheOnInterval(function()
     end
 
     local playerLevel = UnitLevel("player")
-    for _, spell in ipairs(trainerSpells) do
+    for i, spell in ipairs(trainerSpells) do
         -- requiresSpellId gates talent/quest-only ranks (e.g. Mortal Strike
         -- rank 2 needs the talent's rank 1): without it the entry is never
-        -- trainable, so it mustn't count as "unlearned" forever.
-        local gateMet = spell.requiresSpellId == nil or PlayerKnowsSpellId(spell.requiresSpellId)
-        if spell.level <= playerLevel and gateMet and not PlayerKnowsSpellId(spell.spellId) then
+        -- trainable, so it mustn't count as "unlearned" forever. Checked by
+        -- name, not ID: once rank 2 is learned, rank 1's ID stops reading as
+        -- known (see TrainerSpellRankKnown), which would un-gate rank 3.
+        local gateMet = spell.requiresSpellId == nil or IsSpellKnownByName(GetSpellInfo(spell.requiresSpellId))
+        if spell.level <= playerLevel and gateMet and not TrainerSpellRankKnown(trainerSpells, i) then
             table.insert(unlearned, spell)
         end
     end
 
     return unlearned
-end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
+end
+
+local GetUnlearnedTrainerSpells = CacheOnInterval(ComputeUnlearnedTrainerSpells, RARE_STATE_REFRESH_INTERVAL_SECONDS)
+
+-- /yytrain debug dump: what G6/G7 currently report (cached) vs. a fresh scan,
+-- plus every unlearned entry, to diagnose a "wants to train, nothing to train".
+function PrintTrainerSpellDebug()
+    local fresh = ComputeUnlearnedTrainerSpells()
+    local freshCost = 0
+    for _, spell in ipairs(fresh) do
+        freshCost = freshCost + spell.cost
+    end
+
+    print("YoyokazooUI: trainer-spell check (level " .. UnitLevel("player") .. ", money " .. GetMoney() .. "c) --")
+    print("  cached:  AllSkillsKnown=" .. tostring(AllSkillsKnownForThisLevel()) .. " CanAfford=" .. tostring(CanAffordToTrainAllSkills()))
+    print("  fresh:   " .. #fresh .. " unlearned, total cost " .. freshCost .. "c")
+    for _, spell in ipairs(fresh) do
+        print("    L" .. spell.level .. " " .. spell.name .. " (spellId " .. spell.spellId .. ", " .. spell.cost .. "c)"
+            .. " IsPlayerSpell=" .. tostring(IsPlayerSpell and IsPlayerSpell(spell.spellId))
+            .. " IsSpellKnown=" .. tostring(IsSpellKnown(spell.spellId)))
+    end
+end
 
 -- Packed into MultiBoolTwo's G6.
 function AllSkillsKnownForThisLevel()
@@ -1974,8 +2018,8 @@ end
 -- UnitCharacterPoints/GetTalentInfo/LearnTalent's behavior on this client
 -- build isn't verified live yet (see the top of CLAUDE.md) --
 -- AUTO_TALENT_DEBUG prints every talent the scan sees and why it was or
--- wasn't picked. Defaults ON until it's confirmed working; flip it off after.
-AUTO_TALENT_DEBUG = true
+-- wasn't picked. Off now; flip it back on if auto-talent needs debugging.
+AUTO_TALENT_DEBUG = false
 
 function AutoTalentDebugPrint(message)
     if AUTO_TALENT_DEBUG then

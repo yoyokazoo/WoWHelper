@@ -394,10 +394,18 @@ against `GetMoney()` (base cost, ignoring trainer rep discounts; true when
 nothing's unlearned). An entry may also carry `requiresSpellId`: it only
 counts once the player knows that spell — for later ranks of talent- or
 quest-granted abilities (Mortal Strike/Bloodthirst/Shield Slam/Intercept),
-which the trainer only offers if rank 1 is already known. Warrior is filled
+which the trainer only offers if rank 1 is already known (checked by name via
+`IsSpellKnownByName`, not by ID). Learning a higher rank replaces the lower
+one in the spellbook, so `IsPlayerSpell(lowerRankId)` reads false afterwards
+(confirmed live with Rend R1/R2) — `TrainerSpellRankKnown()` therefore
+counts an entry as known if it or any later same-named entry (`"Rend"` /
+`"Rend (R2)"`, matched by stripping the ` (Rn)` suffix) is known. Warrior is filled
 in for levels 1-60 (sourced from the WhatsTraining addon's data; quest
 spells, talent rank 1s, and weapon skills deliberately excluded);
 Shaman/Warlock tables are empty, so they always read "all known".
+`/yytrain` (`PrintTrainerSpellDebug()`) prints the cached G6/G7 values next
+to a fresh uncached scan, listing each unlearned entry with its
+`IsPlayerSpell`/`IsSpellKnown` results.
 G8 is `WowWorldState.GearNeedsRepair` (`GearNeedsRepair()`,
 `WoWFunctions.lua`): true if a melee weapon (main hand, or an off-hand
 *weapon* — shields count as armor) is at "yellow" durability or worse
@@ -1165,9 +1173,11 @@ of truth — edits should be made here, not in the WoW install directory.
   `PLAYER_LEVEL_UP`, `PLAYER_ENTERING_WORLD`, `PLAYER_REGEN_ENABLED`, and
   ticking the checkbox on. Each learned point fires `CHARACTER_POINTS_CHANGED`
   again, which spends the next one; a failed `LearnTalent` fires nothing, so
-  it stops rather than looping. Skipped in combat. Not confirmed live yet —
-  `AUTO_TALENT_DEBUG` (`WoWFunctions.lua`, currently **on**) prints each
-  build entry's current/target rank; turn it off once confirmed. Lua-only.
+  it stops rather than looping. Skipped in combat. Since
+  `PLAYER_REGEN_ENABLED` is a trigger, it re-runs the scan after every
+  fight (harmless — no free point means nothing happens).
+  `AUTO_TALENT_DEBUG` (`WoWFunctions.lua`, currently **off**) prints each
+  build entry's current/target rank. Lua-only.
 
 ## Tests (`WoWHelperUnitTests/`)
 

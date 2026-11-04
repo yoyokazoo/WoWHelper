@@ -1030,6 +1030,11 @@ end
 -- /yytarget Mottled,Scorpid rewrites the "0 Targ" target-finding macro's
 -- /target lines (SetTargetMacroMobs(), WoWFunctions.lua). Typed by the bot
 -- itself once it has picked a farming route (WowLocationConfiguration.TargetMacroMobNames).
+SLASH_YYTRAIN1 = "/yytrain"
+SlashCmdList["YYTRAIN"] = function()
+    PrintTrainerSpellDebug()
+end
+
 SLASH_YYTARGET1 = "/yytarget"
 SlashCmdList["YYTARGET"] = function(msg)
     local ok, reason = SetTargetMacroMobs(msg)
