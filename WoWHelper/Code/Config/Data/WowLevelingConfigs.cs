@@ -33,7 +33,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLevelingConfiguration LEVEL_7_THRU_9 = new WowLevelingConfiguration
         {
-            Levels = new List<int> { 7, 8, 9 },
+            Levels = new List<int> { 7, 8, 9, 10 },
 
             LocationConfigs = new List<WowLocationConfiguration>
             {

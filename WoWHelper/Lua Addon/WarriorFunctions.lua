@@ -125,6 +125,17 @@ WARRIOR_TRAINER_SPELLS = {
     { level = 60, name = "Shield Slam (R4)",      spellId = 23925, cost = 3100,  requiresSpellId = SHIELD_SLAM_R1 },
 }
 
+-- Talent build, read by FindNextTalentToLearn() in WoWFunctions.lua. Ordered;
+-- each entry is a cumulative target rank ("get this talent to rank N"), and a
+-- free point always goes to the first entry not yet reached. Matched by
+-- talent name, not tab/index. Only the first 11 points are stubbed in so far.
+WARRIOR_TALENT_BUILD = {
+    { name = "Deflection",       rank = 2 },
+    { name = "Improved Rend",    rank = 3 },
+    { name = "Tactical Mastery", rank = 5 },
+    { name = "Anger Management", rank = 1 },
+}
+
 -- Overpower rank 1, 7384 (GetSpellCooldown is queried by name, so rank 1's ID
 -- covers every rank). Both halves are needed: IsUsableSpell only reports
 -- whether the spell's *conditions* are met -- enough rage, and the 5s

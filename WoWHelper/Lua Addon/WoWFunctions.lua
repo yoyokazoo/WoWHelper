@@ -1964,3 +1964,78 @@ function FindNextAffordableTrainerService()
 
     return nil
 end
+
+-- Auto-pick talents: spends free talent points following the class's talent
+-- build table (WARRIOR_TALENT_BUILD in WarriorFunctions.lua -- Warrior only
+-- so far; any other class has no build and does nothing). Driven from
+-- YoyokazooUI.lua (CHARACTER_POINTS_CHANGED etc.), gated by the /yyconfig
+-- "Auto-pick talents" checkbox. Lua-only; nothing reaches the pixel row.
+--
+-- UnitCharacterPoints/GetTalentInfo/LearnTalent's behavior on this client
+-- build isn't verified live yet (see the top of CLAUDE.md) --
+-- AUTO_TALENT_DEBUG prints every talent the scan sees and why it was or
+-- wasn't picked. Defaults ON until it's confirmed working; flip it off after.
+AUTO_TALENT_DEBUG = true
+
+function AutoTalentDebugPrint(message)
+    if AUTO_TALENT_DEBUG then
+        print("YoyokazooUI auto-talent: " .. message)
+    end
+end
+
+local function GetClassTalentBuild()
+    local _, classFile = UnitClass("player")
+
+    if classFile == "WARRIOR" then
+        return WARRIOR_TALENT_BUILD
+    end
+
+    return nil
+end
+
+-- Returns tabIndex, talentIndex, name, currentRank, targetRank for the next
+-- point to spend, or nil if there's no free point, no build for this class,
+-- or the build is finished. Matched by name: a talent's index within its tab
+-- isn't guaranteed to follow its position in the tree. A build entry whose
+-- name isn't found at all stops the scan (rather than skipping ahead), so a
+-- typo can't shift every later point into the wrong talent.
+function FindNextTalentToLearn()
+    local build = GetClassTalentBuild()
+    if not build then
+        return nil
+    end
+
+    local freePoints = UnitCharacterPoints("player") or 0
+    if freePoints < 1 then
+        AutoTalentDebugPrint("no free talent points")
+        return nil
+    end
+
+    local talentsByName = {}
+    for tab = 1, (GetNumTalentTabs() or 0) do
+        for index = 1, (GetNumTalents(tab) or 0) do
+            local name, _, _, _, rank, maxRank = GetTalentInfo(tab, index)
+            if name then
+                talentsByName[name] = { tab = tab, index = index, rank = rank or 0, maxRank = maxRank }
+            end
+        end
+    end
+
+    for _, entry in ipairs(build) do
+        local talent = talentsByName[entry.name]
+        if not talent then
+            AutoTalentDebugPrint("build talent \"" .. entry.name .. "\" not found -- stopping")
+            return nil
+        end
+
+        AutoTalentDebugPrint("  " .. entry.name .. ": rank " .. talent.rank .. "/" .. tostring(talent.maxRank) ..
+            ", target " .. entry.rank .. " (tab " .. talent.tab .. ", index " .. talent.index .. ")")
+
+        if talent.rank < entry.rank then
+            return talent.tab, talent.index, entry.name, talent.rank, entry.rank
+        end
+    end
+
+    AutoTalentDebugPrint("build finished (" .. freePoints .. " point(s) left unspent)")
+    return nil
+end

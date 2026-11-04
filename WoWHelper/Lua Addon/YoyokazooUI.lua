@@ -113,6 +113,12 @@ if YoyokazooUIDB.autoTrainSkills == nil then
     YoyokazooUIDB.autoTrainSkills = true
 end
 
+-- Auto-spend free talent points per the class's talent build (see
+-- LearnNextTalentIfAny below). Defaults OFF. Lua-only.
+if YoyokazooUIDB.autoPickTalents == nil then
+    YoyokazooUIDB.autoPickTalents = false
+end
+
 -- Which dynamite-tier item AreWeLowOnDynamite() (WoWFunctions.lua) checks the bag
 -- count of -- selectable via the /yyconfig "Dynamite item" selector below instead
 -- of being hardcoded. Defaults to Dense Dynamite (18641), what it used to be
@@ -168,6 +174,10 @@ end
 
 function IsAutoTrainSkillsEnabled()
     return YoyokazooUIDB.autoTrainSkills
+end
+
+function IsAutoPickTalentsEnabled()
+    return YoyokazooUIDB.autoPickTalents
 end
 
 -- Read by AreWeLowOnDynamite() (WoWFunctions.lua). Not piped to the C# side at
@@ -256,6 +266,11 @@ frame:RegisterEvent("EQUIP_BIND_CONFIRM")
 frame:RegisterEvent("GOSSIP_SHOW")
 frame:RegisterEvent("TRAINER_SHOW")
 frame:RegisterEvent("TRAINER_CLOSED")
+-- pcall'd: an unknown event throws and would abort the rest of this file's
+-- load (see the note below), and this one isn't confirmed on this client yet.
+if not pcall(frame.RegisterEvent, frame, "CHARACTER_POINTS_CHANGED") then
+    print("YoyokazooUI: CHARACTER_POINTS_CHANGED not available -- auto-pick talents only runs on level-up/login/leaving combat.")
+end
 -- No AUTOEQUIP_BIND_CONFIRM: that event doesn't exist on this client
 -- (RegisterEvent throws "unknown event" -- confirmed live), and an error here
 -- aborts the rest of this file's load.
@@ -491,9 +506,56 @@ local function TrainNextAffordableSkill(generation, boughtCount, emptyRetries)
     end)
 end
 
+-- Auto-pick talents: learns one talent point per call, picked by
+-- FindNextTalentToLearn() (WoWFunctions.lua). Like auto-equip, it's not a
+-- timer chain: learning a talent fires CHARACTER_POINTS_CHANGED, which
+-- schedules the next point. If LearnTalent fails (e.g. a tier requirement
+-- isn't met), no event fires and it stops instead of retrying forever.
+-- Debounced, since level-up fires PLAYER_LEVEL_UP and
+-- CHARACTER_POINTS_CHANGED together.
+local AUTO_TALENT_DEBOUNCE_SECONDS = 0.5
+local autoTalentPending = false
+
+function LearnNextTalentIfAny()
+    if not IsAutoPickTalentsEnabled() then
+        return false
+    end
+
+    if InCombatLockdown() or UnitAffectingCombat("player") then
+        AutoTalentDebugPrint("skipped: in combat")
+        return false
+    end
+
+    local tab, index, name, currentRank, targetRank = FindNextTalentToLearn()
+    if not tab then
+        return false
+    end
+
+    print("YoyokazooUI: learning talent " .. name .. " (rank " .. (currentRank + 1) .. ", target " .. targetRank .. ")")
+    LearnTalent(tab, index)
+    return true
+end
+
+local function ScheduleAutoTalentPick()
+    if autoTalentPending then
+        return
+    end
+
+    autoTalentPending = true
+    C_Timer.After(AUTO_TALENT_DEBOUNCE_SECONDS, function()
+        autoTalentPending = false
+        LearnNextTalentIfAny()
+    end)
+end
+
 frame:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_WHISPER" then
         lastWhisperTime = GetTime()
+    end
+
+    if event == "CHARACTER_POINTS_CHANGED" or event == "PLAYER_LEVEL_UP"
+        or event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_REGEN_ENABLED" then
+        ScheduleAutoTalentPick()
     end
 
     if event == "LOOT_BIND_CONFIRM" then
@@ -1046,6 +1108,17 @@ SlashCmdList["YYCONFIG"] = function()
                 set = function(value)
                     YoyokazooUIDB.autoTrainSkills = value
                     print("YoyokazooUI: Auto-train skills " .. (value and "ON" or "OFF") .. " (saved).")
+                end,
+            },
+            {
+                label = "Auto-pick talents",
+                get = IsAutoPickTalentsEnabled,
+                set = function(value)
+                    YoyokazooUIDB.autoPickTalents = value
+                    print("YoyokazooUI: Auto-pick talents " .. (value and "ON" or "OFF") .. " (saved).")
+                    if value then
+                        ScheduleAutoTalentPick()
+                    end
                 end,
             },
             {

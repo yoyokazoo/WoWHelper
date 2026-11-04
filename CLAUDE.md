@@ -1149,6 +1149,26 @@ of truth — edits should be made here, not in the WoW install directory.
   confirmed live yet — `AUTO_TRAIN_DEBUG` (`WoWFunctions.lua`, currently
   **on**) prints every row scanned; turn it off once confirmed.
 
+  Also auto-picks talents: if the `/yyconfig` "Auto-pick talents" checkbox
+  (`YoyokazooUIDB.autoPickTalents`, `IsAutoPickTalentsEnabled()`, defaults
+  **off**) is on, `LearnNextTalentIfAny()` (`YoyokazooUI.lua`) spends one
+  free point (`UnitCharacterPoints`) via `LearnTalent(tab, index)`, picked by
+  `FindNextTalentToLearn()` (`WoWFunctions.lua`) from the class's ordered
+  build table — `WARRIOR_TALENT_BUILD` (`WarriorFunctions.lua`), entries
+  `{ name, rank }` meaning "get this talent to rank N", matched by talent
+  name (not tab/index). Warrior only — other classes have no build and do
+  nothing. Only the first 11 points are stubbed in (Deflection 2, Improved
+  Rend 3, Tactical Mastery 5, Anger Management 1). A build name that isn't
+  found stops the scan rather than skipping it. Triggered (debounced 0.5s,
+  `ScheduleAutoTalentPick()`) by `CHARACTER_POINTS_CHANGED` — registered
+  through `pcall` since it isn't confirmed on this client — plus
+  `PLAYER_LEVEL_UP`, `PLAYER_ENTERING_WORLD`, `PLAYER_REGEN_ENABLED`, and
+  ticking the checkbox on. Each learned point fires `CHARACTER_POINTS_CHANGED`
+  again, which spends the next one; a failed `LearnTalent` fires nothing, so
+  it stops rather than looping. Skipped in combat. Not confirmed live yet —
+  `AUTO_TALENT_DEBUG` (`WoWFunctions.lua`, currently **on**) prints each
+  build entry's current/target rank; turn it off once confirmed. Lua-only.
+
 ## Tests (`WoWHelperUnitTests/`)
 
 MSTest project. Feeds real captured `Source Images/*.bmp` screenshots (trade
