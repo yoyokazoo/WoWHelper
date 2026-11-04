@@ -71,7 +71,7 @@ see "Adding a new pixel" below):
 | 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6 and G1-G8 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair` |
+| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6, G1-G8, and B1 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
@@ -405,8 +405,18 @@ G8 is `WowWorldState.GearNeedsRepair` (`GearNeedsRepair()`,
 yellow, not exposed by the API), or any other equipped piece (armor, shield,
 ranged) is "red" (0 durability/broken). `GEAR_REPAIR_DEBUG` prints per-slot
 durability on each refresh. Nothing on the C# side consumes it yet. The G
-byte is now full; the B byte is still reserved for the next class-agnostic
-bool.
+byte is now full.
+
+B1 is `WowWorldState.IsTargetAttackable` — `ShouldWeAttackTarget()`
+(`WoWFunctions.lua`) packed on its own: the target exists, is attackable,
+alive, not PvP-flagged, doesn't con grey, isn't too far above the player's
+level, and isn't already in combat. It is pure eligibility. The per-class
+`CanChargeTarget`/`CanShootTarget`/`CanSpellcastPullTarget` bits (and so
+`CanEngageTarget()`) AND this same check with range/cooldown, so on their
+own they can't tell "valid but out of range" from "not a valid target";
+this bit can. Consumed by `PathfindingLoopTask`'s out-of-range chase (see
+the target-marker bullet in the C# architecture section). B2-B8 are still
+reserved for the next class-agnostic bool.
 
 **Per-route target macro:** the `"0 Targ"` macro (`TARGET_MACRO_NAME`) (`WowInput.FIND_TARGET_MACRO`) is the bot's target finder, and
 its `/target` lines are set per route: `WowLocationConfiguration.TargetMacroMobNames`
@@ -607,12 +617,14 @@ of truth — edits should be made here, not in the WoW install directory.
   once every `PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS` (1s — a full
   screen capture, so deliberately slower than the 200ms cadence above) it
   checks whether the marker is on screen while `CanEngageTarget()` is false
-  (i.e. we have a target, but it's out of range of our pull), and if so calls
+  but `WorldState.IsTargetAttackable` is true (i.e. we have a valid target,
+  it's just out of range of our pull), and if so calls
   `WalkTowardsTargetMarkerTask`: stop route-walking, `TurnToFaceTargetMarkerTask`,
   then walk straight forward for at most `WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS`
-  (2s) or until `CanEngageTarget() || IsInCombat || LogoutTriggered` — the same
+  (4s) or until `CanEngageTarget() || IsInCombat || LogoutTriggered` — the same
   early-exit the pathfinding loop itself uses, re-checked by the caller right
-  after. Unlike `WalkIntoMeleeRangeTask` it's a short nudge, not a commit; if
+  after — or until `IsTargetAttackable` drops (e.g. someone else pulled it),
+  which just hands back to route-walking. Unlike `WalkIntoMeleeRangeTask` it's a short nudge, not a commit; if
   the target's still out of range the next periodic scan just tries again.
   The addon never paints the marker on a target tapped by someone outside the
   group (`UnitIsTapDenied`, checked in `ShouldMarkCurrentTarget()` on

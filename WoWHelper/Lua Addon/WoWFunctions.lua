@@ -1785,7 +1785,16 @@ function GetMultiBoolTwo()
 
     local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
 
-    return rByte/255.0, gByte/255.0, 0
+    -- B1: the class-agnostic "is the current target a valid one to fight at all" check
+    -- (ShouldWeAttackTarget -- attackable, alive, not PvP, not grey, not too high, not
+    -- already in combat), with no range/cooldown folded in -- unlike the per-class
+    -- CanChargeTarget/CanShootTarget/CanSpellcastPullTarget bits, which AND this with
+    -- their own range/cooldown checks.
+    local boolB1 = ShouldWeAttackTarget()
+
+    local bByte = EncodeBooleansToByte(boolB1, false, false, false, false, false, false, false)
+
+    return rByte/255.0, gByte/255.0, bByte/255.0
 end
 
 function GetMultiIntOne()

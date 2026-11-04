@@ -112,6 +112,14 @@ namespace WoWHelper
         // WoWFunctions.lua. Refreshed by the addon only once a minute.
         public bool GearNeedsRepair { get; private set; }
 
+        // Decoded from MultiBoolTwo's B byte, b1. The current target is a valid one to fight
+        // at all -- ShouldWeAttackTarget() in WoWFunctions.lua (exists, attackable, alive, not
+        // PvP-flagged, doesn't con grey, not too many levels above us, not already in combat).
+        // Pure eligibility: unlike CanEngageTarget() / the per-class CanChargeTarget/
+        // CanShootTarget/CanSpellcastPullTarget bits, no range or cooldown is folded in, so
+        // this can tell "valid but out of range" apart from "not a valid target".
+        public bool IsTargetAttackable { get; private set; }
+
         public WowCombatConfiguration? PlayerClass { get; private set; }
 
         // Red Error Text in middle of screen
@@ -298,8 +306,9 @@ namespace WoWHelper
         // G2 (LogoutOnFullBagsEnabled), and G3 (HasDesiredWorldBuff) are packed into the
         // previously-unused G byte instead of continuing into R7/R8, followed by G4
         // (HighLatency), G5 (CombatStalemate), G6 (AllSkillsKnownForThisLevel), and G7
-        // (CanAffordToTrainAllSkills), and G8 (GearNeedsRepair) -- the B byte is still
-        // reserved for future class-agnostic flags (see GetMultiBoolTwo() in WoWFunctions.lua).
+        // (CanAffordToTrainAllSkills), and G8 (GearNeedsRepair). B1 is IsTargetAttackable;
+        // B2-B8 are still reserved for future class-agnostic flags (see GetMultiBoolTwo()
+        // in WoWFunctions.lua).
         public void UpdateMultiBoolTwo(Bitmap bmp)
         {
             Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
@@ -327,6 +336,10 @@ namespace WoWHelper
             AllSkillsKnownForThisLevel = g6;
             CanAffordToTrainAllSkills = g7;
             GearNeedsRepair = g8;
+
+            DecodeByte(color.B, out var b1, out _, out _, out _, out _, out _, out _, out _);
+
+            IsTargetAttackable = b1;
         }
 
         public void UpdateMultiIntOne(Bitmap bmp)
