@@ -251,6 +251,9 @@ namespace WoWHelper.Code.Config
             LootHeatmapIgnoreWidth = 77,
             LootHeatmapIgnoreHeight = 75,
 
+            MeleeRangeTargetMarkerDistance = 120,
+            TooCloseToTurnWhileWalkingTargetMarkerDistance = 200,
+
             SlackScreenshotCropRegion = new Rectangle(39, 786, 552, 161),
 
             // Measured via MouseTurnRateSweepTask, first at 15px steps 0-180px, then refined

@@ -382,10 +382,9 @@ namespace WoWHelper
                     break;
                 case InteractWithNPCState.BUILD_ROUTE_TO_NPC:
                     CurrentRoute = WowPathfinding.GetRouteToTarget(this, CurrentNPCTarget.Route);
+                    CurrentWaypointIndex = 0;
                     CurrentInteractWithNPCState = InteractWithNPCState.NAVIGATE_ROUTE_TO_NPC;
 
-                    // Manually set the initial waypoint
-                    CurrentWaypointIndex = 0;
                     CurrentNavigateToEndOfCurrentRouteState = NavigateToEndOfCurrentRouteState.FACE_WAYPOINT;
                     break;
                 case InteractWithNPCState.NAVIGATE_ROUTE_TO_NPC:
@@ -573,7 +572,7 @@ namespace WoWHelper
                     break;
                 case FindEnemyTargetState.WALK_TO_TARGETED_ENEMY:
                     var canStillSeeTargetMarker = await WalkToTargetMarkerTask();
-                    if (!canStillSeeTargetMarker)
+                    if (!canStillSeeTargetMarker || !WorldState.IsTargetAttackable)
                     {
                         CurrentFindEnemyTargetState = FindEnemyTargetState.FACE_WAYPOINT;
                     }
@@ -668,6 +667,16 @@ namespace WoWHelper
             // TODO: These first 4 levels where Warrior doesn't have charge are really funky, try and figure out a cleaner way to handle it all... or not
 
             if (FarmingLocationConfiguration == null)
+            {
+                return;
+            }
+
+            // TODO: invert the logic here so we opt in instead of opt out?
+            // Not yet done initial setup like picking a waypoint? Wait until we've done that
+            if (CurrentFindEnemyTargetState == FindEnemyTargetState.PICK_FARMING_LOCATION_CONFIG || 
+                CurrentFindEnemyTargetState == FindEnemyTargetState.PICK_NEXT_WAYPOINT ||
+                CurrentFindEnemyTargetState == FindEnemyTargetState.BUILD_ROUTE_TO_FARMING_LOCATION ||
+                CurrentFindEnemyTargetState == FindEnemyTargetState.NAVIGATE_TO_FARMING_LOCATION)
             {
                 return;
             }
