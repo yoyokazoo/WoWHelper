@@ -271,16 +271,12 @@ namespace WoWHelper.Code.WorldState
 
         #region Levels 1-10 Durotar
 
-        /*
-/target Elder
-/target Venom
-/target Armored
-/target Blood
-        */
         public static readonly WowLocationConfiguration LEVEL_9_DUROTAR_SKULL_ROCK_COAST = new WowLocationConfiguration
         {
             MaximumLevel = 12,
             Route = WowRoutes.LEVEL_9_DUROTAR_SKULL_ROCK_COAST_ROUTE,
+            TargetMacroMobNames = "Elder,Venom,Armored,Blood",
+            ChaseOutOfRangeTargets = true,
         };
 
         public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration

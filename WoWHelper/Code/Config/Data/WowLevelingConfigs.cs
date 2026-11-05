@@ -31,9 +31,9 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
-        public static readonly WowLevelingConfiguration LEVEL_7_THRU_9 = new WowLevelingConfiguration
+        public static readonly WowLevelingConfiguration LEVEL_7_THRU_10 = new WowLevelingConfiguration
         {
-            Levels = new List<int> { 7, 8, 9 },
+            Levels = new List<int> { 7, 8, 9, 10 },
 
             LocationConfigs = new List<WowLocationConfiguration>
             {
@@ -43,9 +43,9 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
-        public static readonly WowLevelingConfiguration LEVEL_10_THRU_12 = new WowLevelingConfiguration
+        public static readonly WowLevelingConfiguration LEVEL_11_THRU_12 = new WowLevelingConfiguration
         {
-            Levels = new List<int> { 10, 11, 12 },
+            Levels = new List<int> { 11, 12 },
 
             LocationConfigs = new List<WowLocationConfiguration>
             {
@@ -57,8 +57,8 @@ namespace WoWHelper.Code.WorldState
         {
             LEVEL_1_THRU_3,
             LEVEL_4_THRU_6,
-            LEVEL_7_THRU_9,
-            LEVEL_10_THRU_12,
+            LEVEL_7_THRU_10,
+            LEVEL_11_THRU_12,
         };
 
         // A config specific to this class wins over an any-class (Class == null) one at the

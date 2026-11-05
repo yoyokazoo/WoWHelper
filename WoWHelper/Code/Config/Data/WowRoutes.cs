@@ -285,6 +285,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(48.61f, 28.66f),
                 new Vector2(47.61f, 23.55f),
                 new Vector2(46.72f, 22.40f),
+                new Vector2(46.37f, 19.16f),
                 new Vector2(46.19f, 17.12f),
                 new Vector2(45.55f, 12.36f),
             }
@@ -297,8 +298,11 @@ namespace WoWHelper.Code.WorldState
 
             Waypoints = new List<Vector2>
             {
-                new Vector2(52.41f, 33.23f),
-
+                new Vector2(46.37f, 19.16f),
+                new Vector2(47.75f, 18.52f),
+                new Vector2(49.77f, 18.06f),
+                new Vector2(50.92f, 16.38f),
+                new Vector2(52.62f, 17.13f),
                 new Vector2(52.93f, 17.36f),
             }
         };
@@ -987,7 +991,8 @@ namespace WoWHelper.Code.WorldState
             RAZOR_HILL_LOOP_TO_RAZOR_HILL,
             RAZOR_HILL_TO_MERCHANT,
             RAZOR_HILL_TO_WARRIOR_TRAINER,
-            RAZOR_HILL_TO_ORG_ENTRANCE
+            RAZOR_HILL_TO_ORG_ENTRANCE,
+            ORG_ENTRANCE_TO_DUROTAR_SKULL_ROCK_COAST
         };
     }
 }
