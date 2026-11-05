@@ -107,8 +107,8 @@ namespace WoWHelper
         public bool AllSkillsKnownForThisLevel { get; private set; }
         public bool CanAffordToTrainAllSkills { get; private set; }
 
-        // Decoded from MultiBoolTwo's G byte, b8. A melee weapon at yellow durability or
-        // worse, or any other equipped piece at red (broken) -- see GearNeedsRepair() in
+        // Decoded from MultiBoolTwo's G byte, b8. A melee weapon or shield at yellow durability
+        // or worse, or any other equipped piece at red (broken) -- see GearNeedsRepair() in
         // WoWFunctions.lua. Refreshed by the addon only once a minute.
         public bool GearNeedsRepair { get; private set; }
 

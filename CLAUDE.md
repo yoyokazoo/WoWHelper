@@ -408,9 +408,9 @@ to a fresh uncached scan, listing each unlearned entry with its
 `IsPlayerSpell`/`IsSpellKnown` results.
 G8 is `WowWorldState.GearNeedsRepair` (`GearNeedsRepair()`,
 `WoWFunctions.lua`): true if a melee weapon (main hand, or an off-hand
-*weapon* — shields count as armor) is at "yellow" durability or worse
+*weapon*) or a shield is at "yellow" durability or worse
 (`DURABILITY_YELLOW_RATIO`, 25% — our approximation of the durability doll's
-yellow, not exposed by the API), or any other equipped piece (armor, shield,
+yellow, not exposed by the API), or any other equipped piece (armor,
 ranged) is "red" (0 durability/broken). `GEAR_REPAIR_DEBUG` prints per-slot
 durability on each refresh. Nothing on the C# side consumes it yet. The G
 byte is now full.

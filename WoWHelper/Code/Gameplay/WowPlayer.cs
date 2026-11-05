@@ -282,11 +282,11 @@ namespace WoWHelper
             // return;
             // }
 
-            // if (WorldState.GearNeedsRepair)
-            // {
-            // await SetPlayerGoalTask(PlayerGoal.REPAIR);
-            // return;
-            // }
+            if (WorldState.GearNeedsRepair)
+            {
+                await SetPlayerGoalTask(PlayerGoal.REPAIR);
+                return;
+            }
 
             // if (WorldState.HearthInWrongLocation)
             // {
@@ -357,11 +357,11 @@ namespace WoWHelper
                     break;
                 case PlayerGoal.TRAIN:
                 case PlayerGoal.SELL:
+                case PlayerGoal.REPAIR:
                     await PlayerInteractWithNPCTask();
                     break;
                 case PlayerGoal.TRAVEL:
                 case PlayerGoal.SET_HEARTH:
-                case PlayerGoal.REPAIR:
                     string errorMessage = $"ExecuteGoalTask not yet implemented for {CurrentPlayerGoal}";
                     SlackHelper.SendMessageToChannel(errorMessage);
                     await Task.Delay(500);

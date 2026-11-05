@@ -33,7 +33,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLevelingConfiguration LEVEL_7_THRU_9 = new WowLevelingConfiguration
         {
-            Levels = new List<int> { 7, 8, 9, 10 },
+            Levels = new List<int> { 7, 8, 9 },
 
             LocationConfigs = new List<WowLocationConfiguration>
             {
@@ -43,11 +43,22 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowLevelingConfiguration LEVEL_10_THRU_12 = new WowLevelingConfiguration
+        {
+            Levels = new List<int> { 10, 11, 12 },
+
+            LocationConfigs = new List<WowLocationConfiguration>
+            {
+                WowLocationConfigs.LEVEL_9_DUROTAR_SKULL_ROCK_COAST,
+            },
+        };
+
         public static readonly List<WowLevelingConfiguration> ALL_LEVELING_CONFIGS = new List<WowLevelingConfiguration>
         {
             LEVEL_1_THRU_3,
             LEVEL_4_THRU_6,
             LEVEL_7_THRU_9,
+            LEVEL_10_THRU_12,
         };
 
         // A config specific to this class wins over an any-class (Class == null) one at the

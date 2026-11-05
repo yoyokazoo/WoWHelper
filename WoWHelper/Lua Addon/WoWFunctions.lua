@@ -719,29 +719,31 @@ GEAR_REPAIR_DEBUG = false
 -- 25% is our approximation of the doll's yellow -- confirm live via
 -- GEAR_REPAIR_DEBUG if it seems off.
 local DURABILITY_YELLOW_RATIO = 0.25
-local WEAPON_CLASS_ID = 2 -- GetItemInfoInstant classID for weapons (shields are armor, 4)
+local WEAPON_CLASS_ID = 2 -- GetItemInfoInstant classID for weapons
+local SHIELD_EQUIP_LOC = "INVTYPE_SHIELD"
 
-local function IsMeleeWeaponSlot(slot)
+-- Slots repaired at yellow rather than only at red: the main hand, and an
+-- off-hand that's either a weapon or a shield (a held-in-off-hand item has no
+-- durability, so it never gets here anyway).
+local function IsYellowRepairSlot(slot)
     if slot == INVSLOT_MAINHAND then
         return true
     end
 
-    -- Off-hand is only a weapon if something with weapon class is in it --
-    -- a shield is armor, and a held-in-off-hand item has no durability.
     if slot == INVSLOT_OFFHAND then
         local itemId = GetInventoryItemID("player", slot)
         if not itemId then
             return false
         end
-        local _, _, _, _, _, classId = GetItemInfoInstant(itemId)
-        return classId == WEAPON_CLASS_ID
+        local _, _, _, equipLoc, _, classId = GetItemInfoInstant(itemId)
+        return classId == WEAPON_CLASS_ID or equipLoc == SHIELD_EQUIP_LOC
     end
 
     return false
 end
 
--- True if a melee weapon (main hand, or off-hand weapon) is at yellow durability
--- or worse, or any other equipped piece (armor, shield, ranged) is red/broken.
+-- True if a melee weapon (main hand, or off-hand weapon) or a shield is at yellow
+-- durability or worse, or any other equipped piece (armor, ranged) is red/broken.
 -- Slots without durability (neck, rings, cloak, trinkets, empty) return nil from
 -- GetInventoryItemDurability and are skipped. Interval-cached -- durability only
 -- moves a point at a time per hit taken/dealt or death, so once a minute is plenty.
@@ -752,17 +754,17 @@ GearNeedsRepair = CacheOnInterval(function()
     for slot = INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do
         local current, maximum = GetInventoryItemDurability(slot)
         if current and maximum and maximum > 0 then
-            local isWeapon = IsMeleeWeaponSlot(slot)
+            local isYellowSlot = IsYellowRepairSlot(slot)
             local slotNeedsRepair
-            if isWeapon then
+            if isYellowSlot then
                 slotNeedsRepair = (current / maximum) <= DURABILITY_YELLOW_RATIO
             else
                 slotNeedsRepair = current == 0
             end
 
             if GEAR_REPAIR_DEBUG then
-                print(string.format("GearNeedsRepair: slot %d %d/%d weapon=%s needsRepair=%s",
-                    slot, current, maximum, tostring(isWeapon), tostring(slotNeedsRepair)))
+                print(string.format("GearNeedsRepair: slot %d %d/%d yellowSlot=%s needsRepair=%s",
+                    slot, current, maximum, tostring(isYellowSlot), tostring(slotNeedsRepair)))
             end
 
             if slotNeedsRepair then
@@ -1744,8 +1746,8 @@ end
 -- COMBAT_STALEMATE_SECONDS, e.g. aggroed by a mob that can't path to us.
 -- G6 (AllSkillsKnownForThisLevel()) and G7 (CanAffordToTrainAllSkills()) feed
 -- the C# leveling-goal logic (WowLevelingConfigs.cs) -- see the class
--- trainer tables those read. G8 (GearNeedsRepair()) is a weapon at yellow
--- durability or any other piece broken. The G byte is now full; the B byte is
+-- trainer tables those read. G8 (GearNeedsRepair()) is a weapon or shield at
+-- yellow durability or any other piece broken. The G byte is now full; the B byte is
 -- still fully reserved for future class-agnostic flags.
 ------------------------------------------------------------
 -- Target-finding macro. The bot presses this macro (WowInput.FIND_TARGET_MACRO)

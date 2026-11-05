@@ -32,12 +32,12 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowNPCConfiguration RAZOR_HILL_MERCHANT = new WowNPCConfiguration
         {
-            Name = "??? razor hill merchant",
+            Name = "Ghrawt (Razor Hill)",
             Route = new WowRoute
             {
                 Name = "Valley of Trials Merchant",
                 Zone = WowZone.Durotar,
-                Waypoints = new List<Vector2> { new Vector2(42.58f, 67.34f) }
+                Waypoints = new List<Vector2> { new Vector2(52.98f, 41.03f) }
             },
             Roles = NPCRoles.Sell | NPCRoles.Repair | NPCRoles.Arrows
         };

@@ -290,6 +290,19 @@ namespace WoWHelper.Code.WorldState
             }
         };
 
+        public static readonly WowRoute ORG_ENTRANCE_TO_DUROTAR_SKULL_ROCK_COAST = new WowRoute
+        {
+            Name = "Org Entrance To Durotar Skull Rock Coast",
+            Zone = WowZone.Durotar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(52.41f, 33.23f),
+
+                new Vector2(52.93f, 17.36f),
+            }
+        };
+
         // Need to implement cross-zone pathing to work with Org
         /*
         public static readonly WowRoute ORG_ENTRANCE_TO_SKINNING_TRAINER = new WowRoute
