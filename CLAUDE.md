@@ -74,6 +74,24 @@ see "Adding a new pixel" below):
 | 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6, G1-G8, and B1 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable` |
 | 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 
+**Pixel status bars:** directly below the row, `InitializePixelRow()` also
+stacks three `PIXEL_BAR_WIDTH` x `PIXEL_BAR_HEIGHT` (100 x 3, same height as
+the row's swatches) physical-pixel `StatusBar`s (`CreatePixelStatusBar()`,
+`UIFunctions.lua`), all at x = 0, empty color `(0, 0, 0)`:
+
+| Bar | Physical y rows (read center) | Fill | Values |
+|---|---|---|---|
+| Player health | 3-5 (4) | `(0, 255, 0)` | `UnitHealth`/`UnitHealthMax("player")` |
+| Player resource | 6-8 (7) | `(0, 0, 255)` | `UnitPower`/`UnitPowerMax("player")` |
+| Target health | 9-11 (10) | `(255, 0, 0)` | `UnitHealth`/`UnitHealthMax("target")`, empty if no target |
+
+Filled pixels = percent. They exist because Midnight-rules clients return
+secret values Lua can't do math on (`MultiIntOne`'s percents read a fallback
+100 there), but a `StatusBar` accepts secrets and renders them itself.
+Nothing on the C# side reads them yet. Each row/bar update in
+`InitializePixelRow()`'s loop is `pcall`'d, printing each distinct error
+once, so one failing populate function can't freeze everything after it.
+
 Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
 matching Lua's `EncodeFloatToColor`); packed bools bit-pack 8 flags per
 channel (`DecodeByte`, order MUST match between Lua's `EncodeBooleansToByte`
@@ -856,7 +874,9 @@ of truth — edits should be made here, not in the WoW install directory.
   `EquipItemByName`/`IsSpellKnown`/`UnitBuff`/`UnitDebuff`/`UnitAura` —
   which use the global if present, else the `C_Spell`/`C_Item`/`C_UnitAuras`
   replacement converted back to the old return shape; call those, not the
-  bare globals). On Midnight-rules clients (`issecretvalue` exists),
+  bare globals. The aura shims swallow the in-combat "auras cannot be
+  accessed when secret" error and return nil, so on Midnight-rules clients
+  every aura-based flag reads "not present" during combat). On Midnight-rules clients (`issecretvalue` exists),
   `YoyokazooUI.lua` skips registering `COMBAT_LOG_EVENT_UNFILTERED`
   (forbidden there — raises the "blocked from an action" popup), so
   `TargetRecentlyEvaded` never fires and `IsCombatStalemate()` always

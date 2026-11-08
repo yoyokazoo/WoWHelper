@@ -88,23 +88,37 @@ local function UnpackAuraDataCompat(aura)
         aura.nameplateShowPersonal, aura.spellId
 end
 
+-- Midnight-rules clients (WoW Forever) make auras secret in combat:
+-- C_UnitAuras.Get*DataByIndex throws ("auras cannot be accessed when secret").
+-- Treat that the same as "no aura at this index" so callers' scan loops just
+-- end, instead of the error unwinding through the pixel-row populate
+-- functions. Consequence: every aura-based flag reads "not present" in combat
+-- on those clients. Also bail if the name itself comes back secret, since
+-- every caller compares it.
+local function SafeAuraQuery(queryFunc, unit, index, filter)
+    local ok, aura = pcall(queryFunc, unit, index, filter)
+    if not ok or not aura then return nil end
+    if IsAnySecretValue(aura.name) then return nil end
+    return UnpackAuraDataCompat(aura)
+end
+
 function Compat_UnitBuff(unit, index, filter)
     if UnitBuff then return UnitBuff(unit, index, filter) end
     if not (C_UnitAuras and C_UnitAuras.GetBuffDataByIndex) then return nil end
-    return UnpackAuraDataCompat(C_UnitAuras.GetBuffDataByIndex(unit, index, filter))
+    return SafeAuraQuery(C_UnitAuras.GetBuffDataByIndex, unit, index, filter)
 end
 
 function Compat_UnitAura(unit, index, filter)
     if UnitAura then return UnitAura(unit, index, filter) end
     if not (C_UnitAuras and C_UnitAuras.GetAuraDataByIndex) then return nil end
     -- old UnitAura defaulted to helpful auras when no filter was passed
-    return UnpackAuraDataCompat(C_UnitAuras.GetAuraDataByIndex(unit, index, filter or "HELPFUL"))
+    return SafeAuraQuery(C_UnitAuras.GetAuraDataByIndex, unit, index, filter or "HELPFUL")
 end
 
 function Compat_UnitDebuff(unit, index, filter)
     if UnitDebuff then return UnitDebuff(unit, index, filter) end
     if not (C_UnitAuras and C_UnitAuras.GetDebuffDataByIndex) then return nil end
-    return UnpackAuraDataCompat(C_UnitAuras.GetDebuffDataByIndex(unit, index, filter))
+    return SafeAuraQuery(C_UnitAuras.GetDebuffDataByIndex, unit, index, filter)
 end
 
 -- How often "rare change" state (bag fullness, consumable counts, gear

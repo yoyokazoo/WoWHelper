@@ -142,6 +142,71 @@ function CreatePixelSwatch(parent, x, y, size, colorFunc)
     }
 end
 
+-- Pixel status bar geometry/colors, in real screen pixels / 0-1 RGB. Width is
+-- 100 so each filled pixel is exactly 1%. Fill/empty colors must stay
+-- distinct from the target marker (magenta) and the row sentinel.
+PIXEL_BAR_WIDTH  = 100
+PIXEL_BAR_HEIGHT = 3  -- matches the pixel row's PIXEL_SIZE; read the center row (y + 1)
+PIXEL_BAR_EMPTY_COLOR = { 0, 0, 0 }  -- (0, 0, 0)
+PLAYER_HEALTH_BAR_FILL_COLOR = { 0, 1, 0 }  -- (0, 255, 0)
+RESOURCE_BAR_FILL_COLOR      = { 0, 0, 1 }  -- (0, 0, 255)
+TARGET_HEALTH_BAR_FILL_COLOR = { 1, 0, 0 }  -- (255, 0, 0)
+
+-- Value sources for the bars: each returns (current, max), possibly secret.
+function GetPlayerHealthBarValues()
+    return UnitHealth("player"), UnitHealthMax("player")
+end
+
+function GetPlayerResourceBarValues()
+    return UnitPower("player"), UnitPowerMax("player")
+end
+
+function GetTargetHealthBarValues()
+    -- UnitExists isn't secret; with no target, show an empty bar rather than
+    -- whatever a 0/0 StatusBar happens to render.
+    if not UnitExists("target") then return 0, 1 end
+    return UnitHealth("target"), UnitHealthMax("target")
+end
+
+-- A StatusBar pinned at (x, y) real screen pixels from the screen's top-left,
+-- filled with valuesFunc()'s (current, max). Positioned the same way as
+-- CreatePixelSwatch (re-converted every update). Values are passed straight
+-- through to the widget without any Lua-side math, so it works even when
+-- UnitHealth/UnitPower etc. return secret values (Midnight-rules clients).
+--
+-- Returns: { frame = <StatusBar>, update = <function> }
+function CreatePixelStatusBar(parent, x, y, width, height, fillColor, valuesFunc)
+    local bar = CreateFrame("StatusBar", nil, parent)
+    bar:SetFrameStrata("TOOLTIP")
+    bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
+    bar:SetStatusBarColor(fillColor[1], fillColor[2], fillColor[3], 1)
+    bar:SetOrientation("HORIZONTAL")
+
+    local bg = bar:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints(bar)
+    bg:SetColorTexture(PIXEL_BAR_EMPTY_COLOR[1], PIXEL_BAR_EMPTY_COLOR[2], PIXEL_BAR_EMPTY_COLOR[3], 1)
+
+    local function UpdateBar()
+        local pixelsPerUnit = GetPhysicalPixelsPerLocalUnit()
+
+        bar:ClearAllPoints()
+        bar:SetSize(width / pixelsPerUnit, height / pixelsPerUnit)
+        bar:SetPoint("TOPLEFT", parent, "TOPLEFT", x / pixelsPerUnit, -(y / pixelsPerUnit))
+
+        -- No comparisons/arithmetic here on purpose -- these may be secret values.
+        local current, max = valuesFunc()
+        bar:SetMinMaxValues(0, max)
+        bar:SetValue(current)
+    end
+
+    UpdateBar()
+
+    return {
+        frame = bar,
+        update = UpdateBar,
+    }
+end
+
 --------------------------------------------------
 -- Run-specific settings menu (/yyconfig) -- toggles like "log out on low
 -- dynamite"/"log out on full bags" used to be hardcoded per-profile in the C#
@@ -299,8 +364,24 @@ function InitializePixelRow()
     AddSwatch(8, GetMultiBoolTwo)
     AddSwatch(9, GetClassBoolTwo)
 
+    -- Status bars, stacked directly below the swatch row: player health,
+    -- player resource, target health. Midnight-rules clients return secret
+    -- values from UnitHealth/UnitPower, which Lua can't do math on (so
+    -- MultiIntOne's percents fall back to 100 there) -- but a StatusBar widget
+    -- accepts secret values in SetMinMaxValues/SetValue and renders them
+    -- itself. The bot reads each percent back by counting filled pixels.
+    local function AddBar(barIndex, fillColor, valuesFunc)
+        local y = PIXEL_SIZE + barIndex * PIXEL_BAR_HEIGHT
+        table.insert(swatches, CreatePixelStatusBar(UIParent, 0, y, PIXEL_BAR_WIDTH, PIXEL_BAR_HEIGHT, fillColor, valuesFunc))
+    end
+
+    AddBar(0, PLAYER_HEALTH_BAR_FILL_COLOR, GetPlayerHealthBarValues)
+    AddBar(1, RESOURCE_BAR_FILL_COLOR,      GetPlayerResourceBarValues)
+    AddBar(2, TARGET_HEALTH_BAR_FILL_COLOR, GetTargetHealthBarValues)
+
     local checkInterval = 0.05
     local elapsedTime = 0
+    local reportedPixelRowErrors = {}
 
     local updaterFrame = CreateFrame("Frame")
     updaterFrame:SetScript("OnUpdate", function(self, elapsed)
@@ -308,8 +389,18 @@ function InitializePixelRow()
         if elapsedTime < checkInterval then return end
         elapsedTime = 0
 
-        for _, swatch in ipairs(swatches) do
-            swatch.update()
+        -- Each update is pcall'd so one failing swatch/bar can't abort the
+        -- loop and freeze everything after it. Each distinct error is printed
+        -- once (with its index) so in-combat failures show up in chat.
+        for i, swatch in ipairs(swatches) do
+            local ok, err = pcall(swatch.update)
+            if not ok then
+                local key = i .. ":" .. tostring(err)
+                if not reportedPixelRowErrors[key] then
+                    reportedPixelRowErrors[key] = true
+                    print("|cffff4040YoyokazooUI pixel row update #" .. i .. " failed (combat=" .. tostring(InCombatLockdown()) .. "):|r " .. tostring(err))
+                end
+            end
         end
     end)
 end
