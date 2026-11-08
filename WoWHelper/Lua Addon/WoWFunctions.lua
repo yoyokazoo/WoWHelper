@@ -1,3 +1,112 @@
+--------------------------------------------------
+-- API compatibility shims (Classic Era vs. modern / WoW Forever clients)
+--------------------------------------------------
+-- Modern clients removed these old globals in favor of C_Spell / C_Item /
+-- C_UnitAuras, several of which return a table instead of multiple values.
+-- Each Compat_ function uses the old global if it exists (Classic Era, behavior
+-- unchanged) and otherwise calls the namespaced replacement and converts its
+-- result back to the old return shape, so call sites don't need to change.
+-- Named Compat_* rather than redefining the Blizzard globals, so other addons'
+-- "does this API exist" checks aren't fooled.
+
+function Compat_GetSpellInfo(spell)
+    if GetSpellInfo then return GetSpellInfo(spell) end
+    local info = C_Spell and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(spell)
+    if not info then return nil end
+    -- old shape: name, rank, icon, castTime, minRange, maxRange, spellId
+    return info.name, nil, info.iconID, info.castTime, info.minRange, info.maxRange, info.spellID
+end
+
+function Compat_GetSpellCooldown(spell)
+    if GetSpellCooldown then return GetSpellCooldown(spell) end
+    local info = C_Spell and C_Spell.GetSpellCooldown and C_Spell.GetSpellCooldown(spell)
+    if not info then return nil end
+    -- old shape: start, duration, enabled (1/0 number, not a boolean)
+    return info.startTime, info.duration, (info.isEnabled and 1 or 0), info.modRate
+end
+
+function Compat_IsSpellInRange(spell, unit)
+    if IsSpellInRange then return IsSpellInRange(spell, unit) end
+    if not (C_Spell and C_Spell.IsSpellInRange) then return nil end
+    local inRange = C_Spell.IsSpellInRange(spell, unit)
+    -- old shape: 1 = in range, 0 = out of range, nil = not applicable
+    if inRange == nil then return nil end
+    return inRange and 1 or 0
+end
+
+function Compat_IsUsableSpell(spell)
+    if IsUsableSpell then return IsUsableSpell(spell) end
+    if not (C_Spell and C_Spell.IsSpellUsable) then return false end
+    return C_Spell.IsSpellUsable(spell)
+end
+
+function Compat_IsCurrentSpell(spell)
+    if IsCurrentSpell then return IsCurrentSpell(spell) end
+    if not (C_Spell and C_Spell.IsCurrentSpell) then return false end
+    return C_Spell.IsCurrentSpell(spell)
+end
+
+function Compat_GetItemInfo(item)
+    if GetItemInfo then return GetItemInfo(item) end
+    if not (C_Item and C_Item.GetItemInfo) then return nil end
+    return C_Item.GetItemInfo(item)
+end
+
+function Compat_GetItemInfoInstant(item)
+    if GetItemInfoInstant then return GetItemInfoInstant(item) end
+    if not (C_Item and C_Item.GetItemInfoInstant) then return nil end
+    return C_Item.GetItemInfoInstant(item)
+end
+
+function Compat_EquipItemByName(item, slot)
+    if EquipItemByName then return EquipItemByName(item, slot) end
+    if C_Item and C_Item.EquipItemByName then return C_Item.EquipItemByName(item, slot) end
+end
+
+function Compat_IsSpellKnown(spellId)
+    if IsSpellKnown then return IsSpellKnown(spellId) end
+    if C_SpellBook and C_SpellBook.IsSpellKnown then return C_SpellBook.IsSpellKnown(spellId) end
+    return IsPlayerSpell and IsPlayerSpell(spellId) or false
+end
+
+function Compat_GetItemCount(item, includeBank, includeCharges)
+    if GetItemCount then return GetItemCount(item, includeBank, includeCharges) end
+    if not (C_Item and C_Item.GetItemCount) then return 0 end
+    return C_Item.GetItemCount(item, includeBank, includeCharges)
+end
+
+-- Converts a C_UnitAuras AuraData table to UnitBuff/UnitDebuff's old shape:
+-- name, icon, count, debuffType, duration, expirationTime, source,
+-- isStealable, nameplateShowPersonal, spellId
+local function UnpackAuraDataCompat(aura)
+    if not aura then return nil end
+    if AuraUtil and AuraUtil.UnpackAuraData then
+        return AuraUtil.UnpackAuraData(aura)
+    end
+    return aura.name, aura.icon, aura.applications, aura.dispelName, aura.duration,
+        aura.expirationTime, aura.sourceUnit, aura.isStealable,
+        aura.nameplateShowPersonal, aura.spellId
+end
+
+function Compat_UnitBuff(unit, index, filter)
+    if UnitBuff then return UnitBuff(unit, index, filter) end
+    if not (C_UnitAuras and C_UnitAuras.GetBuffDataByIndex) then return nil end
+    return UnpackAuraDataCompat(C_UnitAuras.GetBuffDataByIndex(unit, index, filter))
+end
+
+function Compat_UnitAura(unit, index, filter)
+    if UnitAura then return UnitAura(unit, index, filter) end
+    if not (C_UnitAuras and C_UnitAuras.GetAuraDataByIndex) then return nil end
+    -- old UnitAura defaulted to helpful auras when no filter was passed
+    return UnpackAuraDataCompat(C_UnitAuras.GetAuraDataByIndex(unit, index, filter or "HELPFUL"))
+end
+
+function Compat_UnitDebuff(unit, index, filter)
+    if UnitDebuff then return UnitDebuff(unit, index, filter) end
+    if not (C_UnitAuras and C_UnitAuras.GetDebuffDataByIndex) then return nil end
+    return UnpackAuraDataCompat(C_UnitAuras.GetDebuffDataByIndex(unit, index, filter))
+end
+
 -- How often "rare change" state (bag fullness, consumable counts, gear
 -- durability, trainable skills) is actually recomputed. These get polled on the
 -- pixel row's ~50-100ms OnUpdate cadence (plus the debug frame's), but none of
@@ -76,13 +185,13 @@ function ShouldWeAttackTarget()
 end
 
 function SpellIsCooledDown(spellId)
-    local spellName = GetSpellInfo(spellId)
+    local spellName = Compat_GetSpellInfo(spellId)
     if not spellName then
         -- Should never happen unless spell is unknown (e.g., very low level)
         return false
     end
 
-    local start, duration, enabled = GetSpellCooldown(spellName)
+    local start, duration, enabled = Compat_GetSpellCooldown(spellName)
 
     if start == nil then
         return false
@@ -150,12 +259,12 @@ end
 -- Returns true if the *spell's own* cooldown is finished.
 -- If the only cooldown present is the GCD, returns true.
 function SpellIsCooledDownIgnoringGCD(spellId)
-    local spellName = GetSpellInfo(spellId)
+    local spellName = Compat_GetSpellInfo(spellId)
     if not spellName then
         return false
     end
 
-    local start, duration, enabled = GetSpellCooldown(spellName)
+    local start, duration, enabled = Compat_GetSpellCooldown(spellName)
 
     -- If API returns nil or spell is unusable for some reason
     if not start or enabled == 0 then
@@ -176,7 +285,7 @@ function SpellIsCooledDownIgnoringGCD(spellId)
     -- If we're here, spell has a cooldown reported. It might just be the GCD -- probe the
     -- same class-appropriate real spell IsGlobalCooldownCooledDown() does (GetGCDProbeSpell()
     -- above), not the GCD_SPELL_ID placeholder directly (confirmed not to work on this client).
-    local gcdStart, gcdDuration = GetSpellCooldown(GetGCDProbeSpell())
+    local gcdStart, gcdDuration = Compat_GetSpellCooldown(GetGCDProbeSpell())
 
     -- If no GCD data, fall back to original behavior
     if not gcdStart or gcdDuration == 0 then
@@ -204,20 +313,20 @@ function SpellIsInRangeAndCooledDown(spellId)
     local unit = "target"
 
     -- Resolve spell name from its ID
-    local spellName = GetSpellInfo(spellId)
+    local spellName = Compat_GetSpellInfo(spellId)
     if not spellName then
         -- Should never happen unless spell is unknown (e.g., very low level)
         return false
     end
 
     -- 1) Range check
-    local inRange = IsSpellInRange(spellName, unit)
+    local inRange = Compat_IsSpellInRange(spellName, unit)
     if inRange ~= 1 then
         return false
     end
 
     -- 2) Cooldown check
-    local start, duration, enabled = GetSpellCooldown(spellName)
+    local start, duration, enabled = Compat_GetSpellCooldown(spellName)
 
     -- removing this check for now -> we should be using macros to hop into correct stance
     -- If it's not enabled, you can't use it (e.g., disabled by stance/form)
@@ -242,14 +351,14 @@ function SpellIsInRange(spellId)
     local unit = "target"
 
     -- Resolve spell name from its ID
-    local spellName = GetSpellInfo(spellId)
+    local spellName = Compat_GetSpellInfo(spellId)
     if not spellName then
         -- Should never happen unless spell is unknown (e.g., very low level)
         return false
     end
 
     -- 1) Range check
-    local inRange = IsSpellInRange(spellName, unit)
+    local inRange = Compat_IsSpellInRange(spellName, unit)
     if inRange ~= 1 then
         return false
     end
@@ -288,9 +397,24 @@ end
 --------------------------------------------------
 -- Health: player (percent 0�100)
 --------------------------------------------------
+-- Midnight-rules clients (WoW Forever) can return "secret" values from
+-- UnitHealth/UnitPower etc.; any arithmetic or comparison on one throws.
+-- issecretvalue() doesn't exist on older clients (Classic Era), so guard it.
+-- Temporary for the Forever port: callers just return 100 when a value is secret.
+local SECRET_VALUE_FALLBACK_PERCENT = 100
+
+function IsAnySecretValue(...)
+    if not issecretvalue then return false end
+    for i = 1, select("#", ...) do
+        if issecretvalue((select(i, ...))) then return true end
+    end
+    return false
+end
+
 function GetPlayerHealthPercent()
     local hp  = UnitHealth("player")
     local max = UnitHealthMax("player")
+    if IsAnySecretValue(hp, max) then return SECRET_VALUE_FALLBACK_PERCENT end
     if max == 0 then return 0 end
     return math.floor((hp / max) * 100 + 0.5)
 end
@@ -303,6 +427,7 @@ function GetPlayerResourcePercent()
     local cur = UnitPower("player", powerType)
     local max = UnitPowerMax("player", powerType)
 
+    if IsAnySecretValue(cur, max) then return SECRET_VALUE_FALLBACK_PERCENT end
     if max == 0 then return 0 end
     return math.floor((cur / max) * 100 + 0.5)
 end
@@ -317,6 +442,7 @@ function GetTargetHealthPercent()
 
     local hp  = UnitHealth("target")
     local max = UnitHealthMax("target")
+    if IsAnySecretValue(hp, max) then return SECRET_VALUE_FALLBACK_PERCENT end
     if max == 0 then return 0 end
     return math.floor((hp / max) * 100 + 0.5)
 end
@@ -525,7 +651,7 @@ function IsFacingTarget()
 end
 
 function IsAttacking()
-    return IsCurrentSpell(6603) -- Auto Attack
+    return Compat_IsCurrentSpell(6603) -- Auto Attack
     --print(IsCurrentAction(9))
     --return IsCurrentAction(81)
 end
@@ -533,7 +659,7 @@ end
 function HasBuffNamed(buffName)
     local i = 1
     while true do
-        local name, icon = UnitBuff("player", i)
+        local name, icon = Compat_UnitBuff("player", i)
         if not name then
             return false -- no more buffs; not found
         end
@@ -571,7 +697,7 @@ end
 -- fireblast rank 1, 2136
 -- cone of cold rank 1,
 function IsSpellUsable(spellId)
-    return IsUsableSpell(spellId)
+    return Compat_IsUsableSpell(spellId)
 end
 
 -- Whether the player knows a spell, matched by exact name instead of a
@@ -582,6 +708,25 @@ end
 -- Shaman dispatch). Used for spells where the possible spell ID(s) aren't
 -- confidently known, e.g. CanCurePoison/CanCureDisease in ShamanFunctions.lua.
 function IsSpellKnownByName(name)
+    -- Modern clients (WoW Forever) replaced the spell-tab globals with
+    -- C_SpellBook skill lines; Classic Era still has GetNumSpellTabs.
+    if not GetNumSpellTabs then
+        if not (C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines) then return false end
+        local bank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player
+        for line = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+            local info = C_SpellBook.GetSpellBookSkillLineInfo(line)
+            if info then
+                local offset = info.itemIndexOffset or 0
+                for i = offset + 1, offset + (info.numSpellBookItems or 0) do
+                    if C_SpellBook.GetSpellBookItemName(i, bank) == name then
+                        return true
+                    end
+                end
+            end
+        end
+        return false
+    end
+
     for tab = 1, GetNumSpellTabs() do
         local _, _, offset, numSpells = GetSpellTabInfo(tab)
         for i = offset + 1, offset + numSpells do
@@ -676,7 +821,7 @@ HEALING_POTION_ITEM_CHOICES = {
 -- state, and nothing reading this needs to notice within the minute. Note a
 -- /yyconfig selector change also only shows up on the next refresh.
 AreWeLowOnHealthPotions = CacheOnInterval(function()
-    local count = GetItemCount(GetHealingPotionItemId(), false)
+    local count = Compat_GetItemCount(GetHealingPotionItemId(), false)
     return count < 2
 end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
@@ -696,7 +841,7 @@ DYNAMITE_ITEM_CHOICES = {
 
 -- Interval-cached, same as AreWeLowOnHealthPotions() above.
 AreWeLowOnDynamite = CacheOnInterval(function()
-    local dynamiteCount = GetItemCount(GetDynamiteItemId(), false)
+    local dynamiteCount = Compat_GetItemCount(GetDynamiteItemId(), false)
     return dynamiteCount < 2
 end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
@@ -705,7 +850,7 @@ end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 -- sharp arrow, 2515
 -- Interval-cached, same as AreWeLowOnHealthPotions() above.
 AreWeLowOnAmmo = CacheOnInterval(function()
-    local ammoCount = GetItemCount(2515, false)
+    local ammoCount = Compat_GetItemCount(2515, false)
     return ammoCount < 2
 end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
@@ -733,7 +878,7 @@ local function IsMeleeWeaponSlot(slot)
         if not itemId then
             return false
         end
-        local _, _, _, _, _, classId = GetItemInfoInstant(itemId)
+        local _, _, _, _, _, classId = Compat_GetItemInfoInstant(itemId)
         return classId == WEAPON_CLASS_ID
     end
 
@@ -780,7 +925,7 @@ end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
 function TargetHasDebuffSpellId(debuffSpellId)
   for i = 1, 40 do
-    local _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("target", i)
+    local _, _, _, _, _, _, _, _, _, spellId = Compat_UnitDebuff("target", i)
     if not spellId then break end
 
     if spellId == debuffSpellId then
@@ -793,7 +938,7 @@ end
 
 function TargetHasDebuffSpellName(debuffSpellName)
   for i = 1, 40 do
-    local spellName, _, _, _, _, _, _, _, _, _ = UnitDebuff("target", i)
+    local spellName, _, _, _, _, _, _, _, _, _ = Compat_UnitDebuff("target", i)
     if not spellName then break end
 
     if spellName == debuffSpellName then
@@ -958,7 +1103,7 @@ end
 -- for the full reasoning and confirmed-vs-untested status of each class's pick) instead
 -- of GCD_SPELL_ID directly, which never showed a cooldown in testing on this client.
 function IsGlobalCooldownCooledDown()
-    local start, duration = GetSpellCooldown(GetGCDProbeSpell())
+    local start, duration = Compat_GetSpellCooldown(GetGCDProbeSpell())
 
     if not start or duration == 0 then
         return true
@@ -1156,7 +1301,7 @@ function ShouldAutoSellItem(itemInfo, mode)
 
     -- GetItemInfo returns nil for an item the client hasn't cached yet; that
     -- shows up as name=nil here rather than as a silent non-match.
-    local itemName = GetItemInfo(itemInfo.itemID)
+    local itemName = Compat_GetItemInfo(itemInfo.itemID)
 
     if mode == "allowlist" then
         if quality == 0 then
@@ -1345,7 +1490,7 @@ local function PlayerKnowsSpellId(spellId)
     if IsPlayerSpell then
         return IsPlayerSpell(spellId)
     end
-    return IsSpellKnown(spellId)
+    return Compat_IsSpellKnown(spellId)
 end
 
 -- Weighted stat score for an item link, per AUTO_EQUIP_STAT_WEIGHTS for the
@@ -1362,7 +1507,8 @@ function GetItemEquipScore(itemLink)
         return 0
     end
 
-    local stats = GetItemStats(itemLink) or {}
+    local getItemStats = GetItemStats or (C_Item and C_Item.GetItemStats)
+    local stats = (getItemStats and getItemStats(itemLink)) or {}
     local score = 0
     local dump = {}
     for statKey, value in pairs(stats) do
@@ -1387,7 +1533,7 @@ local function GetAutoEquipCandidateSlots(itemLink, quality)
 
     -- GetItemInfo returns nil for an item the client hasn't cached yet; the
     -- next BAG_UPDATE_DELAYED scan will pick it up once it has.
-    local _, _, _, _, minLevel, _, _, _, equipLoc = GetItemInfo(itemLink)
+    local _, _, _, _, minLevel, _, _, _, equipLoc = Compat_GetItemInfo(itemLink)
     if not equipLoc then
         return nil, "item info not cached yet"
     end
@@ -1401,7 +1547,7 @@ local function GetAutoEquipCandidateSlots(itemLink, quality)
         return nil, "requires level " .. minLevel
     end
 
-    local _, _, _, _, _, classId, subclassId = GetItemInfoInstant(itemLink)
+    local _, _, _, _, _, classId, subclassId = Compat_GetItemInfoInstant(itemLink)
     if classId ~= 4 then
         return nil, "not armor (classID " .. tostring(classId) .. ")"
     end
@@ -1496,7 +1642,7 @@ end
 
 function IsPlayerPetrified()
     for i = 1, 40 do
-        local name = UnitAura("player", i)
+        local name = Compat_UnitAura("player", i)
         if not name then
             return false
         end
@@ -1533,7 +1679,7 @@ local DEBUFF_TYPE_MIN_REMAINING_SECONDS = 5
 
 function PlayerHasDebuffType(debuffType)
   for i = 1, 40 do
-    local name, _, _, thisDebuffType, duration, expirationTime = UnitDebuff("player", i)
+    local name, _, _, thisDebuffType, duration, expirationTime = Compat_UnitDebuff("player", i)
     if not name then break end
 
     if thisDebuffType == debuffType then

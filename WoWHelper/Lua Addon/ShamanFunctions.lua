@@ -30,11 +30,11 @@ function HasRockbiterWeaponMainHand()
 end
 
 function ShouldCastRockbiterWeapon()
-    return IsSpellKnown(8017) and IsSpellUsable(8017) and not HasRockbiterWeaponMainHand()
+    return Compat_IsSpellKnown(8017) and IsSpellUsable(8017) and not HasRockbiterWeaponMainHand()
 end
 
 function ShouldCastLightningShield()
-    return IsSpellKnown(324) and IsSpellUsable(324) and not HasBuffNamed("Lightning Shield")
+    return Compat_IsSpellKnown(324) and IsSpellUsable(324) and not HasBuffNamed("Lightning Shield")
 end
 
 -- Earth Shock Rank 1, 8042

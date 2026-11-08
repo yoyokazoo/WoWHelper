@@ -846,7 +846,21 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`WoWFunctions.lua`** — class-agnostic game-state queries (in melee range,
   in combat, should-attack-target checks, spell cooldown/range checks incl.
   GCD-aware cooldown detection, attacker counting, etc.) — the "is X true"
-  logic layer, plus `GetMultiBoolOne/Two`/`GetMultiIntOne/Two` (shared-state
+  logic layer (temporary, for the WoW Forever / Midnight-rules port:
+  `GetPlayerHealthPercent`/`GetPlayerResourcePercent`/`GetTargetHealthPercent`
+  return 100 when `IsAnySecretValue()` sees a secret value, instead of
+  erroring — so `MultiIntOne` reads 100 for those on that client; also, the
+  top of the file has `Compat_*` shims for old globals modern clients removed
+  — `GetSpellInfo`/`GetSpellCooldown`/`IsSpellInRange`/`IsUsableSpell`/
+  `IsCurrentSpell`/`GetItemInfo`/`GetItemInfoInstant`/`GetItemCount`/
+  `EquipItemByName`/`IsSpellKnown`/`UnitBuff`/`UnitDebuff`/`UnitAura` —
+  which use the global if present, else the `C_Spell`/`C_Item`/`C_UnitAuras`
+  replacement converted back to the old return shape; call those, not the
+  bare globals). On Midnight-rules clients (`issecretvalue` exists),
+  `YoyokazooUI.lua` skips registering `COMBAT_LOG_EVENT_UNFILTERED`
+  (forbidden there — raises the "blocked from an action" popup), so
+  `TargetRecentlyEvaded` never fires and `IsCombatStalemate()` always
+  returns false (gated on the `COMBAT_LOG_AVAILABLE` global), plus `GetMultiBoolOne/Two`/`GetMultiIntOne/Two` (shared-state
   pixel populate functions) and `GetClassBoolOne/Two`/`GetClassIntOne`
   (class-specific dispatchers — see "Class split" above). The
   `IsTargetCasterMob`/`IsTargetRunnerMob`/`IsTargetFireImmune` checks here

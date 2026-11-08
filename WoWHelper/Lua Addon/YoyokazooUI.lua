@@ -241,11 +241,40 @@ local function ApplyDebugFrameVisibility()
     end
 end
 
+-- Temporary diagnostic for the WoW Forever port: prints which function
+-- triggered the "YoyokazooUI has been blocked from an action" popup.
+-- ADDON_ACTION_BLOCKED/ADDON_ACTION_FORBIDDEN pass (addonName, functionName).
+-- Registered before any of our other RegisterEvent calls so it also catches
+-- a block caused by one of those. Prints a stack trace too, though it may only
+-- show Blizzard's own code depending on where the event is dispatched from.
+-- Each registration is pcall'd in case an event name doesn't exist on a client.
+local BLOCKED_ACTION_DEBUG = true
+if BLOCKED_ACTION_DEBUG then
+    local blockedFrame = CreateFrame("Frame")
+    for _, e in ipairs({ "ADDON_ACTION_BLOCKED", "ADDON_ACTION_FORBIDDEN", "MACRO_ACTION_BLOCKED", "MACRO_ACTION_FORBIDDEN" }) do
+        pcall(blockedFrame.RegisterEvent, blockedFrame, e)
+    end
+    blockedFrame:SetScript("OnEvent", function(_, event, addonName, functionName)
+        print(string.format("|cffff0000[blocked]|r %s: addon=%s function=%s inCombat=%s",
+            event, tostring(addonName), tostring(functionName), tostring(InCombatLockdown())))
+        print(debugstack(2, 8, 0))
+    end)
+end
+
 frame:RegisterEvent("CHAT_MSG_WHISPER")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("PLAYER_XP_UPDATE")
 frame:RegisterEvent("PLAYER_LEVEL_UP")
-frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+-- Midnight-rules clients (WoW Forever) forbid addons from registering the
+-- combat log: it isn't a Lua error (pcall won't catch it), it raises the
+-- "has been blocked from an action" popup instead. issecretvalue only exists
+-- on those clients, so it's used as the "Midnight rules" check. Without it,
+-- HasRecentTargetEvade() never fires and IsCombatStalemate() is disabled
+-- (see COMBAT_LOG_AVAILABLE there).
+COMBAT_LOG_AVAILABLE = (issecretvalue == nil)
+if COMBAT_LOG_AVAILABLE then
+    frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+end
 frame:RegisterEvent("LOOT_BIND_CONFIRM")
 frame:RegisterEvent("PLAYER_REGEN_DISABLED")
 frame:RegisterEvent("MERCHANT_SHOW")
@@ -300,7 +329,7 @@ function EquipBestUpgradeIfBetter()
 
     print("YoyokazooUI: equipping upgrade " .. upgrade.itemLink .. " (score +" .. upgrade.gain .. ")")
     lastAutoEquipTime = GetTime()
-    EquipItemByName(upgrade.itemLink, upgrade.inventorySlot)
+    Compat_EquipItemByName(upgrade.itemLink, upgrade.inventorySlot)
     return true
 end
 
@@ -869,6 +898,13 @@ end
 -- at the top of this file, and PLAYER_REGEN_DISABLED/COMBAT_LOG_EVENT_UNFILTERED
 -- handling above.
 function IsCombatStalemate()
+    -- Without the combat log nothing ever refreshes lastCombatActivityTime
+    -- after combat starts, so every fight would read as a stalemate after
+    -- 30s (and the bot would log out mid-fight). Disabled instead.
+    if not COMBAT_LOG_AVAILABLE then
+        return false
+    end
+
     if not UnitAffectingCombat("player") or not lastCombatActivityTime then
         return false
     end

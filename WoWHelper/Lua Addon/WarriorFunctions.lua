@@ -189,14 +189,14 @@ end
 
 -- shoot gun, shoot crossbow
 function WaitingToShoot()
-    return IsCurrentSpell(7918) or IsCurrentSpell(2480) or IsCurrentSpell(5019)
+    return Compat_IsCurrentSpell(7918) or Compat_IsCurrentSpell(2480) or Compat_IsCurrentSpell(5019)
 end
 
 function IsAnyNextSwingSpellQueued()
     -- Action queue abilities always satisfy IsCurrentSpell()
     -- So check if ANY known next-swing spell is current.
-    if IsCurrentSpell("Heroic Strike") then return true end
-    if IsCurrentSpell("Cleave")        then return true end
+    if Compat_IsCurrentSpell("Heroic Strike") then return true end
+    if Compat_IsCurrentSpell("Cleave")        then return true end
     return false
 end
 
@@ -307,8 +307,8 @@ function CanCastSweepingStrikes()
     local result = SpellIsCooledDownIgnoringGCD(12292)
 
     if SWEEPING_STRIKES_DEBUG then
-        local spellName = GetSpellInfo(12292)
-        local start, duration, enabled = GetSpellCooldown(spellName or 12292)
+        local spellName = Compat_GetSpellInfo(12292)
+        local start, duration, enabled = Compat_GetSpellCooldown(spellName or 12292)
         local remaining = (start and duration) and (start + duration - GetTime()) or nil
         print(string.format(
             "|cffff9900[sweep]|r CanCastSweepingStrikes: spellName(12292)=%s start=%s duration=%s enabled=%s remaining=%s -> ignoringGCD=%s plainCooledDown=%s",
