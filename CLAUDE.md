@@ -89,7 +89,18 @@ Filled pixels = percent. They exist because Midnight-rules clients return
 secret values Lua can't do math on (`MultiIntOne`'s percents read a fallback
 100 there), but a `StatusBar` accepts secrets and renders them itself.
 `WowWorldState.UpdateStatusBars()` decodes them into `PlayerHpPercent`/
-`ResourcePercent`/`TargetHpPercent`: since a bar fills left to right,
+`ResourcePercent`/`TargetHpPercent`.
+
+Below those (physical y rows 12-14), a **bool bar**: `MultiBoolOne`'s 24
+flags unpacked into one 3x3 swatch each, at x = 0, 3, ..., 69 in bit order
+(R1-R8, G1-G8, B1-B8), green `(0, 255, 0)` = true, red `(255, 0, 0)` = false.
+Both it and the packed `GetMultiBoolOne()` pixel are built from the one
+`MULTI_BOOL_ONE_FIELDS` list (`WoWFunctions.lua`), so they can't disagree.
+Each flag is `pcall`'d on its own (`BoolBarColor()`, `UIFunctions.lua`), so
+one throwing reads red without affecting the rest. Nothing on the C# side
+reads the bool bar yet — it still decodes the packed pixel.
+
+For the status bars: since a bar fills left to right,
 `ReadStatusBarPercent()` binary-searches the center row for the first
 unfilled pixel (at most 7 reads per bar), "filled" meaning the bar's fill
 channel is >= 128. Geometry lives on `WowScreenConfiguration`
@@ -884,12 +895,24 @@ of truth — edits should be made here, not in the WoW install directory.
   replacement converted back to the old return shape; call those, not the
   bare globals. The aura shims swallow the in-combat "auras cannot be
   accessed when secret" error and return nil, so on Midnight-rules clients
-  every aura-based flag reads "not present" during combat. Likewise
-  `Compat_GetSpellCooldown` returns "ready" (0, 0) when the cooldown comes
-  back secret in combat, so every cooldown check (`SpellIsCooledDown`,
-  `IsGlobalCooldownCooledDown`, etc.) reads "off cooldown" there;
-  `SECRET_COOLDOWN_DEBUG` prints once per spell which cooldown fields were
-  secret). On Midnight-rules clients (`issecretvalue` exists),
+  every aura-based flag reads "not present" during combat. Cooldowns are
+  also secret in combat there — `startTime`/`duration`/`modRate` are secret,
+  but `isEnabled`/`isActive` stay readable, and `isActive` is confirmed live
+  to track the cooldown/GCD — so when the timings are secret,
+  `Compat_GetSpellCooldown` answers from `isActive`: inactive → "ready"
+  (0, 0), active → a stand-in "on cooldown" shape (`GetTime()`, 1s) that makes
+  every caller's remaining-time math positive (real remaining time is
+  unknown). Every cooldown check (`SpellIsCooledDown`,
+  `IsGlobalCooldownCooledDown`, etc.) keeps working in combat this way; the
+  one imprecision is `SpellIsCooledDownIgnoringGCD`, which can read a spell on
+  a real cooldown as "ready apart from the GCD" while the GCD is running. If
+  `isActive` is ever unreadable it falls back to "ready".
+  `SECRET_COOLDOWN_DEBUG` (off) prints once per spell which cooldown fields
+  were secret. `/yycd [spellId|off]`
+  (`YoyokazooUI.lua`, watcher in `WoWFunctions.lua`) is a debug-only watcher
+  that prints each `isActive` flip, with timestamp/combat/remaining time, plus
+  every successful player cast, to confirm whether `isActive` tracks the
+  cooldown in combat). On Midnight-rules clients (`issecretvalue` exists),
   `YoyokazooUI.lua` skips registering `COMBAT_LOG_EVENT_UNFILTERED`
   (forbidden there — raises the "blocked from an action" popup), so
   `TargetRecentlyEvaded` never fires and `IsCombatStalemate()` always
@@ -956,14 +979,15 @@ of truth — edits should be made here, not in the WoW install directory.
   `IsGlobalCooldownCooledDown()` (which decodes into `WorldState.GCDCooledDown`)
   both now probe the same class-appropriate real spell via a shared
   `GetGCDProbeSpell()` — Shaman: Lightning Bolt Rank 1 (confirmed live);
-  Warrior: Rend Rank 1 (772 — not ideal, since Rend isn't trainable until
-  level 4, but it's the first ability a Warrior learns that actually
-  triggers the GCD; this replaced an original Warrior pick of Heroic Strike,
-  which is confirmed wrong outright — Heroic Strike doesn't trigger the GCD
+  Warrior: Battle Shout Rank 1 (6673 — known from level 1, triggers the GCD,
+  no cooldown of its own; confirmed live on the Forever client. It replaced Rend Rank 1
+  (772), which isn't trainable until level 4 and so gave no cooldown info
+  at all below that; Rend in turn replaced an original pick of Heroic
+  Strike, confirmed wrong outright — Heroic Strike doesn't trigger the GCD
   at all in Classic); Warlock: Shadow Bolt Rank 1 (still unconfirmed live).
   Before this, both functions separately probed the dedicated GCD spell ID
-  (61304), confirmed via testing to never show a cooldown on this client for
-  any class — `SpellIsCooledDownIgnoringGCD()` was silently non-functional
+  (61304), confirmed via testing to never show a cooldown on Classic Era for
+  any class (and on the Forever client it returns no cooldown info at all) — `SpellIsCooledDownIgnoringGCD()` was silently non-functional
   until this fix. Note the Warrior rotation's `WarriorShouldCastX` checks are
   game-state only (buff up? proc available? target already debuffed?) and
   deliberately don't look at rage: the `if/else if` chain in

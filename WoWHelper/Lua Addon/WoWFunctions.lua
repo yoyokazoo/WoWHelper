@@ -18,17 +18,29 @@ function Compat_GetSpellInfo(spell)
 end
 
 -- Midnight-rules clients (WoW Forever) make spell cooldowns secret in combat:
--- comparing/doing math on start/duration throws ("duration is a secret number
--- value"). When that happens we return "ready" (0, 0, enabled) -- every caller
--- treats that as off cooldown. Chosen over "on cooldown" since a false "ready"
--- just means the bot presses an ability that isn't up yet (the game ignores
--- it), while a false "on cooldown" would stall every rotation completely.
+-- comparing/doing math on startTime/duration/modRate throws ("duration is a
+-- secret number value"). isEnabled and isActive stay readable, and isActive
+-- was confirmed live (via /yycd on Battle Shout, in and out of combat) to go
+-- true exactly while the cooldown/GCD is running. So when the timings are
+-- secret, Compat_GetSpellCooldown answers from isActive instead:
+--   isActive false -> "ready":       (0, 0, enabled)
+--   isActive true  -> "on cooldown": (GetTime(), SECRET_COOLDOWN_STAND_IN_DURATION, enabled)
+-- The real remaining time is unknown, so the "on cooldown" shape is a
+-- stand-in that just makes every caller's remaining-time math come out
+-- positive. Note SpellIsCooledDownIgnoringGCD() compares a spell's window
+-- against the GCD probe's, and two stand-ins built the same frame match --
+-- so while the GCD is running, a spell on a longer real cooldown reads
+-- "ready apart from the GCD". It reads correctly again once the GCD ends.
+--
+-- If isActive itself is unreadable (secret/missing -- not seen so far), we
+-- fall back to "ready": a false "ready" just means the bot presses an ability
+-- that isn't up yet (the game ignores it), while a false "on cooldown" would
+-- stall every rotation completely.
 --
 -- SECRET_COOLDOWN_DEBUG prints, once per spell, which fields of the
--- C_Spell.GetSpellCooldown table came back secret -- to find out whether
--- anything (e.g. isOnGCD) is still readable in combat to build a better
--- answer from.
-SECRET_COOLDOWN_DEBUG = true
+-- C_Spell.GetSpellCooldown table came back secret.
+SECRET_COOLDOWN_DEBUG = false
+local SECRET_COOLDOWN_STAND_IN_DURATION = 1
 local reportedSecretCooldownSpells = {}
 
 local function ReportSecretCooldown(spell, info)
@@ -46,12 +58,145 @@ local function ReportSecretCooldown(spell, info)
     print("|cffff9900[cooldown]|r " .. tostring(spell) .. " secret in combat: " .. table.concat(parts, ", "))
 end
 
+--------------------------------------------------
+-- Cooldown watcher (/yycd, YoyokazooUI.lua) -- debug-only. Confirms whether
+-- C_Spell.GetSpellCooldown's isActive field (readable in combat even when
+-- startTime/duration are secret) actually tracks a running cooldown. Polls
+-- each watched spell every COOLDOWN_WATCH_INTERVAL seconds and prints only
+-- when isActive changes, with a timestamp, whether we're in combat, and the
+-- remaining time when it's readable (out of combat), so isActive can be
+-- checked against real numbers out of combat and then watched in combat.
+-- Also prints each successful player cast, to line the flips up against.
+--------------------------------------------------
+local COOLDOWN_WATCH_INTERVAL = 0.05
+local cooldownWatchSpells = {}      -- spellId -> last seen isActive (or "unseen")
+local cooldownWatchFrame = nil
+local cooldownWatchElapsed = 0
+
+local function CooldownWatchPrint(text)
+    print(string.format("|cff40c0ff[cdwatch %.2f]|r %s", GetTime(), text))
+end
+
+local function DescribeMaybeSecret(value)
+    if IsAnySecretValue(value) then return "SECRET" end
+    return tostring(value)
+end
+
+local function SampleWatchedCooldown(spellId)
+    local info = C_Spell.GetSpellCooldown(spellId)
+    if not info then
+        return "noinfo", "no cooldown info (spell unknown?)"
+    end
+
+    local isActive = info.isActive
+    if IsAnySecretValue(isActive) then
+        return "secret", "isActive=SECRET"
+    end
+
+    local remaining
+    if IsAnySecretValue(info.startTime, info.duration) then
+        remaining = "SECRET"
+    elseif info.duration == 0 then
+        remaining = "0"
+    else
+        remaining = string.format("%.2f", info.startTime + info.duration - GetTime())
+    end
+
+    return tostring(isActive), string.format("isActive=%s remaining=%s", tostring(isActive), remaining)
+end
+
+local function CooldownWatchTick(self, elapsed)
+    cooldownWatchElapsed = cooldownWatchElapsed + elapsed
+    if cooldownWatchElapsed < COOLDOWN_WATCH_INTERVAL then return end
+    cooldownWatchElapsed = 0
+
+    for spellId, lastState in pairs(cooldownWatchSpells) do
+        local ok, state, description = pcall(SampleWatchedCooldown, spellId)
+        if not ok then
+            state, description = "error", "error: " .. tostring(state)
+        end
+        if state ~= lastState then
+            cooldownWatchSpells[spellId] = state
+            CooldownWatchPrint(string.format("%s (%d) %s combat=%s",
+                tostring(C_Spell.GetSpellName and C_Spell.GetSpellName(spellId) or "?"), spellId,
+                description, tostring(UnitAffectingCombat("player"))))
+        end
+    end
+end
+
+local function CooldownWatchEvent(self, event, unit, castGUID, spellId)
+    -- Events still fire on a hidden frame (only OnUpdate stops), so check
+    -- the watch list rather than relying on Hide().
+    if not next(cooldownWatchSpells) then return end
+    local name = "?"
+    if not IsAnySecretValue(spellId) and C_Spell.GetSpellName then
+        name = tostring(C_Spell.GetSpellName(spellId))
+    end
+    CooldownWatchPrint(string.format("cast succeeded: %s (%s)", name, DescribeMaybeSecret(spellId)))
+end
+
+function IsCooldownWatchRunning()
+    return cooldownWatchFrame ~= nil and cooldownWatchFrame:IsShown()
+end
+
+-- Adds spellId to the watch list (or removes it if already watched), and
+-- starts/stops the watcher as the list becomes non-empty/empty.
+function ToggleCooldownWatchSpell(spellId)
+    if not (C_Spell and C_Spell.GetSpellCooldown) then
+        print("YoyokazooUI: /yycd needs C_Spell.GetSpellCooldown (not on this client).")
+        return
+    end
+
+    if cooldownWatchSpells[spellId] ~= nil then
+        cooldownWatchSpells[spellId] = nil
+        print("YoyokazooUI: stopped watching cooldown of spell " .. spellId)
+    else
+        cooldownWatchSpells[spellId] = "unseen"
+        print("YoyokazooUI: watching cooldown of spell " .. spellId)
+    end
+
+    if not cooldownWatchFrame then
+        cooldownWatchFrame = CreateFrame("Frame")
+        cooldownWatchFrame:SetScript("OnUpdate", CooldownWatchTick)
+        cooldownWatchFrame:SetScript("OnEvent", CooldownWatchEvent)
+        cooldownWatchFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+    end
+
+    if next(cooldownWatchSpells) then
+        cooldownWatchFrame:Show()
+    else
+        cooldownWatchFrame:Hide()
+    end
+end
+
+function StopCooldownWatch()
+    wipe(cooldownWatchSpells)
+    if cooldownWatchFrame then cooldownWatchFrame:Hide() end
+    print("YoyokazooUI: cooldown watch stopped.")
+end
+
+-- Answer for a cooldown whose timings came back secret -- see the comment
+-- above SECRET_COOLDOWN_DEBUG. info may be nil (old global path, no table).
+local function SecretCooldownFromIsActive(info)
+    if type(info) ~= "table" or info.isActive == nil or IsAnySecretValue(info.isActive, info.isEnabled) then
+        return 0, 0, 1, 1
+    end
+
+    local enabled = info.isEnabled and 1 or 0
+    if info.isActive then
+        return GetTime(), SECRET_COOLDOWN_STAND_IN_DURATION, enabled, 1
+    end
+    return 0, 0, enabled, 1
+end
+
 function Compat_GetSpellCooldown(spell)
     if GetSpellCooldown then
         local start, duration, enabled, modRate = GetSpellCooldown(spell)
         if IsAnySecretValue(start, duration, enabled) then
-            ReportSecretCooldown(spell, nil)
-            return 0, 0, 1, 1
+            -- The old global has no isActive -- borrow it from C_Spell if present.
+            local info = C_Spell and C_Spell.GetSpellCooldown and C_Spell.GetSpellCooldown(spell)
+            ReportSecretCooldown(spell, info)
+            return SecretCooldownFromIsActive(info)
         end
         return start, duration, enabled, modRate
     end
@@ -63,7 +208,7 @@ function Compat_GetSpellCooldown(spell)
     -- below would throw on a secret.
     if IsAnySecretValue(info.startTime, info.duration, info.isEnabled) then
         ReportSecretCooldown(spell, info)
-        return 0, 0, 1, 1
+        return SecretCooldownFromIsActive(info)
     end
 
     -- old shape: start, duration, enabled (1/0 number, not a boolean)
@@ -289,13 +434,12 @@ local GCD_SPELL_ID = 61304
 -- Confirmed via testing: Shaman (Lightning Bolt Rank 1, same spell ID
 -- CanSpellcastPullTarget() already uses above).
 --
--- Warrior: Rend Rank 1 (772 -- same rank-1 ID TargetHasRend()'s name-match comment in
--- WarriorFunctions.lua lists among Rend's 7 ranks). Not ideal -- Rend isn't trainable
--- until level 4, so GetSpellCooldown(772) returns no start/duration at all below that
--- (both callers below already treat "no start" as "GCD/cooldown clear", so a level 1-3
--- Warrior just always reads as cooled down rather than actually tracking anything) -- but
--- it's the first ability a Warrior learns that actually triggers the GCD, so there's no
--- earlier-available real probe to use instead.
+-- Warrior: Battle Shout Rank 1 (6673) -- known from level 1, triggers the GCD, no
+-- cooldown of its own. Replaced Rend Rank 1 (772), which isn't trainable until level 4,
+-- so a level 1-3 Warrior got no cooldown info at all and always read as cooled down.
+-- Confirmed live on the Forever client (/yycd: isActive tracks the GCD in and out of
+-- combat); not yet re-checked on Classic Era. (The generic GCD spell 61304 doesn't help here either:
+-- on the Forever client it returns no cooldown info at all, "spell unknown".)
 --
 -- NOT yet confirmed via testing: Warlock (Shadow Bolt Rank 1, same spell ID
 -- CanSpellcastPullTarget() uses above, known from level 1, no cooldown beyond GCD). Verify
@@ -307,7 +451,7 @@ function GetGCDProbeSpell()
     if classFile == "SHAMAN" then
         return 403 -- Lightning Bolt (Rank 1)
     elseif classFile == "WARRIOR" then
-        return 772 -- Rend (Rank 1)
+        return 6673 -- Battle Shout (Rank 1)
     elseif classFile == "WARLOCK" then
         return 686 -- Shadow Bolt (Rank 1) -- UNTESTED
     end
@@ -1843,44 +1987,69 @@ end
 -- full, so it lives in GetMultiBoolTwo's R4 instead -- see there), and
 -- IsPlayerPoisoned/IsPlayerDiseased/IsTargetNatureImmune/IsTargetCasting
 -- (b5-b8), which fully packs the byte.
+local function AlwaysFalse() return false end
+
+local function PlayerIsClass(classFileToMatch)
+    return function()
+        local _, classFile = UnitClass("player")
+        return classFile == classFileToMatch
+    end
+end
+
+-- Wraps a global function by NAME, looked up when called rather than when
+-- this table is built -- several of these are defined further down this file
+-- or in later-loaded files (HasUnseenWhisper/HasRecentTargetEvade live in
+-- YoyokazooUI.lua), so capturing the reference at load time would capture nil.
+local function Global(functionName)
+    return function() return _G[functionName]() end
+end
+
+-- MultiBoolOne's 24 flags, in bit order: entries 1-8 = R1-R8, 9-16 = G1-G8,
+-- 17-24 = B1-B8. The single source of truth for both GetMultiBoolOne() (the
+-- packed pixel the C# side reads today) and the one-swatch-per-bool bar
+-- (InitializePixelRow() in UIFunctions.lua), so the two can't drift apart.
+MULTI_BOOL_ONE_FIELDS = {
+    Global("IsAttacking"),                  -- R1
+    Global("AreWeLowOnHealthPotions"),      -- R2
+    Global("AreWeLowOnDynamite"),           -- R3
+    Global("AreWeLowOnAmmo"),               -- R4
+    Global("IsGlobalCooldownCooledDown"),   -- R5
+    Global("AreBagsFull"),                  -- R6
+    Global("IsInCombat"),                   -- R7
+    Global("IsPlayerPetrified"),            -- R8
+
+    Global("HasUnseenWhisper"),             -- G1
+    AlwaysFalse,                            -- G2 reserved, previously IsInMeleeRange() -- removed, CheckInteractDistance
+                                            --    proved unreliable; WalkIntoMeleeRangeTask (WowMovementTasks.cs) now
+                                            --    relies on WorldState.IsInCombat plus the target-marker bearing instead
+    Global("IsPlayerCasting"),              -- G3
+    Global("AreEnemyNameplatesTurnedOn"),   -- G4
+    Global("CurrentTargetInCombatWithUs"),  -- G5
+    Global("IsTargetCasterMob"),            -- G6
+    Global("IsTargetRunnerMob"),            -- G7
+    Global("IsTargetFireImmune"),           -- G8
+
+    Global("HasRecentTargetEvade"),         -- B1
+    PlayerIsClass("WARRIOR"),               -- B2
+    AlwaysFalse,                            -- B3 reserved, previously (classFile == "MAGE")
+    PlayerIsClass("SHAMAN"),                -- B4
+    Global("IsPlayerPoisoned"),             -- B5
+    Global("IsPlayerDiseased"),             -- B6
+    Global("IsTargetNatureImmune"),         -- B7
+    Global("IsTargetCasting"),              -- B8
+}
+
 function GetMultiBoolOne()
-    local boolR1 = IsAttacking()
-    local boolR2 = AreWeLowOnHealthPotions()
-    local boolR3 = AreWeLowOnDynamite()
-    local boolR4 = AreWeLowOnAmmo()
-    local boolR5 = IsGlobalCooldownCooledDown()
-    local boolR6 = AreBagsFull()
-    local boolR7 = IsInCombat()
-    local boolR8 = IsPlayerPetrified()
+    local values = {}
+    for i = 1, #MULTI_BOOL_ONE_FIELDS do
+        -- Normalized to a real boolean: a nil hole would throw off
+        -- EncodeBooleansToByte's #flags count.
+        values[i] = MULTI_BOOL_ONE_FIELDS[i]() and true or false
+    end
 
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
-
-    local boolG1 = HasUnseenWhisper()
-    local boolG2 = false -- reserved, previously IsInMeleeRange() -- removed, CheckInteractDistance
-                          -- proved unreliable; WalkIntoMeleeRangeTask (WowMovementTasks.cs) now
-                          -- relies on WorldState.IsInCombat plus the target-marker bearing instead
-    local boolG3 = IsPlayerCasting()
-    local boolG4 = AreEnemyNameplatesTurnedOn()
-    local boolG5 = CurrentTargetInCombatWithUs()
-    local boolG6 = IsTargetCasterMob()
-    local boolG7 = IsTargetRunnerMob()
-    local boolG8 = IsTargetFireImmune()
-
-    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
-
-    local boolB1 = HasRecentTargetEvade()
-
-    local _, classFile = UnitClass("player")
-    local boolB2 = (classFile == "WARRIOR")
-    local boolB3 = false -- reserved, previously (classFile == "MAGE")
-    local boolB4 = (classFile == "SHAMAN")
-
-    local boolB5 = IsPlayerPoisoned()
-    local boolB6 = IsPlayerDiseased()
-    local boolB7 = IsTargetNatureImmune()
-    local boolB8 = IsTargetCasting()
-
-    local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
+    local rByte = EncodeBooleansToByte(unpack(values, 1, 8))
+    local gByte = EncodeBooleansToByte(unpack(values, 9, 16))
+    local bByte = EncodeBooleansToByte(unpack(values, 17, 24))
 
     return rByte/255.0, gByte/255.0, bByte/255.0
 end

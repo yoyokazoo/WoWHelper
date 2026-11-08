@@ -945,6 +945,26 @@ end
 -- and (if a merchant is open) whether it can repair and what that would
 -- currently cost. "/yysell allowlist" or "/yysell blocklist" previews that
 -- mode instead of the current /yyconfig one.
+-- /yycd            -> toggle watching the class's GCD probe spell (GetGCDProbeSpell())
+-- /yycd <spellId>  -> toggle watching that spell's cooldown
+-- /yycd off        -> stop watching everything
+-- Debug-only: see the cooldown watcher in WoWFunctions.lua.
+SLASH_YYCD1 = "/yycd"
+SlashCmdList["YYCD"] = function(msg)
+    local arg = strtrim(msg or ""):lower()
+    if arg == "off" then
+        StopCooldownWatch()
+        return
+    end
+
+    local spellId = (arg == "") and GetGCDProbeSpell() or tonumber(arg)
+    if not spellId then
+        print("YoyokazooUI: usage: /yycd [spellId | off]")
+        return
+    end
+    ToggleCooldownWatchSpell(spellId)
+end
+
 SLASH_YYSELL1 = "/yysell"
 SlashCmdList["YYSELL"] = function(msg)
     local mode = GetAutoSellMode()

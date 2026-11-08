@@ -152,6 +152,28 @@ PLAYER_HEALTH_BAR_FILL_COLOR = { 0, 1, 0 }  -- (0, 255, 0)
 RESOURCE_BAR_FILL_COLOR      = { 0, 0, 1 }  -- (0, 0, 255)
 TARGET_HEALTH_BAR_FILL_COLOR = { 1, 0, 0 }  -- (255, 0, 0)
 
+-- Bool bar swatch colors (see InitializePixelRow()).
+BOOL_BAR_TRUE_COLOR  = { 0, 1, 0 }  -- (0, 255, 0)
+BOOL_BAR_FALSE_COLOR = { 1, 0, 0 }  -- (255, 0, 0)
+
+-- Green if boolFunc() is true, red if false. An error (e.g. a secret value)
+-- also reads red, and prints once per distinct message so it doesn't go
+-- unnoticed.
+local reportedBoolBarErrors = {}
+function BoolBarColor(boolFunc)
+    local ok, result = pcall(function() return boolFunc() and true or false end)
+    if not ok then
+        if not reportedBoolBarErrors[tostring(result)] then
+            reportedBoolBarErrors[tostring(result)] = true
+            print("|cffff4040YoyokazooUI bool bar flag failed (reads false):|r " .. tostring(result))
+        end
+        result = false
+    end
+
+    local color = result and BOOL_BAR_TRUE_COLOR or BOOL_BAR_FALSE_COLOR
+    return color[1], color[2], color[3]
+end
+
 -- Value sources for the bars: each returns (current, max), possibly secret.
 function GetPlayerHealthBarValues()
     return UnitHealth("player"), UnitHealthMax("player")
@@ -378,6 +400,19 @@ function InitializePixelRow()
     AddBar(0, PLAYER_HEALTH_BAR_FILL_COLOR, GetPlayerHealthBarValues)
     AddBar(1, RESOURCE_BAR_FILL_COLOR,      GetPlayerResourceBarValues)
     AddBar(2, TARGET_HEALTH_BAR_FILL_COLOR, GetTargetHealthBarValues)
+
+    -- Bool bar, below the three status bars: MultiBoolOne's 24 flags
+    -- (MULTI_BOOL_ONE_FIELDS, WoWFunctions.lua) unpacked into one
+    -- PIXEL_SIZE swatch each, left to right in bit order (R1-R8, G1-G8,
+    -- B1-B8). Each flag is evaluated on its own, so one that throws (e.g. on
+    -- a secret value mid-combat) only affects its own swatch, instead of
+    -- taking down the other 23 the way it does in the packed pixel.
+    local boolBarY = PIXEL_SIZE + 3 * PIXEL_BAR_HEIGHT
+    for i, field in ipairs(MULTI_BOOL_ONE_FIELDS) do
+        table.insert(swatches, CreatePixelSwatch(UIParent, (i - 1) * PIXEL_SIZE, boolBarY, PIXEL_SIZE, function()
+            return BoolBarColor(field)
+        end))
+    end
 
     local checkInterval = 0.05
     local elapsedTime = 0
