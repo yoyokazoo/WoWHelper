@@ -805,7 +805,12 @@ YoyokazooUIDB = YoyokazooUIDB or {}
 -- so does the target's plate disappearing (NAME_PLATE_UNIT_REMOVED, plus a
 -- polling reconcile as a backstop).
 --------------------------------------------------
-local NAMEPLATE_MARKER_SIZE = 12
+-- In real screen pixels, not UI units -- converted via
+-- GetPhysicalPixelsPerLocalUnit() (same as the pixel row) so the marker is
+-- exactly this size on every client/UI scale. (It used to be 12 UI units,
+-- which came out ~20px on Classic Era at ratio 1.6875 but ~14-15px on the
+-- Forever client at ratio 1.2.)
+local NAMEPLATE_MARKER_SIZE_PIXELS = 20
 local NAMEPLATE_MARKER_COLOR = { 1, 0, 1 } -- magenta -- keep in sync with
 -- the corresponding sentinel color on the decoding side
 
@@ -838,7 +843,6 @@ local function AddTargetMarker(plate)
         -- internal layering.
         local marker = CreateFrame("Frame", nil, UIParent)
         marker:SetFrameStrata("TOOLTIP")
-        marker:SetSize(NAMEPLATE_MARKER_SIZE, NAMEPLATE_MARKER_SIZE)
         marker:SetPoint("CENTER", plate, "CENTER", 0, 0)
 
         local tex = marker:CreateTexture(nil, "OVERLAY")
@@ -847,6 +851,11 @@ local function AddTargetMarker(plate)
 
         plate.wowHelperTargetMarker = marker
     end
+
+    -- Re-sized on every show, not just at creation, in case the pixel/unit
+    -- ratio changed since (UI scale or resolution change mid-session).
+    local localSize = NAMEPLATE_MARKER_SIZE_PIXELS / GetPhysicalPixelsPerLocalUnit()
+    plate.wowHelperTargetMarker:SetSize(localSize, localSize)
 
     if currentlyShownMarker and currentlyShownMarker ~= plate.wowHelperTargetMarker then
         currentlyShownMarker:Hide()

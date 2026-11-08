@@ -154,7 +154,10 @@ namespace WoWHelper
 
         public Point MultiBoolOnePosition => PixelRowPoint(4);
 
-        public Point MultiIntOnePosition => PixelRowPoint(5);
+        // Index 5 (MultiIntOne, packed HP%/resource%/target HP%) is still painted by the
+        // addon but no longer read -- those come from the status bars below instead, which
+        // keep working when the client returns secret values. Left in the row rather than
+        // removed so every later index keeps its position.
         public Point MultiIntTwoPosition => PixelRowPoint(6);
 
         public Point ClassBoolOnePosition => PixelRowPoint(7);
@@ -162,6 +165,20 @@ namespace WoWHelper
         public Point MultiBoolTwoPosition => PixelRowPoint(8);
 
         public Point ClassBoolTwoPosition => PixelRowPoint(9);
+
+        // Status bars stacked directly below the pixel row (CreatePixelStatusBar() in
+        // UIFunctions.lua): each StatusBarWidth x PixelSize physical pixels, starting at x = 0,
+        // filled left-to-right, so the number of filled pixels IS the percent. Bar order and
+        // fill colors MUST match InitializePixelRow()'s AddBar calls / *_BAR_FILL_COLOR there.
+        // We read each bar's center row, same edge-blur margin as the swatches.
+        public const int StatusBarWidth = 100;
+
+        private static int StatusBarCenterY(int barIndex) =>
+            PixelSize + barIndex * PixelSize + PixelCenterOffset;
+
+        public int PlayerHealthBarY => StatusBarCenterY(0);   // fill (0, 255, 0)
+        public int ResourceBarY => StatusBarCenterY(1);       // fill (0, 0, 255)
+        public int TargetHealthBarY => StatusBarCenterY(2);   // fill (255, 0, 0)
 
         // Bounding rectangle covering every pixel anything in this codebase reads off a
         // captured screen bitmap: the pixel row (top-left corner), the red-error-text/
@@ -186,8 +203,12 @@ namespace WoWHelper
             var points = new[]
             {
                 AddonLoadedPosition, MapXPosition, MapYPosition, FacingDegreesPosition,
-                MultiBoolOnePosition, MultiIntOnePosition, MultiIntTwoPosition, ClassBoolOnePosition,
+                MultiBoolOnePosition, MultiIntTwoPosition, ClassBoolOnePosition,
                 MultiBoolTwoPosition, ClassBoolTwoPosition,
+                // Far corners of the status bars (only their center rows are read).
+                new Point(StatusBarWidth - 1, PlayerHealthBarY),
+                new Point(StatusBarWidth - 1, ResourceBarY),
+                new Point(StatusBarWidth - 1, TargetHealthBarY),
             };
 
             var clusters = new[]

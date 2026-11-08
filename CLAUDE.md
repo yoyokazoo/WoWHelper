@@ -68,7 +68,7 @@ see "Adding a new pixel" below):
 | 2 | Map Y (float) | `WowWorldState.MapY` |
 | 3 | Facing degrees (float) | `WowWorldState.FacingDegrees` |
 | 4 | `MultiBoolOne` (packed bools, class-agnostic) | various `WowWorldState` bools |
-| 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
+| 5 | `MultiIntOne` (packed R/G/B percents) | **not read anymore** — the percents come from the status bars below; kept painted so later indices don't shift |
 | 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 | 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
 | 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6, G1-G8, and B1 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable` |
@@ -88,7 +88,13 @@ the row's swatches) physical-pixel `StatusBar`s (`CreatePixelStatusBar()`,
 Filled pixels = percent. They exist because Midnight-rules clients return
 secret values Lua can't do math on (`MultiIntOne`'s percents read a fallback
 100 there), but a `StatusBar` accepts secrets and renders them itself.
-Nothing on the C# side reads them yet. Each row/bar update in
+`WowWorldState.UpdateStatusBars()` decodes them into `PlayerHpPercent`/
+`ResourcePercent`/`TargetHpPercent`: since a bar fills left to right,
+`ReadStatusBarPercent()` binary-searches the center row for the first
+unfilled pixel (at most 7 reads per bar), "filled" meaning the bar's fill
+channel is >= 128. Geometry lives on `WowScreenConfiguration`
+(`StatusBarWidth`, `PlayerHealthBarY`/`ResourceBarY`/`TargetHealthBarY`) and
+MUST match the Lua side's bar order, size and colors. Each row/bar update in
 `InitializePixelRow()`'s loop is `pcall`'d, printing each distinct error
 once, so one failing populate function can't freeze everything after it.
 
@@ -597,8 +603,10 @@ of truth — edits should be made here, not in the WoW install directory.
   actual position/bearing/distance in this client (`UnitPosition`,
   `C_Map.GetPlayerMapPosition`, and nameplate frame measurement are all
   confirmed blocked), so `UIFunctions.lua` paints a sentinel-colored marker
-  (`WowScreenConfiguration.TARGET_MARKER_COLOR`) onto the current target's
-  nameplate, found via a full-screen pixel search (`FindTargetMarkerOnScreen`
+  (`WowScreenConfiguration.TARGET_MARKER_COLOR`; `NAMEPLATE_MARKER_SIZE_PIXELS`
+  = 20x20 real screen pixels, converted via `GetPhysicalPixelsPerLocalUnit()`
+  like the pixel row so it's the same size on every client/UI scale) onto the
+  current target's nameplate, found via a full-screen pixel search (`FindTargetMarkerOnScreen`
   — a separate, full-resolution capture, not the small fixed-position pixel
   row `WorldState` normally reads). With the bot run camera-pitched straight
   down, the marker's position relative to screen center IS bearing/distance:

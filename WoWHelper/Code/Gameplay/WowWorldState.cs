@@ -18,7 +18,7 @@ namespace WoWHelper
         public Vector2 PlayerLocation { get; private set; }
         public float FacingDegrees { get; private set; }
 
-        // Multi Int One
+        // Status bars below the pixel row (see UpdateStatusBars)
         public int PlayerHpPercent { get; private set; }
         public int ResourcePercent { get; private set; }
         public int TargetHpPercent { get; private set; }
@@ -197,7 +197,7 @@ namespace WoWHelper
             PlayerClass = null;
             UpdateMultiBoolOne(bmp);
             UpdateMultiBoolTwo(bmp);
-            UpdateMultiIntOne(bmp);
+            UpdateStatusBars(bmp);
             UpdateMultiIntTwo(bmp);
 
             UpdateRedErrorTextMessages(bmp);
@@ -342,13 +342,47 @@ namespace WoWHelper
             IsTargetAttackable = b1;
         }
 
-        public void UpdateMultiIntOne(Bitmap bmp)
+        // Player HP / resource / target HP percents, read off the status bars below the
+        // pixel row (see WowScreenConfiguration.StatusBarWidth) rather than MultiIntOne's
+        // packed channels, since the bars still render when the client hands Lua secret values.
+        public void UpdateStatusBars(Bitmap bmp)
         {
-            Color color = bmp.GetPixel(ScreenConfig.MultiIntOnePosition.X, ScreenConfig.MultiIntOnePosition.Y);
-            
-            PlayerHpPercent = color.R;
-            ResourcePercent = color.G;
-            TargetHpPercent = color.B;
+            PlayerHpPercent = ReadStatusBarPercent(bmp, ScreenConfig.PlayerHealthBarY, c => c.G);
+            ResourcePercent = ReadStatusBarPercent(bmp, ScreenConfig.ResourceBarY, c => c.B);
+            TargetHpPercent = ReadStatusBarPercent(bmp, ScreenConfig.TargetHealthBarY, c => c.R);
+        }
+
+        // A bar fills left to right, so "is pixel x filled" is monotonic (true...true,
+        // false...false) and the count of filled pixels -- the percent -- is the index of the
+        // first unfilled pixel. Binary search for it: at most 7 pixel reads for 0-100.
+        // Invariant: every pixel < lo is filled, every pixel >= hi is empty.
+        private static int ReadStatusBarPercent(Bitmap bmp, int y, System.Func<Color, byte> fillChannel)
+        {
+            int lo = 0;
+            int hi = WowScreenConfiguration.StatusBarWidth;
+
+            while (lo < hi)
+            {
+                int mid = (lo + hi) / 2;
+                if (IsStatusBarPixelFilled(bmp.GetPixel(mid, y), fillChannel))
+                {
+                    lo = mid + 1;
+                }
+                else
+                {
+                    hi = mid;
+                }
+            }
+
+            return lo;
+        }
+
+        // Filled = the bar's fill channel is at least half-bright. Empty is black, so a
+        // partially-covered edge pixel (blended between fill and black) counts as filled
+        // once it's more than half covered -- i.e. the result rounds to the nearest percent.
+        private static bool IsStatusBarPixelFilled(Color color, System.Func<Color, byte> fillChannel)
+        {
+            return fillChannel(color) >= 128;
         }
 
         public void UpdateMultiIntTwo(Bitmap bmp)
