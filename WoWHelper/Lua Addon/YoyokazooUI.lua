@@ -81,7 +81,7 @@ end
 -- Auto-sell to an open merchant (see the MERCHANT_SHOW handling below) --
 -- "off"/"allowlist"/"blocklist", see AUTO_SELL_MODE_CHOICES (WoWFunctions.lua).
 -- Defaults to "off". Lua-only, like the dynamite item/healing potion
--- selectors -- never piped to the C# side via GetMultiBoolTwo, since the bot
+-- selectors -- never piped to the C# side, since the bot
 -- doesn't need to know it happened. Replaced the old autoSellJunk boolean
 -- (its "on" behavior is now "allowlist"); the stale field is dropped rather
 -- than migrated, so everyone starts from the new "off" default.
@@ -131,15 +131,15 @@ end
 
 -- Which world buff HasDesiredWorldBuff() (WoWFunctions.lua) checks for -- selectable via the
 -- /yyconfig "Desired world buff" selector below instead of being hardcoded. Defaults to Ony's
--- Rallying Cry. See WORLD_BUFF_CHOICES (WoWFunctions.lua) for the full list. Read by
--- GetMultiBoolTwo() into MultiBoolTwo's G3, decoded on the C# side into
+-- Rallying Cry. See WORLD_BUFF_CHOICES (WoWFunctions.lua) for the full list. Drawn into
+-- MultiBoolTwo's box 11 (G3, MULTI_BOOL_TWO_FIELDS), decoded on the C# side into
 -- WowWorldState.HasDesiredWorldBuff, consumed by WaitForWorldBuffThenLogoffTask
 -- (WowManagementTasks.cs).
 if YoyokazooUIDB.desiredWorldBuffId == nil then
     YoyokazooUIDB.desiredWorldBuffId = "ony"
 end
 
--- Read by GetMultiBoolTwo() (WoWFunctions.lua) to pack these into MultiBoolTwo's G1/G2,
+-- Drawn into MultiBoolTwo's boxes 9/10 (G1/G2, MULTI_BOOL_TWO_FIELDS in WoWFunctions.lua),
 -- decoded on the C# side into WowWorldState.LogoutOnLowDynamiteEnabled/
 -- LogoutOnFullBagsEnabled.
 function IsLogoutOnLowDynamiteEnabled()
@@ -810,7 +810,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- frame would unwind straight out of this whole block, meaning
         -- InitializePixelRow() never even got called, silently freezing every decoded
         -- bot flag (combat state, HP%, casting, zone, all of it) for the rest of the
-        -- session. Confirmed happening in testing (a bug in one of GetMultiBoolOne's
+        -- session. Confirmed happening in testing (a bug in one of MultiBoolOne's
         -- inputs, read by InitializeIndicators()'s debug swatch, blocked
         -- InitializePixelRow() from ever running). pcall-isolating each one, with its
         -- own success flag, means a bug in the debug-only frame can never again take
@@ -854,11 +854,6 @@ frame:SetScript("OnEvent", function(self, event, ...)
 
     if event == "PLAYER_LEVEL_UP" then
         local level = ...
-        
-        -- When you level, XP resets to 0. Compute how much XP the last level needed.
-        --local maxBefore = UnitXPMax("player")
-        --xpTracker.totalGained = xpTracker.totalGained + (maxBefore - xpTracker.currentXP)
-        --xpTracker.currentXP = 0
 
         print("Level up! Now level", level)
         print("Total session XP so far:", xpTracker.totalGained)

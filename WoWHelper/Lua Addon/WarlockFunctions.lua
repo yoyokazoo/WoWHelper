@@ -1,9 +1,6 @@
 ------------------------------------------------------------
--- Warlock-specific game-state checks.
---
--- Moved out of WoWFunctions.lua as part of splitting shared state
--- (MultiBool/MultiInt) from class-specific state (ClassBool/ClassInt -- see
--- the dispatchers in WoWFunctions.lua and GetWarlockClassBoolOne/Two below).
+-- Warlock-specific game-state checks, and Warlock's Class pixel-row field
+-- lists (WARLOCK_CLASS_BOOL_ONE/TWO_FIELDS, bottom of this file).
 --
 -- Note: CanSpellcastPullTarget() stays in WoWFunctions.lua -- it's shared
 -- between Shaman/Warlock (branches internally on class); giving it the same
@@ -63,29 +60,16 @@ function ShouldCastCorruption()
 end
 
 ------------------------------------------------------------
--- Packs Warlock-specific state into the ClassBool/ClassInt pixels. Called via
--- the GetClassBoolOne/Two/GetClassIntOne dispatchers in WoWFunctions.lua once
--- UnitClass("player") resolves to WARLOCK. R1-R5 are the flags packed here so
--- far -- R6-R8 are still reserved for future Warlock-specific flags.
+-- Warlock's Class pixel rows -- see the field-list comment above
+-- MULTI_BOOL_ONE_FIELDS (WoWFunctions.lua) for how these lists work. Decoded
+-- on the C# side by WowWarlockClassState, in the same order.
 ------------------------------------------------------------
-function GetWarlockClassBoolOne()
-    local boolR1 = CanSpellcastPullTarget()
-    local boolR2 = ShouldCastDemonArmor()
-    local boolR3 = ShouldSummonPet()
-    local boolR4 = ShouldCastImmolate()
-    local boolR5 = ShouldCastCorruption()
+WARLOCK_CLASS_BOOL_ONE_FIELDS = {
+    "CanSpellcastPullTarget",  -- 1 (R1) WoWFunctions.lua -- shared with Shaman
+    "ShouldCastDemonArmor",    -- 2 (R2)
+    "ShouldSummonPet",         -- 3 (R3)
+    "ShouldCastImmolate",      -- 4 (R4)
+    "ShouldCastCorruption",    -- 5 (R5)
+}
 
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, false, false, false)
-
-    return rByte/255.0, 0, 0
-end
-
-function GetWarlockClassBoolTwo()
-    -- Reserved for future Warlock-specific flags.
-    return 0, 0, 0
-end
-
-function GetWarlockClassIntOne()
-    -- Reserved for future Warlock-specific numeric values; none needed yet.
-    return 0, 0, 0
-end
+WARLOCK_CLASS_BOOL_TWO_FIELDS = {}

@@ -373,9 +373,7 @@ function ShouldWeAttackTarget()
         return false
     end
 
-    -- don't charge oranges
-    --if UnitLevel("player") - UnitLevel(unit) <= -3 then
-    -- temp changing
+    -- don't pull anything 4+ levels above us
     if UnitLevel("player") - UnitLevel(unit) <= -4 then
         return false
     end
@@ -528,14 +526,9 @@ function SpellIsInRangeAndCooledDown(spellId)
         return false
     end
 
-    -- 2) Cooldown check
-    local start, duration, enabled = Compat_GetSpellCooldown(spellName)
-
-    -- removing this check for now -> we should be using macros to hop into correct stance
-    -- If it's not enabled, you can't use it (e.g., disabled by stance/form)
-    --if enabled == 0 then
-    --    return false
-    --end
+    -- 2) Cooldown check. Deliberately ignores the "enabled" return (spell
+    -- disabled by stance/form) -- the bot's macros hop into the right stance.
+    local start, duration = Compat_GetSpellCooldown(spellName)
 
     -- If start == 0 and duration == 0, spell is ready
     if start == 0 and duration == 0 then
@@ -569,8 +562,6 @@ function SpellIsInRange(spellId)
     return true
 end
 
--- CanChargeTarget() and CanShootTarget() moved to WarriorFunctions.lua.
-
 -- Shared between Shaman and Warlock (branches internally below), so it
 -- stays here rather than moving to a single class file -- see the note atop
 -- ShamanFunctions.lua/WarlockFunctions.lua about why it isn't split further.
@@ -595,10 +586,8 @@ function CanSpellcastPullTarget()
     return SpellIsInRange(spellId)
 end
 
--- WaitingToShoot() and IsAnyNextSwingSpellQueued() moved to WarriorFunctions.lua.
-
 --------------------------------------------------
--- Health: player (percent 0�100)
+-- Health: player (percent 0-100)
 --------------------------------------------------
 -- Midnight-rules clients (WoW Forever) can return "secret" values from
 -- UnitHealth/UnitPower etc.; any arithmetic or comparison on one throws.
@@ -623,7 +612,7 @@ function GetPlayerHealthPercent()
 end
 
 --------------------------------------------------
--- Resource: player (rage / mana / energy, percent 0�100)
+-- Resource: player (rage / mana / energy, percent 0-100)
 --------------------------------------------------
 function GetPlayerResourcePercent()
     local powerType = UnitPowerType("player")            -- e.g. 0 = mana, 1 = rage, 3 = energy
@@ -636,7 +625,7 @@ function GetPlayerResourcePercent()
 end
 
 --------------------------------------------------
--- Target health (percent 0�100)
+-- Target health (percent 0-100)
 --------------------------------------------------
 function GetTargetHealthPercent()
     if not UnitExists("target") then
@@ -651,7 +640,7 @@ function GetTargetHealthPercent()
 end
 
 --------------------------------------------------
--- Map X coord (0�100, normalized across map)
+-- Map X coord (0-100, normalized across map)
 --------------------------------------------------
 function GetPlayerMapX()
     if not C_Map or not C_Map.GetBestMapForUnit then
@@ -668,12 +657,12 @@ function GetPlayerMapX()
         return 0
     end
 
-    -- pos.x is 0�1 across the map; convert to 0�100
+    -- pos.x is 0-1 across the map; convert to 0-100
     return math.floor((pos.x or 0) * 10000 + 0.5) / 100  -- two decimals
 end
 
 --------------------------------------------------
--- Map Y coord (0�100, normalized across map)
+-- Map Y coord (0-100, normalized across map)
 --------------------------------------------------
 function GetPlayerMapY()
     if not C_Map or not C_Map.GetBestMapForUnit then
@@ -690,7 +679,7 @@ function GetPlayerMapY()
         return 0
     end
 
-    -- pos.y is 0�1; convert to 0�100
+    -- pos.y is 0-1; convert to 0-100
     return math.floor((pos.y or 0) * 10000 + 0.5) / 100  -- two decimals
 end
 
@@ -728,57 +717,13 @@ function GetCurrentZoneId()
     return ZONE_NAME_TO_ID[zoneName] or 255
 end
 
---------------------------------------------------
--- Player facing as a normalized 2D direction
--- Returns X and Y where:
---   facing due East:  x =  1, y =  0
---   facing due North: x =  0, y = -1
---   facing due West:  x = -1, y =  0
---   facing due South: x =  0, y =  1
---------------------------------------------------
-function GetPlayerFacingVector()
-    local facing = GetPlayerFacing()
-    if not facing then
-        return 0, -1  -- default �north-ish�
-    end
-
-    local x = -math.sin(facing)
-    local y = -math.cos(facing)
-
-    -- Should already be unit length, but normalize defensively.
-    --local len = math.sqrt(x*x + y*y)
-    --if len > 0 then
-    --    x, y = x / len, y / len
-    --end
-
-    return x, y
-end
-
---------------------------------------------------
--- Convenience wrappers if you want to use them with CreateNumberIndicator:
--- (Each returns a single number)
---------------------------------------------------
-
-function GetPlayerFacingX()
-    local x, _ = GetPlayerFacingVector()
-    return math.floor(x * 100) / 100  -- two decimals
-end
-
-function GetPlayerFacingY()
-    local _, y = GetPlayerFacingVector()
-    return math.floor(y * 100) / 100  -- two decimals
-end
-
-function GetPlayerFacingInRadians()
-    return round2(GetPlayerFacing())
-end
-
+-- Player facing in degrees, 0-360 (0 = north, counterclockwise), to two decimals.
 function GetPlayerFacingInDegrees()
     local facing = GetPlayerFacing()
-    if (facing == nil) then
+    if facing == nil then
         return 0
     end
-    return round2(GetPlayerFacing() * 180 / math.pi)
+    return round2(facing * 180 / math.pi)
 end
 
 -- TEMP diagnostic switch: set true to print per-nameplate condition results.
@@ -842,7 +787,7 @@ function IsFacingTarget()
         return false
     end
 
-    local playerFacing = GetPlayerFacing()       -- 0�2pi radians
+    local playerFacing = GetPlayerFacing()       -- 0-2pi radians
     local angleToTarget = math.atan2(ty - py, tx - px)
 
     local diff = angleToTarget - playerFacing
@@ -855,8 +800,6 @@ end
 
 function IsAttacking()
     return Compat_IsCurrentSpell(6603) -- Auto Attack
-    --print(IsCurrentAction(9))
-    --return IsCurrentAction(81)
 end
 
 function HasBuffNamed(buffName)
@@ -884,7 +827,7 @@ WORLD_BUFF_CHOICES = {
     { id = "zg",   label = "Spirit of Zandalar (ZG)",    buffName = "Spirit of Zandalar" },
 }
 
--- Read by GetMultiBoolTwo() to pack into MultiBoolTwo's R6, decoded on the C# side into
+-- Drawn into MultiBoolTwo's box 11 (G3, MULTI_BOOL_TWO_FIELDS), decoded on the C# side into
 -- WowWorldState.HasDesiredWorldBuff.
 function HasDesiredWorldBuff()
     local desiredId = GetDesiredWorldBuffId()
@@ -907,8 +850,8 @@ end
 -- hardcoded spell ID -- scans the real spellbook (GetNumSpellTabs/
 -- GetSpellTabInfo/GetSpellBookItemName) rather than guessing an ID, so it
 -- doesn't go stale across ranks the way the hardcoded rank-1 IDs elsewhere
--- in this file can (see the Flame Shock rank TODO above GetMultiBoolOne's
--- Shaman dispatch). Used for spells where the possible spell ID(s) aren't
+-- in this file can (see the Flame Shock rank TODO in ShamanFunctions.lua).
+-- Used for spells where the possible spell ID(s) aren't
 -- confidently known, e.g. CanCurePoison/CanCureDisease in ShamanFunctions.lua.
 function IsSpellKnownByName(name)
     -- Modern clients (WoW Forever) replaced the spell-tab globals with
@@ -1152,9 +1095,6 @@ function TargetHasDebuffSpellName(debuffSpellName)
   return false
 end
 
--- TargetHasRend() moved to WarriorFunctions.lua.
--- TargetHasFlameShock() moved to ShamanFunctions.lua.
-
 -- CASTER_MOB_NAMES/RUNNER_MOB_NAMES/FIRE_IMMUNE_MOB_NAMES now live in
 -- CreatureConfig.lua -- one place to update every name-based creature list.
 
@@ -1316,11 +1256,6 @@ function IsGlobalCooldownCooledDown()
     return remaining <= 0
 end
 
--- CanCastMortalStrikeOrBloodthirst() moved to WarriorFunctions.lua.
--- (CanCastWhirlwind()/CanCastSweepingStrikes() used to live there too --
--- removed, see the GetWarriorClassBoolOne() comment in WarriorFunctions.lua.)
--- CanCastEarthShock() moved to ShamanFunctions.lua.
-
 function GetFreeSlotsInBag(bag)
     local total = C_Container.GetContainerNumSlots(bag)
     local free = 0
@@ -1354,8 +1289,7 @@ end
 -- source of the addon's GC churn (confirmed while investigating the ~1MB/sec
 -- addon-memory growth shown in the game's addon-memory tooltip). Bag contents
 -- don't change on the ~50-100ms cadence AreBagsFull() gets polled at (it's one
--- of the flags packed into GetMultiBoolOne, read by both the pixel-row and
--- debug OnUpdate loops in UIFunctions.lua), so cache the real check and only
+-- of the MultiBoolOne pixel-row flags, redrawn every refresh), so cache the real check and only
 -- recompute it periodically (CacheOnInterval) instead of every tick.
 AreBagsFull = CacheOnInterval(function()
     return GetTotalFreeBagSlots() == 0
@@ -1971,112 +1905,6 @@ function CanAffordToTrainAllSkills()
     return totalCost <= GetMoney()
 end
 
--- HasRockbiterWeaponMainHand(), ShouldCastRockbiterWeapon(),
--- ShouldCastLightningShield(), and ShouldCastFlameShock() moved to
--- ShamanFunctions.lua.
-
--- Class-specific fields (Battle Shout, Rend, Frost Armor, Rockbiter, etc.)
--- moved to GetClassBoolOne/Two (see the dispatchers further down and
--- GetXClassBoolOne/Two in WarriorFunctions.lua/ShamanFunctions.lua/
--- WarlockFunctions.lua) -- those are used instead of these now. All
--- class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G are both fully
--- packed, and the B byte carries HasRecentTargetEvade() (b1), two of the
--- three supported classes the player might be playing (b2 Warrior, b4
--- Shaman -- b3 is reserved/unused, previously Mage, removed along with Mage
--- support; the 3rd class, Warlock, didn't fit once this byte was already
--- full, so it lives in GetMultiBoolTwo's R4 instead -- see there), and
--- IsPlayerPoisoned/IsPlayerDiseased/IsTargetNatureImmune/IsTargetCasting
--- (b5-b8), which fully packs the byte.
-local function AlwaysFalse() return false end
-
-local function PlayerIsClass(classFileToMatch)
-    return function()
-        local _, classFile = UnitClass("player")
-        return classFile == classFileToMatch
-    end
-end
-
--- Wraps a global function by NAME, looked up when called rather than when
--- this table is built -- several of these are defined further down this file
--- or in later-loaded files (HasUnseenWhisper/HasRecentTargetEvade live in
--- YoyokazooUI.lua), so capturing the reference at load time would capture nil.
-local function Global(functionName)
-    return function() return _G[functionName]() end
-end
-
--- MultiBoolOne's 24 flags, in bit order: entries 1-8 = R1-R8, 9-16 = G1-G8,
--- 17-24 = B1-B8. The single source of truth for both GetMultiBoolOne() (the
--- packed pixel the C# side reads today) and the one-swatch-per-bool bar
--- (InitializePixelRow() in UIFunctions.lua), so the two can't drift apart.
-MULTI_BOOL_ONE_FIELDS = {
-    Global("IsAttacking"),                  -- R1
-    Global("AreWeLowOnHealthPotions"),      -- R2
-    Global("AreWeLowOnDynamite"),           -- R3
-    Global("AreWeLowOnAmmo"),               -- R4
-    Global("IsGlobalCooldownCooledDown"),   -- R5
-    Global("AreBagsFull"),                  -- R6
-    Global("IsInCombat"),                   -- R7
-    Global("IsPlayerPetrified"),            -- R8
-
-    Global("HasUnseenWhisper"),             -- G1
-    AlwaysFalse,                            -- G2 reserved, previously IsInMeleeRange() -- removed, CheckInteractDistance
-                                            --    proved unreliable; WalkIntoMeleeRangeTask (WowMovementTasks.cs) now
-                                            --    relies on WorldState.IsInCombat plus the target-marker bearing instead
-    Global("IsPlayerCasting"),              -- G3
-    Global("AreEnemyNameplatesTurnedOn"),   -- G4
-    Global("CurrentTargetInCombatWithUs"),  -- G5
-    Global("IsTargetCasterMob"),            -- G6
-    Global("IsTargetRunnerMob"),            -- G7
-    Global("IsTargetFireImmune"),           -- G8
-
-    Global("HasRecentTargetEvade"),         -- B1
-    PlayerIsClass("WARRIOR"),               -- B2
-    AlwaysFalse,                            -- B3 reserved, previously (classFile == "MAGE")
-    PlayerIsClass("SHAMAN"),                -- B4
-    Global("IsPlayerPoisoned"),             -- B5
-    Global("IsPlayerDiseased"),             -- B6
-    Global("IsTargetNatureImmune"),         -- B7
-    Global("IsTargetCasting"),              -- B8
-}
-
-function GetMultiBoolOne()
-    local values = {}
-    for i = 1, #MULTI_BOOL_ONE_FIELDS do
-        -- Normalized to a real boolean: a nil hole would throw off
-        -- EncodeBooleansToByte's #flags count.
-        values[i] = MULTI_BOOL_ONE_FIELDS[i]() and true or false
-    end
-
-    local rByte = EncodeBooleansToByte(unpack(values, 1, 8))
-    local gByte = EncodeBooleansToByte(unpack(values, 9, 16))
-    local bByte = EncodeBooleansToByte(unpack(values, 17, 24))
-
-    return rByte/255.0, gByte/255.0, bByte/255.0
-end
-
--- R1 (IsTargetLongRangeCaster), R2 (IsLogoffMobSeen), R3 (IsCurrentlySkinning),
--- R4 (the 4th "which supported class" bit, Warlock -- see GetMultiBoolOne's
--- B-byte comment above for why it landed here instead of there), R5
--- (IsTargetBleedImmune), and R6 (IsTargetFearCaster) are the flags packed
--- into the R byte so far -- both mob-name lookups, same pattern as
--- IsTargetLongRangeCaster/IsLogoffMobSeen above, so they live here
--- (class-agnostic) rather than in a class's own ClassBool even though only
--- Warrior consumes them today -- R7-R8 are still reserved. G1
--- (IsLogoutOnLowDynamiteEnabled), G2 (IsLogoutOnFullBagsEnabled), and G3
--- (HasDesiredWorldBuff) are packed into the previously-unused G byte instead
--- of continuing into R7/R8 -- run-specific settings toggled live in-game via
--- the /yyconfig menu (YoyokazooUI.lua) rather than live game-state queries
--- like everything else in this row. G4 (HasHighLatency(), see there) is back
--- to being a live game-state query, same category as the R byte -- it just
--- landed in G because the R byte was already full by the time it was added.
--- G5 (IsCombatStalemate(), YoyokazooUI.lua) is likewise a live game-state
--- query -- in combat, but no damage/miss combat-log events involving us for
--- COMBAT_STALEMATE_SECONDS, e.g. aggroed by a mob that can't path to us.
--- G6 (AllSkillsKnownForThisLevel()) and G7 (CanAffordToTrainAllSkills()) feed
--- the C# leveling-goal logic (WowLevelingConfigs.cs) -- see the class
--- trainer tables those read. G8 (GearNeedsRepair()) is a weapon at yellow
--- durability or any other piece broken. The G byte is now full; the B byte is
--- still fully reserved for future class-agnostic flags.
 ------------------------------------------------------------
 -- Target-finding macro. The bot presses this macro (WowInput.FIND_TARGET_MACRO)
 -- to find mobs; its /target lines differ per farming route, so the bot types
@@ -2135,118 +1963,79 @@ function SetTargetMacroMobs(mobNamesCsv)
     return true
 end
 
-function GetMultiBoolTwo()
-    local boolR1 = IsTargetLongRangeCaster()
-    local boolR2 = IsLogoffMobSeen()
-    local boolR3 = IsCurrentlySkinning()
-
-    local _, classFile = UnitClass("player")
-    local boolR4 = (classFile == "WARLOCK")
-
-    local boolR5 = IsTargetBleedImmune()
-    local boolR6 = IsTargetFearCaster()
-
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, false, false)
-
-    local boolG1 = IsLogoutOnLowDynamiteEnabled()
-    local boolG2 = IsLogoutOnFullBagsEnabled()
-    local boolG3 = HasDesiredWorldBuff()
-    local boolG4 = HasHighLatency()
-    local boolG5 = IsCombatStalemate()
-    local boolG6 = AllSkillsKnownForThisLevel()
-    local boolG7 = CanAffordToTrainAllSkills()
-    local boolG8 = GearNeedsRepair()
-
-    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
-
-    -- B1: the class-agnostic "is the current target a valid one to fight at all" check
-    -- (ShouldWeAttackTarget -- attackable, alive, not PvP, not grey, not too high, not
-    -- already in combat), with no range/cooldown folded in -- unlike the per-class
-    -- CanChargeTarget/CanShootTarget/CanSpellcastPullTarget bits, which AND this with
-    -- their own range/cooldown checks.
-    local boolB1 = ShouldWeAttackTarget()
-
-    local bByte = EncodeBooleansToByte(boolB1, false, false, false, false, false, false, false)
-
-    return rByte/255.0, gByte/255.0, bByte/255.0
-end
-
-function GetMultiIntOne()
-    local r = GetPlayerHealthPercent()
-    local g = GetPlayerResourcePercent()
-    local b = GetTargetHealthPercent()
-
-    return r/255.0, g/255.0, b/255.0
-end
-
-function GetMultiIntTwo()
-    local r = CountAttackers()
-    local g = UnitLevel("player")
-    local b = GetCurrentZoneId()
-
-    return r/255.0, g/255.0, b/255.0
-end
-
 ------------------------------------------------------------
--- ClassBool/ClassInt dispatchers -- the class-specific counterpart to
--- GetMultiBoolOne/Two/GetMultiIntOne/Two above. Each checks the player's
--- class once and delegates to that class's own populate function (see
--- GetWarriorClassBoolOne/Two, GetShamanClassBoolOne/Two, and
--- GetWarlockClassBoolOne/Two in WarriorFunctions.lua/ShamanFunctions.lua/
--- WarlockFunctions.lua). Unsupported/unrecognized classes get all-zero.
+-- Pixel row bool fields (drawn by InitializePixelRow() in UIFunctions.lua
+-- via EncodeBoolFields() in MathFunctions.lua). Each list is one row: entry
+-- N is the global function shown in box N, green when it returns true.
+-- Entries are function NAMES, looked up each time the row is drawn, so they
+-- can live in any file regardless of load order. The C# decoders read the
+-- same positions (WowWorldState.cs for these Multi rows, Wow*ClassState.cs
+-- for the Class rows) -- change both sides together, and put RESERVED in a
+-- retired entry's place rather than removing it, so later boxes don't shift.
+--
+-- The (R1)/(G3)/(B1) tags are each box's name from when a row was a single
+-- pixel's R/G/B bytes: Rn = box n, Gn = box 8+n, Bn = box 16+n. CLAUDE.md
+-- still refers to boxes that way.
 ------------------------------------------------------------
-function GetClassBoolOne()
+function IsPlayerWarrior() return select(2, UnitClass("player")) == "WARRIOR" end
+function IsPlayerShaman()  return select(2, UnitClass("player")) == "SHAMAN"  end
+function IsPlayerWarlock() return select(2, UnitClass("player")) == "WARLOCK" end
+
+MULTI_BOOL_ONE_FIELDS = {
+    "IsAttacking",                  --  1 (R1)
+    "AreWeLowOnHealthPotions",      --  2 (R2)
+    "AreWeLowOnDynamite",           --  3 (R3)
+    "AreWeLowOnAmmo",               --  4 (R4)
+    "IsGlobalCooldownCooledDown",   --  5 (R5)
+    "AreBagsFull",                  --  6 (R6)
+    "IsInCombat",                   --  7 (R7)
+    "IsPlayerPetrified",            --  8 (R8)
+    "HasUnseenWhisper",             --  9 (G1) YoyokazooUI.lua
+    RESERVED,                       -- 10 (G2) was IsInMeleeRange -- CheckInteractDistance proved unreliable
+    "IsPlayerCasting",              -- 11 (G3)
+    "AreEnemyNameplatesTurnedOn",   -- 12 (G4)
+    "CurrentTargetInCombatWithUs",  -- 13 (G5)
+    "IsTargetCasterMob",            -- 14 (G6)
+    "IsTargetRunnerMob",            -- 15 (G7)
+    "IsTargetFireImmune",           -- 16 (G8)
+    "HasRecentTargetEvade",         -- 17 (B1) YoyokazooUI.lua
+    "IsPlayerWarrior",              -- 18 (B2) supported-class bits: exactly one of these and
+    RESERVED,                       -- 19 (B3)   MultiBoolTwo's box 4 (Warlock) is true. 19 was
+    "IsPlayerShaman",               -- 20 (B4)   Mage, removed along with Mage support.
+    "IsPlayerPoisoned",             -- 21 (B5)
+    "IsPlayerDiseased",             -- 22 (B6)
+    "IsTargetNatureImmune",         -- 23 (B7)
+    "IsTargetCasting",              -- 24 (B8)
+}
+
+MULTI_BOOL_TWO_FIELDS = {
+    "IsTargetLongRangeCaster",      --  1 (R1)
+    "IsLogoffMobSeen",              --  2 (R2)
+    "IsCurrentlySkinning",          --  3 (R3)
+    "IsPlayerWarlock",              --  4 (R4) supported-class bit, see MultiBoolOne box 18
+    "IsTargetBleedImmune",          --  5 (R5)
+    "IsTargetFearCaster",           --  6 (R6)
+    RESERVED,                       --  7 (R7)
+    RESERVED,                       --  8 (R8)
+    "IsLogoutOnLowDynamiteEnabled", --  9 (G1) /yyconfig setting, YoyokazooUI.lua
+    "IsLogoutOnFullBagsEnabled",    -- 10 (G2) /yyconfig setting, YoyokazooUI.lua
+    "HasDesiredWorldBuff",          -- 11 (G3) buff picked via /yyconfig
+    "HasHighLatency",               -- 12 (G4)
+    "IsCombatStalemate",            -- 13 (G5) YoyokazooUI.lua
+    "AllSkillsKnownForThisLevel",   -- 14 (G6)
+    "CanAffordToTrainAllSkills",    -- 15 (G7)
+    "GearNeedsRepair",              -- 16 (G8)
+    "ShouldWeAttackTarget",         -- 17 (B1) pure eligibility -- no range/cooldown folded in
+}
+
+-- The player's class's list for one of the Class rows: listSuffix
+-- "CLASS_BOOL_ONE_FIELDS" gives e.g. WARRIOR_CLASS_BOOL_ONE_FIELDS
+-- (WarriorFunctions.lua) -- so the same box means something different per
+-- class. An unsupported class gets an empty list (an all-red row).
+function GetPlayerClassFields(listSuffix)
     local _, classFile = UnitClass("player")
-
-    if classFile == "WARRIOR" then
-        return GetWarriorClassBoolOne()
-    elseif classFile == "SHAMAN" then
-        return GetShamanClassBoolOne()
-    elseif classFile == "WARLOCK" then
-        return GetWarlockClassBoolOne()
-    end
-
-    return 0, 0, 0
+    return _G[(classFile or "") .. "_" .. listSuffix] or {}
 end
-
-function GetClassBoolTwo()
-    local _, classFile = UnitClass("player")
-
-    if classFile == "WARRIOR" then
-        return GetWarriorClassBoolTwo()
-    elseif classFile == "SHAMAN" then
-        return GetShamanClassBoolTwo()
-    elseif classFile == "WARLOCK" then
-        return GetWarlockClassBoolTwo()
-    end
-
-    return 0, 0, 0
-end
-
-function GetClassIntOne()
-    local _, classFile = UnitClass("player")
-
-    if classFile == "WARRIOR" then
-        return GetWarriorClassIntOne()
-    elseif classFile == "SHAMAN" then
-        return GetShamanClassIntOne()
-    elseif classFile == "WARLOCK" then
-        return GetWarlockClassIntOne()
-    end
-
-    return 0, 0, 0
-end
-
-function IsAttackingColor()
-    return GetColorFromSingleBool(IsAttacking())
-end
-
-function IsInCombatColor()
-    return GetColorFromSingleBool(IsInCombat())
-end
-
--- CanChargeTargetColor() and IsAnyNextSwingSpellQueuedColor() moved to
--- WarriorFunctions.lua.
 
 -- Auto-pick the "I require <Class> training." gossip option when talking to a
 -- class trainer, so the trainer window opens without anyone clicking the

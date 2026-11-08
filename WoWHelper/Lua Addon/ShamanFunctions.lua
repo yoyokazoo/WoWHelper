@@ -1,9 +1,6 @@
 ------------------------------------------------------------
--- Shaman-specific game-state checks.
---
--- Moved out of WoWFunctions.lua as part of splitting shared state
--- (MultiBool/MultiInt) from class-specific state (ClassBool/ClassInt -- see
--- the dispatchers in WoWFunctions.lua and GetShamanClassBoolOne/Two below).
+-- Shaman-specific game-state checks, and Shaman's Class pixel-row field
+-- lists (SHAMAN_CLASS_BOOL_ONE/TWO_FIELDS, bottom of this file).
 --
 -- Note: CanSpellcastPullTarget() stays in WoWFunctions.lua -- it's shared
 -- between Shaman and Warlock (branches internally on class), and giving it
@@ -98,41 +95,23 @@ function CanCureDisease()
 end
 
 ------------------------------------------------------------
--- Packs Shaman-specific state into the ClassBool/ClassInt pixels. Called via
--- the GetClassBoolOne/Two/GetClassIntOne dispatchers in WoWFunctions.lua
--- once UnitClass("player") resolves to SHAMAN. Decoded on the other end in
--- the same bit order -- keep both sides in sync. R7/R8
--- (CanCurePoison/CanCureDisease) fully pack the byte.
+-- Shaman's Class pixel rows -- see the field-list comment above
+-- MULTI_BOOL_ONE_FIELDS (WoWFunctions.lua) for how these lists work. Decoded
+-- on the C# side by WowShamanClassState, in the same order.
 ------------------------------------------------------------
-function GetShamanClassBoolOne()
-    local boolR1 = ShouldCastRockbiterWeapon()
-    local boolR2 = ShouldCastLightningShield()
-    local boolR3 = CanCastEarthShock()
-    local boolR4 = ShouldCastFlameShock()
-    local boolR5 = TargetHasFlameShock()
-    local boolR6 = CanSpellcastPullTarget()
-    local boolR7 = CanCurePoison()
-    local boolR8 = CanCureDisease()
+SHAMAN_CLASS_BOOL_ONE_FIELDS = {
+    "ShouldCastRockbiterWeapon",  -- 1 (R1)
+    "ShouldCastLightningShield",  -- 2 (R2)
+    "CanCastEarthShock",          -- 3 (R3)
+    "ShouldCastFlameShock",       -- 4 (R4)
+    "TargetHasFlameShock",        -- 5 (R5)
+    "CanSpellcastPullTarget",     -- 6 (R6) WoWFunctions.lua -- shared with Warlock
+    "CanCurePoison",              -- 7 (R7)
+    "CanCureDisease",             -- 8 (R8)
+}
 
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
-
-    return rByte/255.0, 0, 0
-end
-
--- R1 (IsInEarthShockRange), R2 (HasClearcasting), and R3 (CanCastFrostShock)
--- are the flags packed here so far -- R4-R8 and the G/B bytes are still
--- reserved for future Shaman-specific flags.
-function GetShamanClassBoolTwo()
-    local boolR1 = IsInEarthShockRange()
-    local boolR2 = HasClearcasting()
-    local boolR3 = CanCastFrostShock()
-
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, false, false, false, false, false)
-
-    return rByte/255.0, 0, 0
-end
-
-function GetShamanClassIntOne()
-    -- Reserved for future Shaman-specific numeric values; none needed yet.
-    return 0, 0, 0
-end
+SHAMAN_CLASS_BOOL_TWO_FIELDS = {
+    "IsInEarthShockRange",        -- 1 (R1)
+    "HasClearcasting",            -- 2 (R2)
+    "CanCastFrostShock",          -- 3 (R3)
+}

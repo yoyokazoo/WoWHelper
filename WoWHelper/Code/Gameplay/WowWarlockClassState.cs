@@ -2,17 +2,10 @@ using System.Drawing;
 
 namespace WoWHelper
 {
-    // Warlock's slice of ClassBoolOne/Two/ClassIntOne. Bit layout here MUST
-    // match WarlockFunctions.lua's GetWarlockClassBoolOne/Two/GetWarlockClassIntOne.
-    //
-    // R1-R5 of ClassBoolOne are decoded below -- R6-R8, ClassBoolTwo, and
-    // ClassIntOne are still fully reserved for this class (same as any other
-    // not-yet-decoded pixel -- see "Reserved-but-not-in-the-row" in
-    // CLAUDE.md). Add properties here (and the matching bit in
-    // WarlockFunctions.lua's GetWarlockClassBoolOne/Two) together as more
-    // Warlock state gets wired up -- see WowShamanClassState for the pattern
-    // to follow (decode a byte via WowWorldState.DecodeByte, assign named
-    // bools in the same order the Lua side packs them).
+    // Warlock's slice of the Class pixel rows. Box numbers here MUST match
+    // WARLOCK_CLASS_BOOL_ONE_FIELDS in WarlockFunctions.lua -- add a property
+    // here and the matching list entry there together as more Warlock state
+    // gets wired up (ClassBoolTwo is unused for Warlock so far).
     public class WowWarlockClassState : WowClassState
     {
         public bool CanSpellcastPullTarget { get; private set; }
@@ -34,20 +27,17 @@ namespace WoWHelper
         public bool ShouldCastImmolate { get; private set; }
         public bool ShouldCastCorruption { get; private set; }
 
-        public override void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig)
+        public override void UpdateFromBitmap(Bitmap bmp)
         {
             Initialized = true;
 
-            Color color = bmp.GetPixel(screenConfig.ClassBoolOnePosition.X, screenConfig.ClassBoolOnePosition.Y);
-            WowWorldState.DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out _, out _, out _);
+            PixelRowBits bits = WowPixelRows.ReadBits(bmp, PixelRow.ClassBoolOne);
 
-            CanSpellcastPullTarget = r1;
-            ShouldCastDemonArmor = r2;
-            ShouldSummonPet = r3;
-            ShouldCastImmolate = r4;
-            ShouldCastCorruption = r5;
-            // R6-R8 still reserved for Warlock -- see GetWarlockClassBoolOne() in
-            // WarlockFunctions.lua.
+            CanSpellcastPullTarget = bits[1];
+            ShouldCastDemonArmor = bits[2];
+            ShouldSummonPet = bits[3];
+            ShouldCastImmolate = bits[4];
+            ShouldCastCorruption = bits[5];
         }
     }
 }

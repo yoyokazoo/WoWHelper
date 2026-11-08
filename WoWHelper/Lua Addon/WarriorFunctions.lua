@@ -1,9 +1,6 @@
 ------------------------------------------------------------
--- Warrior-specific game-state checks.
---
--- Moved out of WoWFunctions.lua as part of splitting shared state
--- (MultiBool/MultiInt) from class-specific state (ClassBool/ClassInt -- see
--- the dispatchers in WoWFunctions.lua and GetWarriorClassBoolOne/Two below).
+-- Warrior-specific game-state checks, and Warrior's Class pixel-row field
+-- lists (WARRIOR_CLASS_BOOL_ONE/TWO_FIELDS, bottom of this file).
 ------------------------------------------------------------
 
 -- Class trainer spells, read by AllSkillsKnownForThisLevel()/
@@ -171,10 +168,6 @@ function CanChargeTarget()
     return SpellIsInRangeAndCooledDown(100)
 end
 
-function CanChargeTargetColor()
-    return GetColorFromSingleBool(CanChargeTarget())
-end
-
 -- 75,    -- Auto Shot (Hunter)
 -- 2480,  -- Shoot Bow
 -- 7918,  -- Shoot Gun
@@ -198,10 +191,6 @@ function IsAnyNextSwingSpellQueued()
     if Compat_IsCurrentSpell("Heroic Strike") then return true end
     if Compat_IsCurrentSpell("Cleave")        then return true end
     return false
-end
-
-function IsAnyNextSwingSpellQueuedColor()
-    return GetColorFromSingleBool(IsAnyNextSwingSpellQueued())
 end
 
 -- Mortal Strike, 12294
@@ -319,54 +308,32 @@ function CanCastSweepingStrikes()
     return result
 end
 
+function HasBattleShout()
+    return HasBuffNamed("Battle Shout")
+end
+
 ------------------------------------------------------------
--- Packs Warrior-specific state into the ClassBool/ClassInt pixels. Called
--- via the GetClassBoolOne/Two/GetClassIntOne dispatchers in WoWFunctions.lua
--- once UnitClass("player") resolves to WARRIOR, and read on the C# side by
--- WowWarriorClassState.UpdateFromBitmap. ClassBoolOne's R/G bytes are now
--- fully packed (R8/G1/G4/G5/G6 were added once PlayerLevel-based training
--- gates on the C# side were replaced with real spellbook checks; G8 is
--- CanCastSweepingStrikes, added once WarriorShouldCastSweepingStrikes wired it
--- into the rotation -- its trained-yet check is folded into
--- CanCastSweepingStrikes() itself rather than spending a separate bit on it,
--- since nothing needed that independently of the cooldown check -- see that
--- function's own comment above for why that's safe here but isn't for
--- KnowsCharge/KnowsMortalStrikeOrBloodthirst, which do still need their own
--- bits. G7 is reserved again as a result).
+-- Warrior's Class pixel rows -- see the field-list comment above
+-- MULTI_BOOL_ONE_FIELDS (WoWFunctions.lua) for how these lists work. Decoded
+-- on the C# side by WowWarriorClassState, in the same order.
 ------------------------------------------------------------
-function GetWarriorClassBoolOne()
-    local boolR1 = HasBuffNamed("Battle Shout")
-    local boolR2 = TargetHasRend()
-    local boolR3 = CanChargeTarget()
-    local boolR4 = CanShootTarget()
-    local boolR5 = WaitingToShoot()
-    local boolR6 = IsAnyNextSwingSpellQueued()
-    local boolR7 = IsOverpowerUsable()
-    local boolR8 = KnowsRend()
+WARRIOR_CLASS_BOOL_ONE_FIELDS = {
+    "HasBattleShout",                   --  1 (R1)
+    "TargetHasRend",                    --  2 (R2)
+    "CanChargeTarget",                  --  3 (R3)
+    "CanShootTarget",                   --  4 (R4)
+    "WaitingToShoot",                   --  5 (R5)
+    "IsAnyNextSwingSpellQueued",        --  6 (R6)
+    "IsOverpowerUsable",                --  7 (R7)
+    "KnowsRend",                        --  8 (R8)
+    "KnowsExecute",                     --  9 (G1)
+    "CanCastMortalStrikeOrBloodthirst", -- 10 (G2)
+    "KnowsMortalStrikeOrBloodthirst",   -- 11 (G3)
+    "KnowsCharge",                      -- 12 (G4)
+    "TargetHasSunderArmor",             -- 13 (G5)
+    "KnowsSunderArmor",                 -- 14 (G6)
+    RESERVED,                           -- 15 (G7) was KnowsSweepingStrikes, folded into CanCastSweepingStrikes
+    "CanCastSweepingStrikes",           -- 16 (G8)
+}
 
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
-
-    local boolG1 = KnowsExecute()
-    local boolG2 = CanCastMortalStrikeOrBloodthirst()
-    local boolG3 = KnowsMortalStrikeOrBloodthirst()
-    local boolG4 = KnowsCharge()
-    local boolG5 = TargetHasSunderArmor()
-    local boolG6 = KnowsSunderArmor()
-    local boolG7 = false -- reserved
-    local boolG8 = CanCastSweepingStrikes()
-
-    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
-
-    return rByte/255.0, gByte/255.0, 0
-end
-
-function GetWarriorClassBoolTwo()
-    -- Reserved for future Warrior-specific flags; everything currently
-    -- tracked fits in ClassBoolOne above.
-    return 0, 0, 0
-end
-
-function GetWarriorClassIntOne()
-    -- Reserved for future Warrior-specific numeric values; none needed yet.
-    return 0, 0, 0
-end
+WARRIOR_CLASS_BOOL_TWO_FIELDS = {}
