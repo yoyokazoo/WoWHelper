@@ -60,6 +60,11 @@
         // can be given some wiggle room. If a future route's own gaps exceed this, widen it.
         public const float MAX_DISTANCE_FROM_ROUTE_WAYPOINT = 3.0f;
 
+        // How long CrossZoneTask holds a crossing's heading waiting for the zone to change.
+        // Generous for walking a few yards past FromPoint, short enough that a wrong heading
+        // doesn't wander far. Only counts time spent crossing, not fights that interrupt it.
+        public const long ZONE_CROSSING_TIMEOUT_MILLIS = 20 * 1000;
+
         // How close two Vector2s (a route waypoint and WowMerchantConfiguration.Waypoints[0])
         // need to be to count as "the same point" -- matched by position, not waypoint index,
         // since a route's Waypoints list can reach that same point via more than one

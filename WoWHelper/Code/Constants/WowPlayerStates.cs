@@ -122,6 +122,8 @@
             PICK_NEXT_WAYPOINT,
             FACE_WAYPOINT,
             WALK_TO_WAYPOINT,
+            CROSSING_ZONE, // reached the route's ZoneCrossingAtEnd, walking through it
+            CROSSED_ZONE, // in the new zone, caller needs to build the next leg
             ARRIVED_AT_END_OF_ROUTE
         }
 

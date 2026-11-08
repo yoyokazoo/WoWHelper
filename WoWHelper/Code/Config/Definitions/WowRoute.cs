@@ -25,6 +25,10 @@ namespace WoWHelper.Code.WorldState
 
         public List<Vector2> Waypoints { get; set; }
 
+        // Set on a route WowPathfinding built as one leg of a trip into another zone -- arriving
+        // at the last waypoint means take this crossing, not that the trip is over.
+        public WowZoneCrossing ZoneCrossingAtEnd { get; set; }
+
         public WowRoute()
         {
             // LINEAR, not CIRCULAR -- walking routes (A -> B and back) are far more common to

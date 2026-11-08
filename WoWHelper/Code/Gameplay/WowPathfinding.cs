@@ -274,7 +274,32 @@ namespace WoWHelper.Code
 
         public static WowRoute GetRouteToTarget(WowPlayer wowPlayer, WowRoute targetRoute)
         {
-            List<Vector2> waypoints = GetWaypointsToTarget(wowPlayer, targetRoute);
+            WowZone currentZone = wowPlayer.WorldState.CurrentZone;
+            WowZoneCrossing zoneCrossing = null;
+            List<Vector2> waypoints = new List<Vector2>();
+
+            if (targetRoute.Zone == currentZone)
+            {
+                waypoints = GetWaypointsToTarget(wowPlayer, targetRoute);
+            }
+            else
+            {
+                // Only build as far as the next crossing -- map coordinates are per-zone, so the
+                // rest of the trip can't be walked as one route. The caller comes back here once
+                // it's in the next zone, which also means nothing needs saving if a fight or a
+                // restart interrupts the trip.
+                List<WowZoneCrossing> crossings = GetZoneCrossingsBetween(currentZone, targetRoute.Zone, wowPlayer.WorldState.PlayerLevel);
+
+                if (crossings == null)
+                {
+                    wowPlayer.SetLogoutVariablesAndSlack($"Unable to find a chain of zone crossings from {currentZone} to {targetRoute.Zone} for {targetRoute}");
+                }
+                else
+                {
+                    zoneCrossing = crossings[0];
+                    waypoints = GetWaypointsToPoint(wowPlayer, zoneCrossing.FromPoint);
+                }
+            }
 
             Console.WriteLine($"Built route to target: {String.Join(",", waypoints)}");
 
@@ -282,22 +307,77 @@ namespace WoWHelper.Code
             {
                 Name = "Dynamic Route",
                 Waypoints = waypoints,
-                Zone = targetRoute.Zone,
+                Zone = currentZone, // this leg, not the destination, which might be zones away
+                ZoneCrossingAtEnd = zoneCrossing,
                 TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
                 MinimumLevel = 0,
                 DistanceTolerance = WowRoute.DEFAULT_DISTANCE_TOLERANCE
             };
         }
 
+        // Breadth-first search over the zones, where each crossing is a one-way edge. Returns the
+        // crossings to take in order, using as few as possible -- empty if already in targetZone,
+        // null if targetZone can't be reached. crossings defaults to ALL_ZONE_CROSSINGS.
+        public static List<WowZoneCrossing> GetZoneCrossingsBetween(WowZone startingZone, WowZone targetZone, int playerLevel, IEnumerable<WowZoneCrossing> crossings = null)
+        {
+            List<WowZoneCrossing> eligibleCrossings = (crossings ?? WowZoneCrossings.ALL_ZONE_CROSSINGS)
+                .Where(crossing => crossing.MinimumLevel <= 0 || playerLevel >= crossing.MinimumLevel)
+                .ToList();
+
+            // Each visited zone maps to the crossing we reached it through (null for the start).
+            Dictionary<WowZone, WowZoneCrossing> crossingInto = new Dictionary<WowZone, WowZoneCrossing> { { startingZone, null } };
+            Queue<WowZone> zonesToVisit = new Queue<WowZone>();
+            zonesToVisit.Enqueue(startingZone);
+
+            while (zonesToVisit.Count > 0)
+            {
+                WowZone currentZone = zonesToVisit.Dequeue();
+
+                if (currentZone == targetZone)
+                {
+                    List<WowZoneCrossing> path = new List<WowZoneCrossing>();
+                    for (WowZoneCrossing crossing = crossingInto[targetZone]; crossing != null; crossing = crossingInto[crossing.FromZone])
+                    {
+                        path.Add(crossing);
+                    }
+                    path.Reverse();
+                    return path;
+                }
+
+                foreach (WowZoneCrossing nextCrossing in eligibleCrossings.Where(c => c.FromZone == currentZone))
+                {
+                    if (!crossingInto.ContainsKey(nextCrossing.ToZone))
+                    {
+                        crossingInto[nextCrossing.ToZone] = nextCrossing;
+                        zonesToVisit.Enqueue(nextCrossing.ToZone);
+                    }
+                }
+            }
+
+            return null;
+        }
+
         // Top-level method should always take a route as the desired destination
         // Pathfinding helpers will be the ones to figure out which point is intersecting and shoot for that specifically
         private static List<Vector2> GetWaypointsToTarget(WowPlayer wowPlayer, WowRoute targetRoute)
         {
+            List<WowRoute> routes = GetRoutesToTarget(wowPlayer, route => route == targetRoute, targetRoute.ToString());
+            return GetWaypointsAlongRoutes(wowPlayer, routes, null);
+        }
+
+        // Unlike GetWaypointsToTarget, ends exactly on destination, rather than wherever the
+        // chain first touches a route containing it.
+        private static List<Vector2> GetWaypointsToPoint(WowPlayer wowPlayer, Vector2 destination)
+        {
+            List<WowRoute> routes = GetRoutesToTarget(wowPlayer, route => route.Waypoints.Contains(destination), destination.ToString());
+            return GetWaypointsAlongRoutes(wowPlayer, routes, destination);
+        }
+
+        private static List<Vector2> GetWaypointsAlongRoutes(WowPlayer wowPlayer, List<WowRoute> routes, Vector2? finalWaypoint)
+        {
             List<Vector2> waypoints = new List<Vector2>();
             Vector2 startingWaypoint = Vector2.Zero;
             Vector2 endingWaypoint = Vector2.Zero;
-
-            List<WowRoute> routes = GetRoutesToTarget(wowPlayer, targetRoute);
 
             if (routes.Count == 0)
             {
@@ -306,7 +386,7 @@ namespace WoWHelper.Code
 
             startingWaypoint = GetWaypointClosestToPlayer(wowPlayer, routes[0]);
 
-            if (routes.Count == 1)
+            if (routes.Count == 1 && !finalWaypoint.HasValue)
             {
                 return new List<Vector2> { startingWaypoint };
             }
@@ -325,17 +405,28 @@ namespace WoWHelper.Code
                 startingWaypoint = endingWaypoint;
             }
 
+            if (finalWaypoint.HasValue)
+            {
+                var finalPartialWaypoints = CreatePartialWaypointsFromRoute(routes[routes.Count - 1], startingWaypoint, finalWaypoint.Value);
+                waypoints.AddRange(waypoints.Count == 0 ? finalPartialWaypoints : finalPartialWaypoints.Skip(1));
+            }
+
             return waypoints;
         }
 
         // Breadth-first search over the safe routes in the player's current zone, where two
         // routes are connected if they share a waypoint (TryGetInstersectingWaypoint). Returns
         // the chain with the fewest route hops, starting with the route closest to the player
-        // and ending with targetRoute, e.g.
+        // and ending with the first route isDestination accepts, e.g.
         // LEVEL_1_DUROTAR_BOARS_AND_SCORPS -> BOARS_AND_SCORPS_TO_MERCHANT -> VALLEY_OF_TRIALS_MERCHANT.
-        private static List<WowRoute> GetRoutesToTarget(WowPlayer wowPlayer, WowRoute targetRoute)
+        private static List<WowRoute> GetRoutesToTarget(WowPlayer wowPlayer, Func<WowRoute, bool> isDestination, string destinationName)
         {
             WowRoute startingRoute = FindRouteClosestToPlayer(wowPlayer);
+
+            if (startingRoute == null)
+            {
+                return new List<WowRoute>();
+            }
 
             List<WowRoute> eligibleRoutes = GetAllSafeRoutes(wowPlayer)
                 .Where(route => route.Zone == wowPlayer.WorldState.CurrentZone)
@@ -350,10 +441,10 @@ namespace WoWHelper.Code
             {
                 WowRoute currentRoute = routesToVisit.Dequeue();
 
-                if (currentRoute == targetRoute)
+                if (isDestination(currentRoute))
                 {
                     List<WowRoute> routes = new List<WowRoute>();
-                    for (WowRoute route = targetRoute; route != null; route = previousRoute[route])
+                    for (WowRoute route = currentRoute; route != null; route = previousRoute[route])
                     {
                         routes.Add(route);
                     }
@@ -371,7 +462,7 @@ namespace WoWHelper.Code
                 }
             }
 
-            string message = $"Unable to find a chain of intersecting routes from {startingRoute} to {targetRoute} in {wowPlayer.WorldState.CurrentZone}";
+            string message = $"Unable to find a chain of intersecting routes from {startingRoute} to {destinationName} in {wowPlayer.WorldState.CurrentZone}";
             wowPlayer.SetLogoutVariablesAndSlack(message);
             return new List<WowRoute>();
         }
@@ -391,7 +482,7 @@ namespace WoWHelper.Code
             {
                 string message = $"Unable to find route close enough to player in FindRouteClosestToPlayer, player location {wowPlayer.WorldState.PlayerLocation} in {wowPlayer.WorldState.CurrentZone}";
                 wowPlayer.SetLogoutVariablesAndSlack(message);
-                return new WowRoute();
+                return null;
             }
 
             return closestRoute;
@@ -474,7 +565,7 @@ namespace WoWHelper.Code
             return (closestFirst, closestSecond, closestDistance);
         }
 
-        private static List<Vector2> CreatePartialWaypointsFromRoute(WowRoute route, Vector2 startingWaypoint, Vector2 endingWaypoint)
+        public static List<Vector2> CreatePartialWaypointsFromRoute(WowRoute route, Vector2 startingWaypoint, Vector2 endingWaypoint)
         {
             if (!route.Waypoints.Contains(startingWaypoint) || !route.Waypoints.Contains(endingWaypoint))
             {

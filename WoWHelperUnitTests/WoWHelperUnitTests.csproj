@@ -251,6 +251,7 @@
     <Compile Include="Tests\Pathfinding Tests\PathfindingTests.cs" />
     <Compile Include="Tests\Pathfinding Tests\MerchantConfigTests.cs" />
     <Compile Include="Tests\Pathfinding Tests\PartialRouteTests.cs" />
+    <Compile Include="Tests\Pathfinding Tests\ZoneCrossingTests.cs" />
     <Compile Include="Tests\Shared\CustomAssertions.cs" />
     <Compile Include="Tests\Shared\DpiAwareness.cs" />
     <Compile Include="Tests\Shared\UnitTestBase.cs" />

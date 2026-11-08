@@ -14,11 +14,18 @@ namespace WoWHelper
         {
             var levelingConfig = WowLevelingConfigs.GetFor(CombatConfiguration, WorldState.PlayerLevel);
 
-            // For now, only pick configs in the same zone
-            var matchingLocationConfigs = levelingConfig.LocationConfigs
-                .Where(locationConfig => locationConfig.Route.Zone == WorldState.CurrentZone);
-
-            var newLocationConfig = matchingLocationConfigs.FirstOrDefault();
+            // Any config we can reach, fewest zone crossings first, so a config in the current
+            // zone always wins. Ties keep the order in LocationConfigs.
+            var newLocationConfig = levelingConfig.LocationConfigs
+                .Select(locationConfig => new
+                {
+                    Config = locationConfig,
+                    Crossings = WowPathfinding.GetZoneCrossingsBetween(WorldState.CurrentZone, locationConfig.Route.Zone, WorldState.PlayerLevel)
+                })
+                .Where(x => x.Crossings != null)
+                .OrderBy(x => x.Crossings.Count)
+                .Select(x => x.Config)
+                .FirstOrDefault();
 
             if (newLocationConfig == null)
             {

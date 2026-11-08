@@ -324,6 +324,26 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
+        #region Orgrimmar
+
+        public static readonly WowRoute ORGRIMMAR_ENTRANCE_ROUTE = new WowRoute
+        {
+            Name = "Orgrimmar Entrance",
+            Zone = WowZone.Orgrimmar,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(49.02f, 94.24f),
+                new Vector2(48.71f, 90.27f),
+                new Vector2(52.91f, 89.44f),
+                new Vector2(52.22f, 81.56f),
+                new Vector2(52.58f, 74.95f),
+                new Vector2(50.52f, 71.63f),
+            }
+        };
+
+        #endregion
+
         #region Mulgore
 
         public static readonly WowRoute LEVEL_10_MULGORE_MIXED_BEASTS_ROUTE = new WowRoute
@@ -992,7 +1012,8 @@ namespace WoWHelper.Code.WorldState
             RAZOR_HILL_TO_MERCHANT,
             RAZOR_HILL_TO_WARRIOR_TRAINER,
             RAZOR_HILL_TO_ORG_ENTRANCE,
-            ORG_ENTRANCE_TO_DUROTAR_SKULL_ROCK_COAST
+            ORG_ENTRANCE_TO_DUROTAR_SKULL_ROCK_COAST,
+            ORGRIMMAR_ENTRANCE_ROUTE
         };
     }
 }

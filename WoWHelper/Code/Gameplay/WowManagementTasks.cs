@@ -535,10 +535,19 @@ namespace WoWHelper
         {
             NPCRoles requiredRoles = PickRequiredRolesForNPCBasedOnGoal();
 
+            // Fewest zone crossings first, so an NPC in the current zone always wins.
             var validNPCs = WowNPCConfigs.ALL_NPCS
-                .Where(npc => npc.Roles.HasFlag(requiredRoles) && 
-                    npc.Route.Zone.Equals(WorldState.CurrentZone) &&
-                    npc.MaximumLevel >= WorldState.PlayerLevel);
+                .Where(npc => npc.Roles.HasFlag(requiredRoles) &&
+                    npc.MaximumLevel >= WorldState.PlayerLevel)
+                .Select(npc => new
+                {
+                    NPC = npc,
+                    Crossings = WowPathfinding.GetZoneCrossingsBetween(WorldState.CurrentZone, npc.Route.Zone, WorldState.PlayerLevel)
+                })
+                .Where(x => x.Crossings != null)
+                .OrderBy(x => x.Crossings.Count)
+                .Select(x => x.NPC)
+                .ToList();
 
             if (!validNPCs.Any())
             {

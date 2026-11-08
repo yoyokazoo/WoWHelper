@@ -122,6 +122,31 @@ one constant sized off the loosest route's own largest adjacent-waypoint gap,
 not a per-config value) is wired into `WowManagementTasks.SetLogoutVariablesTask()`,
 checked first so a bad start gives the clearest possible logout reason.
 
+**Cross-zone navigation:** map coordinates are per-zone, so routes in
+different zones never share a waypoint; `WowZoneCrossing`
+(`Config/Definitions/`, instances in `Config/Data/WowZoneCrossings.cs`) is the
+link between them instead: a `FromZone`/`FromPoint` -> `ToZone`/`ToPoint` pair
+plus `HeadingDegrees` and `MinimumLevel`. Each link is defined once and is
+walkable both ways: `ALL_ZONE_CROSSINGS` adds each one's `Reversed()`, which
+heads straight back (`HeadingDegrees` + 180) unless `ReturnHeadingDegrees` is
+set, for paths that bend at the border. There's no one-way crossing yet.
+`FromPoint`/`ToPoint` must be waypoints on routes in their own zones (enforced
+by `ZoneCrossingTests.cs`, not at runtime). `WowPathfinding.GetZoneCrossingsBetween`
+searches zones for the fewest crossings (null = unreachable, empty = same zone),
+which `PickFarmingLocationConfig` and `PickNPCToInteractWith` also use to prefer
+the current zone and then the nearest reachable one. `GetRouteToTarget` only
+builds one leg at a time: for a target in another zone, it returns a route to
+the next crossing's `FromPoint` with `ZoneCrossingAtEnd` set.
+`NavigateToEndOfCurrentRouteTask` then goes `CROSSING_ZONE` (`CrossZoneTask`
+holds the heading, up to `ZONE_CROSSING_TIMEOUT_MILLIS`) -> `CROSSED_ZONE`,
+and the caller rebuilds from the new zone, so no trip progress is stored.
+Crossing completion is keyed off `CurrentZone`, checked every tick since the
+border can come before `FromPoint`. Walking crossings only so far; a transit
+zone must be added to both `WowZone` and `ZONE_NAME_TO_ID`. `PlayerGoal.TRAVEL`
+is still an unused stub, since this lives inside navigation rather than a goal.
+The Durotar/Orgrimmar crossing is stubbed: `ORGRIMMAR_ENTRANCE_ROUTE`'s waypoint
+and the crossing's `HeadingDegrees` still need real values.
+
 **Expected mob roster (`WowLocationConfiguration.ExpectedMobNames`):** every
 mob name a route is expected to pull, e.g. `{ "Desert Rumbler" }` for
 `LEVEL_58_SILITHUS_RUMBLERS` — distinct from the `/target Foo` macro

@@ -1165,6 +1165,44 @@ namespace WoWHelper
             }
         }
 
+        // One tick of walking through a WowZoneCrossing, once we're at its FromPoint. There's no
+        // waypoint to aim at, since nothing on the far side is in this zone's coordinates, so
+        // this just holds the heading. NavigateToEndOfCurrentRouteTask ends it on the zone change.
+        public async Task CrossZoneTask(WowZoneCrossing crossing)
+        {
+            // Same staleness idea as StuckRecoveryTask -- a fight mid-crossing shouldn't use up
+            // the timeout, and this also starts the clock on the first tick.
+            long now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            if (now - LastZoneCrossingTickTime > STUCK_CHECK_STALE_MILLIS)
+            {
+                ZoneCrossingStartTime = now;
+            }
+            LastZoneCrossingTickTime = now;
+
+            if (now - ZoneCrossingStartTime > WowPlayerConstants.ZONE_CROSSING_TIMEOUT_MILLIS)
+            {
+                await EndWalkForwardTask();
+                SetLogoutVariablesAndSlack($"Timed out on {crossing}, still in {WorldState.CurrentZone} at {WorldState.PlayerLocation}");
+                return;
+            }
+
+            if (await StuckRecoveryTask())
+            {
+                return;
+            }
+
+            if (!WalkingForward)
+            {
+                await StartWalkForwardTask();
+            }
+
+            float degreesDifference = WowPathfinding.GetDegreesToMoveWhileStationary(WorldState.FacingDegrees, crossing.HeadingDegrees);
+            if (Math.Abs(degreesDifference) > WowPathfinding.WAYPOINT_DEGREE_TOLERANCE_MIN_DEGREES)
+            {
+                await TurnByKeyboardTask(degreesDifference);
+            }
+        }
+
         public async Task<bool> WalkToTargetMarkerTask()
         {
             // Took a recovery action this tick -- stay in WALK_TO_TARGETED_ENEMY and re-check

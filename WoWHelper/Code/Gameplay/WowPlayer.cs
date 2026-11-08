@@ -73,6 +73,10 @@ namespace WoWHelper
         public long StuckAnchorTime { get; private set; }
         public long LastStuckCheckTime { get; private set; }
 
+        // Zone crossing timeout -- see CrossZoneTask (WowMovementTasks.cs)
+        public long ZoneCrossingStartTime { get; private set; }
+        public long LastZoneCrossingTickTime { get; private set; }
+
         public bool LogoutTriggered { get; private set; }
         public string LogoutReason { get; private set; }
         public Bitmap LogoutBitmap { get; private set; }
@@ -393,6 +397,10 @@ namespace WoWHelper
                     {
                         CurrentInteractWithNPCState = InteractWithNPCState.INTERACT_WITH_NPC;
                     }
+                    else if (CurrentNavigateToEndOfCurrentRouteState == NavigateToEndOfCurrentRouteState.CROSSED_ZONE)
+                    {
+                        CurrentInteractWithNPCState = InteractWithNPCState.BUILD_ROUTE_TO_NPC;
+                    }
                     break;
                 case InteractWithNPCState.INTERACT_WITH_NPC:
                     await InteractWithNPCTask();
@@ -469,6 +477,17 @@ namespace WoWHelper
         {
             Console.WriteLine($"NavigateToEndOfCurrentRouteTask, CurrentNavigateToEndOfCurrentRouteState = {CurrentNavigateToEndOfCurrentRouteState}");
 
+            // Checked every tick, not just while CROSSING_ZONE, since the border can come before
+            // FromPoint. Past it, this route's coordinates mean nothing, so stop following it.
+            WowZoneCrossing zoneCrossing = CurrentRoute.ZoneCrossingAtEnd;
+            if (zoneCrossing != null && WorldState.CurrentZone == zoneCrossing.ToZone)
+            {
+                Console.WriteLine($"Crossed into {zoneCrossing.ToZone}");
+                await EndWalkForwardTask();
+                CurrentNavigateToEndOfCurrentRouteState = NavigateToEndOfCurrentRouteState.CROSSED_ZONE;
+                return;
+            }
+
             switch (CurrentNavigateToEndOfCurrentRouteState)
             {
                 case NavigateToEndOfCurrentRouteState.PICK_NEXT_WAYPOINT:
@@ -485,11 +504,16 @@ namespace WoWHelper
 
                     float targetDistance = Vector2.Distance(WorldState.PlayerLocation, CurrentWaypoint);
                     bool isFinalWaypointInRoute = CurrentWaypointIndex == CurrentRoute.Waypoints.Count - 1;
-                    float distanceTolerance = isFinalWaypointInRoute ? WowPlayerConstants.NPC_FINAL_WAYPOINT_TOLERANCE : CurrentRoute.DistanceTolerance;
+                    float distanceTolerance = isFinalWaypointInRoute && zoneCrossing == null ? WowPlayerConstants.NPC_FINAL_WAYPOINT_TOLERANCE : CurrentRoute.DistanceTolerance;
                     bool arrived = targetDistance <= distanceTolerance;
                     if (arrived)
                     {
-                        if (isFinalWaypointInRoute)
+                        if (isFinalWaypointInRoute && zoneCrossing != null)
+                        {
+                            Console.WriteLine($"Arrived at {CurrentWaypoint}, starting {zoneCrossing}");
+                            CurrentNavigateToEndOfCurrentRouteState = NavigateToEndOfCurrentRouteState.CROSSING_ZONE;
+                        }
+                        else if (isFinalWaypointInRoute)
                         {
                             Console.WriteLine($"Arrived at {CurrentWaypoint}, last waypoint in route");
                             CurrentNavigateToEndOfCurrentRouteState = NavigateToEndOfCurrentRouteState.ARRIVED_AT_END_OF_ROUTE;
@@ -503,6 +527,10 @@ namespace WoWHelper
                     }
 
                     break;
+                case NavigateToEndOfCurrentRouteState.CROSSING_ZONE:
+                    await CrossZoneTask(zoneCrossing);
+                    break;
+                case NavigateToEndOfCurrentRouteState.CROSSED_ZONE:
                 case NavigateToEndOfCurrentRouteState.ARRIVED_AT_END_OF_ROUTE:
                     break;
             }
@@ -546,6 +574,10 @@ namespace WoWHelper
                         CurrentRoute = FarmingLocationConfiguration.Route;
                         CurrentWaypointIndex = -1;
                         CurrentFindEnemyTargetState = FindEnemyTargetState.PICK_NEXT_WAYPOINT;
+                    }
+                    else if (CurrentNavigateToEndOfCurrentRouteState == NavigateToEndOfCurrentRouteState.CROSSED_ZONE)
+                    {
+                        CurrentFindEnemyTargetState = FindEnemyTargetState.BUILD_ROUTE_TO_FARMING_LOCATION;
                     }
                     break;
                 case FindEnemyTargetState.PICK_NEXT_WAYPOINT:
