@@ -17,9 +17,11 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
+        public const string WOW_EXE_NAME = "Wow";
+
         public async Task<bool> FocusOnWindowTask()
         {
-            IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
+            IntPtr wowHandle = ScreenCapture.GetWindowHandleByName(WOW_EXE_NAME);
             if (wowHandle == IntPtr.Zero) { return false; }
 
             for(int tries = 1; tries <= 10; tries++)
@@ -39,7 +41,7 @@ namespace WoWHelper
 
         public async Task<bool> RecoverFromLostWindowFocusTask()
         {
-            SlackHelper.SendMessageToChannel("Lost focus on WoWClassic window! Refocusing...");
+            SlackHelper.SendMessageToChannel($"Lost focus on {WOW_EXE_NAME} window! Refocusing...");
 
             for (int attempts = 0; attempts <= 5; attempts++)
             {
@@ -74,7 +76,7 @@ namespace WoWHelper
             // below) it's safe to run regardless of whether the addon is rendering yet.
             if (CurrentPlayerMetaState != PlayerMetaState.WAITING_TO_FOCUS_ON_WINDOW)
             {
-                IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
+                IntPtr wowHandle = ScreenCapture.GetWindowHandleByName(WOW_EXE_NAME);
                 if (wowHandle != IntPtr.Zero && ScreenCapture.GetForegroundWindow() != wowHandle)
                 {
                     await RecoverFromLostWindowFocusTask();

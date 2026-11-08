@@ -171,7 +171,7 @@ namespace WoWHelper
         {
             WowWorldState currentState = new WowWorldState(screenConfig);
 
-            System.IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
+            System.IntPtr wowHandle = ScreenCapture.GetWindowHandleByName(WowPlayer.WOW_EXE_NAME);
             currentState.WowWindowHasFocus = wowHandle != System.IntPtr.Zero && ScreenCapture.GetForegroundWindow() == wowHandle;
 
             currentState.Bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(screenConfig.CaptureRectangle);

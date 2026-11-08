@@ -884,7 +884,12 @@ of truth — edits should be made here, not in the WoW install directory.
   replacement converted back to the old return shape; call those, not the
   bare globals. The aura shims swallow the in-combat "auras cannot be
   accessed when secret" error and return nil, so on Midnight-rules clients
-  every aura-based flag reads "not present" during combat). On Midnight-rules clients (`issecretvalue` exists),
+  every aura-based flag reads "not present" during combat. Likewise
+  `Compat_GetSpellCooldown` returns "ready" (0, 0) when the cooldown comes
+  back secret in combat, so every cooldown check (`SpellIsCooledDown`,
+  `IsGlobalCooldownCooledDown`, etc.) reads "off cooldown" there;
+  `SECRET_COOLDOWN_DEBUG` prints once per spell which cooldown fields were
+  secret). On Midnight-rules clients (`issecretvalue` exists),
   `YoyokazooUI.lua` skips registering `COMBAT_LOG_EVENT_UNFILTERED`
   (forbidden there — raises the "blocked from an action" popup), so
   `TargetRecentlyEvaded` never fires and `IsCombatStalemate()` always

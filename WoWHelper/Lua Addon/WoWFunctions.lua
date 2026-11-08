@@ -17,10 +17,55 @@ function Compat_GetSpellInfo(spell)
     return info.name, nil, info.iconID, info.castTime, info.minRange, info.maxRange, info.spellID
 end
 
+-- Midnight-rules clients (WoW Forever) make spell cooldowns secret in combat:
+-- comparing/doing math on start/duration throws ("duration is a secret number
+-- value"). When that happens we return "ready" (0, 0, enabled) -- every caller
+-- treats that as off cooldown. Chosen over "on cooldown" since a false "ready"
+-- just means the bot presses an ability that isn't up yet (the game ignores
+-- it), while a false "on cooldown" would stall every rotation completely.
+--
+-- SECRET_COOLDOWN_DEBUG prints, once per spell, which fields of the
+-- C_Spell.GetSpellCooldown table came back secret -- to find out whether
+-- anything (e.g. isOnGCD) is still readable in combat to build a better
+-- answer from.
+SECRET_COOLDOWN_DEBUG = true
+local reportedSecretCooldownSpells = {}
+
+local function ReportSecretCooldown(spell, info)
+    if not SECRET_COOLDOWN_DEBUG or reportedSecretCooldownSpells[spell] then return end
+    reportedSecretCooldownSpells[spell] = true
+
+    local parts = {}
+    if type(info) == "table" then
+        for key, value in pairs(info) do
+            table.insert(parts, tostring(key) .. "=" .. (issecretvalue(value) and "SECRET" or tostring(value)))
+        end
+    else
+        table.insert(parts, "(old GetSpellCooldown global, no table)")
+    end
+    print("|cffff9900[cooldown]|r " .. tostring(spell) .. " secret in combat: " .. table.concat(parts, ", "))
+end
+
 function Compat_GetSpellCooldown(spell)
-    if GetSpellCooldown then return GetSpellCooldown(spell) end
+    if GetSpellCooldown then
+        local start, duration, enabled, modRate = GetSpellCooldown(spell)
+        if IsAnySecretValue(start, duration, enabled) then
+            ReportSecretCooldown(spell, nil)
+            return 0, 0, 1, 1
+        end
+        return start, duration, enabled, modRate
+    end
+
     local info = C_Spell and C_Spell.GetSpellCooldown and C_Spell.GetSpellCooldown(spell)
     if not info then return nil end
+
+    -- Check before touching anything: even the isEnabled truthiness test
+    -- below would throw on a secret.
+    if IsAnySecretValue(info.startTime, info.duration, info.isEnabled) then
+        ReportSecretCooldown(spell, info)
+        return 0, 0, 1, 1
+    end
+
     -- old shape: start, duration, enabled (1/0 number, not a boolean)
     return info.startTime, info.duration, (info.isEnabled and 1 or 0), info.modRate
 end
