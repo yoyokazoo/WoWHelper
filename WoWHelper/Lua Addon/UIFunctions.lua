@@ -24,30 +24,6 @@ function CreateNumberIndicator(parent, label, valueFunc, orderY)
     end
 end
 
--- A labeled box, green when boolFunc() is true and red when false.
--- Returns the update function.
-function CreateBoolIndicator(parent, label, boolFunc, orderY)
-    local box = CreateFrame("Frame", nil, parent)
-    box:SetSize(20, 20)
-    box:SetPoint("TOPLEFT", parent, "TOPLEFT", 170, -10 - (orderY * 24))
-
-    local tex = box:CreateTexture(nil, "ARTWORK")
-    tex:SetAllPoints(box)
-    tex:SetColorTexture(1, 0, 0, 1)
-
-    local text = box:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    text:SetPoint("LEFT", box, "RIGHT", 8, 0)
-    text:SetText(label)
-
-    return function()
-        if boolFunc() then
-            tex:SetColorTexture(0, 1, 0, 1)
-        else
-            tex:SetColorTexture(1, 0, 0, 1)
-        end
-    end
-end
-
 -- Measures the real physical-pixels-per-UIParent-local-unit ratio by
 -- comparing GetPhysicalScreenSize() against UIParent's own reported size,
 -- instead of trusting UIParent:GetEffectiveScale() / PixelUtil.
@@ -191,18 +167,19 @@ end
 --           sentinel box right after it, at x = PIXEL_BAR_WIDTH
 --   Row  1  player resource bar (blue)
 --   Row  2  target health bar (red)
---   Row  3  map X                fixed point
---   Row  4  map Y                fixed point
---   Row  5  facing, in degrees   fixed point
---   Row  6  MultiBoolOne         bool fields (MULTI_BOOL_ONE_FIELDS)
---   Row  7  MultiBoolTwo         bool fields (MULTI_BOOL_TWO_FIELDS)
---   Row  8  ClassBoolOne         bool fields (<CLASS>_CLASS_BOOL_ONE_FIELDS)
---   Row  9  ClassBoolTwo         bool fields (<CLASS>_CLASS_BOOL_TWO_FIELDS)
---   Row 10  MultiIntOne          bytes: attacker count, player level, zone ID
+--   Row  3  (empty -- spacing between the bars and the bit rows)
+--   Row  4  map X                fixed point
+--   Row  5  map Y                fixed point
+--   Row  6  facing, in degrees   fixed point
+--   Row  7  MultiBoolOne         bool fields (MULTI_BOOL_ONE_FIELDS)
+--   Row  8  MultiBoolTwo         bool fields (MULTI_BOOL_TWO_FIELDS)
+--   Row  9  ClassBoolOne         bool fields (<CLASS>_CLASS_BOOL_ONE_FIELDS)
+--   Row 10  ClassBoolTwo         bool fields (<CLASS>_CLASS_BOOL_TWO_FIELDS)
+--   Row 11  MultiIntOne          bytes: attacker count, player level, zone ID
 --
 -- Bars fill left to right, so the number of filled pixels is the percent --
 -- and a StatusBar accepts secret values (Midnight-rules clients), which Lua
--- itself can't do math on. Rows 3-10 are bit rows: PIXEL_ROW_BITS boxes,
+-- itself can't do math on. Rows 4-11 are bit rows: PIXEL_ROW_BITS boxes,
 -- green = 1, red = 0 (see MathFunctions.lua for the encodings).
 --
 -- Row order and every constant below MUST match WowPixelRows.cs. A one-sided
@@ -210,7 +187,7 @@ end
 --------------------------------------------------
 PIXEL_SIZE = 3
 PIXEL_BAR_WIDTH = 100  -- so each filled bar pixel is exactly 1%
-local PIXEL_ROW_COUNT = 11
+local PIXEL_ROW_COUNT = 12
 
 -- Exact-match sentinel: if the C# side sees exactly this color, the addon is
 -- loaded and the rows are real. Nothing else here ever draws it.
@@ -328,16 +305,18 @@ function InitializePixelRow()
         CreateStatusBarElement(container, 1, RESOURCE_BAR_FILL_COLOR, GetPlayerResourceBarValues),
         CreateStatusBarElement(container, 2, TARGET_HEALTH_BAR_FILL_COLOR, GetTargetHealthBarValues),
 
-        CreateBitRowElement(container, 3, function() return EncodeFixedPoint(GetPlayerMapX()) end),
-        CreateBitRowElement(container, 4, function() return EncodeFixedPoint(GetPlayerMapY()) end),
-        CreateBitRowElement(container, 5, function() return EncodeFixedPoint(GetPlayerFacingInDegrees()) end),
+        -- Row 3 is left empty: spacing between the bars and the bit rows.
 
-        CreateBitRowElement(container, 6, function() return EncodeBoolFields("MultiBoolOne", MULTI_BOOL_ONE_FIELDS) end),
-        CreateBitRowElement(container, 7, function() return EncodeBoolFields("MultiBoolTwo", MULTI_BOOL_TWO_FIELDS) end),
-        CreateBitRowElement(container, 8, function() return EncodeBoolFields("ClassBoolOne", GetPlayerClassFields("CLASS_BOOL_ONE_FIELDS")) end),
-        CreateBitRowElement(container, 9, function() return EncodeBoolFields("ClassBoolTwo", GetPlayerClassFields("CLASS_BOOL_TWO_FIELDS")) end),
+        CreateBitRowElement(container, 4, function() return EncodeFixedPoint(GetPlayerMapX()) end),
+        CreateBitRowElement(container, 5, function() return EncodeFixedPoint(GetPlayerMapY()) end),
+        CreateBitRowElement(container, 6, function() return EncodeFixedPoint(GetPlayerFacingInDegrees()) end),
 
-        CreateBitRowElement(container, 10, function()
+        CreateBitRowElement(container, 7, function() return EncodeBoolFields("MultiBoolOne", MULTI_BOOL_ONE_FIELDS) end),
+        CreateBitRowElement(container, 8, function() return EncodeBoolFields("MultiBoolTwo", MULTI_BOOL_TWO_FIELDS) end),
+        CreateBitRowElement(container, 9, function() return EncodeBoolFields("ClassBoolOne", GetPlayerClassFields("CLASS_BOOL_ONE_FIELDS")) end),
+        CreateBitRowElement(container, 10, function() return EncodeBoolFields("ClassBoolTwo", GetPlayerClassFields("CLASS_BOOL_TWO_FIELDS")) end),
+
+        CreateBitRowElement(container, 11, function()
             return EncodeBytes(CountAttackers(), UnitLevel("player"), GetCurrentZoneId())
         end),
     }
@@ -387,22 +366,15 @@ function InitializePixelRow()
     end)
 end
 
--- The human-only debug frame (/yydebug). Each update is pcall'd so one
--- failing value doesn't freeze the rest.
+-- The human-only debug frame (/yydebug): map X/Y and facing, for reading off
+-- coordinates while recording routes. Its size (YoyokazooUI.lua) fits exactly
+-- these rows -- resize it there if rows are added. Each update is pcall'd so
+-- one failing value doesn't freeze the rest.
 function InitializeIndicators()
     local updates = {
-        CreateNumberIndicator(YoyokazooUIFrame, "HP%",       GetPlayerHealthPercent,   0),
-        CreateNumberIndicator(YoyokazooUIFrame, "Resource",  GetPlayerResourcePercent, 1),
-        CreateNumberIndicator(YoyokazooUIFrame, "TgtHP%",    GetTargetHealthPercent,   2),
-        CreateNumberIndicator(YoyokazooUIFrame, "MapX",      GetPlayerMapX,            3),
-        CreateNumberIndicator(YoyokazooUIFrame, "MapY",      GetPlayerMapY,            4),
-        CreateNumberIndicator(YoyokazooUIFrame, "Degrees",   GetPlayerFacingInDegrees, 5),
-        CreateNumberIndicator(YoyokazooUIFrame, "Attackers", CountAttackers,           6),
-
-        CreateBoolIndicator(YoyokazooUIFrame, "Attacking",       IsAttacking,               0),
-        CreateBoolIndicator(YoyokazooUIFrame, "InCombat",        IsInCombat,                1),
-        CreateBoolIndicator(YoyokazooUIFrame, "CanChargeTarget", CanChargeTarget,           2),
-        CreateBoolIndicator(YoyokazooUIFrame, "Heroic Queued",   IsAnyNextSwingSpellQueued, 3),
+        CreateNumberIndicator(YoyokazooUIFrame, "MapX",    GetPlayerMapX,            0),
+        CreateNumberIndicator(YoyokazooUIFrame, "MapY",    GetPlayerMapY,            1),
+        CreateNumberIndicator(YoyokazooUIFrame, "Degrees", GetPlayerFacingInDegrees, 2),
     }
 
     local checkInterval = 0.1

@@ -586,57 +586,16 @@ function CanSpellcastPullTarget()
     return SpellIsInRange(spellId)
 end
 
---------------------------------------------------
--- Health: player (percent 0-100)
---------------------------------------------------
 -- Midnight-rules clients (WoW Forever) can return "secret" values from
--- UnitHealth/UnitPower etc.; any arithmetic or comparison on one throws.
--- issecretvalue() doesn't exist on older clients (Classic Era), so guard it.
--- Temporary for the Forever port: callers just return 100 when a value is secret.
-local SECRET_VALUE_FALLBACK_PERCENT = 100
-
+-- UnitHealth/UnitPower, aura and cooldown queries, etc.; any arithmetic or
+-- comparison on one throws. issecretvalue() doesn't exist on older clients
+-- (Classic Era), so guard it.
 function IsAnySecretValue(...)
     if not issecretvalue then return false end
     for i = 1, select("#", ...) do
         if issecretvalue((select(i, ...))) then return true end
     end
     return false
-end
-
-function GetPlayerHealthPercent()
-    local hp  = UnitHealth("player")
-    local max = UnitHealthMax("player")
-    if IsAnySecretValue(hp, max) then return SECRET_VALUE_FALLBACK_PERCENT end
-    if max == 0 then return 0 end
-    return math.floor((hp / max) * 100 + 0.5)
-end
-
---------------------------------------------------
--- Resource: player (rage / mana / energy, percent 0-100)
---------------------------------------------------
-function GetPlayerResourcePercent()
-    local powerType = UnitPowerType("player")            -- e.g. 0 = mana, 1 = rage, 3 = energy
-    local cur = UnitPower("player", powerType)
-    local max = UnitPowerMax("player", powerType)
-
-    if IsAnySecretValue(cur, max) then return SECRET_VALUE_FALLBACK_PERCENT end
-    if max == 0 then return 0 end
-    return math.floor((cur / max) * 100 + 0.5)
-end
-
---------------------------------------------------
--- Target health (percent 0-100)
---------------------------------------------------
-function GetTargetHealthPercent()
-    if not UnitExists("target") then
-        return 0
-    end
-
-    local hp  = UnitHealth("target")
-    local max = UnitHealthMax("target")
-    if IsAnySecretValue(hp, max) then return SECRET_VALUE_FALLBACK_PERCENT end
-    if max == 0 then return 0 end
-    return math.floor((hp / max) * 100 + 0.5)
 end
 
 --------------------------------------------------
@@ -1352,6 +1311,9 @@ AUTO_SELL_BLOCKLIST_ITEM_NAMES = {
     "Superior Healing Potion",
     "Major Healing Potion",
     "Skinning Knife",
+    "Apprentice's Skinning Satchel",
+    "Rough Arrow",
+    "Light Shot",
 }
 
 local function IsItemNameInList(itemName, list)

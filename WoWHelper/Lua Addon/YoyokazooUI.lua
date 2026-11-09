@@ -212,10 +212,12 @@ function GetHealingPotionItemId()
     return itemId
 end
 
--- Create a frame to be our black box
+-- The /yydebug frame's black box. Sized to fit exactly InitializeIndicators()'s
+-- three rows (UIFunctions.lua): rows start 10px down, 24px apart, 20px tall,
+-- plus 10px bottom padding; values at x = 10, labels at x = 70.
 local frame = CreateFrame("Frame", "YoyokazooUIFrame", UIParent, "BackdropTemplate")
 -- Size and position
-frame:SetSize(300, 350)
+frame:SetSize(130, 88)
 frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -100)
 -- Give it a solid black background
 frame:SetBackdrop({

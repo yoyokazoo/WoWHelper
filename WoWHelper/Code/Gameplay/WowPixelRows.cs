@@ -15,15 +15,17 @@ namespace WoWHelper
         ResourceBar = 1,
         TargetHealthBar = 2,
 
+        // Row 3 is left empty: spacing between the bars and the bit rows.
+
         // Bit rows (see PixelRowBits).
-        MapX = 3,
-        MapY = 4,
-        FacingDegrees = 5,
-        MultiBoolOne = 6,
-        MultiBoolTwo = 7,
-        ClassBoolOne = 8,
-        ClassBoolTwo = 9,
-        MultiIntOne = 10,
+        MapX = 4,
+        MapY = 5,
+        FacingDegrees = 6,
+        MultiBoolOne = 7,
+        MultiBoolTwo = 8,
+        ClassBoolOne = 9,
+        ClassBoolTwo = 10,
+        MultiIntOne = 11,
     }
 
     // Layout constants and readers for the pixel rows. Every constant here MUST match its

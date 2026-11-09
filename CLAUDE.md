@@ -70,14 +70,15 @@ order. Row N covers physical y = 3N to 3N+2 (read at y = 3N+1):
 | 0 | Player health bar, plus the sentinel box right after it at x = 100 (read at (101, 1)) | bar, fill `(0, 255, 0)`; sentinel exactly `ADDON_LOADED_COLOR` (96, 255, 117) | `PlayerHpPercent`; `AddonLoaded` (see below) |
 | 1 | Player resource bar | bar, fill `(0, 0, 255)` | `ResourcePercent` |
 | 2 | Target health bar (empty with no target) | bar, fill `(255, 0, 0)` | `TargetHpPercent` |
-| 3 | Map X | fixed point | `MapX` |
-| 4 | Map Y | fixed point | `MapY` |
-| 5 | Facing, degrees | fixed point | `FacingDegrees` |
-| 6 | `MultiBoolOne` — `MULTI_BOOL_ONE_FIELDS` (class-agnostic, all 24 boxes used or reserved) | bool fields | various `WowWorldState` bools |
-| 7 | `MultiBoolTwo` — `MULTI_BOOL_TWO_FIELDS` (class-agnostic — boxes 1-6, 9-17 used so far) | bool fields | `IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable` |
-| 8 | `ClassBoolOne` — `<CLASS>_CLASS_BOOL_ONE_FIELDS` (class-specific) | bool fields | a `WowClassState` subtype (see C# architecture section) |
-| 9 | `ClassBoolTwo` — `<CLASS>_CLASS_BOOL_TWO_FIELDS` (class-specific — only Shaman's boxes 1-3 used so far) | bool fields | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
-| 10 | `MultiIntOne` — attacker count, player level, zone ID | bytes | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
+| 3 | *(empty — spacing between the bars and the bit rows)* | — | — |
+| 4 | Map X | fixed point | `MapX` |
+| 5 | Map Y | fixed point | `MapY` |
+| 6 | Facing, degrees | fixed point | `FacingDegrees` |
+| 7 | `MultiBoolOne` — `MULTI_BOOL_ONE_FIELDS` (class-agnostic, all 24 boxes used or reserved) | bool fields | various `WowWorldState` bools |
+| 8 | `MultiBoolTwo` — `MULTI_BOOL_TWO_FIELDS` (class-agnostic — boxes 1-6, 9-17 used so far) | bool fields | `IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable` |
+| 9 | `ClassBoolOne` — `<CLASS>_CLASS_BOOL_ONE_FIELDS` (class-specific) | bool fields | a `WowClassState` subtype (see C# architecture section) |
+| 10 | `ClassBoolTwo` — `<CLASS>_CLASS_BOOL_TWO_FIELDS` (class-specific — only Shaman's boxes 1-3 used so far) | bool fields | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
+| 11 | `MultiIntOne` — attacker count, player level, zone ID | bytes | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 
 **Bars** (rows 0-2) are `PIXEL_BAR_WIDTH` (100) physical-pixel `StatusBar`s
 at x = 0, empty color `(0, 0, 0)`, filled left to right — filled pixel count
@@ -89,7 +90,7 @@ them itself (the bar value sources pass them through untouched).
 first unfilled pixel (at most 7 reads per bar), "filled" meaning the bar's
 fill channel is >= 128 (so a half-covered edge pixel rounds to nearest).
 
-**Bit rows** (rows 3-10) are 24 boxes, green `(0, 255, 0)` = 1 and red
+**Bit rows** (rows 4-11) are 24 boxes, green `(0, 255, 0)` = 1 and red
 `(255, 0, 0)` = 0, together one unsigned integer with **box 1 (leftmost) as
 bit 0**. C# reads a box as 1 when its green channel beats its red
 (`WowPixelRows.ReadBits()` → `PixelRowBits`). Three encodings, Lua helpers in
@@ -890,11 +891,8 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`WoWFunctions.lua`** — class-agnostic game-state queries (in melee range,
   in combat, should-attack-target checks, spell cooldown/range checks incl.
   GCD-aware cooldown detection, attacker counting, etc.) — the "is X true"
-  logic layer (temporary, for the WoW Forever / Midnight-rules port:
-  `GetPlayerHealthPercent`/`GetPlayerResourcePercent`/`GetTargetHealthPercent`
-  return 100 when `IsAnySecretValue()` sees a secret value, instead of
-  erroring — only the `/yydebug` frame shows these now, the bot reads the
-  bars; also, the
+  logic layer (for the WoW Forever / Midnight-rules port, `IsAnySecretValue()`
+  guards values that may come back secret; also, the
   top of the file has `Compat_*` shims for old globals modern clients removed
   — `GetSpellInfo`/`GetSpellCooldown`/`IsSpellInRange`/`IsUsableSpell`/
   `IsCurrentSpell`/`GetItemInfo`/`GetItemInfoInstant`/`GetItemCount`/
@@ -937,8 +935,8 @@ of truth — edits should be made here, not in the WoW install directory.
   (a short, manually-curated list of cooking/fishing byproducts and
   skinning/leatherworking materials); `"blocklist"` sells everything
   quality 0-2 (gray/white/green) *except* items named in
-  `AUTO_SELL_BLOCKLIST_ITEM_NAMES` (currently just the healing-potion
-  tiers), and skips any item whose name isn't cached yet since it can't be
+  `AUTO_SELL_BLOCKLIST_ITEM_NAMES` (changes often -- see the list itself),
+  and skips any item whose name isn't cached yet since it can't be
   checked against the blocklist. Both lists match by name
   (`GetItemInfo(itemID)`) rather than item ID, unlike
   `DYNAMITE_ITEM_CHOICES`/`HEALING_POTION_ITEM_CHOICES` below, since they
@@ -1040,10 +1038,10 @@ of truth — edits should be made here, not in the WoW install directory.
     `CreateSolidSwatchElement`/`CreateBitRowElement`), all in one
     `TOOLTIP`-strata container frame, placed via the self-calibrating
     `GetPhysicalPixelsPerLocalUnit()` helper. No debug-only values live here.
-  - `InitializeIndicators()` — the draggable debug frame
-    (`YoyokazooUIFrame`, toggled by `/yydebug`), showing a few values
-    legibly with labels (`CreateNumberIndicator`/`CreateBoolIndicator`), for
-    human debugging. The bot never reads it.
+  - `InitializeIndicators()` — the debug frame (`YoyokazooUIFrame`, toggled
+    by `/yydebug`), showing map X/Y and facing degrees as labeled numbers
+    (`CreateNumberIndicator`), for reading off coordinates by hand. Its size
+    (`YoyokazooUI.lua`) fits exactly those three rows. The bot never reads it.
   - `CreateSettingsMenu()` — a small checkbox/selector dialog (not tied to
     any live game-state read/OnUpdate loop) toggled by `YoyokazooUI.lua`'s
     `/yyconfig` slash command, for run-specific settings like "log out on low

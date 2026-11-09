@@ -283,7 +283,7 @@ namespace WoWHelper
             IsTargetAttackable = bits[17];
         }
 
-        // Byte order MUST match the EncodeBytes call for row 10 in InitializePixelRow()
+        // Byte order MUST match the EncodeBytes call for row 11 in InitializePixelRow()
         // (UIFunctions.lua).
         private void UpdateMultiIntOne(PixelRowBits bits)
         {
