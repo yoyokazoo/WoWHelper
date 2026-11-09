@@ -2241,9 +2241,8 @@ end
 -- Forever client (see GetTrainerServiceNameRankCategory() above -- on Forever
 -- this scan used to read the icon ID as the category, so it never bought
 -- anything). AUTO_TRAIN_DEBUG prints every row the scan sees and why it was
--- or wasn't picked. Defaults ON until buying is confirmed working; flip it
--- off after.
-AUTO_TRAIN_DEBUG = true
+-- or wasn't picked. Off now that buying is confirmed working on Forever.
+AUTO_TRAIN_DEBUG = false
 
 function AutoTrainDebugPrint(message)
     if AUTO_TRAIN_DEBUG then

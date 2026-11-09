@@ -488,7 +488,32 @@ local AUTO_TRAIN_TICK_SECONDS = 0.3
 local AUTO_TRAIN_EMPTY_LIST_MAX_RETRIES = 5
 local autoTrainGeneration = 0
 
-local function TrainNextAffordableSkill(generation, boughtCount, emptyRetries)
+-- GetCoinText is a Classic global that modern clients (Forever) don't have --
+-- calling it there threw and silently killed the auto-train chain right
+-- before the first BuyTrainerService. Plain "1g 2s 3c" instead.
+local function FormatCopper(copper)
+    copper = tonumber(copper) or 0
+    local gold = math.floor(copper / 10000)
+    local silver = math.floor((copper % 10000) / 100)
+    local text = (copper % 100) .. "c"
+    if silver > 0 or gold > 0 then text = silver .. "s " .. text end
+    if gold > 0 then text = gold .. "g " .. text end
+    return text
+end
+
+local TrainNextAffordableSkill
+
+-- Each tick runs through pcall: these run from C_Timer callbacks, and with
+-- the scriptErrors CVar off (the default) an error there vanishes without a
+-- trace, leaving auto-train silently stopped.
+local function RunAutoTrainTick(generation, boughtCount, emptyRetries)
+    local ok, err = pcall(TrainNextAffordableSkill, generation, boughtCount, emptyRetries)
+    if not ok then
+        print("YoyokazooUI: auto-train failed: " .. tostring(err))
+    end
+end
+
+TrainNextAffordableSkill = function(generation, boughtCount, emptyRetries)
     if generation ~= autoTrainGeneration then
         AutoTrainDebugPrint("tick bailed: stale generation (trainer closed)")
         return
@@ -502,7 +527,7 @@ local function TrainNextAffordableSkill(generation, boughtCount, emptyRetries)
     if (GetNumTrainerServices() or 0) == 0 and emptyRetries < AUTO_TRAIN_EMPTY_LIST_MAX_RETRIES then
         AutoTrainDebugPrint("service list empty -- retry " .. (emptyRetries + 1) .. "/" .. AUTO_TRAIN_EMPTY_LIST_MAX_RETRIES)
         C_Timer.After(AUTO_TRAIN_TICK_SECONDS, function()
-            TrainNextAffordableSkill(generation, boughtCount, emptyRetries + 1)
+            RunAutoTrainTick(generation, boughtCount, emptyRetries + 1)
         end)
         return
     end
@@ -514,11 +539,11 @@ local function TrainNextAffordableSkill(generation, boughtCount, emptyRetries)
     end
 
     print("YoyokazooUI: training " .. tostring(name) .. " " .. tostring(rank or "") ..
-        " (" .. GetCoinText(cost, " ") .. ")")
+        " (" .. FormatCopper(cost) .. ")")
     BuyTrainerService(index)
 
     C_Timer.After(AUTO_TRAIN_TICK_SECONDS, function()
-        TrainNextAffordableSkill(generation, boughtCount + 1, emptyRetries)
+        RunAutoTrainTick(generation, boughtCount + 1, emptyRetries)
     end)
 end
 
@@ -619,7 +644,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         else
             AutoTrainDebugPrint("TRAINER_SHOW (generation " .. generation .. ")")
             C_Timer.After(AUTO_TRAIN_TICK_SECONDS, function()
-                TrainNextAffordableSkill(generation, 0, 0)
+                RunAutoTrainTick(generation, 0, 0)
             end)
         end
     end

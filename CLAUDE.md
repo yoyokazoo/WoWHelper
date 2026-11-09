@@ -1221,9 +1221,12 @@ of truth — edits should be made here, not in the WoW install directory.
   1/0.
   Same generation-counter guard as auto-sell (`autoTrainGeneration`, bumped
   on `TRAINER_SHOW`/`TRAINER_CLOSED`). The G6/G7 trainer-spell cache isn't
-  invalidated, so those bits can lag up to 60s after training. Not
-  confirmed live yet — `AUTO_TRAIN_DEBUG` (`WoWFunctions.lua`, currently
-  **on**) prints every row scanned; turn it off once confirmed.
+  invalidated, so those bits can lag up to 60s after training. Confirmed
+  working live on Forever. Each tick runs through `pcall` and chat-prints
+  any error (these run from `C_Timer` callbacks, where an error otherwise
+  vanishes silently — that's how a nil `GetCoinText`, a Classic-only global,
+  kept it from ever buying). `AUTO_TRAIN_DEBUG` (`WoWFunctions.lua`, off by
+  default) prints every row scanned.
 
 ## Tests (`WoWHelperUnitTests/`)
 
