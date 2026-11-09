@@ -430,8 +430,10 @@ nothing's unlearned). An entry may also carry `requiresSpellId`: it only
 counts once the player knows that spell — for later ranks of talent- or
 quest-granted abilities (Mortal Strike/Bloodthirst/Shield Slam/Intercept),
 which the trainer only offers if rank 1 is already known. Warrior is filled
-in for levels 1-60 (sourced from the WhatsTraining addon's data; quest
-spells, talent rank 1s, and weapon skills deliberately excluded);
+in for levels 1-60, generated from a `/yyspells` dump of a WoW Forever
+trainer (real per-row levels/costs/spell IDs — Forever's schedule differs
+from Classic Era's; starting/quest spells, talent rank 1s, and weapon skills
+aren't on the trainer, so they're excluded);
 Shaman/Warlock tables are empty, so they always read "all known".
 G8 is `WowWorldState.GearNeedsRepair` (`GearNeedsRepair()`,
 `WoWFunctions.lua`): true if a melee weapon (main hand, or an off-hand
@@ -1075,7 +1077,12 @@ of truth — edits should be made here, not in the WoW install directory.
   each backed by its own `YoyokazooUIDB` field
   (`logoutOnLowDynamite`/`logoutOnFullBags`) read via
   `IsLogoutOnLowDynamiteEnabled()`/`IsLogoutOnFullBagsEnabled()` when the
-  `MultiBoolTwo` pixel row is drawn; `/yysell` is a debug-only dry run
+  `MultiBoolTwo` pixel row is drawn; `/yyspells` (debug-only,
+  `DumpSpellData()` in `WoWFunctions.lua`) dumps an open class trainer's
+  rows, the class trainer table's spell IDs as the client sees them, and the
+  spellbook into `YoyokazooUIDB.spellDump`, written to the SavedVariables
+  file on `/reload`, for rebuilding a trainer table from real client data;
+  `/yysell` is a debug-only dry run
   of the auto-sell bag scan (see the auto-sell paragraph below) that prints
   what it would sell without selling anything, and works with no merchant
   open. Also auto-confirms the bind-on-pickup loot popup: on
@@ -1207,6 +1214,11 @@ of truth — edits should be made here, not in the WoW install directory.
   each tick with `FindNextAffordableTrainerService()` (`WoWFunctions.lua` —
   first row with category `"available"` and cost `<= GetMoney()`; forces
   the trainer's "available" filter on) since a purchase shifts the rows.
+  `GetTrainerServiceInfo` returns `(name, rank, category)` on Classic Era but
+  `(name, category, icon)` on the Forever client (no rank), so rows are read
+  through `GetTrainerServiceNameRankCategory()`, which handles both; Forever
+  also wants a real boolean for `SetTrainerServiceTypeFilter`'s on/off, not
+  1/0.
   Same generation-counter guard as auto-sell (`autoTrainGeneration`, bumped
   on `TRAINER_SHOW`/`TRAINER_CLOSED`). The G6/G7 trainer-spell cache isn't
   invalidated, so those bits can lag up to 60s after training. Not

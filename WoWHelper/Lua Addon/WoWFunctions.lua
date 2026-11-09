@@ -1868,6 +1868,204 @@ function CanAffordToTrainAllSkills()
 end
 
 ------------------------------------------------------------
+-- Spell data dump (/yyspells, YoyokazooUI.lua) -- debug-only. For rebuilding
+-- a class's <CLASS>_TRAINER_SPELLS table on a client whose spell IDs/ranks
+-- differ from the table's source (WoW Forever), from real client data
+-- instead of guessing. Collects three sections:
+--   trainer   -- every row of an open class trainer (all categories, not
+--                just "available"): name, rank, category, level, cost, and
+--                the spell ID from the row's link, if the client gives one
+--   table     -- each existing table entry's spellId: what the client calls
+--                that ID, and whether IsPlayerSpell/IsSpellKnown say it's known
+--   spellbook -- every spell in the player's spellbook, with its spell ID
+-- Lines go into YoyokazooUIDB.spellDump (the SavedVariables table, written to
+-- disk on /reload or logout) rather than only chat, since ~100 chat lines
+-- can't be copied out of the game.
+------------------------------------------------------------
+local function DescribeValue(value)
+    if IsAnySecretValue(value) then return "SECRET" end
+    return tostring(value)
+end
+
+local function SpellIdFromLink(link)
+    if type(link) ~= "string" then return nil end
+    return tonumber(link:match("|Hspell:(%d+)"))
+end
+
+local function ClientSpellName(spellId)
+    if C_Spell and C_Spell.GetSpellName then
+        return C_Spell.GetSpellName(spellId)
+    end
+    return (Compat_GetSpellInfo(spellId))
+end
+
+local TRAINER_FILTERS = { "available", "unavailable", "used" }
+
+-- GetTrainerServiceInfo's return shape differs by client: Classic Era gives
+-- (name, rank, category), but the Forever client gives (name, category,
+-- icon) -- no rank at all (confirmed live via /yyspells). Returns
+-- name, rank (nil on Forever), category on either.
+function GetTrainerServiceNameRankCategory(index)
+    local name, second, third = GetTrainerServiceInfo(index)
+    if second == "available" or second == "unavailable" or second == "used" then
+        return name, nil, second
+    end
+    return name, second, third
+end
+
+-- A trainer row's spell ID and rank text, read back off a hidden tooltip:
+-- neither GetTrainerServiceInfo nor GetTrainerServiceItemLink gives the ID
+-- on the Forever client. Tries GetSpell() and then GetTooltipData(), since
+-- which one a client supports isn't verified yet; the rank usually sits in
+-- the first line's right-hand text.
+local scanTooltip = nil
+
+local function ReadTrainerServiceTooltip(index)
+    if not scanTooltip then
+        scanTooltip = CreateFrame("GameTooltip", "YoyokazooUIScanTooltip", nil, "GameTooltipTemplate")
+    end
+    scanTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
+    scanTooltip:ClearLines()
+    scanTooltip:SetTrainerService(index)
+
+    local spellId = nil
+    if scanTooltip.GetSpell then
+        spellId = select(2, scanTooltip:GetSpell())
+    end
+    if not spellId and scanTooltip.GetTooltipData then
+        local data = scanTooltip:GetTooltipData()
+        spellId = data and data.id
+    end
+
+    local rightText = _G["YoyokazooUIScanTooltipTextRight1"]
+    local rankText = rightText and rightText:GetText()
+
+    scanTooltip:Hide()
+    return spellId, rankText
+end
+
+local function DumpTrainerServices(lines)
+    local numServices = GetNumTrainerServices and GetNumTrainerServices() or 0
+    if numServices == 0 or not IsClassTrainerOpen() then
+        table.insert(lines, "trainer: no class trainer window open -- open one and run /yyspells again for this section")
+        return
+    end
+
+    -- Show every category while dumping, then put the window's filters back.
+    -- The on/off argument must be a real boolean -- the Forever client
+    -- rejects Classic's 1/0 ("Missing on/off parameter").
+    local savedFilters = {}
+    if GetTrainerServiceTypeFilter and SetTrainerServiceTypeFilter then
+        for _, filter in ipairs(TRAINER_FILTERS) do
+            savedFilters[filter] = GetTrainerServiceTypeFilter(filter) and true or false
+            SetTrainerServiceTypeFilter(filter, true)
+        end
+        numServices = GetNumTrainerServices() or 0
+    end
+
+    for i = 1, numServices do
+        local name, rank, category = GetTrainerServiceNameRankCategory(i)
+        local cost = GetTrainerServiceCost(i)
+        local levelReq = GetTrainerServiceLevelReq and GetTrainerServiceLevelReq(i)
+        local linkSpellId = SpellIdFromLink(GetTrainerServiceItemLink and GetTrainerServiceItemLink(i))
+
+        local tooltipOk, tooltipSpellId, tooltipRank = pcall(ReadTrainerServiceTooltip, i)
+        if not tooltipOk then
+            tooltipRank = "tooltip error: " .. tostring(tooltipSpellId)
+            tooltipSpellId = nil
+        end
+        local spellId = linkSpellId or tooltipSpellId
+
+        table.insert(lines, string.format(
+            "trainer %d | %s | rank=%s | tooltipRank=%s | %s | level=%s | cost=%s | spellId=%s | clientName=%s | known=%s",
+            i, tostring(name), tostring(rank), tostring(tooltipRank), tostring(category), tostring(levelReq),
+            tostring(cost), tostring(spellId), tostring(spellId and ClientSpellName(spellId)),
+            DescribeValue(spellId and IsPlayerSpell and IsPlayerSpell(spellId))))
+    end
+
+    if SetTrainerServiceTypeFilter then
+        for _, filter in ipairs(TRAINER_FILTERS) do
+            SetTrainerServiceTypeFilter(filter, savedFilters[filter])
+        end
+    end
+end
+
+local function DumpTrainerTable(lines)
+    local trainerSpells = GetClassTrainerSpells()
+    if not trainerSpells then
+        table.insert(lines, "table: no trainer table for this class")
+        return
+    end
+
+    for _, spell in ipairs(trainerSpells) do
+        table.insert(lines, string.format("table L%d | %s | spellId=%d | clientName=%s | IsPlayerSpell=%s | IsSpellKnown=%s",
+            spell.level, spell.name, spell.spellId, tostring(ClientSpellName(spell.spellId)),
+            DescribeValue(IsPlayerSpell and IsPlayerSpell(spell.spellId)),
+            DescribeValue(Compat_IsSpellKnown(spell.spellId))))
+    end
+end
+
+local function DumpSpellbook(lines)
+    -- Modern clients: C_SpellBook skill lines (same as IsSpellKnownByName()).
+    if not GetNumSpellTabs then
+        if not (C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines) then
+            table.insert(lines, "spellbook: no spellbook API found")
+            return
+        end
+        local bank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player
+        for line = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+            local lineInfo = C_SpellBook.GetSpellBookSkillLineInfo(line)
+            if lineInfo then
+                local offset = lineInfo.itemIndexOffset or 0
+                for i = offset + 1, offset + (lineInfo.numSpellBookItems or 0) do
+                    local info = C_SpellBook.GetSpellBookItemInfo and C_SpellBook.GetSpellBookItemInfo(i, bank)
+                    if info then
+                        table.insert(lines, string.format("spellbook %s | %s | subName=%s | spellId=%s | type=%s",
+                            tostring(lineInfo.name), tostring(info.name), tostring(info.subName),
+                            tostring(info.spellID), tostring(info.itemType)))
+                    else
+                        table.insert(lines, "spellbook " .. tostring(lineInfo.name) .. " | " ..
+                            tostring(C_SpellBook.GetSpellBookItemName(i, bank)) .. " | (no item info)")
+                    end
+                end
+            end
+        end
+        return
+    end
+
+    for tab = 1, GetNumSpellTabs() do
+        local tabName, _, offset, numSpells = GetSpellTabInfo(tab)
+        for i = offset + 1, offset + numSpells do
+            local name, rank = GetSpellBookItemName(i, BOOKTYPE_SPELL)
+            local _, spellId = GetSpellBookItemInfo(i, BOOKTYPE_SPELL)
+            table.insert(lines, string.format("spellbook %s | %s | rank=%s | spellId=%s",
+                tostring(tabName), tostring(name), tostring(rank), tostring(spellId)))
+        end
+    end
+end
+
+-- Returns the number of lines collected. Each section is pcall'd, so one
+-- unexpected API shape doesn't lose the other two -- its error is recorded
+-- in the dump instead.
+function DumpSpellData()
+    local lines = {
+        string.format("dump at %s | %s level %d | client %s",
+            date("%Y-%m-%d %H:%M:%S"), tostring(select(2, UnitClass("player"))), UnitLevel("player"),
+            tostring((GetBuildInfo())))
+    }
+
+    for _, section in ipairs({ DumpTrainerServices, DumpTrainerTable, DumpSpellbook }) do
+        local ok, err = pcall(section, lines)
+        if not ok then
+            table.insert(lines, "section failed: " .. tostring(err))
+        end
+    end
+
+    YoyokazooUIDB.spellDump = lines
+    return #lines
+end
+
+------------------------------------------------------------
 -- Target-finding macro. The bot presses this macro (WowInput.FIND_TARGET_MACRO)
 -- to find mobs; its /target lines differ per farming route, so the bot types
 -- "/yytarget Mottled,Scorpid" (YoyokazooUI.lua) once it has resolved its route,
@@ -2039,10 +2237,12 @@ end
 -- trainers are skipped, since buying e.g. "Apprentice Skinning" would spend a
 -- profession slot. Lua-only; nothing reaches the pixel row.
 --
--- GetTrainerServiceInfo/GetTrainerServiceCost's exact return shapes on this
--- client build aren't verified live yet (see the top of CLAUDE.md) --
--- AUTO_TRAIN_DEBUG prints every row the scan sees and why it was or wasn't
--- picked. Defaults ON until it's confirmed working; flip it off after.
+-- GetTrainerServiceInfo's return shape differs between Classic Era and the
+-- Forever client (see GetTrainerServiceNameRankCategory() above -- on Forever
+-- this scan used to read the icon ID as the category, so it never bought
+-- anything). AUTO_TRAIN_DEBUG prints every row the scan sees and why it was
+-- or wasn't picked. Defaults ON until buying is confirmed working; flip it
+-- off after.
 AUTO_TRAIN_DEBUG = true
 
 function AutoTrainDebugPrint(message)
@@ -2069,7 +2269,7 @@ function FindNextAffordableTrainerService()
     if GetTrainerServiceTypeFilter and SetTrainerServiceTypeFilter
         and not GetTrainerServiceTypeFilter("available") then
         AutoTrainDebugPrint("\"available\" filter was off -- turning it on")
-        SetTrainerServiceTypeFilter("available", 1)
+        SetTrainerServiceTypeFilter("available", true)  -- boolean: Forever rejects 1/0
     end
 
     local money = GetMoney()
@@ -2077,7 +2277,7 @@ function FindNextAffordableTrainerService()
     AutoTrainDebugPrint("scanning " .. numServices .. " service row(s), money " .. money)
 
     for i = 1, numServices do
-        local name, rank, category = GetTrainerServiceInfo(i)
+        local name, rank, category = GetTrainerServiceNameRankCategory(i)
         local cost = GetTrainerServiceCost(i)
         AutoTrainDebugPrint("  " .. i .. ": " .. tostring(name) .. " (" .. tostring(rank) .. ") category=" ..
             tostring(category) .. " cost=" .. tostring(cost))

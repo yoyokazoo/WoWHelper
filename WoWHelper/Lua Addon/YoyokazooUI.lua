@@ -1000,6 +1000,16 @@ end
 -- FindBestEquipmentUpgrade() with AUTO_EQUIP_DEBUG forced on, printing every
 -- bag item's stats/score/skip reason and the upgrade it would pick -- but
 -- never equips anything.
+-- /yyspells: debug-only spell data dump for rebuilding a class's trainer
+-- table (see DumpSpellData() in WoWFunctions.lua). Run it with a class
+-- trainer window open to include the trainer's rows, then /reload so the
+-- dump is written to the SavedVariables file on disk.
+SLASH_YYSPELLS1 = "/yyspells"
+SlashCmdList["YYSPELLS"] = function()
+    local count = DumpSpellData()
+    print("YoyokazooUI: spell dump collected (" .. count .. " lines) into YoyokazooUIDB.spellDump -- /reload to write it to disk.")
+end
+
 SLASH_YYEQUIP1 = "/yyequip"
 SlashCmdList["YYEQUIP"] = function()
     print("YoyokazooUI: auto-equip dry run --")
