@@ -291,7 +291,7 @@ namespace WoWHelper
             // merely low). Only Warrior can actually run out of ammo, so gate on class too.
             else if (WorldState.LowOnAmmo &&
                 CombatConfiguration == Code.Gameplay.WowCombatConfiguration.Warrior &&
-                FarmingLocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
+                FarmingLocationConfiguration.EngageMethod == EngagementMethod.Pull)
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Ammo";

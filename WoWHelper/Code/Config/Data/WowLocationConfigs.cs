@@ -116,7 +116,7 @@ namespace WoWHelper.Code.WorldState
         {
             Route = WowRoutes.LEVEL_29_HILLSBRAD_RIVER_ROUTE,
             TargetMacroMobNames = "Snapjaw",
-            TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
+            TargetFindMethod = TargetFindMethod.MACRO,
             ChaseOutOfRangeTargets = false, // elite dragon nearby if we get dragged too far
         };
 
@@ -205,13 +205,13 @@ namespace WoWHelper.Code.WorldState
         {
             Route = WowRoutes.LEVEL_10_MULGORE_MIXED_BEASTS_ROUTE,
             TargetMacroMobNames = "Swoop,Flatland,Prairie",
-            TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
+            TargetFindMethod = TargetFindMethod.MACRO, // Kodo packs wandering around
         };
 
         public static readonly WowLocationConfiguration LEVEL_8_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
         {
             Route = WowRoutes.LEVEL_8_MULGORE_MIXED_BEASTS_ROUTE,
-            TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
+            TargetFindMethod = TargetFindMethod.MACRO, // Kodo packs wandering around
         };
 
         public static readonly WowLocationConfiguration LEVEL_6_MULGORE_BATTLEBOARS = new WowLocationConfiguration

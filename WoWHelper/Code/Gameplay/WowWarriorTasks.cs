@@ -294,17 +294,17 @@ namespace WoWHelper
                 return false;
             }
 
-            if (FarmingLocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge && !classState.KnowsCharge) // no charge yet
+            if (FarmingLocationConfiguration.EngageMethod == EngagementMethod.Charge && !classState.KnowsCharge) // no charge yet
             {
                 await WowInput.PressKey(WowInput.START_ATTACK);
                 await WalkIntoMeleeRangeTask(classState);
                 //await WowInput.PressKey(WowInput.START_ATTACK);
             }
-            else if (FarmingLocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Charge)
+            else if (FarmingLocationConfiguration.EngageMethod == EngagementMethod.Charge)
             {
                 await FaceAndChargeTarget();
             }
-            else if (FarmingLocationConfiguration.EngageMethod == WowLocationConfiguration.EngagementMethod.Pull)
+            else if (FarmingLocationConfiguration.EngageMethod == EngagementMethod.Pull)
             {
                 if (!classState.WaitingToShoot)
                 {
@@ -332,7 +332,7 @@ namespace WoWHelper
 
             switch (FarmingLocationConfiguration.EngageMethod)
             {
-                case WowLocationConfiguration.EngagementMethod.Charge:
+                case EngagementMethod.Charge:
                     {
                         if (!classState.KnowsCharge && classState.CanChargeTarget)
                         {
@@ -340,7 +340,7 @@ namespace WoWHelper
                         }
                         return classState.CanChargeTarget;
                     }
-                case WowLocationConfiguration.EngagementMethod.Pull: return classState.CanShootTarget;
+                case EngagementMethod.Pull: return classState.CanShootTarget;
                 default: throw new System.NotImplementedException(
                     $"{nameof(WarriorCanEngageTarget)}: EngageMethod \"{FarmingLocationConfiguration.EngageMethod}\" (from location " +
                     $"\"{CurrentRoute?.Name}\") isn't supported for Warrior -- only Charge/Pull " +
