@@ -27,6 +27,8 @@ namespace WoWHelper
         public long LastJumpTime { get; private set; }
         public long DynamiteTime { get; private set; }
         public long HealthPotionTime { get; private set; }
+        // When the bot last pressed Battle Shout -- see WarriorShouldCastBattleShout.
+        public long BattleShoutPressTime { get; private set; }
         public long HealingTrinketTime { get; private set; }
         public long BerserkerRageTime { get; private set; }
         public long ImmolateCastTime { get; private set; }

@@ -28,6 +28,7 @@
         public const int HEALING_TRINKET_COOLDOWN_MILLIS = 5 * 60 * 1000;
         public const int DIAMOND_FLASK_COOLDOWN_MILLIS = 6 * 60 * 1000;
         public const int BERSERKER_RAGE_COOLDOWN_MILLIS = 30 * 1000;
+        public const int BATTLE_SHOUT_DURATION_MILLIS = 2 * 60 * 1000;
 
         // Warlock
 

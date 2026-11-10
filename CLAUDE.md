@@ -511,7 +511,7 @@ reads it back to verify, and chat-prints the result. It never creates the
 macro, and refuses in combat or over 255 chars. A missing macro is
 surfaced in-game only, not over the pixel row: `IsTargetMacroMissing()`
 drives a red `UIErrorsFrame` toast plus a red chat line on `PLAYER_ENTERING_WORLD`, alongside the
-nameplates-off alerts. Every route sets `TargetMacroMobNames` except
+enemy-nameplates-off alert. Every route sets `TargetMacroMobNames` except
 `LEVEL_8_MULGORE_MIXED_BEASTS` (its list is still a TODO); a route
 without it leaves the macro untouched.
 
@@ -959,7 +959,24 @@ of truth — edits should be made here, not in the WoW install directory.
   replacement converted back to the old return shape; call those, not the
   bare globals. The aura shims swallow the in-combat "auras cannot be
   accessed when secret" error and return nil, so on Midnight-rules clients
-  every aura-based flag reads "not present" during combat. Cooldowns are
+  every aura-based flag reads "not present" during combat. Confirmed live via
+  `/yybuff [name]` (`DebugBuffRead()`, probes every alternate aura API by name
+  and by Battle Shout's rank spell IDs): in combat the index scan throws
+  "Auras cannot be accessed when secret while tainted by 'YoyokazooUI'" and
+  the by-name/by-ID lookups return nil — no in-combat aura read works.
+  `HasBuffNamedOrRemembered()` is the workaround for buffs whose lifetime is
+  just their duration: when the read is blind (`SafeAuraQuery` sets
+  `lastAuraQueryWasBlind`) it answers from the expiration time remembered from
+  the last read that worked, so a pre-pull buff stays true through combat.
+  A buff cast *mid-combat* is invisible to it, so the C# side also remembers
+  its own key press: `WarriorShouldCastBattleShout` skips recasting in combat
+  within `BATTLE_SHOUT_DURATION_MILLIS` of `BattleShoutPressTime` (this used
+  to recast Battle Shout every tick in combat). Only `HasBattleShout()` uses
+  it so far; Demon Skin/Armor would fit too, but charge-consumed buffs
+  (Lightning Shield) and procs (Clearcasting) would read true after they're
+  gone. `BUFF_READ_DEBUG` (`WoWFunctions.lua`, off by default)
+  prints each distinct `SafeAuraQuery` outcome plus each `HasBattleShout()`
+  flip. Cooldowns are
   also secret in combat there — `startTime`/`duration`/`modRate` are secret,
   but `isEnabled`/`isActive` stay readable, and `isActive` is confirmed live
   to track the cooldown/GCD — so when the timings are secret,

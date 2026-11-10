@@ -53,6 +53,7 @@ namespace WoWHelper
                 if (WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT);
+                    BattleShoutPressTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 }
             }
             else if (WarriorShouldCastSweepingStrikes(classState))
@@ -134,7 +135,14 @@ namespace WoWHelper
         {
             // rather than pass a custom bool for a spell that will be trained 5m into the character's life, let's just hack this one
             bool knowsBattleShout = WorldState.PlayerLevel >= 3 || WorldState.AllSkillsKnownForThisLevel;
-            return !classState.BattleShoutActive && knowsBattleShout;
+            // On Midnight-rules clients the addon can't read auras in combat at all, so in
+            // combat BattleShoutActive only knows about a shout from before the pull (the
+            // addon remembers its expiration). A shout cast mid-fight is invisible to it, so
+            // trust our own press time instead. Out of combat the read is real, so the press
+            // time is ignored (a press that didn't land gets retried after the fight).
+            bool recentlyPressedInCombat = WorldState.IsInCombat &&
+                GeneralHelpers.CurrentTimeInsideDuration(BattleShoutPressTime, WowGameplayConstants.BATTLE_SHOUT_DURATION_MILLIS);
+            return !classState.BattleShoutActive && !recentlyPressedInCombat && knowsBattleShout;
         }
 
         // Only below Battle Shout in priority. Sweeping Strikes makes the next

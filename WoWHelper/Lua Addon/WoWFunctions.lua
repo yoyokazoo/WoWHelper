@@ -285,10 +285,47 @@ end
 -- functions. Consequence: every aura-based flag reads "not present" in combat
 -- on those clients. Also bail if the name itself comes back secret, since
 -- every caller compares it.
+-- BUFF_READ_DEBUG prints, once per distinct (unit, outcome, in-combat)
+-- combination, how SafeAuraQuery's aura read went: pcall error (with message),
+-- nil at index 1 (no auras at all), aura with a secret name (and whether its
+-- spellId is still readable), or a normal readable aura. Temporary, for
+-- confirming why HasBattleShout reads false in combat -- see also /yybuff
+-- (DebugBuffRead below).
+BUFF_READ_DEBUG = false
+local reportedBuffReadOutcomes = {}
+
+-- Set by SafeAuraQuery whenever a query couldn't actually be read (pcall
+-- error or secret name) -- i.e. "not found" means "couldn't look", not "absent".
+-- HasBuffNamedOrRemembered resets it before each scan.
+local lastAuraQueryWasBlind = false
+
+local function ReportBuffReadOutcome(unit, outcome)
+    if not BUFF_READ_DEBUG then return end
+    local inCombat = UnitAffectingCombat("player") and true or false
+    local key = tostring(unit) .. "|" .. outcome .. "|" .. tostring(inCombat)
+    if reportedBuffReadOutcomes[key] then return end
+    reportedBuffReadOutcomes[key] = true
+    print(string.format("|cffff9900[buffread]|r unit=%s inCombat=%s -> %s",
+        tostring(unit), tostring(inCombat), outcome))
+end
+
 local function SafeAuraQuery(queryFunc, unit, index, filter)
     local ok, aura = pcall(queryFunc, unit, index, filter)
-    if not ok or not aura then return nil end
-    if IsAnySecretValue(aura.name) then return nil end
+    if not ok then
+        lastAuraQueryWasBlind = true
+        ReportBuffReadOutcome(unit, "pcall error: " .. DescribeMaybeSecret(aura))
+        return nil
+    end
+    if not aura then
+        if index == 1 then ReportBuffReadOutcome(unit, "nil at index 1 (no auras returned)") end
+        return nil
+    end
+    if IsAnySecretValue(aura.name) then
+        lastAuraQueryWasBlind = true
+        ReportBuffReadOutcome(unit, "name secret; spellId=" .. DescribeMaybeSecret(aura.spellId))
+        return nil
+    end
+    ReportBuffReadOutcome(unit, "readable")
     return UnpackAuraDataCompat(aura)
 end
 
@@ -762,17 +799,129 @@ function IsAttacking()
     return Compat_IsCurrentSpell(6603) -- Auto Attack
 end
 
-function HasBuffNamed(buffName)
+-- Returns found, expirationTime (0 = no expiration; may be nil/secret on some clients).
+local function FindBuffNamed(buffName)
     local i = 1
     while true do
-        local name, icon = Compat_UnitBuff("player", i)
+        local name, _, _, _, _, expirationTime = Compat_UnitBuff("player", i)
         if not name then
             return false -- no more buffs; not found
         end
         if name == buffName then
-            return true
+            return true, expirationTime
         end
         i = i + 1
+    end
+end
+
+function HasBuffNamed(buffName)
+    return (FindBuffNamed(buffName))
+end
+
+-- Like HasBuffNamed, but for when the aura read is blind (Midnight-rules
+-- clients block every aura API in combat -- confirmed live, see
+-- SafeAuraQuery): falls back to the expiration time remembered from the last
+-- read that worked. So a buff applied before combat keeps reading true
+-- through combat until it would have expired. A buff applied *during* combat
+-- can't be seen here at all -- the C# side covers that by remembering when it
+-- pressed the key (e.g. WarriorShouldCastBattleShout). Only for buffs whose
+-- lifetime is just their duration: a charge-consumed buff (Lightning Shield)
+-- or a proc (Clearcasting) would read true after it's actually gone.
+local rememberedBuffExpirations = {}
+
+function HasBuffNamedOrRemembered(buffName)
+    lastAuraQueryWasBlind = false
+    local found, expirationTime = FindBuffNamed(buffName)
+
+    if not lastAuraQueryWasBlind then
+        if not found then
+            rememberedBuffExpirations[buffName] = nil
+        elseif not IsAnySecretValue(expirationTime) then
+            -- 0/nil = no expiration (or unknown); treat as lasting until the next real read
+            rememberedBuffExpirations[buffName] =
+                (expirationTime and expirationTime > 0) and expirationTime or math.huge
+        end
+        return found
+    end
+
+    local expiration = rememberedBuffExpirations[buffName]
+    return expiration ~= nil and GetTime() < expiration
+end
+
+-- /yybuff (YoyokazooUI.lua): debug-only. Tries every buff-lookup API we could
+-- fall back on for one buff (by name and by each rank's spell ID) and prints
+-- what each returned -- error, nil, a readable result, or secret fields -- so
+-- we can see which (if any) still works in combat on Midnight-rules clients.
+-- Defaults to Battle Shout (all ranks).
+local DEBUG_BUFF_DEFAULT_NAME = "Battle Shout"
+local DEBUG_BUFF_DEFAULT_SPELL_IDS = { 6673, 5242, 6192, 11549, 11550, 11551, 25289 }
+
+local function DescribeAuraTable(aura)
+    if aura == nil then return "nil" end
+    if issecretvalue and issecretvalue(aura) then return "<secret table>" end
+    if type(aura) ~= "table" then return "non-table: " .. DescribeMaybeSecret(aura) end
+    return string.format("name=%s spellId=%s expirationTime=%s",
+        DescribeMaybeSecret(aura.name), DescribeMaybeSecret(aura.spellId),
+        DescribeMaybeSecret(aura.expirationTime))
+end
+
+local function DebugProbe(label, func, ...)
+    if not func then
+        print(string.format("  %s: API missing", label))
+        return
+    end
+    local results = { pcall(func, ...) }
+    if not results[1] then
+        print(string.format("  %s: ERROR %s", label, DescribeMaybeSecret(results[2])))
+        return
+    end
+    if type(results[2]) == "table" or results[2] == nil then
+        print(string.format("  %s: %s", label, DescribeAuraTable(results[2])))
+    else
+        -- unpacked return shape (AuraUtil.FindAuraByName, UnitBuff): name ... spellId(10th)
+        print(string.format("  %s: name=%s spellId=%s", label,
+            DescribeMaybeSecret(results[2]), DescribeMaybeSecret(results[11])))
+    end
+end
+
+function DebugBuffRead(buffName)
+    buffName = (buffName and buffName ~= "") and buffName or DEBUG_BUFF_DEFAULT_NAME
+    local spellIds = (buffName == DEBUG_BUFF_DEFAULT_NAME) and DEBUG_BUFF_DEFAULT_SPELL_IDS or {}
+
+    print(string.format("|cffff9900[yybuff]|r '%s' inCombat=%s issecretvalue=%s UnitBuff=%s",
+        buffName, tostring(UnitAffectingCombat("player") and true or false),
+        tostring(issecretvalue ~= nil), tostring(UnitBuff ~= nil)))
+
+    local okHas, has = pcall(HasBuffNamed, buffName)
+    print("  HasBuffNamed (current path): " .. (okHas and tostring(has) or ("ERROR " .. DescribeMaybeSecret(has))))
+
+    -- Raw index scan, bypassing SafeAuraQuery, so we see exactly what comes back.
+    if C_UnitAuras and C_UnitAuras.GetBuffDataByIndex then
+        for i = 1, 40 do
+            local ok, aura = pcall(C_UnitAuras.GetBuffDataByIndex, "player", i, "HELPFUL")
+            if not ok then
+                print(string.format("  GetBuffDataByIndex[%d]: ERROR %s", i, DescribeMaybeSecret(aura)))
+                break
+            end
+            if aura == nil then
+                print(string.format("  GetBuffDataByIndex: end of list at %d", i))
+                break
+            end
+            print(string.format("  GetBuffDataByIndex[%d]: %s", i, DescribeAuraTable(aura)))
+        end
+    else
+        print("  GetBuffDataByIndex: API missing")
+    end
+
+    local auras = C_UnitAuras or {}
+    DebugProbe("GetAuraDataBySpellName", auras.GetAuraDataBySpellName, "player", buffName, "HELPFUL")
+    DebugProbe("AuraUtil.FindAuraByName", AuraUtil and AuraUtil.FindAuraByName, buffName, "player", "HELPFUL")
+    if UnitBuff then DebugProbe("UnitBuff[1]", UnitBuff, "player", 1) end
+    for _, id in ipairs(spellIds) do
+        DebugProbe("GetPlayerAuraBySpellID(" .. id .. ")", auras.GetPlayerAuraBySpellID, id)
+        if auras.GetUnitAuraBySpellID then
+            DebugProbe("GetUnitAuraBySpellID(" .. id .. ")", auras.GetUnitAuraBySpellID, "player", id)
+        end
     end
 end
 
@@ -847,16 +996,6 @@ end
 
 function AreEnemyNameplatesTurnedOn()
     return GetCVarBool("nameplateShowEnemies")
-end
-
--- The target marker (UIFunctions.lua) is drawn on the target's nameplate, so a
--- friendly target (e.g. a merchant/trainer NPC) only gets one if these are on.
--- Reads nameplateShowFriendlyNPCs, not nameplateShowFriends -- confirmed live
--- (via a temporary CVar dump) that the friendly-nameplate toggle sets the
--- former to "1", while GetCVarBool("nameplateShowFriends") returned nil.
--- Compared against the raw "1" string so a missing CVar reads false, never nil.
-function AreFriendlyNameplatesTurnedOn()
-    return GetCVar("nameplateShowFriendlyNPCs") == "1"
 end
 
 -- Returns the name of whatever's currently bound to a key combo, in Blizzard's own

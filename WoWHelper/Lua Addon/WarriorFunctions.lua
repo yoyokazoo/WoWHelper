@@ -330,8 +330,20 @@ function CanCastSweepingStrikes()
     return result
 end
 
+-- Temporary (see BUFF_READ_DEBUG, WoWFunctions.lua): prints each flip of the
+-- Battle Shout read, to tell "the read is blind in combat" apart from "the
+-- shout never actually landed".
+local lastBattleShoutRead = nil
+
 function HasBattleShout()
-    return HasBuffNamed("Battle Shout")
+    local result = HasBuffNamedOrRemembered("Battle Shout")
+    if BUFF_READ_DEBUG and result ~= lastBattleShoutRead then
+        print(string.format("|cffff9900[buffread]|r HasBattleShout %s -> %s (inCombat=%s)",
+            tostring(lastBattleShoutRead), tostring(result),
+            tostring(UnitAffectingCombat("player") and true or false)))
+    end
+    lastBattleShoutRead = result
+    return result
 end
 
 ------------------------------------------------------------

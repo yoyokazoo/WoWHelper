@@ -900,12 +900,6 @@ frame:SetScript("OnEvent", function(self, event, ...)
             UIErrorsFrame:AddMessage("Enemy nameplates are off! Turn them on!", 1, 0, 0, nil, 15)
         end
 
-        -- Alert if friendly nameplates are off, since the target marker needs a
-        -- nameplate to draw on and friendly NPCs won't have one otherwise
-        if not AreFriendlyNameplatesTurnedOn() then
-            UIErrorsFrame:AddMessage("Friendly nameplates are off! Turn them on!", 1, 0, 0, nil, 15)
-        end
-
         -- Alert if the target-finding macro is missing -- /yytarget rewrites its
         -- body per route but never creates it (see SetTargetMacroMobs())
         if IsTargetMacroMissing() then
@@ -1198,6 +1192,14 @@ end
 SLASH_YYTRAIN1 = "/yytrain"
 SlashCmdList["YYTRAIN"] = function()
     PrintTrainerSpellDebug()
+end
+
+-- /yybuff [buff name]: debug-only. Probes every buff-lookup API for one buff
+-- (default Battle Shout, all ranks) and prints what each returned -- see
+-- DebugBuffRead() in WoWFunctions.lua. Run it in and out of combat to compare.
+SLASH_YYBUFF1 = "/yybuff"
+SlashCmdList["YYBUFF"] = function(msg)
+    DebugBuffRead(msg and strtrim(msg) or nil)
 end
 
 SLASH_YYTARGET1 = "/yytarget"
