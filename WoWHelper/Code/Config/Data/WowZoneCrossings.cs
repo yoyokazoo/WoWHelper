@@ -3,8 +3,6 @@ using System.Linq;
 
 namespace WoWHelper.Code.WorldState
 {
-    // Every link between zones, each defined once and walkable both ways. Each crossing's points
-    // come from the routes they sit on, so there's only one place to edit them.
     public static class WowZoneCrossings
     {
         public static readonly WowZoneCrossing DUROTAR_TO_ORGRIMMAR = new WowZoneCrossing

@@ -2,11 +2,6 @@
 
 namespace WoWHelper.Code.WorldState
 {
-    // Zones WowLocationConfigs.cs's routes are known to live in. Numeric values are
-    // explicit and MUST stay in sync with the ZONE_NAME_TO_ID table in WoWFunctions.lua
-    // (GetCurrentZoneId()) -- that's what packs a zone into MultiIntOne's third byte for
-    // WowWorldState.CurrentZone to decode. This is a WowHelper-defined ID scheme, not
-    // Blizzard's internal map/zone ID (which doesn't fit in a byte).
     public enum WowZone
     {
         Durotar = 0,
@@ -39,18 +34,13 @@ namespace WoWHelper.Code.WorldState
             ALTERNATE // alternate between the two
         }
 
-        // Only distinguishes the one thing that actually varies by class: Warriors either
-        // charge in or pull at range (bow/gun); Shaman/Warlock always pull with a spell
-        // regardless of what this says (ShamanCanEngageTarget/WarlockCanEngageTarget ignore
-        // it entirely -- see WowShamanTasks.cs/WowWarlockTasks.cs). Used to have a third,
-        // redundant Spellcast value alongside Shoot; collapsed since both meant "not a
-        // melee gap-closer" and only Warrior's dispatch ever cared about the distinction.
         public enum EngagementMethod
         {
             Charge, // melee gap-closer (Warrior only)
             Pull // shoot bow/gun (Warrior) or cast a pull spell -- lightning bolt, shadow bolt, etc. (Shaman/Warlock)
         }
 
+        // TODO: is this needed any more with leveling configs?
         public int MaximumLevel { get; set; } // Level to log off at
 
         public EngagementMethod EngageMethod { get; set; }
