@@ -13,7 +13,7 @@ namespace WoWHelper.Code.WorldState
         {
             Route = WowRoutes.LEVEL_58_SILITHUS_RUMBLERS_ROUTE,
             TargetMacroMobNames = "Desert Rumbler",
-            ExpectedMobNames = new List<string> { "Desert Rumbler" },
+            AllMobsInZoneAreNatureImmune = true,
         };
 
         public static readonly WowLocationConfiguration LEVEL_57_WINTERSPRING_YETIS = new WowLocationConfiguration

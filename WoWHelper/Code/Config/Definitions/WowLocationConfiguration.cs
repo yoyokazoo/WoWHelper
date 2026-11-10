@@ -64,12 +64,7 @@ namespace WoWHelper.Code.WorldState
         // walks a straight line at the target with no idea what's in between.
         public bool ChaseOutOfRangeTargets { get; set; }
 
-        // Every mob name expected to be encountered while running this route, e.g.
-        // { "Desert Rumbler" } for LEVEL_58_SILITHUS_RUMBLERS -- used by
-        // AllMobsInZoneAreNatureImmune() below. NOT the same thing as TargetMacroMobNames
-        // below -- those are partial name substrings for a target-cycling macro, not a
-        // complete/exact roster.
-        public List<string> ExpectedMobNames { get; set; }
+        public bool AllMobsInZoneAreNatureImmune { get; set; }
 
         // Comma-separated /target names for the "0 Targ" target-finding macro, e.g.
         // "Mottled,Scorpid" -> "/target Mottled" + "/target Scorpid". Typed into chat as
@@ -90,30 +85,7 @@ namespace WoWHelper.Code.WorldState
 
             MaximumLevel = 61;
 
-            ExpectedMobNames = new List<string>();
-        }
-
-        // True only if every mob this route expects to fight (ExpectedMobNames above) is in
-        // CreatureConfig.NATURE_IMMUNE_MOB_NAMES -- the C# mirror of CreatureConfig.lua's
-        // NATURE_IMMUNE_MOB_NAMES table (see that file's comment for why the mirror exists).
-        // An empty ExpectedMobNames list returns false rather than vacuously true -- a route
-        // that hasn't been given its mob roster yet shouldn't silently claim nature immunity.
-        public bool AllMobsInZoneAreNatureImmune()
-        {
-            if (ExpectedMobNames == null || ExpectedMobNames.Count == 0)
-            {
-                return false;
-            }
-
-            foreach (string mobName in ExpectedMobNames)
-            {
-                if (!WowCreatureConfigs.NATURE_IMMUNE_MOB_NAMES.Contains(mobName))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            AllMobsInZoneAreNatureImmune = false;
         }
     }
 }

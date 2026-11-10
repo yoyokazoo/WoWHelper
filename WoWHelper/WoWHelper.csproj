@@ -145,7 +145,6 @@
     <Compile Include="Code\Config\Definitions\WowLocationConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowRoute.cs" />
     <Compile Include="Code\Config\Definitions\WowZoneCrossing.cs" />
-    <Compile Include="Code\Config\Data\WowCreatureConfigs.cs" />
     <Compile Include="Code\Config\Definitions\WowLevelingConfiguration.cs" />
     <Compile Include="Code\Config\Data\WowLocationConfigs.cs" />
     <Compile Include="Code\Config\Data\WowRoutes.cs" />
