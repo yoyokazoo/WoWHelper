@@ -1272,6 +1272,20 @@ of truth — edits should be made here, not in the WoW install directory.
   stats/scores/skip reasons, and `/yyequip` is a dry run with it forced on.
   Lua-only; nothing reaches the pixel row.
 
+  Same toggle and entry point also equip bags, checked before gear:
+  `FindBagToEquip()` (`WoWFunctions.lua`) puts a plain bag (container
+  subclass 0) into an empty normal bag slot (bag IDs 1-4), or, with none
+  empty, swaps it in over the smallest equipped *plain* bag if it has more
+  slots (specialty bags are never replaced or put in normal slots). The
+  reagent bag slot (`Enum.BagIndex.ReagentBag`, absent on Classic Era) gets
+  the same rule, but only for Leatherworking Bags (container subclass 7,
+  `LEATHERWORKING_BAG_SUBCLASS_ID` — confirmed to be the skinning bags). A bag
+  item's slot count is read from its tooltip's "N Slot" line, since
+  `GetItemInfo` doesn't return it. A bag is never swapped into the slot of
+  the bag it sits in. Equipped via `PickupContainerItem` + `PutItemInBag`.
+  Not yet verified live: the reagent bag ID, the tooltip text, and swapping over a non-empty bag (the client should move its
+  contents across). `/yyequip` dumps all of these.
+
   Also auto-picks a class trainer's training gossip option: on `GOSSIP_SHOW`,
   `FindTrainerGossipOption()` (`WoWFunctions.lua`) scans
   `C_GossipInfo.GetOptions()` for a name matching the Lua pattern

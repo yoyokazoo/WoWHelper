@@ -409,6 +409,24 @@ function EquipBestUpgradeIfBetter()
         return false
     end
 
+    -- Bags first (FindBagToEquip(), WoWFunctions.lua): picked up into an
+    -- empty bag slot, or swapped in over a smaller equipped bag.
+    local bagToEquip = FindBagToEquip()
+    if bagToEquip then
+        print("YoyokazooUI: equipping bag " .. bagToEquip.itemLink .. " (" .. bagToEquip.numSlots .. " slots)" ..
+            (bagToEquip.replacing and (" in place of " .. bagToEquip.replacing) or " into an empty bag slot"))
+        lastAutoEquipTime = GetTime()
+        ClearCursor()
+        C_Container.PickupContainerItem(bagToEquip.bag, bagToEquip.slot)
+        PutItemInBag(bagToEquip.inventorySlot)
+        -- If the client refused the swap, don't leave the bag stuck on the cursor.
+        if CursorHasItem() then
+            AutoEquipDebugPrint("bag swap refused, clearing cursor")
+            ClearCursor()
+        end
+        return true
+    end
+
     local upgrade = FindBestEquipmentUpgrade()
     if not upgrade then
         return false
@@ -1175,8 +1193,17 @@ SlashCmdList["YYEQUIP"] = function()
 
     local wasDebug = AUTO_EQUIP_DEBUG
     AUTO_EQUIP_DEBUG = true
+    local bagToEquip = FindBagToEquip()
     local upgrade = FindBestEquipmentUpgrade()
     AUTO_EQUIP_DEBUG = wasDebug
+
+    if bagToEquip then
+        print("  would equip bag " .. bagToEquip.itemLink .. " (" .. bagToEquip.numSlots .. " slots) into inventory slot " ..
+            bagToEquip.inventorySlot .. (bagToEquip.replacing and (" replacing " .. bagToEquip.replacing) or " (empty)") ..
+            " (nothing was equipped)")
+    else
+        print("  no bag to equip")
+    end
 
     if upgrade then
         print("  would equip " .. upgrade.itemLink .. " into inventory slot " .. upgrade.inventorySlot ..

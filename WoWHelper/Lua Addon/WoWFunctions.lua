@@ -1847,6 +1847,222 @@ function FindBestEquipmentUpgrade()
     return best
 end
 
+------------------------------------------------------------
+-- Auto-equip bags (same /yyconfig "Auto-equip upgrades" toggle and same
+-- EquipBestUpgradeIfBetter() entry point in YoyokazooUI.lua as gear above).
+--
+-- Normal bag slots (bag IDs 1-4) take plain bags only (container subclass 0):
+-- an empty slot gets any plain bag; with no empty slot, a bag with more slots
+-- replaces the smallest equipped plain bag. Equipped specialty bags (soul
+-- bags etc.) are never replaced, and specialty bags are never put in a normal
+-- slot, since they'd restrict what the slot can hold.
+--
+-- The reagent bag slot (if this client has one) gets the same treatment, but
+-- only Leatherworking Bags (the skinning bags) are candidates for it.
+--
+-- Unverified live (see the top of CLAUDE.md -- flip AUTO_EQUIP_DEBUG on or run
+-- /yyequip and read the dump before guessing):
+--   * the reagent bag slot's bag ID (GetReagentBagId() below);
+--   * the tooltip's "N Slot Bag" text, which is how a bag item's slot count is
+--     read (GetItemInfo doesn't return it);
+--   * swapping a bigger bag onto a non-empty equipped one -- the client should
+--     move the old bag's contents into the new one.
+------------------------------------------------------------
+
+local CONTAINER_ITEM_CLASS_ID = 1
+local PLAIN_BAG_SUBCLASS_ID = 0
+
+-- Container subclass of Leatherworking Bags -- the skinning bags, the only
+-- kind auto-equipped into the reagent bag slot.
+local LEATHERWORKING_BAG_SUBCLASS_ID = 7
+
+-- Bag IDs of the normal (general-purpose) bag slots. Bag 0, the backpack,
+-- can't be swapped.
+local NORMAL_BAG_IDS = { 1, 2, 3, 4 }
+
+-- Bag ID of the reagent bag slot, or nil if this client doesn't have one
+-- (Classic Era doesn't). Uses the client's own enum, so it isn't hardcoded.
+local function GetReagentBagId()
+    if Enum and Enum.BagIndex then
+        return Enum.BagIndex.ReagentBag
+    end
+    return nil
+end
+
+local function Compat_ContainerIDToInventoryID(bagId)
+    local fn = (C_Container and C_Container.ContainerIDToInventoryID) or ContainerIDToInventoryID
+    if not fn then
+        return nil
+    end
+    local ok, inventorySlot = pcall(fn, bagId)
+    if ok then
+        return inventorySlot
+    end
+    return nil
+end
+
+local bagScanTooltip = nil
+
+-- The bag item's tooltip lines, via C_TooltipInfo where the client has it,
+-- else a hidden GameTooltip.
+local function GetBagItemTooltipLines(bag, slot)
+    local lines = {}
+
+    if C_TooltipInfo and C_TooltipInfo.GetBagItem then
+        local data = C_TooltipInfo.GetBagItem(bag, slot)
+        if data and data.lines then
+            for _, line in ipairs(data.lines) do
+                if line.leftText then
+                    table.insert(lines, line.leftText)
+                end
+            end
+        end
+        return lines
+    end
+
+    if not bagScanTooltip then
+        bagScanTooltip = CreateFrame("GameTooltip", "YoyokazooUIBagScanTooltip", nil, "GameTooltipTemplate")
+    end
+    bagScanTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
+    bagScanTooltip:ClearLines()
+    bagScanTooltip:SetBagItem(bag, slot)
+    for i = 1, bagScanTooltip:NumLines() do
+        local fontString = _G["YoyokazooUIBagScanTooltipTextLeft" .. i]
+        local text = fontString and fontString:GetText()
+        if text then
+            table.insert(lines, text)
+        end
+    end
+    bagScanTooltip:Hide()
+    return lines
+end
+
+-- How many slots a bag sitting in our bags has, read off its tooltip's
+-- "16 Slot Bag" line. nil if it can't be read (e.g. item not cached yet).
+local function GetBagItemSlotCount(bag, slot)
+    for _, text in ipairs(GetBagItemTooltipLines(bag, slot)) do
+        local count = text:match("^(%d+) Slot")
+        if count then
+            return tonumber(count)
+        end
+    end
+    return nil
+end
+
+-- One bag slot's current state: inventory slot, slot count (0 if empty), and
+-- the equipped bag's container subclass (nil if empty or not a container).
+local function GetEquippedBagSlotInfo(bagId)
+    local inventorySlot = Compat_ContainerIDToInventoryID(bagId)
+    if not inventorySlot then
+        return nil
+    end
+
+    local info = { bagId = bagId, inventorySlot = inventorySlot, numSlots = 0, subclassId = nil }
+    local itemLink = GetInventoryItemLink("player", inventorySlot)
+    if itemLink then
+        local _, _, _, _, _, classId, subclassId = Compat_GetItemInfoInstant(itemLink)
+        info.itemLink = itemLink
+        info.numSlots = C_Container.GetContainerNumSlots(bagId) or 0
+        if classId == CONTAINER_ITEM_CLASS_ID then
+            info.subclassId = subclassId
+        end
+    end
+    return info
+end
+
+-- Picks which of the given equipped bag slots a candidate bag should go in:
+-- an empty one first, else the smallest replaceable one the candidate beats
+-- on slot count. Never the bag the candidate is sitting in (swapping a bag
+-- into its own slot can't work). nil if none.
+local function PickBagSlotForCandidate(slotInfos, candidateBag, candidateSlots, canReplace)
+    local target = nil
+    for _, info in ipairs(slotInfos) do
+        if info.bagId ~= candidateBag then
+            if info.numSlots == 0 and not info.itemLink then
+                return info
+            end
+            if canReplace(info) and candidateSlots > info.numSlots and
+                (target == nil or info.numSlots < target.numSlots) then
+                target = info
+            end
+        end
+    end
+    return target
+end
+
+-- Scans bags 0-4 for one bag worth equipping, returning
+-- { bag, slot, inventorySlot, itemLink, numSlots, replacing } (replacing is
+-- the swapped-out bag's link, or nil for an empty slot), or nil. One at a
+-- time, like FindBestEquipmentUpgrade(): the swap fires BAG_UPDATE_DELAYED,
+-- which re-runs this against the new state. Among candidates, the biggest
+-- bag wins.
+function FindBagToEquip()
+    local normalSlots = {}
+    for _, bagId in ipairs(NORMAL_BAG_IDS) do
+        local info = GetEquippedBagSlotInfo(bagId)
+        if info then
+            table.insert(normalSlots, info)
+        end
+    end
+
+    local reagentSlots = {}
+    local reagentBagId = GetReagentBagId()
+    if reagentBagId then
+        local info = GetEquippedBagSlotInfo(reagentBagId)
+        if info then
+            table.insert(reagentSlots, info)
+        end
+    end
+
+    for _, info in ipairs(normalSlots) do
+        AutoEquipDebugPrint("  bag slot " .. info.bagId .. " (inv " .. info.inventorySlot .. "): " ..
+            tostring(info.itemLink) .. ", " .. info.numSlots .. " slots, subclass " .. tostring(info.subclassId))
+    end
+    AutoEquipDebugPrint("  reagent bag ID = " .. tostring(reagentBagId) ..
+        (reagentSlots[1] and (" (inv " .. reagentSlots[1].inventorySlot .. "): " ..
+            tostring(reagentSlots[1].itemLink) .. ", " .. reagentSlots[1].numSlots .. " slots") or " (no slot)"))
+
+    local function isPlainBag(info)
+        return info.subclassId == PLAIN_BAG_SUBCLASS_ID
+    end
+    local function anyBag()
+        return true
+    end
+
+    local best = nil
+    for bag = 0, 4 do
+        for slot = 1, (C_Container.GetContainerNumSlots(bag) or 0) do
+            local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+            if itemInfo and itemInfo.hyperlink then
+                local _, _, _, _, _, classId, subclassId = Compat_GetItemInfoInstant(itemInfo.hyperlink)
+                if classId == CONTAINER_ITEM_CLASS_ID then
+                    local numSlots = GetBagItemSlotCount(bag, slot)
+                    AutoEquipDebugPrint("  " .. bag .. ":" .. slot .. " " .. itemInfo.hyperlink ..
+                        " is a bag: subclass " .. tostring(subclassId) .. ", " .. tostring(numSlots) .. " slots")
+
+                    local target = nil
+                    if numSlots then
+                        if subclassId == PLAIN_BAG_SUBCLASS_ID then
+                            target = PickBagSlotForCandidate(normalSlots, bag, numSlots, isPlainBag)
+                        elseif subclassId == LEATHERWORKING_BAG_SUBCLASS_ID then
+                            target = PickBagSlotForCandidate(reagentSlots, bag, numSlots, anyBag)
+                        end
+                    end
+
+                    if target and (best == nil or numSlots > best.numSlots) then
+                        best = {
+                            bag = bag, slot = slot, inventorySlot = target.inventorySlot,
+                            itemLink = itemInfo.hyperlink, numSlots = numSlots, replacing = target.itemLink,
+                        }
+                    end
+                end
+            end
+        end
+    end
+
+    return best
+end
+
 -- True once LATENCY_HIGH_CYCLE_COUNT consecutive latency samples, one taken every
 -- LATENCY_CHECK_INTERVAL_SECONDS, have all read above LATENCY_HIGH_THRESHOLD_MS -- i.e.
 -- LATENCY_HIGH_CYCLE_COUNT * LATENCY_CHECK_INTERVAL_SECONDS = 10 sustained seconds of bad
