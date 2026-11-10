@@ -32,68 +32,107 @@ than one internal API behavior.
 
 ## The color-encoding contract (the critical coupling point)
 
-`UIFunctions.lua`'s `InitializePixelRow()` paints a row of `PIXEL_SIZE` x
-`PIXEL_SIZE` (currently 3x3) swatches pinned to the screen's literal top-left
-corner — fixed and resolution-independent (no per-resolution calibration
-needed). **The row is deliberately condensed to exactly the pixels the C#
-bot actually reads, in the order it reads them** — nothing decorative or
-debug-only lives here (that's what the separate `InitializeIndicators()`
-frame is for, see the Lua addon section below). Swatches are placed by
-converting desired physical-pixel x/y/size into UIParent's local coordinate
-units via `GetPhysicalPixelsPerLocalUnit()`, a **self-calibrating** ratio
-computed as `GetPhysicalScreenSize() / UIParent:GetWidth()` — NOT
+`UIFunctions.lua`'s `InitializePixelRow()` paints a block of **pixel rows**,
+each `PIXEL_SIZE` (3) physical pixels tall, pinned to the screen's literal
+top-left corner — fixed and resolution-independent (no per-resolution
+calibration needed). **It holds exactly what the C# bot reads** — nothing
+decorative or debug-only lives here (that's what the separate
+`InitializeIndicators()` frame is for, see the Lua addon section below).
+Everything is drawn into one container frame at `TOOLTIP` strata, so no other
+UI (e.g. the player frame, which sits in that corner) can cover it. Sizes
+and offsets are given in physical pixels and converted into UIParent's local
+coordinate units via `GetPhysicalPixelsPerLocalUnit()`, a
+**self-calibrating** ratio computed as
+`GetPhysicalScreenSize() / UIParent:GetWidth()` — NOT
 `UIParent:GetEffectiveScale()` and NOT Blizzard's `PixelUtil` library, both
 of which were tried first and gave wrong/inconsistent results. On the dev
 machine (Classic Era 1.15.9, post Edit-Mode UI update), `GetEffectiveScale()`
 read 0.9, but the real measured ratio was 1.6875 — confirmed by matching four
 independently-measured rendered sizes exactly, none of which matched any
-formula built from 0.9. Comparing `GetPhysicalScreenSize()` against
-`UIParent`'s own reported size sidesteps needing to know *why*
-`GetEffectiveScale()` disagrees with it, so it should keep working even if
-this particular quirk changes or gets patched later. `WowWorldState.cs`
-reads back the **center pixel** of each swatch (`PixelSize/2` in from its
-top-left corner) for margin against any residual edge blur — coordinates are
-computed via `PixelRowPoint(index)` on `WowScreenConfiguration.cs`, not
-hardcoded per property. `PixelSize` must be kept equal on both sides (Lua's
-`PIXEL_SIZE` local in `InitializePixelRow()`, C#'s
-`WowScreenConfiguration.PixelSize` const).
+formula built from 0.9 (on the WoW Forever client at 3440x1440 the ratio is
+1.2). Comparing `GetPhysicalScreenSize()` against `UIParent`'s own reported
+size sidesteps needing to know *why* `GetEffectiveScale()` disagrees with it,
+so it should keep working even if this particular quirk changes or gets
+patched later. Elements are only repositioned when that ratio changes; their
+values redraw every 0.05s.
 
-Current row, index → content (both sides MUST stay in this exact order —
-see "Adding a new pixel" below):
+The C# side's layout and decoders all live in `Code/Gameplay/WowPixelRows.cs`
+(`PixelRow` enum, `WowPixelRows` constants/readers, `PixelRowBits`). It
+always reads the **center pixel** of a box or bar row, for margin against
+residual edge blur. Every constant there MUST match its Lua counterpart
+(`PixelSize`/`PIXEL_SIZE`, `StatusBarWidth`/`PIXEL_BAR_WIDTH`,
+`BitsPerRow`/`PIXEL_ROW_BITS`, `FixedPointFractionBits`/
+`FIXED_POINT_FRACTION_BITS`, `ADDON_LOADED_COLOR`), and so must the row
+order. Row N covers physical y = 3N to 3N+2 (read at y = 3N+1):
 
-| Index | Content | Decoded into |
-|---|---|---|
-| 0 | Fixed sentinel, exactly `ADDON_LOADED_COLOR` (96, 255, 117) | `WowWorldState.AddonLoaded` (see below) |
-| 1 | Map X (float) | `WowWorldState.MapX` |
-| 2 | Map Y (float) | `WowWorldState.MapY` |
-| 3 | Facing degrees (float) | `WowWorldState.FacingDegrees` |
-| 4 | `MultiBoolOne` (packed bools, class-agnostic) | various `WowWorldState` bools |
-| 5 | `MultiIntOne` (packed R/G/B percents) | `PlayerHpPercent`/`ResourcePercent`/`TargetHpPercent` |
-| 6 | `MultiIntTwo` (packed R/G/B) | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
-| 7 | `ClassBoolOne` (packed bools, class-specific) | a `WowClassState` subtype (see C# architecture section) |
-| 8 | `MultiBoolTwo` (packed bools, class-agnostic — R1-R6, G1-G8, and B1 used so far) | `WowWorldState.IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable` |
-| 9 | `ClassBoolTwo` (packed bools, class-specific — only R1-R3 used so far) | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
+| Row | Content | Encoding | Decoded into |
+|---|---|---|---|
+| 0 | Player health bar, plus the sentinel box right after it at x = 100 (read at (101, 1)) | bar, fill `(0, 255, 0)`; sentinel exactly `ADDON_LOADED_COLOR` (96, 255, 117) | `PlayerHpPercent`; `AddonLoaded` (see below) |
+| 1 | Player resource bar | bar, fill `(0, 0, 255)` | `ResourcePercent` |
+| 2 | Target health bar (empty with no target) | bar, fill `(255, 0, 0)` | `TargetHpPercent` |
+| 3 | *(empty — spacing between the bars and the bit rows)* | — | — |
+| 4 | Map X | fixed point | `MapX` |
+| 5 | Map Y | fixed point | `MapY` |
+| 6 | Facing, degrees | fixed point | `FacingDegrees` |
+| 7 | `MultiBoolOne` — `MULTI_BOOL_ONE_FIELDS` (class-agnostic, all 24 boxes used or reserved) | bool fields | various `WowWorldState` bools |
+| 8 | `MultiBoolTwo` — `MULTI_BOOL_TWO_FIELDS` (class-agnostic — boxes 1-6, 9-17 used so far) | bool fields | `IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable` |
+| 9 | `ClassBoolOne` — `<CLASS>_CLASS_BOOL_ONE_FIELDS` (class-specific) | bool fields | a `WowClassState` subtype (see C# architecture section) |
+| 10 | `ClassBoolTwo` — `<CLASS>_CLASS_BOOL_TWO_FIELDS` (class-specific — only Shaman's boxes 1-3 used so far) | bool fields | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
+| 11 | `MultiIntOne` — attacker count, player level, zone ID | bytes | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
 
-Decode schemes: floats use `R*255 + G + B/255` (`GetFloatFromColor`,
-matching Lua's `EncodeFloatToColor`); packed bools bit-pack 8 flags per
-channel (`DecodeByte`, order MUST match between Lua's `EncodeBooleansToByte`
-call and the corresponding C# `Update...` method); packed ints use a raw
-0-255 value per channel. Index 0 is the one exception — a plain exact-color
-match (`WowScreenConfiguration.ADDON_LOADED_COLOR`), not one of the schemes
-above: if the pixel is exactly that color, the addon is loaded and rendering
-the row (so the rest of it is meaningful) and `AddonLoaded` is true;
-*any* other color — including whatever's actually on-screen at that position
-when the addon isn't loaded, or another window covering WoW — means
-`AddonLoaded` is false. This replaced an
-older, unrelated mechanism (a multi-point text/UI pixel-signature match
-against login-screen-specific colors) since folding it into the row is more
+**Bars** (rows 0-2) are `PIXEL_BAR_WIDTH` (100) physical-pixel `StatusBar`s
+at x = 0, empty color `(0, 0, 0)`, filled left to right — filled pixel count
+= percent. They exist because Midnight-rules clients (WoW Forever) return
+secret values from `UnitHealth`/`UnitPower`, which Lua can't do math on, but
+a `StatusBar` accepts secrets in `SetMinMaxValues`/`SetValue` and renders
+them itself (the bar value sources pass them through untouched).
+`WowPixelRows.ReadStatusBarPercent()` binary-searches the center row for the
+first unfilled pixel (at most 7 reads per bar), "filled" meaning the bar's
+fill channel is >= 128 (so a half-covered edge pixel rounds to nearest).
+
+**Bit rows** (rows 4-11) are 24 boxes, green `(0, 255, 0)` = 1 and red
+`(255, 0, 0)` = 0, together one unsigned integer with **box 1 (leftmost) as
+bit 0**. C# reads a box as 1 when its green channel beats its red
+(`WowPixelRows.ReadBits()` → `PixelRowBits`). Three encodings, Lua helpers in
+`MathFunctions.lua`, C# accessors on `PixelRowBits`:
+- **bool fields** (`EncodeBoolFields`, C# `bits[n]`, **1-based** to match the
+  Lua lists): a list of global function *names* (looked up at draw time, so
+  they can live in any file regardless of load order) or `RESERVED`; entry N
+  is box N. Each field is `pcall`'d on its own, so one that throws (e.g. on a
+  secret value mid-combat) reads false — printing once per distinct error —
+  without affecting the rest of its row. Put `RESERVED` in a retired entry's
+  place rather than deleting it, so later boxes don't shift.
+- **bytes** (`EncodeBytes`, C# `bits.Byte(0..2)`): three 0-255 ints in boxes
+  1-8, 9-16, 17-24 (clamped).
+- **fixed point** (`EncodeFixedPoint`, C# `bits.FixedPoint`): unsigned, 15
+  fraction bits (max just under 512, 1/32768 precision). The map
+  coordinates/facing themselves are still rounded to 0.01 on the Lua side,
+  which is the real precision limit.
+
+**Legacy box names:** each bool row used to be a single pixel's packed
+R/G/B bytes, and this file (and the code's comments) still name boxes that
+way: **Rn = box n, Gn = box 8+n, Bn = box 16+n** (e.g. `MultiBoolTwo`'s G3 is
+box 11). The Lua field lists tag every entry with both.
+
+Each pixel-row element's update is `pcall`'d in `InitializePixelRow()`'s
+refresh loop (a failing one keeps its last drawn value and prints once per
+distinct error), so one failure can't freeze the rest.
+
+The sentinel box is the one exception to the schemes above — a plain
+exact-color match (`WowPixelRows.ADDON_LOADED_COLOR`): if it's exactly that
+color, the addon is loaded and rendering the rows (so the rest of them are
+meaningful) and `AddonLoaded` is true; *any* other color — including
+whatever's actually on-screen at that position when the addon isn't loaded,
+or another window covering WoW — means `AddonLoaded` is false. This replaced
+an older, unrelated mechanism (a multi-point text/UI pixel-signature match
+against login-screen-specific colors) since folding it into the rows is more
 reliable than matching login-screen chrome. Since a covered WoW window also
 hides the sentinel, `AddonLoaded` alone can't tell "logged out" from "lost
 focus" — so `WowWorldState` also carries `WowWindowHasFocus` (the WoW window
 was the OS foreground window at capture time, checked in `GetWoWWorldState`
 only — false for bitmap-only test updates), and `IsBotInAValidState`
 (`AddonLoaded && WowWindowHasFocus`) is what gates reading anything else off
-the row (`EveryWorldStateUpdateTasks()`'s early-return, `FocusOnWindowTask`,
+the rows (`EveryWorldStateUpdateTasks()`'s early-return, `FocusOnWindowTask`,
 the combat short-circuit in `CoreGameplayLoopTask`). "Actually logged out"
 (the disconnect alert, `CheckIfLoggedOutTask`) is
 `WowWindowHasFocus && !AddonLoaded`. Separately, **text/UI state
@@ -102,9 +141,9 @@ text) is still its own unrelated mechanism — resolution-specific coordinates
 in `WowScreenConfigs.cs`, compared via `ImageMatchColorPositions.MatchesSourceImage`,
 some validated against bitmaps in `WoWHelperUnitTests/Source Images/`.
 
-**Zone ID (`MultiIntTwo`'s B channel, `WowWorldState.CurrentZone`):** a
+**Zone ID (`MultiIntOne`'s third byte, `WowWorldState.CurrentZone`):** a
 WowHelper-defined numeric zone ID, NOT Blizzard's internal map ID (which
-doesn't fit in a single byte channel). Lua's `GetCurrentZoneId()`
+doesn't fit in a byte). Lua's `GetCurrentZoneId()`
 (`WoWFunctions.lua`) looks up `GetRealZoneText()` against a
 `ZONE_NAME_TO_ID` table (255 = not a known zone); the numeric values there
 MUST stay in sync with the `WowZone` enum in `WowLocationConfiguration.cs`
@@ -227,7 +266,7 @@ the process) rather than guessing. `WowPlayer.ClassState` starts `null`
 the per-tick `ClassState.UpdateFromBitmap` call) until `ResolveCombatConfiguration()`
 builds the concrete subtype; nothing reads `ClassState` before that.
 
-**`MultiBoolOne`'s B byte:** bit 1 carries `TargetRecentlyEvaded` — true for a
+**`MultiBoolOne`'s B boxes (17-24):** B1 carries `TargetRecentlyEvaded` — true for a
 few seconds after the player's own attack drew an `EVADE` combat-log miss
 against the current target (i.e. the target is stuck evading, e.g. leashed on
 the far side of terrain it can't path across). Detected via
@@ -238,38 +277,36 @@ the exact tick the miss fired. Consumed by `MeleeMakeSureWeAreAttackingEnemyTask
 (`WowCommonCombatTasks.cs`) as part of its "this target is stuck, back off/clear
 it" checks.
 
-Bits 2 and 4 carry two of the three bot-supported classes the player might be
-playing — exactly one of `PlayerIsWarrior`/`PlayerIsShaman` is true, from a
-plain `UnitClass("player")` check in `GetMultiBoolOne()` (`WoWFunctions.lua`).
-(Bit 3 is reserved/unused — previously `PlayerIsMage`, removed along with
-Mage support; not reused, to avoid confusing anything that expects the old
-bit meaning.) The 3rd class, Warlock, didn't fit here — this byte was
-already fully packed (b1-b8) by the time Warlock support was added — so its
-bit lives in `MultiBoolTwo`'s R4 instead (see the "Reserved-but-not-in-the-row"
-paragraph below); `WowWorldState.UpdateMultiBoolTwo` overrides `PlayerClass`
-to `Warlock` there rather than duplicating the "exactly one true" logic
-across two bytes. C# decodes these into `WowWorldState.PlayerClass` (nullable
+B2 and B4 carry two of the three bot-supported classes the player might be
+playing — `IsPlayerWarrior()`/`IsPlayerShaman()` (`WoWFunctions.lua`), plain
+`UnitClass("player")` checks. (B3 is `RESERVED` — previously Mage, removed
+along with Mage support; not reused, to avoid confusing anything that expects
+the old meaning.) The 3rd class, Warlock, didn't fit here — this row was
+already full by the time Warlock support was added — so its bit
+(`IsPlayerWarlock()`) lives in `MultiBoolTwo`'s R4 instead (see below);
+`WowWorldState.UpdateMultiBoolTwo` overrides `PlayerClass` to `Warlock` there
+rather than duplicating the "exactly one true" logic across two rows. C#
+decodes these into `WowWorldState.PlayerClass` (nullable
 `WowCombatConfiguration` — null if none of the four bits are set, i.e. an
 unsupported class or the addon isn't rendering a real row yet), which
 `WowPlayer.ResolveFarmingConfigurationTask` uses to set
 `CombatConfiguration` automatically at startup — see "Automatic
 farming-config resolution" below.
 
-Bits 5-8 carry `IsPlayerPoisoned`/`IsPlayerDiseased` (from `PlayerHasDebuffType()`
+B5-B8 carry `IsPlayerPoisoned`/`IsPlayerDiseased` (from `PlayerHasDebuffType()`
 in `WoWFunctions.lua`, keyed off `UnitDebuff("player", i)`'s dispel-type return
 value) and `IsTargetNatureImmune` (name-based, per `NATURE_IMMUNE_MOB_NAMES` in
 `CreatureConfig.lua` — same pattern as `IsTargetFireImmune`)/`IsTargetCasting`
 (`UnitCastingInfo`/`UnitChannelInfo` against `"target"`, the target-side
 counterpart to the already-existing `IsPlayerCasting`, which packs into
-`MultiBoolOne`'s G byte as `WowWorldState.IsCurrentlyCasting`) — this fully
-packs the byte.
+`MultiBoolOne`'s G3 as `WowWorldState.IsCurrentlyCasting`) — this fills
+the row.
 
-**Reserved-but-not-in-the-row:** `ClassIntOne` is reserved for the next
-class-specific numeric value, and doesn't have a pixel in the row or a
-`Point` on `WowScreenConfiguration` yet — **on purpose**, the row only grows
-when a field actually needs to go in it. `MultiBoolTwo` (index 8) and
-`ClassBoolTwo` (index 9) *did* each grow a pixel this way already:
-`MultiBoolTwo`'s R-byte bit 1 is `IsTargetLongRangeCaster` (per-mob, from
+**Rows only grow when a field needs them.** There's no class-specific
+numeric row (the old reserved `ClassIntOne` was dropped, never having been
+used) — add a row when something actually needs one. `MultiBoolTwo` and
+`ClassBoolTwo` each got a row this way:
+`MultiBoolTwo`'s R1 is `IsTargetLongRangeCaster` (per-mob, from
 `LONG_RANGE_CASTER_MOB_NAMES` in `CreatureConfig.lua` — mobs whose ranged
 attack outranges Earth Shock), bit 2 is `WowWorldState.LogoffMobSeen` (from
 `LOGOFF_IF_SEEN_MOB_NAMES` in `CreatureConfig.lua` — mobs dangerous/
@@ -282,13 +319,13 @@ target check catches a mob targeted beyond nameplate range, which the
 nameplate scan alone would miss — since the whole point is to bail before
 ever engaging it — wired into
 `WowManagementTasks.EveryWorldStateUpdateTasks()`, checked every tick
-regardless of player state, same as the level-up check there), and bit 3 is
+regardless of player state, same as the level-up check there), and R3 is
 `WowWorldState.IsCurrentlySkinning` (name-matched against the player's
 current cast, `UnitCastingInfo("player") == "Skinning"` — Skinning is a
 regular cast-bar action, not a channel, and isn't cast via a normal
 spellbook ID the way e.g. `CanCurePoison`'s `IsSpellKnownByName()` match is);
-and R4 is the 4th "which supported class" bit, Warlock (see the `MultiBoolOne`
-B-byte note above for why it landed here instead of there). R5 is
+and R4 is the 3rd "which supported class" bit, Warlock (see the `MultiBoolOne`
+B-box note above for why it landed here instead of there). R5 is
 `WowWorldState.IsTargetBleedImmune` (per-mob, from `BLEED_IMMUNE_MOB_NAMES`
 in `CreatureConfig.lua` — mobs not worth (re)applying Rend to) and R6 is
 `IsTargetFearCaster` (per-mob, from `FEAR_CASTER_MOB_NAMES` in
@@ -305,15 +342,14 @@ express "some mobs at this route bleed-immune/fear-cast, some don't." R7-8
 are still reserved.
 
 G1 is `WowWorldState.LogoutOnLowDynamiteEnabled` and G2 is
-`WowWorldState.LogoutOnFullBagsEnabled` — packed into the previously-unused G
-byte rather than continuing into R7/R8, since (unlike every other bit in this
-row) these two aren't live game-state queries at all. They're run-specific
+`WowWorldState.LogoutOnFullBagsEnabled` — unlike every other bit in this row,
+these two aren't live game-state queries at all. They're run-specific
 settings toggled in-game via the addon's `/yyconfig` menu
 (`CreateSettingsMenu()` in `UIFunctions.lua`, wired up in `YoyokazooUI.lua`),
 saved into `YoyokazooUIDB.logoutOnLowDynamite`/`logoutOnFullBags`
 (`YoyokazooUIDB` is the addon's `SavedVariablesPerCharacter` table — see
 `YoyokazooUI.toc`), and read by `IsLogoutOnLowDynamiteEnabled()`/
-`IsLogoutOnFullBagsEnabled()` when `GetMultiBoolTwo()` packs the byte. This
+`IsLogoutOnFullBagsEnabled()` (both in `MULTI_BOOL_TWO_FIELDS`). This
 replaced hardcoding the equivalent `LogoutOnLowDynamite`/`LogoutOnFullBags`
 booleans on the C# side's `WowManagementConfiguration` — see
 `WowManagementTasks.SetLogoutVariablesTask()`, the only reader of
@@ -347,7 +383,7 @@ is chosen via the `/yyconfig` menu's "Desired world buff" row, another
 `GetDesiredWorldBuffId()`, and matched against the player's actual buffs by
 `HasDesiredWorldBuff()` (`WoWFunctions.lua`, via the existing `HasBuffNamed()`
 helper). Unlike the "Dynamite item"/"Healing potion" selectors, this one
-*does* reach the C# side — it's packed into `GetMultiBoolTwo()` like the two
+*does* reach the C# side — it's in `MULTI_BOOL_TWO_FIELDS` like the two
 booleans above.
 Consumed by `WowManagementTasks.WaitForWorldBuffThenLogoffTask()`: loops
 idle (tapping strafe-left/strafe-right every
@@ -357,9 +393,8 @@ this bit comes true, then Slack-alerts and logs out. Wired up to the
 dedicated `PlayerState`.
 
 G4 is `WowWorldState.HighLatency` — unlike G1-G3 above, this is back to being
-a plain live game-state query (same category as the R-byte flags), not a
-`/yyconfig` setting; it just landed in G because the R byte was already
-fully packed by the time it was added. `HasHighLatency()` (`WoWFunctions.lua`)
+a plain live game-state query (same category as the R flags), not a
+`/yyconfig` setting. `HasHighLatency()` (`WoWFunctions.lua`)
 samples `GetNetStats()`'s `latencyHome` (the player's own connection to their
 realm's datacenter, not `latencyWorld`'s Blizzard-internal server-hop
 latency) once every `LATENCY_CHECK_INTERVAL_SECONDS` (1s) rather than on the
@@ -419,14 +454,11 @@ against `GetMoney()` (base cost, ignoring trainer rep discounts; true when
 nothing's unlearned). An entry may also carry `requiresSpellId`: it only
 counts once the player knows that spell — for later ranks of talent- or
 quest-granted abilities (Mortal Strike/Bloodthirst/Shield Slam/Intercept),
-which the trainer only offers if rank 1 is already known (checked by name via
-`IsSpellKnownByName`, not by ID). Learning a higher rank replaces the lower
-one in the spellbook, so `IsPlayerSpell(lowerRankId)` reads false afterwards
-(confirmed live with Rend R1/R2) — `TrainerSpellRankKnown()` therefore
-counts an entry as known if it or any later same-named entry (`"Rend"` /
-`"Rend (R2)"`, matched by stripping the ` (Rn)` suffix) is known. Warrior is filled
-in for levels 1-60 (sourced from the WhatsTraining addon's data; quest
-spells, talent rank 1s, and weapon skills deliberately excluded);
+which the trainer only offers if rank 1 is already known. Warrior is filled
+in for levels 1-60, generated from a `/yyspells` dump of a WoW Forever
+trainer (real per-row levels/costs/spell IDs — Forever's schedule differs
+from Classic Era's; starting/quest spells, talent rank 1s, and weapon skills
+aren't on the trainer, so they're excluded);
 Shaman/Warlock tables are empty, so they always read "all known".
 `/yytrain` (`PrintTrainerSpellDebug()`) prints the cached G6/G7 values next
 to a fresh uncached scan, listing each unlearned entry with its
@@ -437,19 +469,18 @@ G8 is `WowWorldState.GearNeedsRepair` (`GearNeedsRepair()`,
 (`DURABILITY_YELLOW_RATIO`, 25% — our approximation of the durability doll's
 yellow, not exposed by the API), or any other equipped piece (armor,
 ranged) is "red" (0 durability/broken). `GEAR_REPAIR_DEBUG` prints per-slot
-durability on each refresh. Nothing on the C# side consumes it yet. The G
-byte is now full.
+durability on each refresh. Nothing on the C# side consumes it yet.
 
 B1 is `WowWorldState.IsTargetAttackable` — `ShouldWeAttackTarget()`
-(`WoWFunctions.lua`) packed on its own: the target exists, is attackable,
+(`WoWFunctions.lua`) on its own: the target exists, is attackable,
 alive, not PvP-flagged, doesn't con grey, isn't too far above the player's
 level, and isn't already in combat. It is pure eligibility. The per-class
 `CanChargeTarget`/`CanShootTarget`/`CanSpellcastPullTarget` bits (and so
 `CanEngageTarget()`) AND this same check with range/cooldown, so on their
 own they can't tell "valid but out of range" from "not a valid target";
 this bit can. Consumed by `PathfindingLoopTask`'s out-of-range chase (see
-the target-marker bullet in the C# architecture section). B2-B8 are still
-reserved for the next class-agnostic bool.
+the target-marker bullet in the C# architecture section). Boxes 7-8 and
+18-24 are still free for the next class-agnostic bool.
 
 **Per-route target macro:** the `"0 Targ"` macro (`TARGET_MACRO_NAME`) (`WowInput.FIND_TARGET_MACRO`) is the bot's target finder, and
 its `/target` lines are set per route: `WowLocationConfiguration.TargetMacroMobNames`
@@ -479,37 +510,41 @@ in between rather than recomputing on the pixel row's ~50ms cadence. So any
 of these can lag reality by up to a minute (e.g. after a level-up, trainer
 visit, vendor sell, or `/yyconfig` item-selector change). Put the next flag
 of this kind behind the same helper.
-`ClassBoolTwo`'s
-R-byte bit 1 is Shaman's
+
+`ClassBoolTwo`'s box 1 is Shaman's
 `IsInEarthShockRange` (a pure range check via `SpellIsInRange(8042)`,
-independent of `CanCastEarthShock`'s cooldown/usability check), bit 2 is
+independent of `CanCastEarthShock`'s cooldown/usability check), box 2 is
 Shaman's `HasClearcasting` (Elemental Focus's proc buff, name-matched via
-`HasBuffNamed("Clearcasting")`), and bit 3 is Shaman's `CanCastFrostShock`
+`HasBuffNamed("Clearcasting")`), and box 3 is Shaman's `CanCastFrostShock`
 (cooldown/usability check via `SpellIsCooledDown(8056)`/`IsSpellUsable(8056)`,
 same pattern as `CanCastEarthShock`). Frost Shock does the same damage as
 Earth Shock but never interrupts a cast, so `WowShamanTasks.cs`'s
 `ShamanShouldCastFrostShock()` only uses it as Earth Shock's substitute
 against nature-immune targets (`WorldState.IsTargetNatureImmune`) — Earth
 Shock is nature damage and does nothing to them. Shocks share both a
-cooldown category and a 20-yard range in Classic, so bit 1
+cooldown category and a 20-yard range in Classic, so box 1
 (`IsInEarthShockRange`) doubles as the range check for Frost Shock too — no
-separate range bit needed. R4-8 and the G/B bytes are still reserved for the
-next Shaman-specific flag).
+separate range bit needed. Boxes 4-24 are still free for the next
+Shaman-specific flag.
 
-**Adding a new pixel:** append a new `AddSwatch(N, ...)` call in
-`InitializePixelRow()` (Lua) AND a new `PixelRowPoint(N)`-based property on
-`WowScreenConfiguration.cs` (C#), keeping index `N` identical on both sides.
-Do this together — a one-sided change silently breaks the bot (wrong pixel
-read as wrong flag), it won't fail loudly.
+**Adding a new field:** for a bool, add its function's name to the right
+field list (in a free/`RESERVED` slot, or appended) AND decode the same box
+number on the C# side (`WowWorldState.UpdateMultiBool*` or the class's
+`Wow*ClassState.UpdateFromBitmap`). For a whole new row, add a
+`CreateBitRowElement`/`CreateStatusBarElement` call in `InitializePixelRow()`
+AND a `PixelRow` enum value in `WowPixelRows.cs`, at the same row index (and
+grow `FarthestReadPixel`/the Lua `PIXEL_ROW_COUNT` if it's the new last row).
+Do both sides together — a one-sided change silently breaks the bot (wrong
+box read as wrong flag), it won't fail loudly.
 
 **Class split:** class-specific flags (Battle Shout, Rend, Frost Armor,
-Rockbiter, etc.) live only in `ClassBoolOne`, never in `MultiBoolOne/Two`.
-`GetClassBoolOne/Two`/`GetClassIntOne` (in `WoWFunctions.lua`) check
-`UnitClass("player")` and delegate to that class's own populate function
-(`GetWarriorClassBoolOne` in `WarriorFunctions.lua`, `GetShamanClassBoolOne`
-in `ShamanFunctions.lua`, `GetWarlockClassBoolOne` in `WarlockFunctions.lua`)
-— so the *same* pixel/bit position means something different depending on
-which class is playing. On the C# side, `WowPlayer.ClassState` (a
+Rockbiter, etc.) live only in the Class rows, never in `MultiBoolOne/Two`.
+`GetPlayerClassFields()` (`WoWFunctions.lua`) picks the player's class's list
+by name — `WARRIOR_CLASS_BOOL_ONE_FIELDS` in `WarriorFunctions.lua`,
+`SHAMAN_...` in `ShamanFunctions.lua`, `WARLOCK_...` in
+`WarlockFunctions.lua` (an unsupported class gets an empty, all-red row) — so
+the *same* box means something different depending on which class is
+playing. On the C# side, `WowPlayer.ClassState` (a
 `WowClassState` subtype — see the C# architecture section) decodes the
 matching bits, selected once from `CombatConfiguration` —
 itself auto-set at startup from the player's detected class (see "Automatic
@@ -535,8 +570,8 @@ summoned at all yet -- and doesn't currently have a living pet out), and R4/R5
 (`ShouldCastImmolate`/`ShouldCastCorruption`, true when the player knows that
 spell and the target doesn't already have that DoT on it -- same
 name-matched-against-`TargetHasDebuffSpellName()` pattern Shaman's
-`ShouldCastFlameShock`/`TargetHasFlameShock` use); R6-R8, `ClassBoolTwo`, and
-`ClassIntOne` are still fully reserved. The rest of the dispatch wiring (enum
+`ShouldCastFlameShock`/`TargetHasFlameShock` use); the rest of
+`ClassBoolOne` and all of `ClassBoolTwo` are still free. The rest of the dispatch wiring (enum
 value, `WowClassState.Create`, all six
 `WowPlayerCombatConfig.cs` switches, the `MultiBoolTwo` R4 class-detect bit)
 is also in place.
@@ -565,6 +600,11 @@ of truth — edits should be made here, not in the WoW install directory.
   *class-agnostic* bot inputs (see color contract above); `WowPlayer` keeps a
   `PreviousWorldState` + `WorldState` pair each tick to detect edge-triggered
   events (leveled up, logged out unexpectedly, new whisper, etc.).
+- **`Gameplay/WowPixelRows.cs`** — the pixel-row layout (`PixelRow` enum,
+  layout constants, `ADDON_LOADED_COLOR`) and the low-level readers
+  (`ReadAddonLoaded`, `ReadStatusBarPercent`, `ReadBits` → `PixelRowBits`)
+  that `WowWorldState` and the `Wow*ClassState`s decode through — the C#
+  half of the color-encoding contract above, in one place.
 - **`Gameplay/WowClassState.cs`** (abstract) / **`WowWarriorClassState.cs`** /
   **`WowShamanClassState.cs`** /
   **`WowWarlockClassState.cs`** (stub — see "Class split" above) — the
@@ -625,8 +665,10 @@ of truth — edits should be made here, not in the WoW install directory.
   actual position/bearing/distance in this client (`UnitPosition`,
   `C_Map.GetPlayerMapPosition`, and nameplate frame measurement are all
   confirmed blocked), so `UIFunctions.lua` paints a sentinel-colored marker
-  (`WowScreenConfiguration.TARGET_MARKER_COLOR`) onto the current target's
-  nameplate, found via a full-screen pixel search (`FindTargetMarkerOnScreen`
+  (`WowScreenConfiguration.TARGET_MARKER_COLOR`; `NAMEPLATE_MARKER_SIZE_PIXELS`
+  = 20x20 real screen pixels, converted via `GetPhysicalPixelsPerLocalUnit()`
+  like the pixel row so it's the same size on every client/UI scale) onto the
+  current target's nameplate, found via a full-screen pixel search (`FindTargetMarkerOnScreen`
   — a separate, full-resolution capture, not the small fixed-position pixel
   row `WorldState` normally reads). With the bot run camera-pitched straight
   down, the marker's position relative to screen center IS bearing/distance:
@@ -645,8 +687,8 @@ of truth — edits should be made here, not in the WoW install directory.
   "we made it" signal trusted to actually stop the walk — an earlier
   `IsInMeleeRange` bool, decoded from a `CheckInteractDistance` check in the
   addon, didn't reliably reflect real melee range and was removed; the
-  `MultiBoolOne` G-byte bit it used is reserved again, see
-  `GetMultiBoolOne()` in `WoWFunctions.lua`), caching the last-found marker
+  `MultiBoolOne` box it used, G2, is `RESERVED` in `MULTI_BOOL_ONE_FIELDS`
+  in `WoWFunctions.lua`), caching the last-found marker
   position in `WowPlayer.MostRecentTargetMarkerX`/`MostRecentTargetMarkerY`.
   It reuses
   the marker scan it already does each iteration (for the bearing) for two
@@ -892,9 +934,41 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`WoWFunctions.lua`** — class-agnostic game-state queries (in melee range,
   in combat, should-attack-target checks, spell cooldown/range checks incl.
   GCD-aware cooldown detection, attacker counting, etc.) — the "is X true"
-  logic layer, plus `GetMultiBoolOne/Two`/`GetMultiIntOne/Two` (shared-state
-  pixel populate functions) and `GetClassBoolOne/Two`/`GetClassIntOne`
-  (class-specific dispatchers — see "Class split" above). The
+  logic layer (for the WoW Forever / Midnight-rules port, `IsAnySecretValue()`
+  guards values that may come back secret; also, the
+  top of the file has `Compat_*` shims for old globals modern clients removed
+  — `GetSpellInfo`/`GetSpellCooldown`/`IsSpellInRange`/`IsUsableSpell`/
+  `IsCurrentSpell`/`GetItemInfo`/`GetItemInfoInstant`/`GetItemCount`/
+  `EquipItemByName`/`IsSpellKnown`/`UnitBuff`/`UnitDebuff`/`UnitAura` —
+  which use the global if present, else the `C_Spell`/`C_Item`/`C_UnitAuras`
+  replacement converted back to the old return shape; call those, not the
+  bare globals. The aura shims swallow the in-combat "auras cannot be
+  accessed when secret" error and return nil, so on Midnight-rules clients
+  every aura-based flag reads "not present" during combat. Cooldowns are
+  also secret in combat there — `startTime`/`duration`/`modRate` are secret,
+  but `isEnabled`/`isActive` stay readable, and `isActive` is confirmed live
+  to track the cooldown/GCD — so when the timings are secret,
+  `Compat_GetSpellCooldown` answers from `isActive`: inactive → "ready"
+  (0, 0), active → a stand-in "on cooldown" shape (`GetTime()`, 1s) that makes
+  every caller's remaining-time math positive (real remaining time is
+  unknown). Every cooldown check (`SpellIsCooledDown`,
+  `IsGlobalCooldownCooledDown`, etc.) keeps working in combat this way; the
+  one imprecision is `SpellIsCooledDownIgnoringGCD`, which can read a spell on
+  a real cooldown as "ready apart from the GCD" while the GCD is running. If
+  `isActive` is ever unreadable it falls back to "ready".
+  `SECRET_COOLDOWN_DEBUG` (off) prints once per spell which cooldown fields
+  were secret. `/yycd [spellId|off]`
+  (`YoyokazooUI.lua`, watcher in `WoWFunctions.lua`) is a debug-only watcher
+  that prints each `isActive` flip, with timestamp/combat/remaining time, plus
+  every successful player cast, to confirm whether `isActive` tracks the
+  cooldown in combat). On Midnight-rules clients (`issecretvalue` exists),
+  `YoyokazooUI.lua` skips registering `COMBAT_LOG_EVENT_UNFILTERED`
+  (forbidden there — raises the "blocked from an action" popup), so
+  `TargetRecentlyEvaded` never fires and `IsCombatStalemate()` always
+  returns false (gated on the `COMBAT_LOG_AVAILABLE` global). Also holds the
+  class-agnostic pixel-row field lists (`MULTI_BOOL_ONE_FIELDS`/
+  `MULTI_BOOL_TWO_FIELDS`, the `IsPlayerWarrior`/`Shaman`/`Warlock`
+  class bits, and `GetPlayerClassFields()` — see "Class split" above). The
   `IsTargetCasterMob`/`IsTargetRunnerMob`/`IsTargetFireImmune` checks here
   read their name lists from `CreatureConfig.lua`. Also holds the
   merchant-auto-sell logic. `AUTO_SELL_MODE_CHOICES` defines three modes
@@ -904,8 +978,8 @@ of truth — edits should be made here, not in the WoW install directory.
   (a short, manually-curated list of cooking/fishing byproducts and
   skinning/leatherworking materials); `"blocklist"` sells everything
   quality 0-2 (gray/white/green) *except* items named in
-  `AUTO_SELL_BLOCKLIST_ITEM_NAMES` (currently just the healing-potion
-  tiers), and skips any item whose name isn't cached yet since it can't be
+  `AUTO_SELL_BLOCKLIST_ITEM_NAMES` (changes often -- see the list itself),
+  and skips any item whose name isn't cached yet since it can't be
   checked against the blocklist. Both lists match by name
   (`GetItemInfo(itemID)`) rather than item ID, unlike
   `DYNAMITE_ITEM_CHOICES`/`HEALING_POTION_ITEM_CHOICES` below, since they
@@ -955,14 +1029,15 @@ of truth — edits should be made here, not in the WoW install directory.
   `IsGlobalCooldownCooledDown()` (which decodes into `WorldState.GCDCooledDown`)
   both now probe the same class-appropriate real spell via a shared
   `GetGCDProbeSpell()` — Shaman: Lightning Bolt Rank 1 (confirmed live);
-  Warrior: Rend Rank 1 (772 — not ideal, since Rend isn't trainable until
-  level 4, but it's the first ability a Warrior learns that actually
-  triggers the GCD; this replaced an original Warrior pick of Heroic Strike,
-  which is confirmed wrong outright — Heroic Strike doesn't trigger the GCD
+  Warrior: Battle Shout Rank 1 (6673 — known from level 1, triggers the GCD,
+  no cooldown of its own; confirmed live on the Forever client. It replaced Rend Rank 1
+  (772), which isn't trainable until level 4 and so gave no cooldown info
+  at all below that; Rend in turn replaced an original pick of Heroic
+  Strike, confirmed wrong outright — Heroic Strike doesn't trigger the GCD
   at all in Classic); Warlock: Shadow Bolt Rank 1 (still unconfirmed live).
   Before this, both functions separately probed the dedicated GCD spell ID
-  (61304), confirmed via testing to never show a cooldown on this client for
-  any class — `SpellIsCooledDownIgnoringGCD()` was silently non-functional
+  (61304), confirmed via testing to never show a cooldown on Classic Era for
+  any class (and on the Forever client it returns no cooldown info at all) — `SpellIsCooledDownIgnoringGCD()` was silently non-functional
   until this fix. Note the Warrior rotation's `WarriorShouldCastX` checks are
   game-state only (buff up? proc available? target already debuffed?) and
   deliberately don't look at rage: the `if/else if` chain in
@@ -975,16 +1050,16 @@ of truth — edits should be made here, not in the WoW install directory.
   own cost plus a reserve for the next MS/BT, if trained;
   `ShouldCastRockbiterWeapon`, `CanCastEarthShock` for Shaman;
   `ShouldCastDemonArmor`/`ShouldSummonPet`/`ShouldCastImmolate`/
-  `ShouldCastCorruption` for Warlock) plus a `GetXClassBoolOne/Two`/
-  `GetXClassIntOne` set that packs that class's state into the ClassBool/
-  ClassInt pixels. Split out of `WoWFunctions.lua` to keep class-specific
+  `ShouldCastCorruption` for Warlock) plus that class's
+  `<CLASS>_CLASS_BOOL_ONE/TWO_FIELDS` lists for the Class pixel rows (and,
+  for Warrior, the `HasBattleShout()` wrapper its list names). Split out of `WoWFunctions.lua` to keep class-specific
   logic physically separated as more classes/fields get added. (Mage support
   — `MageFunctions.lua`/`WowMageClassState.cs`/`WowMageTasks.cs` — was
   removed: the rotation never got working, and enough else has changed since
   that it wasn't worth carrying forward. Re-add if it gets revisited; nothing
   else was built to depend on Mage-specific behavior.)
-  `WarlockFunctions.lua` is a work in progress — `GetWarlockClassBoolOne`
-  packs `CanSpellcastPullTarget()` (shared, from `WoWFunctions.lua`),
+  `WarlockFunctions.lua` is a work in progress — `WARLOCK_CLASS_BOOL_ONE_FIELDS`
+  lists `CanSpellcastPullTarget()` (shared, from `WoWFunctions.lua`),
   `ShouldCastDemonArmor()` (checks `HasBuffNamed("Demon Skin")`/
   `HasBuffNamed("Demon Armor")` — only one is ever active — and
   `IsSpellKnownByName()` for either, the same name-matching pattern
@@ -998,30 +1073,29 @@ of truth — edits should be made here, not in the WoW install directory.
   `WoWFunctions.lua` — to check the player knows the spell and the target
   doesn't already have that DoT, same pattern
   `ShouldCastFlameShock()`/`TargetHasFlameShock()` use for Shaman);
-  `GetWarlockClassBoolTwo`/`GetWarlockClassIntOne` are still all-zero.
-- **`UIFunctions.lua`** — builds the on-screen indicator frame/swatches and
-  encodes values/booleans into the colors the C# side decodes
-  (`EncodeFloatToColor` and friends). Two rendering paths coexist, both fed
-  by the same underlying value/color functions:
-  - `InitializePixelRow()` — **the one the C# bot actually reads**, condensed
-    to exactly the 7 pixels it consumes (see the table in the color-encoding
-    contract above) — no debug-only or not-yet-decoded values live here.
-    `PIXEL_SIZE`-square swatches pinned to the screen's literal top-left
-    corner, placed via the self-calibrating `GetPhysicalPixelsPerLocalUnit()`
-    helper, matching the center-pixel `Point`s computed on
-    `WowScreenConfiguration`. Needs no per-resolution calibration.
-  - `InitializeIndicators()` — the original 20x20-box draggable debug frame
-    (`YoyokazooUIFrame`), showing every value (including ones the bot doesn't
-    consume) legibly with labels, for human debugging. The bot never reads
-    its position; kept purely as a human-facing debug display.
-
-  Also holds `CreateSettingsMenu()` — a third, unrelated frame: a small
-  checkbox-list dialog (not tied to any live game-state read/OnUpdate loop,
-  unlike the two above) toggled by `YoyokazooUI.lua`'s `/yyconfig` slash
-  command, for run-specific settings like "log out on low dynamite"/"log out
-  on full bags" — see the `MultiBoolTwo` R4/R5 note in the color-encoding
-  contract above for how those reach the C# side.
-- **`MathFunctions.lua`** — small numeric helpers shared by the above.
+  `WARLOCK_CLASS_BOOL_TWO_FIELDS` is still empty.
+- **`UIFunctions.lua`** — builds the addon's on-screen frames:
+  - `InitializePixelRow()` — **the one the C# bot actually reads**: the pixel
+    rows described in the color-encoding contract above (status bars, the
+    sentinel, and the bit rows, via `CreateStatusBarElement`/
+    `CreateSolidSwatchElement`/`CreateBitRowElement`), all in one
+    `TOOLTIP`-strata container frame, placed via the self-calibrating
+    `GetPhysicalPixelsPerLocalUnit()` helper. No debug-only values live here.
+  - `InitializeIndicators()` — the debug frame (`YoyokazooUIFrame`, toggled
+    by `/yydebug`), showing map X/Y and facing degrees as labeled numbers
+    (`CreateNumberIndicator`), for reading off coordinates by hand. Its size
+    (`YoyokazooUI.lua`) fits exactly those three rows. The bot never reads it.
+  - `CreateSettingsMenu()` — a small checkbox/selector dialog (not tied to
+    any live game-state read/OnUpdate loop) toggled by `YoyokazooUI.lua`'s
+    `/yyconfig` slash command, for run-specific settings like "log out on low
+    dynamite"/"log out on full bags" — see the `MultiBoolTwo` G1/G2 note in
+    the color-encoding contract above for how those reach the C# side.
+  - The nameplate target marker (see the target-marker bullet in the C#
+    architecture section).
+- **`MathFunctions.lua`** — the pixel-row bit encodings (`EncodeBoolFields`/
+  `EncodeBytes`/`EncodeFixedPoint`, `RESERVED`, `PIXEL_ROW_BITS`/
+  `FIXED_POINT_FRACTION_BITS` — see the color-encoding contract above) plus
+  `round2`.
 - **`YoyokazooUI.lua`** — addon entry point/event wiring (login, XP/level-up
   tracking, whisper tracking for "unseen whisper" alerts) and indicator
   initialization. On the first `PLAYER_ENTERING_WORLD`, `InitializeIndicators()`
@@ -1032,7 +1106,7 @@ of truth — edits should be made here, not in the WoW install directory.
   uncaught error building the debug frame used to unwind straight out of that
   whole block, meaning `InitializePixelRow()` never even ran, silently
   freezing every decoded bot flag for the rest of the session — confirmed
-  happening in testing (a bug in one of `GetMultiBoolOne()`'s inputs, read by
+  happening in testing (a bug in one of `MultiBoolOne`'s inputs, read by
   one of the debug frame's swatches, blocked the pixel row from ever being
   built). Now a failure in either one is isolated to that one, and (since its
   flag stays false) retries on the next `PLAYER_ENTERING_WORLD` (zone change,
@@ -1043,8 +1117,13 @@ of truth — edits should be made here, not in the WoW install directory.
   dialog (built lazily, on first use) for the run-specific settings above,
   each backed by its own `YoyokazooUIDB` field
   (`logoutOnLowDynamite`/`logoutOnFullBags`) read via
-  `IsLogoutOnLowDynamiteEnabled()`/`IsLogoutOnFullBagsEnabled()` when
-  `GetMultiBoolTwo()` packs the pixel row; `/yysell` is a debug-only dry run
+  `IsLogoutOnLowDynamiteEnabled()`/`IsLogoutOnFullBagsEnabled()` when the
+  `MultiBoolTwo` pixel row is drawn; `/yyspells` (debug-only,
+  `DumpSpellData()` in `WoWFunctions.lua`) dumps an open class trainer's
+  rows, the class trainer table's spell IDs as the client sees them, and the
+  spellbook into `YoyokazooUIDB.spellDump`, written to the SavedVariables
+  file on `/reload`, for rebuilding a trainer table from real client data;
+  `/yysell` is a debug-only dry run
   of the auto-sell bag scan (see the auto-sell paragraph below) that prints
   what it would sell without selling anything, and works with no merchant
   open. Also auto-confirms the bind-on-pickup loot popup: on
@@ -1176,11 +1255,19 @@ of truth — edits should be made here, not in the WoW install directory.
   each tick with `FindNextAffordableTrainerService()` (`WoWFunctions.lua` —
   first row with category `"available"` and cost `<= GetMoney()`; forces
   the trainer's "available" filter on) since a purchase shifts the rows.
+  `GetTrainerServiceInfo` returns `(name, rank, category)` on Classic Era but
+  `(name, category, icon)` on the Forever client (no rank), so rows are read
+  through `GetTrainerServiceNameRankCategory()`, which handles both; Forever
+  also wants a real boolean for `SetTrainerServiceTypeFilter`'s on/off, not
+  1/0.
   Same generation-counter guard as auto-sell (`autoTrainGeneration`, bumped
   on `TRAINER_SHOW`/`TRAINER_CLOSED`). The G6/G7 trainer-spell cache isn't
-  invalidated, so those bits can lag up to 60s after training. Not
-  confirmed live yet — `AUTO_TRAIN_DEBUG` (`WoWFunctions.lua`, currently
-  **on**) prints every row scanned; turn it off once confirmed.
+  invalidated, so those bits can lag up to 60s after training. Confirmed
+  working live on Forever. Each tick runs through `pcall` and chat-prints
+  any error (these run from `C_Timer` callbacks, where an error otherwise
+  vanishes silently — that's how a nil `GetCoinText`, a Classic-only global,
+  kept it from ever buying). `AUTO_TRAIN_DEBUG` (`WoWFunctions.lua`, off by
+  default) prints every row scanned.
 
   Also auto-picks talents: if the `/yyconfig` "Auto-pick talents" checkbox
   (`YoyokazooUIDB.autoPickTalents`, `IsAutoPickTalentsEnabled()`, defaults

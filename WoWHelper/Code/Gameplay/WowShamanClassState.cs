@@ -2,8 +2,8 @@ using System.Drawing;
 
 namespace WoWHelper
 {
-    // Shaman's slice of ClassBoolOne/Two/ClassIntOne. Bit layout here MUST
-    // match ShamanFunctions.lua's GetShamanClassBoolOne/Two/GetShamanClassIntOne.
+    // Shaman's slice of the Class pixel rows. Box numbers here MUST match
+    // SHAMAN_CLASS_BOOL_ONE/TWO_FIELDS in ShamanFunctions.lua.
     public class WowShamanClassState : WowClassState
     {
         public bool ShouldCastRockbiterWeapon { get; private set; }
@@ -15,8 +15,8 @@ namespace WoWHelper
         public bool CanCurePoison { get; private set; }
         public bool CanCureDisease { get; private set; }
 
-        // Decoded from ClassBoolTwo's R byte, b1/b2/b3 (see GetShamanClassBoolTwo() in
-        // ShamanFunctions.lua). IsInEarthShockRange is a pure range check for Earth Shock,
+        // ClassBoolTwo boxes 1/2 (see SHAMAN_CLASS_BOOL_TWO_FIELDS in ShamanFunctions.lua).
+        // IsInEarthShockRange is a pure range check for Earth Shock,
         // independent of CanCastEarthShock's cooldown/usability check above. HasClearcasting
         // is Elemental Focus's proc buff (next two spells cost less mana).
         public bool IsInEarthShockRange { get; private set; }
@@ -28,29 +28,26 @@ namespace WoWHelper
         // cooldown category, so IsInEarthShockRange above covers range for both.
         public bool CanCastFrostShock { get; private set; }
 
-        public override void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig)
+        public override void UpdateFromBitmap(Bitmap bmp)
         {
             Initialized = true;
 
-            Color color = bmp.GetPixel(screenConfig.ClassBoolOnePosition.X, screenConfig.ClassBoolOnePosition.Y);
-            WowWorldState.DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
+            PixelRowBits one = WowPixelRows.ReadBits(bmp, PixelRow.ClassBoolOne);
 
-            ShouldCastRockbiterWeapon = r1;
-            ShouldCastLightningShield = r2;
-            CanCastEarthShock = r3;
-            ShouldCastFlameShock = r4;
-            TargetHasFlameShock = r5;
-            CanSpellcastPullTarget = r6;
-            CanCurePoison = r7;
-            CanCureDisease = r8;
+            ShouldCastRockbiterWeapon = one[1];
+            ShouldCastLightningShield = one[2];
+            CanCastEarthShock = one[3];
+            ShouldCastFlameShock = one[4];
+            TargetHasFlameShock = one[5];
+            CanSpellcastPullTarget = one[6];
+            CanCurePoison = one[7];
+            CanCureDisease = one[8];
 
-            Color classBoolTwoColor = bmp.GetPixel(screenConfig.ClassBoolTwoPosition.X, screenConfig.ClassBoolTwoPosition.Y);
-            WowWorldState.DecodeByte(classBoolTwoColor.R, out var classBoolTwoR1, out var classBoolTwoR2, out var classBoolTwoR3, out _, out _, out _, out _, out _);
+            PixelRowBits two = WowPixelRows.ReadBits(bmp, PixelRow.ClassBoolTwo);
 
-            IsInEarthShockRange = classBoolTwoR1;
-            HasClearcasting = classBoolTwoR2;
-            CanCastFrostShock = classBoolTwoR3;
-            // ClassIntOne currently reserved/unused for Shaman.
+            IsInEarthShockRange = two[1];
+            HasClearcasting = two[2];
+            CanCastFrostShock = two[3];
         }
     }
 }

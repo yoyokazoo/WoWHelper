@@ -15,14 +15,6 @@ namespace WoWHelper
         public static readonly Color BREATH_BAR_COLOR_TWO = Color.FromArgb(0, 31, 62);
         public static readonly Color BREATH_BAR_COLOR_THREE = Color.FromArgb(0, 34, 69);
 
-        // Pixel-row index 0 (see AddonLoadedPosition below): fixed sentinel painted by
-        // the addon, exact match. Present (this exact color) means the addon is loaded
-        // and the rest of the row is real; anything else -- including whatever's really
-        // at this screen position when the addon isn't rendering, e.g. the login screen
-        // -- means !WowWorldState.AddonLoaded. Replaces the old text/UI pixel-signature match against
-        // login-screen-specific colors.
-        public static readonly Color ADDON_LOADED_COLOR = Color.FromArgb(96, 255, 117);
-
         public static readonly Color TRADE_SCREEN_COLOR_ONE = Color.FromArgb(93, 88, 86);
         public static readonly Color TRADE_SCREEN_COLOR_TWO = Color.FromArgb(167, 165, 161);
         public static readonly Color TRADE_SCREEN_COLOR_THREE = Color.FromArgb(212, 177, 42);
@@ -123,48 +115,8 @@ namespace WoWHelper
         public ImageMatchColorPositions TradeWindowConfirmationScreenPositions { get; set; }
         public ImageMatchTextArea TradeWindowRecipientTextArea { get; set; }
 
-        // Readback points for the machine-readable pixel row the Lua addon draws
-        // via InitializePixelRow() (UIFunctions.lua): a row of PixelSize x
-        // PixelSize swatches pinned to the screen's literal top-left corner.
-        // Fixed and resolution-independent -- no per-resolution calibration
-        // needed. We read the CENTER pixel of each swatch (not its top-left
-        // corner) for margin against edge blur/anti-aliasing. PixelSize here
-        // MUST match Lua's PIXEL_SIZE constant, and the indices passed to
-        // PixelRowPoint() must match the AddSwatch(index, ...) calls there.
-        //
-        // The row is condensed to exactly the pixels actually read below --
-        // no ClassIntOne Point exists because nothing currently decodes it
-        // (MultiBoolTwo/ClassBoolTwo each got a Point once a field needed
-        // one -- IsTargetLongRangeCaster and IsInEarthShockRange
-        // respectively). Add one back here (and a matching swatch in
-        // InitializePixelRow()) if/when a field needs it.
-        private const int PixelSize = 3;
-        private const int PixelCenterOffset = PixelSize / 2;
-
-        private static Point PixelRowPoint(int index) =>
-            new Point(index * PixelSize + PixelCenterOffset, PixelCenterOffset);
-
-        // Index 0: fixed sentinel (see ADDON_LOADED_COLOR above), exact-color match --
-        // not decoded via GetFloatFromColor/DecodeByte like the rest of the row.
-        public Point AddonLoadedPosition => PixelRowPoint(0);
-
-        public Point MapXPosition => PixelRowPoint(1);
-        public Point MapYPosition => PixelRowPoint(2);
-        public Point FacingDegreesPosition => PixelRowPoint(3);
-
-        public Point MultiBoolOnePosition => PixelRowPoint(4);
-
-        public Point MultiIntOnePosition => PixelRowPoint(5);
-        public Point MultiIntTwoPosition => PixelRowPoint(6);
-
-        public Point ClassBoolOnePosition => PixelRowPoint(7);
-
-        public Point MultiBoolTwoPosition => PixelRowPoint(8);
-
-        public Point ClassBoolTwoPosition => PixelRowPoint(9);
-
         // Bounding rectangle covering every pixel anything in this codebase reads off a
-        // captured screen bitmap: the pixel row (top-left corner), the red-error-text/
+        // captured screen bitmap: the pixel rows (top-left corner, see WowPixelRows), the red-error-text/
         // breath-bar cluster, and the trade-window matchers/OCR area (used by
         // CupidTradeLoopTask, WowManagementTasks.cs). Computed once from the fields below and
         // cached (this instance is a static readonly singleton per resolution, so the cache
@@ -185,9 +137,7 @@ namespace WoWHelper
         {
             var points = new[]
             {
-                AddonLoadedPosition, MapXPosition, MapYPosition, FacingDegreesPosition,
-                MultiBoolOnePosition, MultiIntOnePosition, MultiIntTwoPosition, ClassBoolOnePosition,
-                MultiBoolTwoPosition, ClassBoolTwoPosition,
+                WowPixelRows.FarthestReadPixel,
             };
 
             var clusters = new[]

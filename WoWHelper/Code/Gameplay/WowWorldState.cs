@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.SymbolStore;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Numerics;
 using WindowsGameAutomationTools.ImageDetection;
 using WindowsGameAutomationTools.Images;
@@ -18,12 +17,12 @@ namespace WoWHelper
         public Vector2 PlayerLocation { get; private set; }
         public float FacingDegrees { get; private set; }
 
-        // Multi Int One
+        // The three status bars (pixel rows 0-2)
         public int PlayerHpPercent { get; private set; }
         public int ResourcePercent { get; private set; }
         public int TargetHpPercent { get; private set; }
 
-        // Multi Int Two
+        // MultiIntOne's three bytes
         public int AttackerCount { get; private set; }
         public int PlayerLevel { get; private set; }
         public WowZone CurrentZone { get; private set; }
@@ -50,7 +49,7 @@ namespace WoWHelper
         public bool PlayerIsDiseased { get; private set; }
         public bool TargetRecentlyEvaded { get; private set; }
 
-        // Decoded from MultiBoolTwo's R byte, b1/b2/b3/b5/b6 (see GetMultiBoolTwo() in WoWFunctions.lua).
+        // MultiBoolTwo boxes 1-3/5-6 (see MULTI_BOOL_TWO_FIELDS in WoWFunctions.lua).
         public bool IsTargetLongRangeCaster { get; private set; }
         public bool LogoffMobSeen { get; private set; }
         public bool IsCurrentlySkinning { get; private set; }
@@ -60,34 +59,30 @@ namespace WoWHelper
         public bool IsTargetBleedImmune { get; private set; }
         public bool IsTargetFearCaster { get; private set; }
 
-        // Decoded from MultiBoolTwo's G byte, b1/b2 (the R byte was already claimed by
-        // IsTargetLongRangeCaster..IsTargetFearCaster above, so these spill into the
-        // previously-unused G byte instead). Run-specific settings toggled live
-        // in-game via the addon's /yyconfig menu (YoyokazooUIDB.logoutOnLowDynamite/
+        // MultiBoolTwo boxes 9/10. Run-specific settings toggled live in-game via the addon's /yyconfig menu (YoyokazooUIDB.logoutOnLowDynamite/
         // logoutOnFullBags, IsLogoutOnLowDynamiteEnabled()/IsLogoutOnFullBagsEnabled() in
         // YoyokazooUI.lua) rather than hardcoded on the C# side -- see
         // WowManagementTasks.SetLogoutVariablesTask(), the only reader of these.
         public bool LogoutOnLowDynamiteEnabled { get; private set; }
         public bool LogoutOnFullBagsEnabled { get; private set; }
 
-        // Decoded from MultiBoolTwo's G byte, b3. Also a /yyconfig-driven setting rather than
+        // MultiBoolTwo box 11. Also a /yyconfig-driven setting rather than
         // a live game-state query -- true when the player currently has whichever world buff
         // is selected by the addon's "Desired world buff" selector (HasDesiredWorldBuff() in
         // WoWFunctions.lua, WORLD_BUFF_CHOICES for the list of choices). Consumed by
         // WowManagementTasks.WaitForWorldBuffThenLogoffTask().
         public bool HasDesiredWorldBuff { get; private set; }
 
-        // Decoded from MultiBoolTwo's G byte, b4. Unlike LogoutOnLowDynamiteEnabled/
-        // LogoutOnFullBagsEnabled/HasDesiredWorldBuff above, this is a live game-state query
-        // (same category as the R-byte flags), not a /yyconfig setting -- it just landed in G
-        // because the R byte was already fully packed. True once HasHighLatency()
+        // MultiBoolTwo box 12. Unlike LogoutOnLowDynamiteEnabled/LogoutOnFullBagsEnabled/
+        // HasDesiredWorldBuff above, this is a live game-state query, not a /yyconfig
+        // setting. True once HasHighLatency()
         // (WoWFunctions.lua) has seen 10 consecutive per-second latency samples all above
         // 300ms (10 sustained seconds). Consumed by
         // WowManagementTasks.EveryWorldStateUpdateTasks(), same "spot it once, trigger
         // logout" pattern as LogoffMobSeen above.
         public bool HighLatency { get; private set; }
 
-        // Decoded from MultiBoolTwo's G byte, b5. Live game-state query like HighLatency
+        // MultiBoolTwo box 13. Live game-state query like HighLatency
         // above. True once IsCombatStalemate() (YoyokazooUI.lua) has seen the player in
         // combat for COMBAT_STALEMATE_SECONDS (30s) with no damage/miss combat-log event
         // involving the player or their pet in that time (EVADE misses excluded) -- i.e.
@@ -99,7 +94,7 @@ namespace WoWHelper
         // the logout states while combat never drops.
         public bool CombatStalemate { get; private set; }
 
-        // Decoded from MultiBoolTwo's G byte, b6/b7. Whether the player has trained every
+        // MultiBoolTwo boxes 14/15. Whether the player has trained every
         // class skill available at their current level, and whether they have enough money
         // to train everything still missing (also true when nothing's missing). Both come
         // from hand-maintained per-class trainer tables in the addon (WARRIOR_TRAINER_SPELLS
@@ -107,12 +102,12 @@ namespace WoWHelper
         public bool AllSkillsKnownForThisLevel { get; private set; }
         public bool CanAffordToTrainAllSkills { get; private set; }
 
-        // Decoded from MultiBoolTwo's G byte, b8. A melee weapon or shield at yellow durability
-        // or worse, or any other equipped piece at red (broken) -- see GearNeedsRepair() in
+        // MultiBoolTwo box 16. A melee weapon at yellow durability or
+        // worse, or any other equipped piece at red (broken) -- see GearNeedsRepair() in
         // WoWFunctions.lua. Refreshed by the addon only once a minute.
         public bool GearNeedsRepair { get; private set; }
 
-        // Decoded from MultiBoolTwo's B byte, b1. The current target is a valid one to fight
+        // MultiBoolTwo box 17. The current target is a valid one to fight
         // at all -- ShouldWeAttackTarget() in WoWFunctions.lua (exists, attackable, alive, not
         // PvP-flagged, doesn't con grey, not too many levels above us, not already in combat).
         // Pure eligibility: unlike CanEngageTarget() / the per-class CanChargeTarget/
@@ -120,6 +115,9 @@ namespace WoWHelper
         // this can tell "valid but out of range" apart from "not a valid target".
         public bool IsTargetAttackable { get; private set; }
 
+        // Which supported class the player is, from whichever supported-class bit is on
+        // (MultiBoolOne box 18 Warrior / 20 Shaman, MultiBoolTwo box 4 Warlock). Null when
+        // none is -- an unsupported class, or the addon isn't rendering a real row yet.
         public WowCombatConfiguration? PlayerClass { get; private set; }
 
         // Red Error Text in middle of screen
@@ -132,8 +130,8 @@ namespace WoWHelper
         public bool NoPathAvailable { get; private set; }
         public bool TargetUnreachable => NotInLineOfSight || NoPathAvailable;
 
-        // Pixel-row index 0 reads exactly ADDON_LOADED_COLOR -- the addon is loaded and
-        // rendering the row, so the rest of it is meaningful. See UpdateAddonLoaded.
+        // The sentinel box after the health bar reads exactly WowPixelRows.ADDON_LOADED_COLOR --
+        // the addon is loaded and rendering the pixel rows, so the rest of them are meaningful.
         public bool AddonLoaded { get; private set; }
 
         // Whether the WoW client window was the OS foreground window at capture time --
@@ -171,7 +169,7 @@ namespace WoWHelper
         {
             WowWorldState currentState = new WowWorldState(screenConfig);
 
-            System.IntPtr wowHandle = ScreenCapture.GetWindowHandleByName("WowClassic");
+            System.IntPtr wowHandle = ScreenCapture.GetWindowHandleByName(WowPlayer.WOW_EXE_NAME);
             currentState.WowWindowHasFocus = wowHandle != System.IntPtr.Zero && ScreenCapture.GetForegroundWindow() == wowHandle;
 
             currentState.Bmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(screenConfig.CaptureRectangle);
@@ -182,182 +180,116 @@ namespace WoWHelper
 
         public void UpdateFromBitmap(Bitmap bmp)
         {
-            UpdateAddonLoaded(bmp);
+            // The sentinel box is the one exact-color check -- if it's not there, nothing
+            // else in the pixel rows means anything.
+            AddonLoaded = WowPixelRows.ReadAddonLoaded(bmp);
             if (!AddonLoaded)
             {
                 return;
             }
 
             Initialized = true;
-            UpdateMapX(bmp);
-            UpdateMapY(bmp);
-            PlayerLocation = new Vector2(MapX, MapY);
-            UpdateFacingDegrees(bmp);
 
+            // Bars still render when the client hands Lua secret values, which Lua itself
+            // can't do math on -- so the percents come from here.
+            PlayerHpPercent = WowPixelRows.ReadStatusBarPercent(bmp, PixelRow.PlayerHealthBar, c => c.G);
+            ResourcePercent = WowPixelRows.ReadStatusBarPercent(bmp, PixelRow.ResourceBar, c => c.B);
+            TargetHpPercent = WowPixelRows.ReadStatusBarPercent(bmp, PixelRow.TargetHealthBar, c => c.R);
+
+            MapX = WowPixelRows.ReadBits(bmp, PixelRow.MapX).FixedPoint;
+            MapY = WowPixelRows.ReadBits(bmp, PixelRow.MapY).FixedPoint;
+            PlayerLocation = new Vector2(MapX, MapY);
+            FacingDegrees = WowPixelRows.ReadBits(bmp, PixelRow.FacingDegrees).FixedPoint;
+
+            // Set by whichever supported-class bit is on -- see PlayerClass.
             PlayerClass = null;
-            UpdateMultiBoolOne(bmp);
-            UpdateMultiBoolTwo(bmp);
-            UpdateMultiIntOne(bmp);
-            UpdateMultiIntTwo(bmp);
+            UpdateMultiBoolOne(WowPixelRows.ReadBits(bmp, PixelRow.MultiBoolOne));
+            UpdateMultiBoolTwo(WowPixelRows.ReadBits(bmp, PixelRow.MultiBoolTwo));
+            UpdateMultiIntOne(WowPixelRows.ReadBits(bmp, PixelRow.MultiIntOne));
 
             UpdateRedErrorTextMessages(bmp);
 
             UpdateBreathBar(bmp);
         }
 
-        // Returns the R and G component as the whole number part, and the B component as the fractional part.
-        public static float GetFloatFromColor(Color color)
+        // Box numbers MUST match MULTI_BOOL_ONE_FIELDS in WoWFunctions.lua.
+        private void UpdateMultiBoolOne(PixelRowBits bits)
         {
-            return color.R * 255.0f + color.G + (color.B / 255.0f);
-        }
+            IsAutoAttacking = bits[1];
+            LowOnHealthPotions = bits[2];
+            LowOnDynamite = bits[3];
+            LowOnAmmo = bits[4];
+            GCDCooledDown = bits[5];
+            BagsAreFull = bits[6];
+            IsInCombat = bits[7];
+            IsPlayerPetrified = bits[8];
 
-        public static void DecodeByte(
-            byte value,
-            out bool b1, out bool b2, out bool b3, out bool b4,
-            out bool b5, out bool b6, out bool b7, out bool b8)
-        {
-            b1 = (value & 1) != 0;
-            b2 = (value & 2) != 0;
-            b3 = (value & 4) != 0;
-            b4 = (value & 8) != 0;
-            b5 = (value & 16) != 0;
-            b6 = (value & 32) != 0;
-            b7 = (value & 64) != 0;
-            b8 = (value & 128) != 0;
-        }
+            HasUnseenWhisper = bits[9];
+            // 10 reserved
+            IsCurrentlyCasting = bits[11];
+            EnemyNameplatesAreTurnedOn = bits[12];
+            CurrentTargetInCombatWithUs = bits[13];
+            IsTargetCasterMob = bits[14];
+            IsTargetRunnerMob = bits[15];
+            IsTargetFireImmune = bits[16];
 
-        public void UpdateMapX(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(ScreenConfig.MapXPosition.X, ScreenConfig.MapXPosition.Y);
-            MapX = GetFloatFromColor(color);
-        }
+            // True for a few seconds after the player's own attack drew an EVADE miss against
+            // the current target (see HasRecentTargetEvade() in YoyokazooUI.lua) -- i.e. the
+            // target is stuck evading, e.g. leashed on the far side of terrain it can't path
+            // across.
+            TargetRecentlyEvaded = bits[17];
 
-        public void UpdateMapY(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(ScreenConfig.MapYPosition.X, ScreenConfig.MapYPosition.Y);
-            MapY = GetFloatFromColor(color);
-        }
-
-        public void UpdateFacingDegrees(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(ScreenConfig.FacingDegreesPosition.X, ScreenConfig.FacingDegreesPosition.Y);
-            FacingDegrees = GetFloatFromColor(color);
-        }
-
-        // All class-agnostic bools are packed tightly into MultiBoolOne's R+G
-        // bytes (see GetMultiBoolOne() in WoWFunctions.lua) -- MultiBoolTwo is
-        // left fully reserved for the next class-agnostic field rather than
-        // scattering a few bits across both pixels.
-        public void UpdateMultiBoolOne(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(ScreenConfig.MultiBoolOnePosition.X, ScreenConfig.MultiBoolOnePosition.Y);
-            DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out var r7, out var r8);
-            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
-            DecodeByte(color.B, out var b1, out var b2, out var b3, out var b4, out var b5, out var b6, out var b7, out var b8);
-
-            IsAutoAttacking = r1;
-            LowOnHealthPotions = r2;
-            LowOnDynamite = r3;
-            LowOnAmmo = r4;
-            GCDCooledDown = r5;
-            BagsAreFull = r6;
-            IsInCombat = r7;
-            IsPlayerPetrified = r8;
-
-            HasUnseenWhisper = g1;
-            // g2 reserved -- previously IsInMeleeRange, removed (see WoWFunctions.lua's
-            // GetMultiBoolOne comment).
-            IsCurrentlyCasting = g3;
-            EnemyNameplatesAreTurnedOn = g4;
-            CurrentTargetInCombatWithUs = g5;
-            IsTargetCasterMob = g6;
-            IsTargetRunnerMob = g7;
-            IsTargetFireImmune = g8;
-
-            // True for a few seconds after the player's own attack drew an EVADE
-            // miss against the current target (see HasRecentTargetEvade() in
-            // YoyokazooUI.lua) -- i.e. the target is stuck evading, e.g. leashed on
-            // the far side of terrain it can't path across.
-            TargetRecentlyEvaded = b1;
-
-            // Exactly one of these should be true once the addon is loaded and the
-            // player is one of the two classes this byte covers -- see comment on
-            // PlayerClass. (b3 is reserved/unused -- previously Mage.)
-            if (b2)
+            // 18 and 20 are supported-class bits (19 reserved) -- see PlayerClass.
+            if (bits[18])
             {
                 PlayerClass = WowCombatConfiguration.Warrior;
             }
-            else if (b4)
+            else if (bits[20])
             {
                 PlayerClass = WowCombatConfiguration.Shaman;
             }
 
-            // b5-b8 -- fully packs the byte (see GetMultiBoolOne() in WoWFunctions.lua).
-            PlayerIsPoisoned = b5;
-            PlayerIsDiseased = b6;
-            IsTargetNatureImmune = b7;
-            IsTargetCasting = b8;
+            PlayerIsPoisoned = bits[21];
+            PlayerIsDiseased = bits[22];
+            IsTargetNatureImmune = bits[23];
+            IsTargetCasting = bits[24];
         }
 
-        // R1 (IsTargetLongRangeCaster), R2 (LogoffMobSeen), R3 (IsCurrentlySkinning),
-        // R4 (the 4th "which supported class" bit, Warlock -- see PlayerClass), R5
-        // (IsTargetBleedImmune), and R6 (IsTargetFearCaster) are the fields packed into
-        // the R byte so far -- R7-R8 are still reserved. G1 (LogoutOnLowDynamiteEnabled),
-        // G2 (LogoutOnFullBagsEnabled), and G3 (HasDesiredWorldBuff) are packed into the
-        // previously-unused G byte instead of continuing into R7/R8, followed by G4
-        // (HighLatency), G5 (CombatStalemate), G6 (AllSkillsKnownForThisLevel), and G7
-        // (CanAffordToTrainAllSkills), and G8 (GearNeedsRepair). B1 is IsTargetAttackable;
-        // B2-B8 are still reserved for future class-agnostic flags (see GetMultiBoolTwo()
-        // in WoWFunctions.lua).
-        public void UpdateMultiBoolTwo(Bitmap bmp)
+        // Box numbers MUST match MULTI_BOOL_TWO_FIELDS in WoWFunctions.lua.
+        private void UpdateMultiBoolTwo(PixelRowBits bits)
         {
-            Color color = bmp.GetPixel(ScreenConfig.MultiBoolTwoPosition.X, ScreenConfig.MultiBoolTwoPosition.Y);
-            DecodeByte(color.R, out var r1, out var r2, out var r3, out var r4, out var r5, out var r6, out _, out _);
+            IsTargetLongRangeCaster = bits[1];
+            LogoffMobSeen = bits[2];
+            IsCurrentlySkinning = bits[3];
 
-            IsTargetLongRangeCaster = r1;
-            LogoffMobSeen = r2;
-            IsCurrentlySkinning = r3;
-
-            if (r4)
+            if (bits[4])
             {
                 PlayerClass = WowCombatConfiguration.Warlock;
             }
 
-            IsTargetBleedImmune = r5;
-            IsTargetFearCaster = r6;
+            IsTargetBleedImmune = bits[5];
+            IsTargetFearCaster = bits[6];
+            // 7-8 reserved
 
-            DecodeByte(color.G, out var g1, out var g2, out var g3, out var g4, out var g5, out var g6, out var g7, out var g8);
+            LogoutOnLowDynamiteEnabled = bits[9];
+            LogoutOnFullBagsEnabled = bits[10];
+            HasDesiredWorldBuff = bits[11];
+            HighLatency = bits[12];
+            CombatStalemate = bits[13];
+            AllSkillsKnownForThisLevel = bits[14];
+            CanAffordToTrainAllSkills = bits[15];
+            GearNeedsRepair = bits[16];
 
-            LogoutOnLowDynamiteEnabled = g1;
-            LogoutOnFullBagsEnabled = g2;
-            HasDesiredWorldBuff = g3;
-            HighLatency = g4;
-            CombatStalemate = g5;
-            AllSkillsKnownForThisLevel = g6;
-            CanAffordToTrainAllSkills = g7;
-            GearNeedsRepair = g8;
-
-            DecodeByte(color.B, out var b1, out _, out _, out _, out _, out _, out _, out _);
-
-            IsTargetAttackable = b1;
+            IsTargetAttackable = bits[17];
         }
 
-        public void UpdateMultiIntOne(Bitmap bmp)
+        // Byte order MUST match the EncodeBytes call for row 11 in InitializePixelRow()
+        // (UIFunctions.lua).
+        private void UpdateMultiIntOne(PixelRowBits bits)
         {
-            Color color = bmp.GetPixel(ScreenConfig.MultiIntOnePosition.X, ScreenConfig.MultiIntOnePosition.Y);
-            
-            PlayerHpPercent = color.R;
-            ResourcePercent = color.G;
-            TargetHpPercent = color.B;
-        }
-
-        public void UpdateMultiIntTwo(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(ScreenConfig.MultiIntTwoPosition.X, ScreenConfig.MultiIntTwoPosition.Y);
-
-            AttackerCount = color.R;
-            PlayerLevel = color.G;
-            CurrentZone = (WowZone)color.B; // see GetCurrentZoneId() in WoWFunctions.lua
+            AttackerCount = bits.Byte(0);
+            PlayerLevel = bits.Byte(1);
+            CurrentZone = (WowZone)bits.Byte(2); // see GetCurrentZoneId() in WoWFunctions.lua
         }
 
         public void UpdateRedErrorTextMessages(Bitmap bmp)
@@ -369,20 +301,6 @@ namespace WoWHelper
             OutOfRange = MatchesErrorTextColor(bmp, ScreenConfig.OutOfRangePositions);
             NotInLineOfSight = MatchesErrorTextColor(bmp, ScreenConfig.NotInLineOfSightPositions);
             NoPathAvailable = MatchesErrorTextColor(bmp, ScreenConfig.NoPathAvailablePositions);
-        }
-
-        // Index 0 of the pixel row is a fixed sentinel the addon paints, exactly
-        // ADDON_LOADED_COLOR. If it's there, the addon is loaded and the rest of the row
-        // is real; any other color -- including whatever's actually at this screen
-        // position when the addon isn't rendering, e.g. the login screen, or another
-        // window covering WoW -- means !AddonLoaded. Replaces the old text/UI
-        // pixel-signature match.
-        public void UpdateAddonLoaded(Bitmap bmp)
-        {
-            Color color = bmp.GetPixel(ScreenConfig.AddonLoadedPosition.X, ScreenConfig.AddonLoadedPosition.Y);
-            AddonLoaded = (color.R == WowScreenConfiguration.ADDON_LOADED_COLOR.R
-                && color.G == WowScreenConfiguration.ADDON_LOADED_COLOR.G
-                && color.B == WowScreenConfiguration.ADDON_LOADED_COLOR.B);
         }
 
         public void UpdateBreathBar(Bitmap bmp)

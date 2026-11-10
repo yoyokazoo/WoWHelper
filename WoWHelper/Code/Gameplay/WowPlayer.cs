@@ -143,14 +143,14 @@ namespace WoWHelper
                 Console.WriteLine($"Auto-detected combat config {CombatConfiguration}");
             }
 
-            ClassState?.UpdateFromBitmap(WorldState.Bmp, ScreenConfiguration);
+            ClassState?.UpdateFromBitmap(WorldState.Bmp);
         }
 
         // For Testing only, otherwise use UpdateWorldState
         public void UpdateWorldStateFromBitmap(Bitmap bmp)
         {
             WorldState.UpdateFromBitmap(bmp);
-            ClassState?.UpdateFromBitmap(bmp, ScreenConfiguration);
+            ClassState?.UpdateFromBitmap(bmp);
         }
 
         private static void ReleaseInputsAndExit()

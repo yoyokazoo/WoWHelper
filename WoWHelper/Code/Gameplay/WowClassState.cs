@@ -3,11 +3,11 @@ using WoWHelper.Code.Gameplay;
 
 namespace WoWHelper
 {
-    // Class-specific counterpart to WowWorldState. ClassBoolOne/Two and
-    // ClassIntOne are 3 pixels whose MEANING depends on which class is
-    // currently playing (e.g. bit R1 of ClassBoolOne is "Battle Shout
-    // active" for a Warrior, but "Rockbiter Weapon active" for a Shaman --
-    // see Warrior/Shaman/WarlockFunctions.lua's GetXClassBoolOne/Two).
+    // Class-specific counterpart to WowWorldState. The ClassBoolOne/Two pixel
+    // rows' MEANING depends on which class is currently playing (e.g. box 1
+    // of ClassBoolOne is "Battle Shout active" for a Warrior, but "should cast
+    // Rockbiter Weapon" for a Shaman -- see the <CLASS>_CLASS_BOOL_ONE/TWO_FIELDS
+    // lists in Warrior/Shaman/WarlockFunctions.lua).
     // Rather than one flat object with every class's fields (where nothing
     // would stop e.g. Shaman combat code from reading a Warrior-only field
     // and silently getting stale/wrong data), each class gets its own
@@ -26,7 +26,7 @@ namespace WoWHelper
     {
         public bool Initialized { get; protected set; }
 
-        public abstract void UpdateFromBitmap(Bitmap bmp, WowScreenConfiguration screenConfig);
+        public abstract void UpdateFromBitmap(Bitmap bmp);
 
         public static WowClassState Create(WowCombatConfiguration combatConfiguration)
         {

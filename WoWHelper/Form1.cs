@@ -30,6 +30,7 @@ namespace WoWHelper
 
             // always stay up to date, for now since I'm the only one using it we know the path is right
             CopyLuaAddonToWoW(textBox1.Text);
+            CopyLuaAddonToWoW("C:\\Program Files (x86)\\World of Warcraft\\_forever_\\Interface\\AddOns\\YoyokazooUI");
         }
 
         private void button1_Click(object sender, EventArgs e)

@@ -1,3 +1,316 @@
+--------------------------------------------------
+-- API compatibility shims (Classic Era vs. modern / WoW Forever clients)
+--------------------------------------------------
+-- Modern clients removed these old globals in favor of C_Spell / C_Item /
+-- C_UnitAuras, several of which return a table instead of multiple values.
+-- Each Compat_ function uses the old global if it exists (Classic Era, behavior
+-- unchanged) and otherwise calls the namespaced replacement and converts its
+-- result back to the old return shape, so call sites don't need to change.
+-- Named Compat_* rather than redefining the Blizzard globals, so other addons'
+-- "does this API exist" checks aren't fooled.
+
+function Compat_GetSpellInfo(spell)
+    if GetSpellInfo then return GetSpellInfo(spell) end
+    local info = C_Spell and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(spell)
+    if not info then return nil end
+    -- old shape: name, rank, icon, castTime, minRange, maxRange, spellId
+    return info.name, nil, info.iconID, info.castTime, info.minRange, info.maxRange, info.spellID
+end
+
+-- Midnight-rules clients (WoW Forever) make spell cooldowns secret in combat:
+-- comparing/doing math on startTime/duration/modRate throws ("duration is a
+-- secret number value"). isEnabled and isActive stay readable, and isActive
+-- was confirmed live (via /yycd on Battle Shout, in and out of combat) to go
+-- true exactly while the cooldown/GCD is running. So when the timings are
+-- secret, Compat_GetSpellCooldown answers from isActive instead:
+--   isActive false -> "ready":       (0, 0, enabled)
+--   isActive true  -> "on cooldown": (GetTime(), SECRET_COOLDOWN_STAND_IN_DURATION, enabled)
+-- The real remaining time is unknown, so the "on cooldown" shape is a
+-- stand-in that just makes every caller's remaining-time math come out
+-- positive. Note SpellIsCooledDownIgnoringGCD() compares a spell's window
+-- against the GCD probe's, and two stand-ins built the same frame match --
+-- so while the GCD is running, a spell on a longer real cooldown reads
+-- "ready apart from the GCD". It reads correctly again once the GCD ends.
+--
+-- If isActive itself is unreadable (secret/missing -- not seen so far), we
+-- fall back to "ready": a false "ready" just means the bot presses an ability
+-- that isn't up yet (the game ignores it), while a false "on cooldown" would
+-- stall every rotation completely.
+--
+-- SECRET_COOLDOWN_DEBUG prints, once per spell, which fields of the
+-- C_Spell.GetSpellCooldown table came back secret.
+SECRET_COOLDOWN_DEBUG = false
+local SECRET_COOLDOWN_STAND_IN_DURATION = 1
+local reportedSecretCooldownSpells = {}
+
+local function ReportSecretCooldown(spell, info)
+    if not SECRET_COOLDOWN_DEBUG or reportedSecretCooldownSpells[spell] then return end
+    reportedSecretCooldownSpells[spell] = true
+
+    local parts = {}
+    if type(info) == "table" then
+        for key, value in pairs(info) do
+            table.insert(parts, tostring(key) .. "=" .. (issecretvalue(value) and "SECRET" or tostring(value)))
+        end
+    else
+        table.insert(parts, "(old GetSpellCooldown global, no table)")
+    end
+    print("|cffff9900[cooldown]|r " .. tostring(spell) .. " secret in combat: " .. table.concat(parts, ", "))
+end
+
+--------------------------------------------------
+-- Cooldown watcher (/yycd, YoyokazooUI.lua) -- debug-only. Confirms whether
+-- C_Spell.GetSpellCooldown's isActive field (readable in combat even when
+-- startTime/duration are secret) actually tracks a running cooldown. Polls
+-- each watched spell every COOLDOWN_WATCH_INTERVAL seconds and prints only
+-- when isActive changes, with a timestamp, whether we're in combat, and the
+-- remaining time when it's readable (out of combat), so isActive can be
+-- checked against real numbers out of combat and then watched in combat.
+-- Also prints each successful player cast, to line the flips up against.
+--------------------------------------------------
+local COOLDOWN_WATCH_INTERVAL = 0.05
+local cooldownWatchSpells = {}      -- spellId -> last seen isActive (or "unseen")
+local cooldownWatchFrame = nil
+local cooldownWatchElapsed = 0
+
+local function CooldownWatchPrint(text)
+    print(string.format("|cff40c0ff[cdwatch %.2f]|r %s", GetTime(), text))
+end
+
+local function DescribeMaybeSecret(value)
+    if IsAnySecretValue(value) then return "SECRET" end
+    return tostring(value)
+end
+
+local function SampleWatchedCooldown(spellId)
+    local info = C_Spell.GetSpellCooldown(spellId)
+    if not info then
+        return "noinfo", "no cooldown info (spell unknown?)"
+    end
+
+    local isActive = info.isActive
+    if IsAnySecretValue(isActive) then
+        return "secret", "isActive=SECRET"
+    end
+
+    local remaining
+    if IsAnySecretValue(info.startTime, info.duration) then
+        remaining = "SECRET"
+    elseif info.duration == 0 then
+        remaining = "0"
+    else
+        remaining = string.format("%.2f", info.startTime + info.duration - GetTime())
+    end
+
+    return tostring(isActive), string.format("isActive=%s remaining=%s", tostring(isActive), remaining)
+end
+
+local function CooldownWatchTick(self, elapsed)
+    cooldownWatchElapsed = cooldownWatchElapsed + elapsed
+    if cooldownWatchElapsed < COOLDOWN_WATCH_INTERVAL then return end
+    cooldownWatchElapsed = 0
+
+    for spellId, lastState in pairs(cooldownWatchSpells) do
+        local ok, state, description = pcall(SampleWatchedCooldown, spellId)
+        if not ok then
+            state, description = "error", "error: " .. tostring(state)
+        end
+        if state ~= lastState then
+            cooldownWatchSpells[spellId] = state
+            CooldownWatchPrint(string.format("%s (%d) %s combat=%s",
+                tostring(C_Spell.GetSpellName and C_Spell.GetSpellName(spellId) or "?"), spellId,
+                description, tostring(UnitAffectingCombat("player"))))
+        end
+    end
+end
+
+local function CooldownWatchEvent(self, event, unit, castGUID, spellId)
+    -- Events still fire on a hidden frame (only OnUpdate stops), so check
+    -- the watch list rather than relying on Hide().
+    if not next(cooldownWatchSpells) then return end
+    local name = "?"
+    if not IsAnySecretValue(spellId) and C_Spell.GetSpellName then
+        name = tostring(C_Spell.GetSpellName(spellId))
+    end
+    CooldownWatchPrint(string.format("cast succeeded: %s (%s)", name, DescribeMaybeSecret(spellId)))
+end
+
+function IsCooldownWatchRunning()
+    return cooldownWatchFrame ~= nil and cooldownWatchFrame:IsShown()
+end
+
+-- Adds spellId to the watch list (or removes it if already watched), and
+-- starts/stops the watcher as the list becomes non-empty/empty.
+function ToggleCooldownWatchSpell(spellId)
+    if not (C_Spell and C_Spell.GetSpellCooldown) then
+        print("YoyokazooUI: /yycd needs C_Spell.GetSpellCooldown (not on this client).")
+        return
+    end
+
+    if cooldownWatchSpells[spellId] ~= nil then
+        cooldownWatchSpells[spellId] = nil
+        print("YoyokazooUI: stopped watching cooldown of spell " .. spellId)
+    else
+        cooldownWatchSpells[spellId] = "unseen"
+        print("YoyokazooUI: watching cooldown of spell " .. spellId)
+    end
+
+    if not cooldownWatchFrame then
+        cooldownWatchFrame = CreateFrame("Frame")
+        cooldownWatchFrame:SetScript("OnUpdate", CooldownWatchTick)
+        cooldownWatchFrame:SetScript("OnEvent", CooldownWatchEvent)
+        cooldownWatchFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+    end
+
+    if next(cooldownWatchSpells) then
+        cooldownWatchFrame:Show()
+    else
+        cooldownWatchFrame:Hide()
+    end
+end
+
+function StopCooldownWatch()
+    wipe(cooldownWatchSpells)
+    if cooldownWatchFrame then cooldownWatchFrame:Hide() end
+    print("YoyokazooUI: cooldown watch stopped.")
+end
+
+-- Answer for a cooldown whose timings came back secret -- see the comment
+-- above SECRET_COOLDOWN_DEBUG. info may be nil (old global path, no table).
+local function SecretCooldownFromIsActive(info)
+    if type(info) ~= "table" or info.isActive == nil or IsAnySecretValue(info.isActive, info.isEnabled) then
+        return 0, 0, 1, 1
+    end
+
+    local enabled = info.isEnabled and 1 or 0
+    if info.isActive then
+        return GetTime(), SECRET_COOLDOWN_STAND_IN_DURATION, enabled, 1
+    end
+    return 0, 0, enabled, 1
+end
+
+function Compat_GetSpellCooldown(spell)
+    if GetSpellCooldown then
+        local start, duration, enabled, modRate = GetSpellCooldown(spell)
+        if IsAnySecretValue(start, duration, enabled) then
+            -- The old global has no isActive -- borrow it from C_Spell if present.
+            local info = C_Spell and C_Spell.GetSpellCooldown and C_Spell.GetSpellCooldown(spell)
+            ReportSecretCooldown(spell, info)
+            return SecretCooldownFromIsActive(info)
+        end
+        return start, duration, enabled, modRate
+    end
+
+    local info = C_Spell and C_Spell.GetSpellCooldown and C_Spell.GetSpellCooldown(spell)
+    if not info then return nil end
+
+    -- Check before touching anything: even the isEnabled truthiness test
+    -- below would throw on a secret.
+    if IsAnySecretValue(info.startTime, info.duration, info.isEnabled) then
+        ReportSecretCooldown(spell, info)
+        return SecretCooldownFromIsActive(info)
+    end
+
+    -- old shape: start, duration, enabled (1/0 number, not a boolean)
+    return info.startTime, info.duration, (info.isEnabled and 1 or 0), info.modRate
+end
+
+function Compat_IsSpellInRange(spell, unit)
+    if IsSpellInRange then return IsSpellInRange(spell, unit) end
+    if not (C_Spell and C_Spell.IsSpellInRange) then return nil end
+    local inRange = C_Spell.IsSpellInRange(spell, unit)
+    -- old shape: 1 = in range, 0 = out of range, nil = not applicable
+    if inRange == nil then return nil end
+    return inRange and 1 or 0
+end
+
+function Compat_IsUsableSpell(spell)
+    if IsUsableSpell then return IsUsableSpell(spell) end
+    if not (C_Spell and C_Spell.IsSpellUsable) then return false end
+    return C_Spell.IsSpellUsable(spell)
+end
+
+function Compat_IsCurrentSpell(spell)
+    if IsCurrentSpell then return IsCurrentSpell(spell) end
+    if not (C_Spell and C_Spell.IsCurrentSpell) then return false end
+    return C_Spell.IsCurrentSpell(spell)
+end
+
+function Compat_GetItemInfo(item)
+    if GetItemInfo then return GetItemInfo(item) end
+    if not (C_Item and C_Item.GetItemInfo) then return nil end
+    return C_Item.GetItemInfo(item)
+end
+
+function Compat_GetItemInfoInstant(item)
+    if GetItemInfoInstant then return GetItemInfoInstant(item) end
+    if not (C_Item and C_Item.GetItemInfoInstant) then return nil end
+    return C_Item.GetItemInfoInstant(item)
+end
+
+function Compat_EquipItemByName(item, slot)
+    if EquipItemByName then return EquipItemByName(item, slot) end
+    if C_Item and C_Item.EquipItemByName then return C_Item.EquipItemByName(item, slot) end
+end
+
+function Compat_IsSpellKnown(spellId)
+    if IsSpellKnown then return IsSpellKnown(spellId) end
+    if C_SpellBook and C_SpellBook.IsSpellKnown then return C_SpellBook.IsSpellKnown(spellId) end
+    return IsPlayerSpell and IsPlayerSpell(spellId) or false
+end
+
+function Compat_GetItemCount(item, includeBank, includeCharges)
+    if GetItemCount then return GetItemCount(item, includeBank, includeCharges) end
+    if not (C_Item and C_Item.GetItemCount) then return 0 end
+    return C_Item.GetItemCount(item, includeBank, includeCharges)
+end
+
+-- Converts a C_UnitAuras AuraData table to UnitBuff/UnitDebuff's old shape:
+-- name, icon, count, debuffType, duration, expirationTime, source,
+-- isStealable, nameplateShowPersonal, spellId
+local function UnpackAuraDataCompat(aura)
+    if not aura then return nil end
+    if AuraUtil and AuraUtil.UnpackAuraData then
+        return AuraUtil.UnpackAuraData(aura)
+    end
+    return aura.name, aura.icon, aura.applications, aura.dispelName, aura.duration,
+        aura.expirationTime, aura.sourceUnit, aura.isStealable,
+        aura.nameplateShowPersonal, aura.spellId
+end
+
+-- Midnight-rules clients (WoW Forever) make auras secret in combat:
+-- C_UnitAuras.Get*DataByIndex throws ("auras cannot be accessed when secret").
+-- Treat that the same as "no aura at this index" so callers' scan loops just
+-- end, instead of the error unwinding through the pixel-row populate
+-- functions. Consequence: every aura-based flag reads "not present" in combat
+-- on those clients. Also bail if the name itself comes back secret, since
+-- every caller compares it.
+local function SafeAuraQuery(queryFunc, unit, index, filter)
+    local ok, aura = pcall(queryFunc, unit, index, filter)
+    if not ok or not aura then return nil end
+    if IsAnySecretValue(aura.name) then return nil end
+    return UnpackAuraDataCompat(aura)
+end
+
+function Compat_UnitBuff(unit, index, filter)
+    if UnitBuff then return UnitBuff(unit, index, filter) end
+    if not (C_UnitAuras and C_UnitAuras.GetBuffDataByIndex) then return nil end
+    return SafeAuraQuery(C_UnitAuras.GetBuffDataByIndex, unit, index, filter)
+end
+
+function Compat_UnitAura(unit, index, filter)
+    if UnitAura then return UnitAura(unit, index, filter) end
+    if not (C_UnitAuras and C_UnitAuras.GetAuraDataByIndex) then return nil end
+    -- old UnitAura defaulted to helpful auras when no filter was passed
+    return SafeAuraQuery(C_UnitAuras.GetAuraDataByIndex, unit, index, filter or "HELPFUL")
+end
+
+function Compat_UnitDebuff(unit, index, filter)
+    if UnitDebuff then return UnitDebuff(unit, index, filter) end
+    if not (C_UnitAuras and C_UnitAuras.GetDebuffDataByIndex) then return nil end
+    return SafeAuraQuery(C_UnitAuras.GetDebuffDataByIndex, unit, index, filter)
+end
+
 -- How often "rare change" state (bag fullness, consumable counts, gear
 -- durability, trainable skills) is actually recomputed. These get polled on the
 -- pixel row's ~50-100ms OnUpdate cadence (plus the debug frame's), but none of
@@ -60,9 +373,7 @@ function ShouldWeAttackTarget()
         return false
     end
 
-    -- don't charge oranges
-    --if UnitLevel("player") - UnitLevel(unit) <= -3 then
-    -- temp changing
+    -- don't pull anything 4+ levels above us
     if UnitLevel("player") - UnitLevel(unit) <= -4 then
         return false
     end
@@ -76,13 +387,13 @@ function ShouldWeAttackTarget()
 end
 
 function SpellIsCooledDown(spellId)
-    local spellName = GetSpellInfo(spellId)
+    local spellName = Compat_GetSpellInfo(spellId)
     if not spellName then
         -- Should never happen unless spell is unknown (e.g., very low level)
         return false
     end
 
-    local start, duration, enabled = GetSpellCooldown(spellName)
+    local start, duration, enabled = Compat_GetSpellCooldown(spellName)
 
     if start == nil then
         return false
@@ -121,13 +432,12 @@ local GCD_SPELL_ID = 61304
 -- Confirmed via testing: Shaman (Lightning Bolt Rank 1, same spell ID
 -- CanSpellcastPullTarget() already uses above).
 --
--- Warrior: Rend Rank 1 (772 -- same rank-1 ID TargetHasRend()'s name-match comment in
--- WarriorFunctions.lua lists among Rend's 7 ranks). Not ideal -- Rend isn't trainable
--- until level 4, so GetSpellCooldown(772) returns no start/duration at all below that
--- (both callers below already treat "no start" as "GCD/cooldown clear", so a level 1-3
--- Warrior just always reads as cooled down rather than actually tracking anything) -- but
--- it's the first ability a Warrior learns that actually triggers the GCD, so there's no
--- earlier-available real probe to use instead.
+-- Warrior: Battle Shout Rank 1 (6673) -- known from level 1, triggers the GCD, no
+-- cooldown of its own. Replaced Rend Rank 1 (772), which isn't trainable until level 4,
+-- so a level 1-3 Warrior got no cooldown info at all and always read as cooled down.
+-- Confirmed live on the Forever client (/yycd: isActive tracks the GCD in and out of
+-- combat); not yet re-checked on Classic Era. (The generic GCD spell 61304 doesn't help here either:
+-- on the Forever client it returns no cooldown info at all, "spell unknown".)
 --
 -- NOT yet confirmed via testing: Warlock (Shadow Bolt Rank 1, same spell ID
 -- CanSpellcastPullTarget() uses above, known from level 1, no cooldown beyond GCD). Verify
@@ -139,7 +449,7 @@ function GetGCDProbeSpell()
     if classFile == "SHAMAN" then
         return 403 -- Lightning Bolt (Rank 1)
     elseif classFile == "WARRIOR" then
-        return 772 -- Rend (Rank 1)
+        return 6673 -- Battle Shout (Rank 1)
     elseif classFile == "WARLOCK" then
         return 686 -- Shadow Bolt (Rank 1) -- UNTESTED
     end
@@ -150,12 +460,12 @@ end
 -- Returns true if the *spell's own* cooldown is finished.
 -- If the only cooldown present is the GCD, returns true.
 function SpellIsCooledDownIgnoringGCD(spellId)
-    local spellName = GetSpellInfo(spellId)
+    local spellName = Compat_GetSpellInfo(spellId)
     if not spellName then
         return false
     end
 
-    local start, duration, enabled = GetSpellCooldown(spellName)
+    local start, duration, enabled = Compat_GetSpellCooldown(spellName)
 
     -- If API returns nil or spell is unusable for some reason
     if not start or enabled == 0 then
@@ -176,7 +486,7 @@ function SpellIsCooledDownIgnoringGCD(spellId)
     -- If we're here, spell has a cooldown reported. It might just be the GCD -- probe the
     -- same class-appropriate real spell IsGlobalCooldownCooledDown() does (GetGCDProbeSpell()
     -- above), not the GCD_SPELL_ID placeholder directly (confirmed not to work on this client).
-    local gcdStart, gcdDuration = GetSpellCooldown(GetGCDProbeSpell())
+    local gcdStart, gcdDuration = Compat_GetSpellCooldown(GetGCDProbeSpell())
 
     -- If no GCD data, fall back to original behavior
     if not gcdStart or gcdDuration == 0 then
@@ -204,26 +514,21 @@ function SpellIsInRangeAndCooledDown(spellId)
     local unit = "target"
 
     -- Resolve spell name from its ID
-    local spellName = GetSpellInfo(spellId)
+    local spellName = Compat_GetSpellInfo(spellId)
     if not spellName then
         -- Should never happen unless spell is unknown (e.g., very low level)
         return false
     end
 
     -- 1) Range check
-    local inRange = IsSpellInRange(spellName, unit)
+    local inRange = Compat_IsSpellInRange(spellName, unit)
     if inRange ~= 1 then
         return false
     end
 
-    -- 2) Cooldown check
-    local start, duration, enabled = GetSpellCooldown(spellName)
-
-    -- removing this check for now -> we should be using macros to hop into correct stance
-    -- If it's not enabled, you can't use it (e.g., disabled by stance/form)
-    --if enabled == 0 then
-    --    return false
-    --end
+    -- 2) Cooldown check. Deliberately ignores the "enabled" return (spell
+    -- disabled by stance/form) -- the bot's macros hop into the right stance.
+    local start, duration = Compat_GetSpellCooldown(spellName)
 
     -- If start == 0 and duration == 0, spell is ready
     if start == 0 and duration == 0 then
@@ -242,22 +547,20 @@ function SpellIsInRange(spellId)
     local unit = "target"
 
     -- Resolve spell name from its ID
-    local spellName = GetSpellInfo(spellId)
+    local spellName = Compat_GetSpellInfo(spellId)
     if not spellName then
         -- Should never happen unless spell is unknown (e.g., very low level)
         return false
     end
 
     -- 1) Range check
-    local inRange = IsSpellInRange(spellName, unit)
+    local inRange = Compat_IsSpellInRange(spellName, unit)
     if inRange ~= 1 then
         return false
     end
 
     return true
 end
-
--- CanChargeTarget() and CanShootTarget() moved to WarriorFunctions.lua.
 
 -- Shared between Shaman and Warlock (branches internally below), so it
 -- stays here rather than moving to a single class file -- see the note atop
@@ -283,46 +586,20 @@ function CanSpellcastPullTarget()
     return SpellIsInRange(spellId)
 end
 
--- WaitingToShoot() and IsAnyNextSwingSpellQueued() moved to WarriorFunctions.lua.
-
---------------------------------------------------
--- Health: player (percent 0�100)
---------------------------------------------------
-function GetPlayerHealthPercent()
-    local hp  = UnitHealth("player")
-    local max = UnitHealthMax("player")
-    if max == 0 then return 0 end
-    return math.floor((hp / max) * 100 + 0.5)
-end
-
---------------------------------------------------
--- Resource: player (rage / mana / energy, percent 0�100)
---------------------------------------------------
-function GetPlayerResourcePercent()
-    local powerType = UnitPowerType("player")            -- e.g. 0 = mana, 1 = rage, 3 = energy
-    local cur = UnitPower("player", powerType)
-    local max = UnitPowerMax("player", powerType)
-
-    if max == 0 then return 0 end
-    return math.floor((cur / max) * 100 + 0.5)
-end
-
---------------------------------------------------
--- Target health (percent 0�100)
---------------------------------------------------
-function GetTargetHealthPercent()
-    if not UnitExists("target") then
-        return 0
+-- Midnight-rules clients (WoW Forever) can return "secret" values from
+-- UnitHealth/UnitPower, aura and cooldown queries, etc.; any arithmetic or
+-- comparison on one throws. issecretvalue() doesn't exist on older clients
+-- (Classic Era), so guard it.
+function IsAnySecretValue(...)
+    if not issecretvalue then return false end
+    for i = 1, select("#", ...) do
+        if issecretvalue((select(i, ...))) then return true end
     end
-
-    local hp  = UnitHealth("target")
-    local max = UnitHealthMax("target")
-    if max == 0 then return 0 end
-    return math.floor((hp / max) * 100 + 0.5)
+    return false
 end
 
 --------------------------------------------------
--- Map X coord (0�100, normalized across map)
+-- Map X coord (0-100, normalized across map)
 --------------------------------------------------
 function GetPlayerMapX()
     if not C_Map or not C_Map.GetBestMapForUnit then
@@ -339,12 +616,12 @@ function GetPlayerMapX()
         return 0
     end
 
-    -- pos.x is 0�1 across the map; convert to 0�100
+    -- pos.x is 0-1 across the map; convert to 0-100
     return math.floor((pos.x or 0) * 10000 + 0.5) / 100  -- two decimals
 end
 
 --------------------------------------------------
--- Map Y coord (0�100, normalized across map)
+-- Map Y coord (0-100, normalized across map)
 --------------------------------------------------
 function GetPlayerMapY()
     if not C_Map or not C_Map.GetBestMapForUnit then
@@ -361,7 +638,7 @@ function GetPlayerMapY()
         return 0
     end
 
-    -- pos.y is 0�1; convert to 0�100
+    -- pos.y is 0-1; convert to 0-100
     return math.floor((pos.y or 0) * 10000 + 0.5) / 100  -- two decimals
 end
 
@@ -400,57 +677,13 @@ function GetCurrentZoneId()
     return ZONE_NAME_TO_ID[zoneName] or 255
 end
 
---------------------------------------------------
--- Player facing as a normalized 2D direction
--- Returns X and Y where:
---   facing due East:  x =  1, y =  0
---   facing due North: x =  0, y = -1
---   facing due West:  x = -1, y =  0
---   facing due South: x =  0, y =  1
---------------------------------------------------
-function GetPlayerFacingVector()
-    local facing = GetPlayerFacing()
-    if not facing then
-        return 0, -1  -- default �north-ish�
-    end
-
-    local x = -math.sin(facing)
-    local y = -math.cos(facing)
-
-    -- Should already be unit length, but normalize defensively.
-    --local len = math.sqrt(x*x + y*y)
-    --if len > 0 then
-    --    x, y = x / len, y / len
-    --end
-
-    return x, y
-end
-
---------------------------------------------------
--- Convenience wrappers if you want to use them with CreateNumberIndicator:
--- (Each returns a single number)
---------------------------------------------------
-
-function GetPlayerFacingX()
-    local x, _ = GetPlayerFacingVector()
-    return math.floor(x * 100) / 100  -- two decimals
-end
-
-function GetPlayerFacingY()
-    local _, y = GetPlayerFacingVector()
-    return math.floor(y * 100) / 100  -- two decimals
-end
-
-function GetPlayerFacingInRadians()
-    return round2(GetPlayerFacing())
-end
-
+-- Player facing in degrees, 0-360 (0 = north, counterclockwise), to two decimals.
 function GetPlayerFacingInDegrees()
     local facing = GetPlayerFacing()
-    if (facing == nil) then
+    if facing == nil then
         return 0
     end
-    return round2(GetPlayerFacing() * 180 / math.pi)
+    return round2(facing * 180 / math.pi)
 end
 
 -- TEMP diagnostic switch: set true to print per-nameplate condition results.
@@ -514,7 +747,7 @@ function IsFacingTarget()
         return false
     end
 
-    local playerFacing = GetPlayerFacing()       -- 0�2pi radians
+    local playerFacing = GetPlayerFacing()       -- 0-2pi radians
     local angleToTarget = math.atan2(ty - py, tx - px)
 
     local diff = angleToTarget - playerFacing
@@ -526,15 +759,13 @@ function IsFacingTarget()
 end
 
 function IsAttacking()
-    return IsCurrentSpell(6603) -- Auto Attack
-    --print(IsCurrentAction(9))
-    --return IsCurrentAction(81)
+    return Compat_IsCurrentSpell(6603) -- Auto Attack
 end
 
 function HasBuffNamed(buffName)
     local i = 1
     while true do
-        local name, icon = UnitBuff("player", i)
+        local name, icon = Compat_UnitBuff("player", i)
         if not name then
             return false -- no more buffs; not found
         end
@@ -556,7 +787,7 @@ WORLD_BUFF_CHOICES = {
     { id = "zg",   label = "Spirit of Zandalar (ZG)",    buffName = "Spirit of Zandalar" },
 }
 
--- Read by GetMultiBoolTwo() to pack into MultiBoolTwo's R6, decoded on the C# side into
+-- Drawn into MultiBoolTwo's box 11 (G3, MULTI_BOOL_TWO_FIELDS), decoded on the C# side into
 -- WowWorldState.HasDesiredWorldBuff.
 function HasDesiredWorldBuff()
     local desiredId = GetDesiredWorldBuffId()
@@ -572,17 +803,36 @@ end
 -- fireblast rank 1, 2136
 -- cone of cold rank 1,
 function IsSpellUsable(spellId)
-    return IsUsableSpell(spellId)
+    return Compat_IsUsableSpell(spellId)
 end
 
 -- Whether the player knows a spell, matched by exact name instead of a
 -- hardcoded spell ID -- scans the real spellbook (GetNumSpellTabs/
 -- GetSpellTabInfo/GetSpellBookItemName) rather than guessing an ID, so it
 -- doesn't go stale across ranks the way the hardcoded rank-1 IDs elsewhere
--- in this file can (see the Flame Shock rank TODO above GetMultiBoolOne's
--- Shaman dispatch). Used for spells where the possible spell ID(s) aren't
+-- in this file can (see the Flame Shock rank TODO in ShamanFunctions.lua).
+-- Used for spells where the possible spell ID(s) aren't
 -- confidently known, e.g. CanCurePoison/CanCureDisease in ShamanFunctions.lua.
 function IsSpellKnownByName(name)
+    -- Modern clients (WoW Forever) replaced the spell-tab globals with
+    -- C_SpellBook skill lines; Classic Era still has GetNumSpellTabs.
+    if not GetNumSpellTabs then
+        if not (C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines) then return false end
+        local bank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player
+        for line = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+            local info = C_SpellBook.GetSpellBookSkillLineInfo(line)
+            if info then
+                local offset = info.itemIndexOffset or 0
+                for i = offset + 1, offset + (info.numSpellBookItems or 0) do
+                    if C_SpellBook.GetSpellBookItemName(i, bank) == name then
+                        return true
+                    end
+                end
+            end
+        end
+        return false
+    end
+
     for tab = 1, GetNumSpellTabs() do
         local _, _, offset, numSpells = GetSpellTabInfo(tab)
         for i = offset + 1, offset + numSpells do
@@ -677,7 +927,7 @@ HEALING_POTION_ITEM_CHOICES = {
 -- state, and nothing reading this needs to notice within the minute. Note a
 -- /yyconfig selector change also only shows up on the next refresh.
 AreWeLowOnHealthPotions = CacheOnInterval(function()
-    local count = GetItemCount(GetHealingPotionItemId(), false)
+    local count = Compat_GetItemCount(GetHealingPotionItemId(), false)
     return count < 2
 end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
@@ -697,7 +947,7 @@ DYNAMITE_ITEM_CHOICES = {
 
 -- Interval-cached, same as AreWeLowOnHealthPotions() above.
 AreWeLowOnDynamite = CacheOnInterval(function()
-    local dynamiteCount = GetItemCount(GetDynamiteItemId(), false)
+    local dynamiteCount = Compat_GetItemCount(GetDynamiteItemId(), false)
     return dynamiteCount < 2
 end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
@@ -706,7 +956,7 @@ end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 -- sharp arrow, 2515
 -- Interval-cached, same as AreWeLowOnHealthPotions() above.
 AreWeLowOnAmmo = CacheOnInterval(function()
-    local ammoCount = GetItemCount(2515, false)
+    local ammoCount = Compat_GetItemCount(2515, false)
     return ammoCount < 2
 end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
@@ -736,8 +986,8 @@ local function IsYellowRepairSlot(slot)
         if not itemId then
             return false
         end
-        local _, _, _, equipLoc, _, classId = GetItemInfoInstant(itemId)
-        return classId == WEAPON_CLASS_ID or equipLoc == SHIELD_EQUIP_LOC
+        local _, _, _, _, _, classId = Compat_GetItemInfoInstant(itemId)
+        return classId == WEAPON_CLASS_ID
     end
 
     return false
@@ -783,7 +1033,7 @@ end, RARE_STATE_REFRESH_INTERVAL_SECONDS)
 
 function TargetHasDebuffSpellId(debuffSpellId)
   for i = 1, 40 do
-    local _, _, _, _, _, _, _, _, _, spellId = UnitDebuff("target", i)
+    local _, _, _, _, _, _, _, _, _, spellId = Compat_UnitDebuff("target", i)
     if not spellId then break end
 
     if spellId == debuffSpellId then
@@ -796,7 +1046,7 @@ end
 
 function TargetHasDebuffSpellName(debuffSpellName)
   for i = 1, 40 do
-    local spellName, _, _, _, _, _, _, _, _, _ = UnitDebuff("target", i)
+    local spellName, _, _, _, _, _, _, _, _, _ = Compat_UnitDebuff("target", i)
     if not spellName then break end
 
     if spellName == debuffSpellName then
@@ -806,9 +1056,6 @@ function TargetHasDebuffSpellName(debuffSpellName)
 
   return false
 end
-
--- TargetHasRend() moved to WarriorFunctions.lua.
--- TargetHasFlameShock() moved to ShamanFunctions.lua.
 
 -- CASTER_MOB_NAMES/RUNNER_MOB_NAMES/FIRE_IMMUNE_MOB_NAMES now live in
 -- CreatureConfig.lua -- one place to update every name-based creature list.
@@ -961,7 +1208,7 @@ end
 -- for the full reasoning and confirmed-vs-untested status of each class's pick) instead
 -- of GCD_SPELL_ID directly, which never showed a cooldown in testing on this client.
 function IsGlobalCooldownCooledDown()
-    local start, duration = GetSpellCooldown(GetGCDProbeSpell())
+    local start, duration = Compat_GetSpellCooldown(GetGCDProbeSpell())
 
     if not start or duration == 0 then
         return true
@@ -970,11 +1217,6 @@ function IsGlobalCooldownCooledDown()
     local remaining = start + duration - GetTime()
     return remaining <= 0
 end
-
--- CanCastMortalStrikeOrBloodthirst() moved to WarriorFunctions.lua.
--- (CanCastWhirlwind()/CanCastSweepingStrikes() used to live there too --
--- removed, see the GetWarriorClassBoolOne() comment in WarriorFunctions.lua.)
--- CanCastEarthShock() moved to ShamanFunctions.lua.
 
 function GetFreeSlotsInBag(bag)
     local total = C_Container.GetContainerNumSlots(bag)
@@ -1009,8 +1251,7 @@ end
 -- source of the addon's GC churn (confirmed while investigating the ~1MB/sec
 -- addon-memory growth shown in the game's addon-memory tooltip). Bag contents
 -- don't change on the ~50-100ms cadence AreBagsFull() gets polled at (it's one
--- of the flags packed into GetMultiBoolOne, read by both the pixel-row and
--- debug OnUpdate loops in UIFunctions.lua), so cache the real check and only
+-- of the MultiBoolOne pixel-row flags, redrawn every refresh), so cache the real check and only
 -- recompute it periodically (CacheOnInterval) instead of every tick.
 AreBagsFull = CacheOnInterval(function()
     return GetTotalFreeBagSlots() == 0
@@ -1073,6 +1314,9 @@ AUTO_SELL_BLOCKLIST_ITEM_NAMES = {
     "Superior Healing Potion",
     "Major Healing Potion",
     "Skinning Knife",
+    "Apprentice's Skinning Satchel",
+    "Rough Arrow",
+    "Light Shot",
 }
 
 local function IsItemNameInList(itemName, list)
@@ -1159,7 +1403,7 @@ function ShouldAutoSellItem(itemInfo, mode)
 
     -- GetItemInfo returns nil for an item the client hasn't cached yet; that
     -- shows up as name=nil here rather than as a silent non-match.
-    local itemName = GetItemInfo(itemInfo.itemID)
+    local itemName = Compat_GetItemInfo(itemInfo.itemID)
 
     if mode == "allowlist" then
         if quality == 0 then
@@ -1348,7 +1592,7 @@ local function PlayerKnowsSpellId(spellId)
     if IsPlayerSpell then
         return IsPlayerSpell(spellId)
     end
-    return IsSpellKnown(spellId)
+    return Compat_IsSpellKnown(spellId)
 end
 
 -- Weighted stat score for an item link, per AUTO_EQUIP_STAT_WEIGHTS for the
@@ -1365,7 +1609,8 @@ function GetItemEquipScore(itemLink)
         return 0
     end
 
-    local stats = GetItemStats(itemLink) or {}
+    local getItemStats = GetItemStats or (C_Item and C_Item.GetItemStats)
+    local stats = (getItemStats and getItemStats(itemLink)) or {}
     local score = 0
     local dump = {}
     for statKey, value in pairs(stats) do
@@ -1390,7 +1635,7 @@ local function GetAutoEquipCandidateSlots(itemLink, quality)
 
     -- GetItemInfo returns nil for an item the client hasn't cached yet; the
     -- next BAG_UPDATE_DELAYED scan will pick it up once it has.
-    local _, _, _, _, minLevel, _, _, _, equipLoc = GetItemInfo(itemLink)
+    local _, _, _, _, minLevel, _, _, _, equipLoc = Compat_GetItemInfo(itemLink)
     if not equipLoc then
         return nil, "item info not cached yet"
     end
@@ -1404,7 +1649,7 @@ local function GetAutoEquipCandidateSlots(itemLink, quality)
         return nil, "requires level " .. minLevel
     end
 
-    local _, _, _, _, _, classId, subclassId = GetItemInfoInstant(itemLink)
+    local _, _, _, _, _, classId, subclassId = Compat_GetItemInfoInstant(itemLink)
     if classId ~= 4 then
         return nil, "not armor (classID " .. tostring(classId) .. ")"
     end
@@ -1499,7 +1744,7 @@ end
 
 function IsPlayerPetrified()
     for i = 1, 40 do
-        local name = UnitAura("player", i)
+        local name = Compat_UnitAura("player", i)
         if not name then
             return false
         end
@@ -1536,7 +1781,7 @@ local DEBUFF_TYPE_MIN_REMAINING_SECONDS = 5
 
 function PlayerHasDebuffType(debuffType)
   for i = 1, 40 do
-    local name, _, _, thisDebuffType, duration, expirationTime = UnitDebuff("player", i)
+    local name, _, _, thisDebuffType, duration, expirationTime = Compat_UnitDebuff("player", i)
     if not name then break end
 
     if thisDebuffType == debuffType then
@@ -1669,87 +1914,204 @@ function CanAffordToTrainAllSkills()
     return totalCost <= GetMoney()
 end
 
--- HasRockbiterWeaponMainHand(), ShouldCastRockbiterWeapon(),
--- ShouldCastLightningShield(), and ShouldCastFlameShock() moved to
--- ShamanFunctions.lua.
-
--- Class-specific fields (Battle Shout, Rend, Frost Armor, Rockbiter, etc.)
--- moved to GetClassBoolOne/Two (see the dispatchers further down and
--- GetXClassBoolOne/Two in WarriorFunctions.lua/ShamanFunctions.lua/
--- WarlockFunctions.lua) -- those are used instead of these now. All
--- class-agnostic fields fit in MultiBoolOne's R+G bytes; R+G are both fully
--- packed, and the B byte carries HasRecentTargetEvade() (b1), two of the
--- three supported classes the player might be playing (b2 Warrior, b4
--- Shaman -- b3 is reserved/unused, previously Mage, removed along with Mage
--- support; the 3rd class, Warlock, didn't fit once this byte was already
--- full, so it lives in GetMultiBoolTwo's R4 instead -- see there), and
--- IsPlayerPoisoned/IsPlayerDiseased/IsTargetNatureImmune/IsTargetCasting
--- (b5-b8), which fully packs the byte.
-function GetMultiBoolOne()
-    local boolR1 = IsAttacking()
-    local boolR2 = AreWeLowOnHealthPotions()
-    local boolR3 = AreWeLowOnDynamite()
-    local boolR4 = AreWeLowOnAmmo()
-    local boolR5 = IsGlobalCooldownCooledDown()
-    local boolR6 = AreBagsFull()
-    local boolR7 = IsInCombat()
-    local boolR8 = IsPlayerPetrified()
-
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, boolR7, boolR8)
-
-    local boolG1 = HasUnseenWhisper()
-    local boolG2 = false -- reserved, previously IsInMeleeRange() -- removed, CheckInteractDistance
-                          -- proved unreliable; WalkIntoMeleeRangeTask (WowMovementTasks.cs) now
-                          -- relies on WorldState.IsInCombat plus the target-marker bearing instead
-    local boolG3 = IsPlayerCasting()
-    local boolG4 = AreEnemyNameplatesTurnedOn()
-    local boolG5 = CurrentTargetInCombatWithUs()
-    local boolG6 = IsTargetCasterMob()
-    local boolG7 = IsTargetRunnerMob()
-    local boolG8 = IsTargetFireImmune()
-
-    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
-
-    local boolB1 = HasRecentTargetEvade()
-
-    local _, classFile = UnitClass("player")
-    local boolB2 = (classFile == "WARRIOR")
-    local boolB3 = false -- reserved, previously (classFile == "MAGE")
-    local boolB4 = (classFile == "SHAMAN")
-
-    local boolB5 = IsPlayerPoisoned()
-    local boolB6 = IsPlayerDiseased()
-    local boolB7 = IsTargetNatureImmune()
-    local boolB8 = IsTargetCasting()
-
-    local bByte = EncodeBooleansToByte(boolB1, boolB2, boolB3, boolB4, boolB5, boolB6, boolB7, boolB8)
-
-    return rByte/255.0, gByte/255.0, bByte/255.0
+------------------------------------------------------------
+-- Spell data dump (/yyspells, YoyokazooUI.lua) -- debug-only. For rebuilding
+-- a class's <CLASS>_TRAINER_SPELLS table on a client whose spell IDs/ranks
+-- differ from the table's source (WoW Forever), from real client data
+-- instead of guessing. Collects three sections:
+--   trainer   -- every row of an open class trainer (all categories, not
+--                just "available"): name, rank, category, level, cost, and
+--                the spell ID from the row's link, if the client gives one
+--   table     -- each existing table entry's spellId: what the client calls
+--                that ID, and whether IsPlayerSpell/IsSpellKnown say it's known
+--   spellbook -- every spell in the player's spellbook, with its spell ID
+-- Lines go into YoyokazooUIDB.spellDump (the SavedVariables table, written to
+-- disk on /reload or logout) rather than only chat, since ~100 chat lines
+-- can't be copied out of the game.
+------------------------------------------------------------
+local function DescribeValue(value)
+    if IsAnySecretValue(value) then return "SECRET" end
+    return tostring(value)
 end
 
--- R1 (IsTargetLongRangeCaster), R2 (IsLogoffMobSeen), R3 (IsCurrentlySkinning),
--- R4 (the 4th "which supported class" bit, Warlock -- see GetMultiBoolOne's
--- B-byte comment above for why it landed here instead of there), R5
--- (IsTargetBleedImmune), and R6 (IsTargetFearCaster) are the flags packed
--- into the R byte so far -- both mob-name lookups, same pattern as
--- IsTargetLongRangeCaster/IsLogoffMobSeen above, so they live here
--- (class-agnostic) rather than in a class's own ClassBool even though only
--- Warrior consumes them today -- R7-R8 are still reserved. G1
--- (IsLogoutOnLowDynamiteEnabled), G2 (IsLogoutOnFullBagsEnabled), and G3
--- (HasDesiredWorldBuff) are packed into the previously-unused G byte instead
--- of continuing into R7/R8 -- run-specific settings toggled live in-game via
--- the /yyconfig menu (YoyokazooUI.lua) rather than live game-state queries
--- like everything else in this row. G4 (HasHighLatency(), see there) is back
--- to being a live game-state query, same category as the R byte -- it just
--- landed in G because the R byte was already full by the time it was added.
--- G5 (IsCombatStalemate(), YoyokazooUI.lua) is likewise a live game-state
--- query -- in combat, but no damage/miss combat-log events involving us for
--- COMBAT_STALEMATE_SECONDS, e.g. aggroed by a mob that can't path to us.
--- G6 (AllSkillsKnownForThisLevel()) and G7 (CanAffordToTrainAllSkills()) feed
--- the C# leveling-goal logic (WowLevelingConfigs.cs) -- see the class
--- trainer tables those read. G8 (GearNeedsRepair()) is a weapon or shield at
--- yellow durability or any other piece broken. The G byte is now full; the B byte is
--- still fully reserved for future class-agnostic flags.
+local function SpellIdFromLink(link)
+    if type(link) ~= "string" then return nil end
+    return tonumber(link:match("|Hspell:(%d+)"))
+end
+
+local function ClientSpellName(spellId)
+    if C_Spell and C_Spell.GetSpellName then
+        return C_Spell.GetSpellName(spellId)
+    end
+    return (Compat_GetSpellInfo(spellId))
+end
+
+local TRAINER_FILTERS = { "available", "unavailable", "used" }
+
+-- GetTrainerServiceInfo's return shape differs by client: Classic Era gives
+-- (name, rank, category), but the Forever client gives (name, category,
+-- icon) -- no rank at all (confirmed live via /yyspells). Returns
+-- name, rank (nil on Forever), category on either.
+function GetTrainerServiceNameRankCategory(index)
+    local name, second, third = GetTrainerServiceInfo(index)
+    if second == "available" or second == "unavailable" or second == "used" then
+        return name, nil, second
+    end
+    return name, second, third
+end
+
+-- A trainer row's spell ID and rank text, read back off a hidden tooltip:
+-- neither GetTrainerServiceInfo nor GetTrainerServiceItemLink gives the ID
+-- on the Forever client. Tries GetSpell() and then GetTooltipData(), since
+-- which one a client supports isn't verified yet; the rank usually sits in
+-- the first line's right-hand text.
+local scanTooltip = nil
+
+local function ReadTrainerServiceTooltip(index)
+    if not scanTooltip then
+        scanTooltip = CreateFrame("GameTooltip", "YoyokazooUIScanTooltip", nil, "GameTooltipTemplate")
+    end
+    scanTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
+    scanTooltip:ClearLines()
+    scanTooltip:SetTrainerService(index)
+
+    local spellId = nil
+    if scanTooltip.GetSpell then
+        spellId = select(2, scanTooltip:GetSpell())
+    end
+    if not spellId and scanTooltip.GetTooltipData then
+        local data = scanTooltip:GetTooltipData()
+        spellId = data and data.id
+    end
+
+    local rightText = _G["YoyokazooUIScanTooltipTextRight1"]
+    local rankText = rightText and rightText:GetText()
+
+    scanTooltip:Hide()
+    return spellId, rankText
+end
+
+local function DumpTrainerServices(lines)
+    local numServices = GetNumTrainerServices and GetNumTrainerServices() or 0
+    if numServices == 0 or not IsClassTrainerOpen() then
+        table.insert(lines, "trainer: no class trainer window open -- open one and run /yyspells again for this section")
+        return
+    end
+
+    -- Show every category while dumping, then put the window's filters back.
+    -- The on/off argument must be a real boolean -- the Forever client
+    -- rejects Classic's 1/0 ("Missing on/off parameter").
+    local savedFilters = {}
+    if GetTrainerServiceTypeFilter and SetTrainerServiceTypeFilter then
+        for _, filter in ipairs(TRAINER_FILTERS) do
+            savedFilters[filter] = GetTrainerServiceTypeFilter(filter) and true or false
+            SetTrainerServiceTypeFilter(filter, true)
+        end
+        numServices = GetNumTrainerServices() or 0
+    end
+
+    for i = 1, numServices do
+        local name, rank, category = GetTrainerServiceNameRankCategory(i)
+        local cost = GetTrainerServiceCost(i)
+        local levelReq = GetTrainerServiceLevelReq and GetTrainerServiceLevelReq(i)
+        local linkSpellId = SpellIdFromLink(GetTrainerServiceItemLink and GetTrainerServiceItemLink(i))
+
+        local tooltipOk, tooltipSpellId, tooltipRank = pcall(ReadTrainerServiceTooltip, i)
+        if not tooltipOk then
+            tooltipRank = "tooltip error: " .. tostring(tooltipSpellId)
+            tooltipSpellId = nil
+        end
+        local spellId = linkSpellId or tooltipSpellId
+
+        table.insert(lines, string.format(
+            "trainer %d | %s | rank=%s | tooltipRank=%s | %s | level=%s | cost=%s | spellId=%s | clientName=%s | known=%s",
+            i, tostring(name), tostring(rank), tostring(tooltipRank), tostring(category), tostring(levelReq),
+            tostring(cost), tostring(spellId), tostring(spellId and ClientSpellName(spellId)),
+            DescribeValue(spellId and IsPlayerSpell and IsPlayerSpell(spellId))))
+    end
+
+    if SetTrainerServiceTypeFilter then
+        for _, filter in ipairs(TRAINER_FILTERS) do
+            SetTrainerServiceTypeFilter(filter, savedFilters[filter])
+        end
+    end
+end
+
+local function DumpTrainerTable(lines)
+    local trainerSpells = GetClassTrainerSpells()
+    if not trainerSpells then
+        table.insert(lines, "table: no trainer table for this class")
+        return
+    end
+
+    for _, spell in ipairs(trainerSpells) do
+        table.insert(lines, string.format("table L%d | %s | spellId=%d | clientName=%s | IsPlayerSpell=%s | IsSpellKnown=%s",
+            spell.level, spell.name, spell.spellId, tostring(ClientSpellName(spell.spellId)),
+            DescribeValue(IsPlayerSpell and IsPlayerSpell(spell.spellId)),
+            DescribeValue(Compat_IsSpellKnown(spell.spellId))))
+    end
+end
+
+local function DumpSpellbook(lines)
+    -- Modern clients: C_SpellBook skill lines (same as IsSpellKnownByName()).
+    if not GetNumSpellTabs then
+        if not (C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines) then
+            table.insert(lines, "spellbook: no spellbook API found")
+            return
+        end
+        local bank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player
+        for line = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+            local lineInfo = C_SpellBook.GetSpellBookSkillLineInfo(line)
+            if lineInfo then
+                local offset = lineInfo.itemIndexOffset or 0
+                for i = offset + 1, offset + (lineInfo.numSpellBookItems or 0) do
+                    local info = C_SpellBook.GetSpellBookItemInfo and C_SpellBook.GetSpellBookItemInfo(i, bank)
+                    if info then
+                        table.insert(lines, string.format("spellbook %s | %s | subName=%s | spellId=%s | type=%s",
+                            tostring(lineInfo.name), tostring(info.name), tostring(info.subName),
+                            tostring(info.spellID), tostring(info.itemType)))
+                    else
+                        table.insert(lines, "spellbook " .. tostring(lineInfo.name) .. " | " ..
+                            tostring(C_SpellBook.GetSpellBookItemName(i, bank)) .. " | (no item info)")
+                    end
+                end
+            end
+        end
+        return
+    end
+
+    for tab = 1, GetNumSpellTabs() do
+        local tabName, _, offset, numSpells = GetSpellTabInfo(tab)
+        for i = offset + 1, offset + numSpells do
+            local name, rank = GetSpellBookItemName(i, BOOKTYPE_SPELL)
+            local _, spellId = GetSpellBookItemInfo(i, BOOKTYPE_SPELL)
+            table.insert(lines, string.format("spellbook %s | %s | rank=%s | spellId=%s",
+                tostring(tabName), tostring(name), tostring(rank), tostring(spellId)))
+        end
+    end
+end
+
+-- Returns the number of lines collected. Each section is pcall'd, so one
+-- unexpected API shape doesn't lose the other two -- its error is recorded
+-- in the dump instead.
+function DumpSpellData()
+    local lines = {
+        string.format("dump at %s | %s level %d | client %s",
+            date("%Y-%m-%d %H:%M:%S"), tostring(select(2, UnitClass("player"))), UnitLevel("player"),
+            tostring((GetBuildInfo())))
+    }
+
+    for _, section in ipairs({ DumpTrainerServices, DumpTrainerTable, DumpSpellbook }) do
+        local ok, err = pcall(section, lines)
+        if not ok then
+            table.insert(lines, "section failed: " .. tostring(err))
+        end
+    end
+
+    YoyokazooUIDB.spellDump = lines
+    return #lines
+end
+
 ------------------------------------------------------------
 -- Target-finding macro. The bot presses this macro (WowInput.FIND_TARGET_MACRO)
 -- to find mobs; its /target lines differ per farming route, so the bot types
@@ -1808,118 +2170,79 @@ function SetTargetMacroMobs(mobNamesCsv)
     return true
 end
 
-function GetMultiBoolTwo()
-    local boolR1 = IsTargetLongRangeCaster()
-    local boolR2 = IsLogoffMobSeen()
-    local boolR3 = IsCurrentlySkinning()
-
-    local _, classFile = UnitClass("player")
-    local boolR4 = (classFile == "WARLOCK")
-
-    local boolR5 = IsTargetBleedImmune()
-    local boolR6 = IsTargetFearCaster()
-
-    local rByte = EncodeBooleansToByte(boolR1, boolR2, boolR3, boolR4, boolR5, boolR6, false, false)
-
-    local boolG1 = IsLogoutOnLowDynamiteEnabled()
-    local boolG2 = IsLogoutOnFullBagsEnabled()
-    local boolG3 = HasDesiredWorldBuff()
-    local boolG4 = HasHighLatency()
-    local boolG5 = IsCombatStalemate()
-    local boolG6 = AllSkillsKnownForThisLevel()
-    local boolG7 = CanAffordToTrainAllSkills()
-    local boolG8 = GearNeedsRepair()
-
-    local gByte = EncodeBooleansToByte(boolG1, boolG2, boolG3, boolG4, boolG5, boolG6, boolG7, boolG8)
-
-    -- B1: the class-agnostic "is the current target a valid one to fight at all" check
-    -- (ShouldWeAttackTarget -- attackable, alive, not PvP, not grey, not too high, not
-    -- already in combat), with no range/cooldown folded in -- unlike the per-class
-    -- CanChargeTarget/CanShootTarget/CanSpellcastPullTarget bits, which AND this with
-    -- their own range/cooldown checks.
-    local boolB1 = ShouldWeAttackTarget()
-
-    local bByte = EncodeBooleansToByte(boolB1, false, false, false, false, false, false, false)
-
-    return rByte/255.0, gByte/255.0, bByte/255.0
-end
-
-function GetMultiIntOne()
-    local r = GetPlayerHealthPercent()
-    local g = GetPlayerResourcePercent()
-    local b = GetTargetHealthPercent()
-
-    return r/255.0, g/255.0, b/255.0
-end
-
-function GetMultiIntTwo()
-    local r = CountAttackers()
-    local g = UnitLevel("player")
-    local b = GetCurrentZoneId()
-
-    return r/255.0, g/255.0, b/255.0
-end
-
 ------------------------------------------------------------
--- ClassBool/ClassInt dispatchers -- the class-specific counterpart to
--- GetMultiBoolOne/Two/GetMultiIntOne/Two above. Each checks the player's
--- class once and delegates to that class's own populate function (see
--- GetWarriorClassBoolOne/Two, GetShamanClassBoolOne/Two, and
--- GetWarlockClassBoolOne/Two in WarriorFunctions.lua/ShamanFunctions.lua/
--- WarlockFunctions.lua). Unsupported/unrecognized classes get all-zero.
+-- Pixel row bool fields (drawn by InitializePixelRow() in UIFunctions.lua
+-- via EncodeBoolFields() in MathFunctions.lua). Each list is one row: entry
+-- N is the global function shown in box N, green when it returns true.
+-- Entries are function NAMES, looked up each time the row is drawn, so they
+-- can live in any file regardless of load order. The C# decoders read the
+-- same positions (WowWorldState.cs for these Multi rows, Wow*ClassState.cs
+-- for the Class rows) -- change both sides together, and put RESERVED in a
+-- retired entry's place rather than removing it, so later boxes don't shift.
+--
+-- The (R1)/(G3)/(B1) tags are each box's name from when a row was a single
+-- pixel's R/G/B bytes: Rn = box n, Gn = box 8+n, Bn = box 16+n. CLAUDE.md
+-- still refers to boxes that way.
 ------------------------------------------------------------
-function GetClassBoolOne()
+function IsPlayerWarrior() return select(2, UnitClass("player")) == "WARRIOR" end
+function IsPlayerShaman()  return select(2, UnitClass("player")) == "SHAMAN"  end
+function IsPlayerWarlock() return select(2, UnitClass("player")) == "WARLOCK" end
+
+MULTI_BOOL_ONE_FIELDS = {
+    "IsAttacking",                  --  1 (R1)
+    "AreWeLowOnHealthPotions",      --  2 (R2)
+    "AreWeLowOnDynamite",           --  3 (R3)
+    "AreWeLowOnAmmo",               --  4 (R4)
+    "IsGlobalCooldownCooledDown",   --  5 (R5)
+    "AreBagsFull",                  --  6 (R6)
+    "IsInCombat",                   --  7 (R7)
+    "IsPlayerPetrified",            --  8 (R8)
+    "HasUnseenWhisper",             --  9 (G1) YoyokazooUI.lua
+    RESERVED,                       -- 10 (G2) was IsInMeleeRange -- CheckInteractDistance proved unreliable
+    "IsPlayerCasting",              -- 11 (G3)
+    "AreEnemyNameplatesTurnedOn",   -- 12 (G4)
+    "CurrentTargetInCombatWithUs",  -- 13 (G5)
+    "IsTargetCasterMob",            -- 14 (G6)
+    "IsTargetRunnerMob",            -- 15 (G7)
+    "IsTargetFireImmune",           -- 16 (G8)
+    "HasRecentTargetEvade",         -- 17 (B1) YoyokazooUI.lua
+    "IsPlayerWarrior",              -- 18 (B2) supported-class bits: exactly one of these and
+    RESERVED,                       -- 19 (B3)   MultiBoolTwo's box 4 (Warlock) is true. 19 was
+    "IsPlayerShaman",               -- 20 (B4)   Mage, removed along with Mage support.
+    "IsPlayerPoisoned",             -- 21 (B5)
+    "IsPlayerDiseased",             -- 22 (B6)
+    "IsTargetNatureImmune",         -- 23 (B7)
+    "IsTargetCasting",              -- 24 (B8)
+}
+
+MULTI_BOOL_TWO_FIELDS = {
+    "IsTargetLongRangeCaster",      --  1 (R1)
+    "IsLogoffMobSeen",              --  2 (R2)
+    "IsCurrentlySkinning",          --  3 (R3)
+    "IsPlayerWarlock",              --  4 (R4) supported-class bit, see MultiBoolOne box 18
+    "IsTargetBleedImmune",          --  5 (R5)
+    "IsTargetFearCaster",           --  6 (R6)
+    RESERVED,                       --  7 (R7)
+    RESERVED,                       --  8 (R8)
+    "IsLogoutOnLowDynamiteEnabled", --  9 (G1) /yyconfig setting, YoyokazooUI.lua
+    "IsLogoutOnFullBagsEnabled",    -- 10 (G2) /yyconfig setting, YoyokazooUI.lua
+    "HasDesiredWorldBuff",          -- 11 (G3) buff picked via /yyconfig
+    "HasHighLatency",               -- 12 (G4)
+    "IsCombatStalemate",            -- 13 (G5) YoyokazooUI.lua
+    "AllSkillsKnownForThisLevel",   -- 14 (G6)
+    "CanAffordToTrainAllSkills",    -- 15 (G7)
+    "GearNeedsRepair",              -- 16 (G8)
+    "ShouldWeAttackTarget",         -- 17 (B1) pure eligibility -- no range/cooldown folded in
+}
+
+-- The player's class's list for one of the Class rows: listSuffix
+-- "CLASS_BOOL_ONE_FIELDS" gives e.g. WARRIOR_CLASS_BOOL_ONE_FIELDS
+-- (WarriorFunctions.lua) -- so the same box means something different per
+-- class. An unsupported class gets an empty list (an all-red row).
+function GetPlayerClassFields(listSuffix)
     local _, classFile = UnitClass("player")
-
-    if classFile == "WARRIOR" then
-        return GetWarriorClassBoolOne()
-    elseif classFile == "SHAMAN" then
-        return GetShamanClassBoolOne()
-    elseif classFile == "WARLOCK" then
-        return GetWarlockClassBoolOne()
-    end
-
-    return 0, 0, 0
+    return _G[(classFile or "") .. "_" .. listSuffix] or {}
 end
-
-function GetClassBoolTwo()
-    local _, classFile = UnitClass("player")
-
-    if classFile == "WARRIOR" then
-        return GetWarriorClassBoolTwo()
-    elseif classFile == "SHAMAN" then
-        return GetShamanClassBoolTwo()
-    elseif classFile == "WARLOCK" then
-        return GetWarlockClassBoolTwo()
-    end
-
-    return 0, 0, 0
-end
-
-function GetClassIntOne()
-    local _, classFile = UnitClass("player")
-
-    if classFile == "WARRIOR" then
-        return GetWarriorClassIntOne()
-    elseif classFile == "SHAMAN" then
-        return GetShamanClassIntOne()
-    elseif classFile == "WARLOCK" then
-        return GetWarlockClassIntOne()
-    end
-
-    return 0, 0, 0
-end
-
-function IsAttackingColor()
-    return GetColorFromSingleBool(IsAttacking())
-end
-
-function IsInCombatColor()
-    return GetColorFromSingleBool(IsInCombat())
-end
-
--- CanChargeTargetColor() and IsAnyNextSwingSpellQueuedColor() moved to
--- WarriorFunctions.lua.
 
 -- Auto-pick the "I require <Class> training." gossip option when talking to a
 -- class trainer, so the trainer window opens without anyone clicking the
@@ -1961,11 +2284,12 @@ end
 -- trainers are skipped, since buying e.g. "Apprentice Skinning" would spend a
 -- profession slot. Lua-only; nothing reaches the pixel row.
 --
--- GetTrainerServiceInfo/GetTrainerServiceCost's exact return shapes on this
--- client build aren't verified live yet (see the top of CLAUDE.md) --
--- AUTO_TRAIN_DEBUG prints every row the scan sees and why it was or wasn't
--- picked. Defaults ON until it's confirmed working; flip it off after.
-AUTO_TRAIN_DEBUG = true
+-- GetTrainerServiceInfo's return shape differs between Classic Era and the
+-- Forever client (see GetTrainerServiceNameRankCategory() above -- on Forever
+-- this scan used to read the icon ID as the category, so it never bought
+-- anything). AUTO_TRAIN_DEBUG prints every row the scan sees and why it was
+-- or wasn't picked. Off now that buying is confirmed working on Forever.
+AUTO_TRAIN_DEBUG = false
 
 function AutoTrainDebugPrint(message)
     if AUTO_TRAIN_DEBUG then
@@ -1991,7 +2315,7 @@ function FindNextAffordableTrainerService()
     if GetTrainerServiceTypeFilter and SetTrainerServiceTypeFilter
         and not GetTrainerServiceTypeFilter("available") then
         AutoTrainDebugPrint("\"available\" filter was off -- turning it on")
-        SetTrainerServiceTypeFilter("available", 1)
+        SetTrainerServiceTypeFilter("available", true)  -- boolean: Forever rejects 1/0
     end
 
     local money = GetMoney()
@@ -1999,7 +2323,7 @@ function FindNextAffordableTrainerService()
     AutoTrainDebugPrint("scanning " .. numServices .. " service row(s), money " .. money)
 
     for i = 1, numServices do
-        local name, rank, category = GetTrainerServiceInfo(i)
+        local name, rank, category = GetTrainerServiceNameRankCategory(i)
         local cost = GetTrainerServiceCost(i)
         AutoTrainDebugPrint("  " .. i .. ": " .. tostring(name) .. " (" .. tostring(rank) .. ") category=" ..
             tostring(category) .. " cost=" .. tostring(cost))

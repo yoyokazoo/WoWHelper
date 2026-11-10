@@ -4,9 +4,9 @@ namespace WoWHelper.Code.WorldState
 {
     // Zones WowLocationConfigs.cs's routes are known to live in. Numeric values are
     // explicit and MUST stay in sync with the ZONE_NAME_TO_ID table in WoWFunctions.lua
-    // (GetCurrentZoneId()) -- that's what packs a zone into MultiIntTwo's B channel for
+    // (GetCurrentZoneId()) -- that's what packs a zone into MultiIntOne's third byte for
     // WowWorldState.CurrentZone to decode. This is a WowHelper-defined ID scheme, not
-    // Blizzard's internal map/zone ID (which doesn't fit in a single byte channel).
+    // Blizzard's internal map/zone ID (which doesn't fit in a byte).
     public enum WowZone
     {
         Durotar = 0,

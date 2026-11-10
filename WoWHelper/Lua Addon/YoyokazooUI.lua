@@ -81,7 +81,7 @@ end
 -- Auto-sell to an open merchant (see the MERCHANT_SHOW handling below) --
 -- "off"/"allowlist"/"blocklist", see AUTO_SELL_MODE_CHOICES (WoWFunctions.lua).
 -- Defaults to "off". Lua-only, like the dynamite item/healing potion
--- selectors -- never piped to the C# side via GetMultiBoolTwo, since the bot
+-- selectors -- never piped to the C# side, since the bot
 -- doesn't need to know it happened. Replaced the old autoSellJunk boolean
 -- (its "on" behavior is now "allowlist"); the stale field is dropped rather
 -- than migrated, so everyone starts from the new "off" default.
@@ -137,15 +137,15 @@ end
 
 -- Which world buff HasDesiredWorldBuff() (WoWFunctions.lua) checks for -- selectable via the
 -- /yyconfig "Desired world buff" selector below instead of being hardcoded. Defaults to Ony's
--- Rallying Cry. See WORLD_BUFF_CHOICES (WoWFunctions.lua) for the full list. Read by
--- GetMultiBoolTwo() into MultiBoolTwo's G3, decoded on the C# side into
+-- Rallying Cry. See WORLD_BUFF_CHOICES (WoWFunctions.lua) for the full list. Drawn into
+-- MultiBoolTwo's box 11 (G3, MULTI_BOOL_TWO_FIELDS), decoded on the C# side into
 -- WowWorldState.HasDesiredWorldBuff, consumed by WaitForWorldBuffThenLogoffTask
 -- (WowManagementTasks.cs).
 if YoyokazooUIDB.desiredWorldBuffId == nil then
     YoyokazooUIDB.desiredWorldBuffId = "ony"
 end
 
--- Read by GetMultiBoolTwo() (WoWFunctions.lua) to pack these into MultiBoolTwo's G1/G2,
+-- Drawn into MultiBoolTwo's boxes 9/10 (G1/G2, MULTI_BOOL_TWO_FIELDS in WoWFunctions.lua),
 -- decoded on the C# side into WowWorldState.LogoutOnLowDynamiteEnabled/
 -- LogoutOnFullBagsEnabled.
 function IsLogoutOnLowDynamiteEnabled()
@@ -222,10 +222,12 @@ function GetHealingPotionItemId()
     return itemId
 end
 
--- Create a frame to be our black box
+-- The /yydebug frame's black box. Sized to fit exactly InitializeIndicators()'s
+-- three rows (UIFunctions.lua): rows start 10px down, 24px apart, 20px tall,
+-- plus 10px bottom padding; values at x = 10, labels at x = 70.
 local frame = CreateFrame("Frame", "YoyokazooUIFrame", UIParent, "BackdropTemplate")
 -- Size and position
-frame:SetSize(300, 350)
+frame:SetSize(130, 88)
 frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 25, -100)
 -- Give it a solid black background
 frame:SetBackdrop({
@@ -251,11 +253,40 @@ local function ApplyDebugFrameVisibility()
     end
 end
 
+-- Temporary diagnostic for the WoW Forever port: prints which function
+-- triggered the "YoyokazooUI has been blocked from an action" popup.
+-- ADDON_ACTION_BLOCKED/ADDON_ACTION_FORBIDDEN pass (addonName, functionName).
+-- Registered before any of our other RegisterEvent calls so it also catches
+-- a block caused by one of those. Prints a stack trace too, though it may only
+-- show Blizzard's own code depending on where the event is dispatched from.
+-- Each registration is pcall'd in case an event name doesn't exist on a client.
+local BLOCKED_ACTION_DEBUG = true
+if BLOCKED_ACTION_DEBUG then
+    local blockedFrame = CreateFrame("Frame")
+    for _, e in ipairs({ "ADDON_ACTION_BLOCKED", "ADDON_ACTION_FORBIDDEN", "MACRO_ACTION_BLOCKED", "MACRO_ACTION_FORBIDDEN" }) do
+        pcall(blockedFrame.RegisterEvent, blockedFrame, e)
+    end
+    blockedFrame:SetScript("OnEvent", function(_, event, addonName, functionName)
+        print(string.format("|cffff0000[blocked]|r %s: addon=%s function=%s inCombat=%s",
+            event, tostring(addonName), tostring(functionName), tostring(InCombatLockdown())))
+        print(debugstack(2, 8, 0))
+    end)
+end
+
 frame:RegisterEvent("CHAT_MSG_WHISPER")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("PLAYER_XP_UPDATE")
 frame:RegisterEvent("PLAYER_LEVEL_UP")
-frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+-- Midnight-rules clients (WoW Forever) forbid addons from registering the
+-- combat log: it isn't a Lua error (pcall won't catch it), it raises the
+-- "has been blocked from an action" popup instead. issecretvalue only exists
+-- on those clients, so it's used as the "Midnight rules" check. Without it,
+-- HasRecentTargetEvade() never fires and IsCombatStalemate() is disabled
+-- (see COMBAT_LOG_AVAILABLE there).
+COMBAT_LOG_AVAILABLE = (issecretvalue == nil)
+if COMBAT_LOG_AVAILABLE then
+    frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+end
 frame:RegisterEvent("LOOT_BIND_CONFIRM")
 frame:RegisterEvent("PLAYER_REGEN_DISABLED")
 frame:RegisterEvent("MERCHANT_SHOW")
@@ -315,7 +346,7 @@ function EquipBestUpgradeIfBetter()
 
     print("YoyokazooUI: equipping upgrade " .. upgrade.itemLink .. " (score +" .. upgrade.gain .. ")")
     lastAutoEquipTime = GetTime()
-    EquipItemByName(upgrade.itemLink, upgrade.inventorySlot)
+    Compat_EquipItemByName(upgrade.itemLink, upgrade.inventorySlot)
     return true
 end
 
@@ -472,7 +503,32 @@ local AUTO_TRAIN_TICK_SECONDS = 0.3
 local AUTO_TRAIN_EMPTY_LIST_MAX_RETRIES = 5
 local autoTrainGeneration = 0
 
-local function TrainNextAffordableSkill(generation, boughtCount, emptyRetries)
+-- GetCoinText is a Classic global that modern clients (Forever) don't have --
+-- calling it there threw and silently killed the auto-train chain right
+-- before the first BuyTrainerService. Plain "1g 2s 3c" instead.
+local function FormatCopper(copper)
+    copper = tonumber(copper) or 0
+    local gold = math.floor(copper / 10000)
+    local silver = math.floor((copper % 10000) / 100)
+    local text = (copper % 100) .. "c"
+    if silver > 0 or gold > 0 then text = silver .. "s " .. text end
+    if gold > 0 then text = gold .. "g " .. text end
+    return text
+end
+
+local TrainNextAffordableSkill
+
+-- Each tick runs through pcall: these run from C_Timer callbacks, and with
+-- the scriptErrors CVar off (the default) an error there vanishes without a
+-- trace, leaving auto-train silently stopped.
+local function RunAutoTrainTick(generation, boughtCount, emptyRetries)
+    local ok, err = pcall(TrainNextAffordableSkill, generation, boughtCount, emptyRetries)
+    if not ok then
+        print("YoyokazooUI: auto-train failed: " .. tostring(err))
+    end
+end
+
+TrainNextAffordableSkill = function(generation, boughtCount, emptyRetries)
     if generation ~= autoTrainGeneration then
         AutoTrainDebugPrint("tick bailed: stale generation (trainer closed)")
         return
@@ -486,7 +542,7 @@ local function TrainNextAffordableSkill(generation, boughtCount, emptyRetries)
     if (GetNumTrainerServices() or 0) == 0 and emptyRetries < AUTO_TRAIN_EMPTY_LIST_MAX_RETRIES then
         AutoTrainDebugPrint("service list empty -- retry " .. (emptyRetries + 1) .. "/" .. AUTO_TRAIN_EMPTY_LIST_MAX_RETRIES)
         C_Timer.After(AUTO_TRAIN_TICK_SECONDS, function()
-            TrainNextAffordableSkill(generation, boughtCount, emptyRetries + 1)
+            RunAutoTrainTick(generation, boughtCount, emptyRetries + 1)
         end)
         return
     end
@@ -498,11 +554,11 @@ local function TrainNextAffordableSkill(generation, boughtCount, emptyRetries)
     end
 
     print("YoyokazooUI: training " .. tostring(name) .. " " .. tostring(rank or "") ..
-        " (" .. GetCoinText(cost, " ") .. ")")
+        " (" .. FormatCopper(cost) .. ")")
     BuyTrainerService(index)
 
     C_Timer.After(AUTO_TRAIN_TICK_SECONDS, function()
-        TrainNextAffordableSkill(generation, boughtCount + 1, emptyRetries)
+        RunAutoTrainTick(generation, boughtCount + 1, emptyRetries)
     end)
 end
 
@@ -650,7 +706,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         else
             AutoTrainDebugPrint("TRAINER_SHOW (generation " .. generation .. ")")
             C_Timer.After(AUTO_TRAIN_TICK_SECONDS, function()
-                TrainNextAffordableSkill(generation, 0, 0)
+                RunAutoTrainTick(generation, 0, 0)
             end)
         end
     end
@@ -843,7 +899,7 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- frame would unwind straight out of this whole block, meaning
         -- InitializePixelRow() never even got called, silently freezing every decoded
         -- bot flag (combat state, HP%, casting, zone, all of it) for the rest of the
-        -- session. Confirmed happening in testing (a bug in one of GetMultiBoolOne's
+        -- session. Confirmed happening in testing (a bug in one of MultiBoolOne's
         -- inputs, read by InitializeIndicators()'s debug swatch, blocked
         -- InitializePixelRow() from ever running). pcall-isolating each one, with its
         -- own success flag, means a bug in the debug-only frame can never again take
@@ -887,11 +943,6 @@ frame:SetScript("OnEvent", function(self, event, ...)
 
     if event == "PLAYER_LEVEL_UP" then
         local level = ...
-        
-        -- When you level, XP resets to 0. Compute how much XP the last level needed.
-        --local maxBefore = UnitXPMax("player")
-        --xpTracker.totalGained = xpTracker.totalGained + (maxBefore - xpTracker.currentXP)
-        --xpTracker.currentXP = 0
 
         print("Level up! Now level", level)
         print("Total session XP so far:", xpTracker.totalGained)
@@ -931,6 +982,13 @@ end
 -- at the top of this file, and PLAYER_REGEN_DISABLED/COMBAT_LOG_EVENT_UNFILTERED
 -- handling above.
 function IsCombatStalemate()
+    -- Without the combat log nothing ever refreshes lastCombatActivityTime
+    -- after combat starts, so every fight would read as a stalemate after
+    -- 30s (and the bot would log out mid-fight). Disabled instead.
+    if not COMBAT_LOG_AVAILABLE then
+        return false
+    end
+
     if not UnitAffectingCombat("player") or not lastCombatActivityTime then
         return false
     end
@@ -971,6 +1029,26 @@ end
 -- and (if a merchant is open) whether it can repair and what that would
 -- currently cost. "/yysell allowlist" or "/yysell blocklist" previews that
 -- mode instead of the current /yyconfig one.
+-- /yycd            -> toggle watching the class's GCD probe spell (GetGCDProbeSpell())
+-- /yycd <spellId>  -> toggle watching that spell's cooldown
+-- /yycd off        -> stop watching everything
+-- Debug-only: see the cooldown watcher in WoWFunctions.lua.
+SLASH_YYCD1 = "/yycd"
+SlashCmdList["YYCD"] = function(msg)
+    local arg = strtrim(msg or ""):lower()
+    if arg == "off" then
+        StopCooldownWatch()
+        return
+    end
+
+    local spellId = (arg == "") and GetGCDProbeSpell() or tonumber(arg)
+    if not spellId then
+        print("YoyokazooUI: usage: /yycd [spellId | off]")
+        return
+    end
+    ToggleCooldownWatchSpell(spellId)
+end
+
 SLASH_YYSELL1 = "/yysell"
 SlashCmdList["YYSELL"] = function(msg)
     local mode = GetAutoSellMode()
@@ -1009,6 +1087,16 @@ end
 -- FindBestEquipmentUpgrade() with AUTO_EQUIP_DEBUG forced on, printing every
 -- bag item's stats/score/skip reason and the upgrade it would pick -- but
 -- never equips anything.
+-- /yyspells: debug-only spell data dump for rebuilding a class's trainer
+-- table (see DumpSpellData() in WoWFunctions.lua). Run it with a class
+-- trainer window open to include the trainer's rows, then /reload so the
+-- dump is written to the SavedVariables file on disk.
+SLASH_YYSPELLS1 = "/yyspells"
+SlashCmdList["YYSPELLS"] = function()
+    local count = DumpSpellData()
+    print("YoyokazooUI: spell dump collected (" .. count .. " lines) into YoyokazooUIDB.spellDump -- /reload to write it to disk.")
+end
+
 SLASH_YYEQUIP1 = "/yyequip"
 SlashCmdList["YYEQUIP"] = function()
     print("YoyokazooUI: auto-equip dry run --")

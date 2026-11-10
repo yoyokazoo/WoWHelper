@@ -1,91 +1,27 @@
--- Creates a numeric indicator with a label.
--- parent      = parent frame
--- label       = "Range", "HP%", etc.
--- valueFunc   = function that returns a number (or string)
--- orderY      = vertical stacking index
---
--- Returns: { frame = <frame>, update = <function> }
+--------------------------------------------------
+-- Debug frame widgets (InitializeIndicators() below) -- human-facing only;
+-- the bot never reads the debug frame.
+--------------------------------------------------
 
+-- A labeled number. valueFunc returns a number (or string); nil shows "?".
+-- Returns the update function.
 function CreateNumberIndicator(parent, label, valueFunc, orderY)
-    local box = CreateFrame("Frame", nil, parent)
-    box:SetSize(20, 20)
-    box:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -10 - (orderY * 24))
-
-    -- Background texture (colored square)
-    local tex = box:CreateTexture(nil, "ARTWORK")
-    tex:SetAllPoints(box)
-    tex:SetColorTexture(0, 1, 0, 1)  -- default green
-
     local row = CreateFrame("Frame", nil, parent)
     row:SetSize(120, 20)
-    row:SetPoint("TOPLEFT", parent, "TOPLEFT", 40, -10 - (orderY * 24))
+    row:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -10 - (orderY * 24))
 
-    -- Numeric text (left)
     local valueText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     valueText:SetPoint("LEFT", row, "LEFT", 0, 0)
-    valueText:SetText("0")
+    valueText:SetText("?")
 
-    -- Label text (right)
     local labelText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     labelText:SetPoint("LEFT", row, "LEFT", 60, 0)
     labelText:SetText(label)
 
-    -- Update method
-    local function UpdateRow()
-        local v = valueFunc()
-        if v == nil then
-            valueText:SetText("?")
-        else
-            valueText:SetText(tostring(v))
-            local r, g, b = EncodeFloatToColor(v)
-            tex:SetColorTexture(r, g, b, 1)
-        end
+    return function()
+        local value = valueFunc()
+        valueText:SetText(value == nil and "?" or tostring(value))
     end
-
-    UpdateRow()
-
-    return {
-        frame = row,
-        update = UpdateRow,
-    }
-end
-
--- Creates a labeled indicator box.
--- parent      = parent frame
--- label       = string label
--- colorFunc   = a function returning true/false
--- orderY      = vertical offset (for stacking multiple boxes)
---
--- Returns a table { frame = <frame>, update = <update func> }
-
-function CreateIndicator(parent, label, colorFunc, orderY)
-    local box = CreateFrame("Frame", nil, parent)
-    box:SetSize(20, 20)
-    box:SetPoint("TOPLEFT", parent, "TOPLEFT", 170, -10 - (orderY * 24))
-
-    -- Background texture (colored square)
-    local tex = box:CreateTexture(nil, "ARTWORK")
-    tex:SetAllPoints(box)
-    tex:SetColorTexture(1, 0, 0, 1)  -- default red
-
-    -- Label
-    local text = box:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    text:SetPoint("LEFT", box, "RIGHT", 8, 0)
-    text:SetText(label)
-
-    -- Update method toggles the color
-    local function UpdateBox()
-        local r, g, b = colorFunc()
-        tex:SetColorTexture(r, g, b, 1)
-    end
-
-    -- Initial state
-    UpdateBox()
-
-    return {
-        frame = box,
-        update = UpdateBox,
-    }
 end
 
 -- Measures the real physical-pixels-per-UIParent-local-unit ratio by
@@ -105,56 +41,14 @@ local function GetPhysicalPixelsPerLocalUnit()
     return physWidth / UIParent:GetWidth()
 end
 
--- Creates a single exact pixel anchored at a fixed (x, y) offset from the
--- very top-left corner of the screen (not the draggable debug frame).
--- x, y, and size are real screen pixels; converted to UIParent's local
--- coordinate units via GetPhysicalPixelsPerLocalUnit() every update, so this
--- stays correct even if the ratio changes live (resolution change, or
--- whatever is causing GetEffectiveScale() to disagree with it).
---
--- parent    = parent frame (UIParent)
--- x, y      = offset from the top-left corner of the screen, in real screen pixels
--- size      = swatch width/height, in real screen pixels
--- colorFunc = function returning r, g, b (each 0-1)
---
--- Returns: { frame = <texture>, update = <function> }
-function CreatePixelSwatch(parent, x, y, size, colorFunc)
-    local tex = parent:CreateTexture(nil, "OVERLAY")
-    tex:SetColorTexture(0, 0, 0, 1)
-
-    local function UpdateSwatch()
-        local pixelsPerUnit = GetPhysicalPixelsPerLocalUnit()
-        local localSize = size / pixelsPerUnit
-
-        tex:ClearAllPoints()
-        tex:SetSize(localSize, localSize)
-        tex:SetPoint("TOPLEFT", parent, "TOPLEFT", x / pixelsPerUnit, -(y / pixelsPerUnit))
-
-        local r, g, b = colorFunc()
-        tex:SetColorTexture(r, g, b, 1)
-    end
-
-    UpdateSwatch()
-
-    return {
-        frame = tex,
-        update = UpdateSwatch,
-    }
-end
-
 --------------------------------------------------
 -- Run-specific settings menu (/yyconfig) -- toggles like "log out on low
--- dynamite"/"log out on full bags" used to be hardcoded per-profile in the C#
--- side's WowManagementConfiguration; now they're checkboxes here instead, so
--- they can be flipped live for the current run without touching C# config at
--- all. Each row is backed by a YoyokazooUIDB field (see YoyokazooUI.lua, which
--- owns the SavedVariable and the get/set wiring). The two boolean checkboxes
--- are piped to the C# side the same way every other bit of state in this addon
--- is -- packed into GetMultiBoolTwo() (WoWFunctions.lua) and read back as a
--- color -- but that's not a requirement of this menu itself: the "Dynamite
--- item"/"Healing potion" selectors below are Lua-only (only
--- AreWeLowOnDynamite()/AreWeLowOnHealthPotions(), WoWFunctions.lua, ever need
--- them), and aren't piped to C# at all.
+-- dynamite"/"log out on full bags", flipped live for the current run. Each
+-- row is backed by a YoyokazooUIDB field (see YoyokazooUI.lua, which owns the
+-- SavedVariable and the get/set wiring). Some reach the C# side as boxes in
+-- the MultiBoolTwo pixel row (MULTI_BOOL_TWO_FIELDS, WoWFunctions.lua); others,
+-- like the "Dynamite item"/"Healing potion" selectors, are Lua-only (only
+-- AreWeLowOnDynamite()/AreWeLowOnHealthPotions() ever need them).
 --
 -- options: array of either
 --   { label = "...", get = function() end, set = function(bool) end }               -- checkbox (default)
@@ -259,110 +153,231 @@ function CreateSettingsMenu(options)
     return frame
 end
 
--- Section 1 of the redesigned addon UI: a row of exact pixels pinned to the
--- screen's top-left corner at PIXEL_SIZE spacing -- one swatch per field
--- actually consumed elsewhere, in a fixed, resolution-independent spot, in
--- the same order it's consumed in. Debug-only values (individual HP%/
--- attacker count/etc, single-bool indicators) live only in the
--- InitializeIndicators() debug frame below, not here -- this row is
--- intentionally condensed to exactly what's used. MultiBoolTwo/ClassBoolTwo/
--- ClassIntOne aren't here either since nothing decodes them yet -- add a
--- swatch back here if/when a field actually needs one of them.
-function InitializePixelRow()
-    -- Size of each swatch, in real screen pixels; also its spacing, so
-    -- swatches never overlap. The center pixel of each PIXEL_SIZE x
-    -- PIXEL_SIZE block (offset PIXEL_SIZE//2 from this swatch's top-left
-    -- corner) is what gets read, for margin against any residual edge blur.
-    -- Must match the pixel-row layout on the decoding side if this changes.
-    local PIXEL_SIZE = 3
+--------------------------------------------------
+-- The bot's pixel rows -- the ONLY thing the C# side reads (WowPixelRows.cs,
+-- WowWorldState.cs, Wow*ClassState.cs). A block of PIXEL_SIZE-tall rows
+-- pinned to the screen's literal top-left corner, with every size and offset
+-- given in real screen pixels and converted via
+-- GetPhysicalPixelsPerLocalUnit(), so no per-resolution calibration is
+-- needed. Row N covers physical y = N*PIXEL_SIZE through N*PIXEL_SIZE + 2;
+-- the C# side reads the center pixel of each bar row / box, for margin
+-- against edge blur.
+--
+--   Row  0  player health bar (green) -- plus the ADDON_LOADED_COLOR
+--           sentinel box right after it, at x = PIXEL_BAR_WIDTH
+--   Row  1  player resource bar (blue)
+--   Row  2  target health bar (red)
+--   Row  3  (empty -- spacing between the bars and the bit rows)
+--   Row  4  map X                fixed point
+--   Row  5  map Y                fixed point
+--   Row  6  facing, in degrees   fixed point
+--   Row  7  MultiBoolOne         bool fields (MULTI_BOOL_ONE_FIELDS)
+--   Row  8  MultiBoolTwo         bool fields (MULTI_BOOL_TWO_FIELDS)
+--   Row  9  ClassBoolOne         bool fields (<CLASS>_CLASS_BOOL_ONE_FIELDS)
+--   Row 10  ClassBoolTwo         bool fields (<CLASS>_CLASS_BOOL_TWO_FIELDS)
+--   Row 11  MultiIntOne          bytes: attacker count, player level, zone ID
+--
+-- Bars fill left to right, so the number of filled pixels is the percent --
+-- and a StatusBar accepts secret values (Midnight-rules clients), which Lua
+-- itself can't do math on. Rows 4-11 are bit rows: PIXEL_ROW_BITS boxes,
+-- green = 1, red = 0 (see MathFunctions.lua for the encodings).
+--
+-- Row order and every constant below MUST match WowPixelRows.cs. A one-sided
+-- change doesn't fail loudly -- it silently misreads every row it shifts.
+--------------------------------------------------
+PIXEL_SIZE = 3
+PIXEL_BAR_WIDTH = 100  -- so each filled bar pixel is exactly 1%
+local PIXEL_ROW_COUNT = 12
 
-    local swatches = {}
+-- Exact-match sentinel: if the C# side sees exactly this color, the addon is
+-- loaded and the rows are real. Nothing else here ever draws it.
+ADDON_LOADED_COLOR = { 96/255, 255/255, 117/255 }  -- (96, 255, 117)
 
-    local function AddSwatch(index, colorFunc)
-        table.insert(swatches, CreatePixelSwatch(UIParent, index * PIXEL_SIZE, 0, PIXEL_SIZE, colorFunc))
+PIXEL_BAR_EMPTY_COLOR        = { 0, 0, 0 }  -- (0, 0, 0)
+PLAYER_HEALTH_BAR_FILL_COLOR = { 0, 1, 0 }  -- (0, 255, 0)
+RESOURCE_BAR_FILL_COLOR      = { 0, 0, 1 }  -- (0, 0, 255)
+TARGET_HEALTH_BAR_FILL_COLOR = { 1, 0, 0 }  -- (255, 0, 0)
+
+BIT_ONE_COLOR  = { 0, 1, 0 }  -- (0, 255, 0)
+BIT_ZERO_COLOR = { 1, 0, 0 }  -- (255, 0, 0)
+
+local PIXEL_ROW_REFRESH_SECONDS = 0.05
+
+-- Bar value sources: each returns (current, max), possibly secret -- passed
+-- straight to the StatusBar with no Lua-side math or comparisons.
+function GetPlayerHealthBarValues()
+    return UnitHealth("player"), UnitHealthMax("player")
+end
+
+function GetPlayerResourceBarValues()
+    return UnitPower("player"), UnitPowerMax("player")
+end
+
+function GetTargetHealthBarValues()
+    -- UnitExists isn't secret. With no target, show an empty bar rather than
+    -- whatever a 0/0 StatusBar happens to render.
+    if not UnitExists("target") then return 0, 1 end
+    return UnitHealth("target"), UnitHealthMax("target")
+end
+
+local function PlaceInPixels(container, region, pixelsPerUnit, x, y, width, height)
+    region:ClearAllPoints()
+    region:SetSize(width / pixelsPerUnit, height / pixelsPerUnit)
+    region:SetPoint("TOPLEFT", container, "TOPLEFT", x / pixelsPerUnit, -(y / pixelsPerUnit))
+end
+
+-- Each element is { name, layout(pixelsPerUnit), update() }: layout
+-- positions it (re-run only when the pixel/unit ratio changes), update
+-- redraws its value every refresh (nil for static elements).
+
+local function CreateStatusBarElement(container, row, fillColor, valuesFunc)
+    local bar = CreateFrame("StatusBar", nil, container)
+    bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8")
+    bar:SetStatusBarColor(fillColor[1], fillColor[2], fillColor[3], 1)
+    bar:SetOrientation("HORIZONTAL")
+
+    local background = bar:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints(bar)
+    background:SetColorTexture(PIXEL_BAR_EMPTY_COLOR[1], PIXEL_BAR_EMPTY_COLOR[2], PIXEL_BAR_EMPTY_COLOR[3], 1)
+
+    return {
+        name = "row " .. row .. " (bar)",
+        layout = function(pixelsPerUnit)
+            PlaceInPixels(container, bar, pixelsPerUnit, 0, row * PIXEL_SIZE, PIXEL_BAR_WIDTH, PIXEL_SIZE)
+        end,
+        update = function()
+            local current, max = valuesFunc()
+            bar:SetMinMaxValues(0, max)
+            bar:SetValue(current)
+        end,
+    }
+end
+
+local function CreateSolidSwatchElement(container, name, x, y, color)
+    local tex = container:CreateTexture(nil, "OVERLAY")
+    tex:SetColorTexture(color[1], color[2], color[3], 1)
+
+    return {
+        name = name,
+        layout = function(pixelsPerUnit)
+            PlaceInPixels(container, tex, pixelsPerUnit, x, y, PIXEL_SIZE, PIXEL_SIZE)
+        end,
+    }
+end
+
+-- bitsFunc returns the row's integer value (see the Encode* helpers in
+-- MathFunctions.lua); box i shows bit i-1.
+local function CreateBitRowElement(container, row, bitsFunc)
+    local boxes = {}
+    for i = 1, PIXEL_ROW_BITS do
+        boxes[i] = container:CreateTexture(nil, "OVERLAY")
     end
 
-    -- Fixed sentinel color, exactly (96, 255, 117) -- never produced by any of the
-    -- encoded/computed swatches below, so it's possible to tell "addon is loaded and
-    -- this pixel row is real" (exact match) apart from "on the login screen, or
-    -- otherwise not rendering" (anything else, including whatever's actually at this
-    -- screen position when the addon isn't loaded) via a single exact-color check,
-    -- instead of the old login-screen-specific text/UI pixel signature match.
-    AddSwatch(0, function() return 96/255, 255/255, 117/255 end)
-    AddSwatch(1, function() return EncodeFloatToColor(GetPlayerMapX()) end)
-    AddSwatch(2, function() return EncodeFloatToColor(GetPlayerMapY()) end)
-    AddSwatch(3, function() return EncodeFloatToColor(GetPlayerFacingInDegrees()) end)
-    AddSwatch(4, GetMultiBoolOne)
-    AddSwatch(5, GetMultiIntOne)
-    AddSwatch(6, GetMultiIntTwo)
-    AddSwatch(7, GetClassBoolOne)
-    AddSwatch(8, GetMultiBoolTwo)
-    AddSwatch(9, GetClassBoolTwo)
+    return {
+        name = "row " .. row,
+        layout = function(pixelsPerUnit)
+            for i, box in ipairs(boxes) do
+                PlaceInPixels(container, box, pixelsPerUnit, (i - 1) * PIXEL_SIZE, row * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE)
+            end
+        end,
+        update = function()
+            local n = bitsFunc()
+            for _, box in ipairs(boxes) do
+                local bitValue = n % 2
+                n = (n - bitValue) / 2
+                local color = (bitValue == 1) and BIT_ONE_COLOR or BIT_ZERO_COLOR
+                box:SetColorTexture(color[1], color[2], color[3], 1)
+            end
+        end,
+    }
+end
 
-    local checkInterval = 0.05
-    local elapsedTime = 0
+function InitializePixelRow()
+    -- Its own TOOLTIP-strata frame, so no other UI (e.g. the player frame,
+    -- which sits in this corner) can draw over the rows.
+    local container = CreateFrame("Frame", nil, UIParent)
+    container:SetFrameStrata("TOOLTIP")
+    container:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0, 0)
 
-    local updaterFrame = CreateFrame("Frame")
-    updaterFrame:SetScript("OnUpdate", function(self, elapsed)
-        elapsedTime = elapsedTime + elapsed
-        if elapsedTime < checkInterval then return end
-        elapsedTime = 0
+    local elements = {
+        CreateStatusBarElement(container, 0, PLAYER_HEALTH_BAR_FILL_COLOR, GetPlayerHealthBarValues),
+        CreateSolidSwatchElement(container, "addon-loaded sentinel", PIXEL_BAR_WIDTH, 0, ADDON_LOADED_COLOR),
+        CreateStatusBarElement(container, 1, RESOURCE_BAR_FILL_COLOR, GetPlayerResourceBarValues),
+        CreateStatusBarElement(container, 2, TARGET_HEALTH_BAR_FILL_COLOR, GetTargetHealthBarValues),
 
-        for _, swatch in ipairs(swatches) do
-            swatch.update()
+        -- Row 3 is left empty: spacing between the bars and the bit rows.
+
+        CreateBitRowElement(container, 4, function() return EncodeFixedPoint(GetPlayerMapX()) end),
+        CreateBitRowElement(container, 5, function() return EncodeFixedPoint(GetPlayerMapY()) end),
+        CreateBitRowElement(container, 6, function() return EncodeFixedPoint(GetPlayerFacingInDegrees()) end),
+
+        CreateBitRowElement(container, 7, function() return EncodeBoolFields("MultiBoolOne", MULTI_BOOL_ONE_FIELDS) end),
+        CreateBitRowElement(container, 8, function() return EncodeBoolFields("MultiBoolTwo", MULTI_BOOL_TWO_FIELDS) end),
+        CreateBitRowElement(container, 9, function() return EncodeBoolFields("ClassBoolOne", GetPlayerClassFields("CLASS_BOOL_ONE_FIELDS")) end),
+        CreateBitRowElement(container, 10, function() return EncodeBoolFields("ClassBoolTwo", GetPlayerClassFields("CLASS_BOOL_TWO_FIELDS")) end),
+
+        CreateBitRowElement(container, 11, function()
+            return EncodeBytes(CountAttackers(), UnitLevel("player"), GetCurrentZoneId())
+        end),
+    }
+
+    local lastPixelsPerUnit = nil
+    local reportedErrors = {}
+
+    local function Refresh()
+        local pixelsPerUnit = GetPhysicalPixelsPerLocalUnit()
+        -- UIParent can briefly report no width during loading (inf/NaN here).
+        if not pixelsPerUnit or pixelsPerUnit ~= pixelsPerUnit or pixelsPerUnit <= 0 or pixelsPerUnit == math.huge then return end
+
+        if pixelsPerUnit ~= lastPixelsPerUnit then
+            lastPixelsPerUnit = pixelsPerUnit
+            container:SetSize((PIXEL_BAR_WIDTH + PIXEL_SIZE) / pixelsPerUnit, (PIXEL_ROW_COUNT * PIXEL_SIZE) / pixelsPerUnit)
+            for _, element in ipairs(elements) do
+                element.layout(pixelsPerUnit)
+            end
         end
+
+        -- Each element is pcall'd so one failing can't stop the rest from
+        -- updating; it keeps its last drawn value. Each distinct error is
+        -- printed once.
+        for _, element in ipairs(elements) do
+            if element.update then
+                local ok, err = pcall(element.update)
+                if not ok then
+                    local key = element.name .. tostring(err)
+                    if not reportedErrors[key] then
+                        reportedErrors[key] = true
+                        print(string.format("|cffff4040YoyokazooUI pixel %s update failed (combat=%s):|r %s",
+                            element.name, tostring(InCombatLockdown()), tostring(err)))
+                    end
+                end
+            end
+        end
+    end
+
+    Refresh()
+
+    local elapsedTime = 0
+    container:SetScript("OnUpdate", function(self, elapsed)
+        elapsedTime = elapsedTime + elapsed
+        if elapsedTime < PIXEL_ROW_REFRESH_SECONDS then return end
+        elapsedTime = 0
+        Refresh()
     end)
 end
 
+-- The human-only debug frame (/yydebug): map X/Y and facing, for reading off
+-- coordinates while recording routes. Its size (YoyokazooUI.lua) fits exactly
+-- these rows -- resize it there if rows are added. Each update is pcall'd so
+-- one failing value doesn't freeze the rest.
 function InitializeIndicators()
-    local numIndicators = {}
-
-    local hpNum      = CreateNumberIndicator(YoyokazooUIFrame, "HP%",      GetPlayerHealthPercent,    0)
-    local resNum     = CreateNumberIndicator(YoyokazooUIFrame, "Resource", GetPlayerResourcePercent,  1)
-    local tgtHpNum   = CreateNumberIndicator(YoyokazooUIFrame, "TgtHP%",   GetTargetHealthPercent,    2)
-    local mapXNum    = CreateNumberIndicator(YoyokazooUIFrame, "MapX",     GetPlayerMapX,            3)
-    local mapYNum    = CreateNumberIndicator(YoyokazooUIFrame, "MapY",     GetPlayerMapY,            4)
-    local facingYNum = CreateNumberIndicator(YoyokazooUIFrame, "Degrees",    GetPlayerFacingInDegrees,         5)
-    local attackers = CreateNumberIndicator(YoyokazooUIFrame, "Attackers",    CountAttackers,         6)
-
-    table.insert(numIndicators, hpNum.update)
-    table.insert(numIndicators, resNum.update)
-    table.insert(numIndicators, tgtHpNum.update)
-    table.insert(numIndicators, mapXNum.update)
-    table.insert(numIndicators, mapYNum.update)
-    table.insert(numIndicators, facingYNum.update)
-    table.insert(numIndicators, attackers.update)
-
-    local inRangeBox = CreateIndicator(YoyokazooUIFrame, "InRange", IsAttackingColor, 0)
-    local inCombatBox = CreateIndicator(YoyokazooUIFrame, "InCombat", IsInCombatColor, 1)
-    local canChargeTarget = CreateIndicator(YoyokazooUIFrame, "CanChargeTarget", CanChargeTargetColor, 2)
-    local heroicQueued = CreateIndicator(YoyokazooUIFrame, "Heroic Queued", IsAnyNextSwingSpellQueuedColor, 3)
-    local multiBoolOne = CreateIndicator(YoyokazooUIFrame, "Multi Bool One", GetMultiBoolOne, 4)
-    local multiBoolTwo = CreateIndicator(YoyokazooUIFrame, "Multi Bool Two", GetMultiBoolTwo, 5)
-    local multiIntOne = CreateIndicator(YoyokazooUIFrame, "Multi Int One", GetMultiIntOne, 6)
-    local multiIntTwo = CreateIndicator(YoyokazooUIFrame, "Multi Int Two", GetMultiIntTwo, 7)
-    local classBoolOne = CreateIndicator(YoyokazooUIFrame, "Class Bool One", GetClassBoolOne, 8)
-    local classBoolTwo = CreateIndicator(YoyokazooUIFrame, "Class Bool Two", GetClassBoolTwo, 9)
-    local classIntOne = CreateIndicator(YoyokazooUIFrame, "Class Int One", GetClassIntOne, 10)
-
-    local indicators = {
-        inRangeBox.update,
-        inCombatBox.update,
-        canChargeTarget.update,
-        heroicQueued.update,
-        multiBoolOne.update,
-        multiBoolTwo.update,
-        multiIntOne.update,
-        multiIntTwo.update,
-        classBoolOne.update,
-        classBoolTwo.update,
-        classIntOne.update
+    local updates = {
+        CreateNumberIndicator(YoyokazooUIFrame, "MapX",    GetPlayerMapX,            0),
+        CreateNumberIndicator(YoyokazooUIFrame, "MapY",    GetPlayerMapY,            1),
+        CreateNumberIndicator(YoyokazooUIFrame, "Degrees", GetPlayerFacingInDegrees, 2),
     }
 
-    -- Melee Range Indicator
-
-    local checkInterval = 0.1    -- seconds between checks
-    local elapsedSinceCheck = 0
+    local checkInterval = 0.1
     local elapsedTime = 0
 
     YoyokazooUIFrame:SetScript("OnUpdate", function(self, elapsed)
@@ -370,13 +385,8 @@ function InitializeIndicators()
         if elapsedTime < checkInterval then return end
         elapsedTime = 0
 
-        -- Update all indicator boxes
-        for _, update in ipairs(indicators) do
-            update()
-        end
-
-        for _, update in ipairs(numIndicators) do
-            update()
+        for _, update in ipairs(updates) do
+            pcall(update)
         end
     end)
 end
@@ -407,275 +417,6 @@ function PrintXpPerHour(prefix, startTime, totalGained)
         hoursToLevel
     ))
 end
-
-function PositionLootFrameCenter()
-  if not LootFrame then return end
-  LootFrame:ClearAllPoints()
-  LootFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-  print("LOOT FRAME CENTERED")
-end
-
-
-
-
-
-
-
------- Chat GPT picker buttons, but things are a bit spotty.  Shelving for now
-
---[=[
-
---[[
-Creates a "picker" button:
-- Shows a single square parent button.
-- On hover, spawns (and shows) a vertical list of option buttons (each an item).
-- Clicking an option:
-    - Saves the chosen itemID into SavedVariables (your table)
-    - Updates parent icon to the chosen item�s icon
-    - Hides the options
-
-Classic-friendly notes:
-- Uses GetItemIcon(itemID) (works in Classic-era clients)
-- Tooltips use GameTooltip:SetItemByID(itemID)
-- You must define your SavedVariables table in your .toc, e.g.:
-    ## SavedVariables: MyAddonDB
-and ensure MyAddonDB exists at runtime.
-]]
-
-local function EnsureDB(db, key)
-    if type(db) ~= "table" then
-        error("db must be a table (SavedVariables root table).")
-    end
-    if db[key] == nil then
-        db[key] = {} -- optional: you can store more later
-    end
-end
-
-local function SetButtonIcon(button, itemID)
-    local icon = GetItemIcon(itemID)
-    if icon then
-        button.icon:SetTexture(icon)
-        button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        button.icon:Show()
-    else
-        -- icon might not be cached yet; show question mark
-        button.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-        button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        button.icon:Show()
-    end
-end
-
-local function AttachItemTooltip(frame, itemID)
-    frame:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetItemByID(itemID)
-        GameTooltip:Show()
-    end)
-    frame:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-end
-
-local function DumpTableShallow(t, prefix)
-    prefix = prefix or ""
-    if type(t) ~= "table" then
-        print(prefix .. tostring(t))
-        return
-    end
-
-    for k, v in pairs(t) do
-        print(prefix .. tostring(k) .. " = " .. tostring(v))
-    end
-end
-
--- db: your SavedVariables root table (e.g., MyAddonDB)
--- storageKey: string key where the selected itemID is stored (e.g., "healingPotionItemID")
--- options: array of { name=..., level=..., itemID=... } (name/level optional, itemID required)
--- parent: UI parent frame
--- x, y: anchor offsets (TOPLEFT of parent by default)
--- size: button size (px)
---
--- Returns: parentButton (Frame)
-function CreateHoverItemPickerButton(db, storageKey, options, parent, x, y, size)
-    parent = parent or UIParent
-    x = x or 0
-    y = y or 0
-    size = size or 36
-
-    EnsureDB(db, storageKey)
-
-    -- Parent button
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetSize(size, size)
-    btn:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-    btn:SetFrameStrata("MEDIUM")
-    btn:SetClampedToScreen(true)
-
-    btn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = false, edgeSize = 12,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
-    })
-    btn:SetBackdropColor(0, 0, 0, 0.65)
-
-    btn.icon = btn:CreateTexture(nil, "ARTWORK")
-    btn.icon:SetAllPoints(btn)
-
-    -- Option buttons container (just to keep references)
-    btn.optionButtons = {}
-
-    local function HideOptions()
-        for _, ob in ipairs(btn.optionButtons) do
-            ob:Hide()
-        end
-    end
-
-    local function ShowOptions()
-        for _, ob in ipairs(btn.optionButtons) do
-            ob:Show()
-        end
-    end
-
-    print("db = ", DumpTableShallow(db, " "))
-    print("storageKey = ", storageKey)
-    print("db[storageKey] = ", DumpTableShallow(db[storageKey], " "))
-    print("options", DumpTableShallow(options, " "))
-    print("options[1]", options[1])
-    print("options[1]", DumpTableShallow(options[1], " "))
-
-    -- Pick initial selection:
-    -- 1) from SavedVariables (db[storageKey]) if set
-    -- 2) else first option
-    local initialItemID = db[storageKey]
-    --if not initialItemID then
-    --    if options[1] and options[1].itemID then
-    --        initialItemID = options[1].itemID
-    --        db[storageKey] = initialItemID
-    --    end
-    --end
-
-    initialItemID = options[1]
-
-    print("InitialItemId = ", DumpTableShallow(initialItemID, " "))
-    print("InitialItemId.itemID = ", initialItemID.itemID)
-
-    if initialItemID then
-        SetButtonIcon(btn, initialItemID.itemID)
-        AttachItemTooltip(btn, initialItemID.itemID)
-    else
-        btn.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-        btn.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    end
-
-    -- Create option buttons (vertical list to the right by default)
-    local gap = 4
-    for i, opt in ipairs(options) do
-        local itemID = opt.itemID
-        local ob = CreateFrame("Button", nil, parent, "BackdropTemplate")
-        ob:SetSize(size, size)
-        ob:SetPoint("TOPLEFT", btn, "TOPRIGHT", gap, -((i - 1) * (size + gap)))
-        ob:SetFrameStrata("DIALOG")
-        ob:SetClampedToScreen(true)
-
-        ob:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            tile = false, edgeSize = 12,
-            insets = { left = 2, right = 2, top = 2, bottom = 2 }
-        })
-        ob:SetBackdropColor(0, 0, 0, 0.75)
-
-        ob.icon = ob:CreateTexture(nil, "ARTWORK")
-        ob.icon:SetAllPoints(ob)
-
-        SetButtonIcon(ob, itemID)
-        AttachItemTooltip(ob, itemID)
-
-        ob:SetScript("OnClick", function()
-            db[storageKey] = itemID
-
-            -- Update parent icon + tooltip to the chosen one
-            SetButtonIcon(btn, itemID)
-            AttachItemTooltip(btn, itemID)
-
-            HideOptions()
-        end)
-
-        -- Keep the dropdown open while hovering option buttons too
-        ob:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetItemByID(itemID)
-            GameTooltip:Show()
-            ShowOptions()
-        end)
-        ob:SetScript("OnLeave", function()
-            GameTooltip:Hide()
-            -- We don't hide immediately here; parent OnLeave handles it (with a short delay).
-        end)
-
-        ob:Hide()
-        table.insert(btn.optionButtons, ob)
-    end
-
-    -- Hover behavior: show options on enter, hide on leave (with small delay to allow moving cursor)
-    btn:SetScript("OnEnter", function()
-        -- Update tooltip based on current selection
-        --local selected = db[storageKey]
-        --if selected then
-        --    GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
-        --    GameTooltip:SetItemByID(selected)
-        --    GameTooltip:Show()
-        --end
-        ShowOptions()
-    end)
-
-    btn:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-
-        -- Delay hiding slightly so moving from parent -> option doesn't close it.
-        C_Timer.After(0.10, function()
-            -- If neither parent nor any option is moused over, hide.
-            if not btn:IsMouseOver() then
-                for _, ob in ipairs(btn.optionButtons) do
-                    if ob:IsMouseOver() then
-                        return
-                    end
-                end
-                HideOptions()
-            end
-        end)
-    end)
-
-    -- Utility to query current selection
-    btn.GetSelectedItemID = function()
-        return db[storageKey]
-    end
-
-    -- Utility to force refresh icon from saved vars (e.g., after /reload)
-    btn.Refresh = function()
-        local selected = db[storageKey]
-        if selected then
-            SetButtonIcon(btn, selected)
-            AttachItemTooltip(btn, selected)
-        end
-    end
-
-    return btn
-end
-
-YoyokazooUIDB = YoyokazooUIDB or {}
-
-        local healingOptions = {
-            { name = "Lesser Healing Potion",   itemID = 858   },
-            { name = "Healing Potion",          itemID = 929   },
-            { name = "Greater Healing Potion",  itemID = 1710  },
-            { name = "Superior Healing Potion", itemID = 3928  },
-            { name = "Major Healing Potion",    itemID = 13446 },
-        }
-        local picker = CreateHoverItemPickerButton(YoyokazooUIDB, "healingPotionItemID", healingOptions, UIParent, 50, -50, 36)
-
-]=]
 
 --------------------------------------------------
 -- Target bearing marker: a single sentinel-colored square anchored to the
@@ -714,7 +455,12 @@ YoyokazooUIDB = YoyokazooUIDB or {}
 -- so does the target's plate disappearing (NAME_PLATE_UNIT_REMOVED, plus a
 -- polling reconcile as a backstop).
 --------------------------------------------------
-local NAMEPLATE_MARKER_SIZE = 12
+-- In real screen pixels, not UI units -- converted via
+-- GetPhysicalPixelsPerLocalUnit() (same as the pixel row) so the marker is
+-- exactly this size on every client/UI scale. (It used to be 12 UI units,
+-- which came out ~20px on Classic Era at ratio 1.6875 but ~14-15px on the
+-- Forever client at ratio 1.2.)
+local NAMEPLATE_MARKER_SIZE_PIXELS = 20
 local NAMEPLATE_MARKER_COLOR = { 1, 0, 1 } -- magenta -- keep in sync with
 -- the corresponding sentinel color on the decoding side
 
@@ -747,7 +493,6 @@ local function AddTargetMarker(plate)
         -- internal layering.
         local marker = CreateFrame("Frame", nil, UIParent)
         marker:SetFrameStrata("TOOLTIP")
-        marker:SetSize(NAMEPLATE_MARKER_SIZE, NAMEPLATE_MARKER_SIZE)
         marker:SetPoint("CENTER", plate, "CENTER", 0, 0)
 
         local tex = marker:CreateTexture(nil, "OVERLAY")
@@ -756,6 +501,11 @@ local function AddTargetMarker(plate)
 
         plate.wowHelperTargetMarker = marker
     end
+
+    -- Re-sized on every show, not just at creation, in case the pixel/unit
+    -- ratio changed since (UI scale or resolution change mid-session).
+    local localSize = NAMEPLATE_MARKER_SIZE_PIXELS / GetPhysicalPixelsPerLocalUnit()
+    plate.wowHelperTargetMarker:SetSize(localSize, localSize)
 
     if currentlyShownMarker and currentlyShownMarker ~= plate.wowHelperTargetMarker then
         currentlyShownMarker:Hide()
