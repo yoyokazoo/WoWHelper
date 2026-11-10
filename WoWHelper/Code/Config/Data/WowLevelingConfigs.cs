@@ -61,8 +61,6 @@ namespace WoWHelper.Code.WorldState
             LEVEL_11_THRU_12,
         };
 
-        // A config specific to this class wins over an any-class (Class == null) one at the
-        // same level. Null if neither exists yet.
         public static WowLevelingConfiguration GetFor(WowCombatConfiguration playerClass, int level)
         {
             return ALL_LEVELING_CONFIGS.FirstOrDefault(c => c.Levels.Contains(level) && c.Class == playerClass)

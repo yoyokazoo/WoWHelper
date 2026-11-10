@@ -137,19 +137,6 @@ namespace WoWHelper.Code.WorldState
             MaximumLevel = 43,
             Route = WowRoutes.LEVEL_36_KODO_GRAVEYARD_ROUTE,
             EngageMethod = EngagementMethod.Pull,
-
-            MerchantConfig = new WowMerchantConfiguration
-            {
-                Name = "Muuran",
-                Waypoints = new List<Vector2>
-                {
-                    new Vector2(53.65f, 57.29f),
-                    new Vector2(54.63f, 57.79f),
-                    new Vector2(55.48f, 58.22f),
-                    new Vector2(55.88f, 57.25f),
-                    new Vector2(55.60f, 56.51f),
-                },
-            },
         };
 
         /*
@@ -179,21 +166,6 @@ namespace WoWHelper.Code.WorldState
             Route = WowRoutes.LEVEL_29_HILLSBRAD_RIVER_ROUTE,
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
             ChaseOutOfRangeTargets = false, // elite dragon nearby if we get dragged too far
-
-            // TODO: stubbed -- confirm this is actually a vendor and tune the tight final
-            // approach point once tested live.
-            MerchantConfig = new WowMerchantConfiguration
-            {
-                Name = "Derak Nightfall",
-                Waypoints = new List<Vector2>
-                {
-                    new Vector2(67.82f, 17.99f), // must match LEVEL_29_HILLSBRAD_RIVER_ROUTE.Waypoints[2] exactly
-                    new Vector2(66.43f, 18.23f),
-                    new Vector2(64.79f, 18.04f),
-                    new Vector2(63.26f, 17.25f),
-                    new Vector2(63.09f, 19.39f),
-                },
-            },
         };
 
         /*
@@ -307,19 +279,6 @@ namespace WoWHelper.Code.WorldState
             MaximumLevel = 4,
             Route = WowRoutes.LEVEL_1_DUROTAR_BOARS_AND_SCORPS_ROUTE,
             TargetMacroMobNames = "Mottled,Scorpid",
-
-            MerchantConfig = new WowMerchantConfiguration
-            {
-                Name = "Duokna",
-                Waypoints = new List<Vector2>
-                {
-                    new Vector2(44.19f, 66.23f),
-                    new Vector2(43.82f, 66.78f),
-                    new Vector2(43.72f, 67.81f),
-                    new Vector2(43.10f, 67.61f),
-                    new Vector2(42.58f, 67.35f),
-                },
-            },
         };
 
         #endregion
@@ -444,7 +403,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_6_MULGORE_BATTLEBOARS,
             LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
             LEVEL_4_TIRISFAL_ANIMALS,
-            //LEVEL_4_DUROTAR_IMPS, // Too crowded
+            LEVEL_4_DUROTAR_IMPS,
             LEVEL_4_DUROTAR_SCORPS,
             LEVEL_1_MULGORE_PLAINSTRIDERS,
             LEVEL_1_DUROTAR_BOARS_AND_SCORPS,

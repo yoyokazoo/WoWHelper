@@ -81,10 +81,6 @@ namespace WoWHelper.Code.WorldState
         // Name, waypoints, traversal method, distance tolerance, zone and minimum level -- see WowRoutes.cs.
         public WowRoute Route { get; set; }
 
-        // Optional "sell run" detour -- see WowMerchantConfiguration for the branch-off
-        // contract. Null (default) for routes that just log out on full bags instead.
-        public WowMerchantConfiguration MerchantConfig { get; set; }
-
         public WowLocationConfiguration()
         {
             TargetFindMethod = WaypointTargetFindMethod.ALTERNATE;
