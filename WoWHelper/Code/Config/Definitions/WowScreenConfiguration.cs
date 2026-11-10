@@ -9,17 +9,6 @@ namespace WoWHelper
     {
         #region Constants
 
-        public static readonly Color TRADE_SCREEN_COLOR_ONE = Color.FromArgb(93, 88, 86);
-        public static readonly Color TRADE_SCREEN_COLOR_TWO = Color.FromArgb(167, 165, 161);
-        public static readonly Color TRADE_SCREEN_COLOR_THREE = Color.FromArgb(212, 177, 42);
-
-        public static readonly Color TRADE_SCREEN_ACCEPTED_COLOR_ONE = Color.FromArgb(38, 64, 33);
-        public static readonly Color TRADE_SCREEN_ACCEPTED_COLOR_TWO = Color.FromArgb(140, 223, 0);
-
-        public static readonly Color TRADE_SCREEN_CONFIRMATION_COLOR_ONE = Color.FromArgb(68, 66, 64);
-        public static readonly Color TRADE_SCREEN_CONFIRMATION_COLOR_TWO = Color.FromArgb(233, 181, 43);
-        public static readonly Color TRADE_SCREEN_CONFIRMATION_COLOR_THREE = Color.FromArgb(87, 0, 0);
-
         // Sentinel color painted onto the current target's nameplate (a single CENTER-anchored
         // texture -- see UIFunctions.lua's target-marker section) so it can be found via an
         // ordinary screen-capture pixel search instead of a restricted frame-measurement API
@@ -30,7 +19,6 @@ namespace WoWHelper
 
         #endregion
 
-        // /console cameraDistanceMaxZoomFactor 2.6
         // TODO: init instead of set would be nice. What would it take to migrate?
         public string Name { get; set; }
         public Size Resolution { get; set; }
@@ -61,12 +49,6 @@ namespace WoWHelper
         public int MeleeRangeTargetMarkerDistance { get; set; }
         public int TooCloseToTurnWhileWalkingTargetMarkerDistance { get; set; }
 
-        // Trade window
-        public ImageMatchColorPositions TradeWindowScreenPositions { get; set; }
-        public ImageMatchColorPositions TradeWindowAcceptedScreenPositions { get; set; }
-        public ImageMatchColorPositions TradeWindowConfirmationScreenPositions { get; set; }
-        public ImageMatchTextArea TradeWindowRecipientTextArea { get; set; }
-
         // Bounding rectangle covering every pixel anything in this codebase reads off a
         // captured screen bitmap: the pixel rows (top-left corner, see WowPixelRows) and
         // the trade-window matchers/OCR area (used by
@@ -92,11 +74,6 @@ namespace WoWHelper
                 WowPixelRows.FarthestReadPixel,
             };
 
-            var clusters = new[]
-            {
-                TradeWindowScreenPositions, TradeWindowAcceptedScreenPositions, TradeWindowConfirmationScreenPositions,
-            };
-
             int maxX = 0;
             int maxY = 0;
 
@@ -104,36 +81,6 @@ namespace WoWHelper
             {
                 maxX = Math.Max(maxX, point.X);
                 maxY = Math.Max(maxY, point.Y);
-            }
-
-            foreach (var cluster in clusters)
-            {
-                if (cluster == null)
-                {
-                    continue; // not configured for this resolution -- skip rather than blow up
-                }
-
-                foreach (var position in cluster.ColorPositions)
-                {
-                    maxX = Math.Max(maxX, position.X);
-                    maxY = Math.Max(maxY, position.Y);
-                }
-            }
-
-            var textAreas = new[]
-            {
-                TradeWindowRecipientTextArea,
-            };
-
-            foreach (var textArea in textAreas)
-            {
-                if (textArea == null)
-                {
-                    continue; // not configured for this resolution -- skip rather than blow up
-                }
-
-                maxX = Math.Max(maxX, textArea.X + textArea.Width);
-                maxY = Math.Max(maxY, textArea.Y + textArea.Height);
             }
 
             return new Rectangle(0, 0, maxX + CaptureRectangleMargin, maxY + CaptureRectangleMargin);

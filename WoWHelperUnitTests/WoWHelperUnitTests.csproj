@@ -254,7 +254,6 @@
     <Compile Include="Tests\Shared\CustomAssertions.cs" />
     <Compile Include="Tests\Shared\DpiAwareness.cs" />
     <Compile Include="Tests\Shared\UnitTestBase.cs" />
-    <Compile Include="Tests\WorldStateTests\WowTradeTests.cs" />
     <Compile Include="Tests\WorldStateTests\WoWWorldstateTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -273,10 +272,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Source Images\2560trade.bmp" />
-    <Content Include="Source Images\2560tradeaccepted.bmp" />
     <Content Include="Source Images\BattleShout.bmp" />
-    <Content Include="Source Images\login screen.bmp" />
     <Content Include="Source Images\new login screen.bmp" />
     <Content Include="Source Images\NoBattleshout.bmp" />
     <Content Include="Source Images\numbersAsColors3.bmp" />
