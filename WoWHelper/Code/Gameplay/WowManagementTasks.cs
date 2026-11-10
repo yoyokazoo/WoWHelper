@@ -220,7 +220,7 @@ namespace WoWHelper
 
         public void AlertOnLevelUp()
         {
-            if (FarmingLocationConfiguration != null && PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
+            if (PreviousWorldState.Initialized && WorldState.PlayerLevel == PreviousWorldState.PlayerLevel + 1)
             {
                 string levelUpMessage = $"Leveled up from {PreviousWorldState.PlayerLevel} to {WorldState.PlayerLevel}!";
 
@@ -237,12 +237,6 @@ namespace WoWHelper
                 }
 
                 SlackHelper.SendMessageToChannel(levelUpMessage);
-
-                if (FarmingLocationConfiguration.MaximumLevel == WorldState.PlayerLevel)
-                {
-                    LogoutTriggered = true;
-                    LogoutReason = $"Reached log out level {FarmingLocationConfiguration.MaximumLevel}";
-                }
             }
         }
 

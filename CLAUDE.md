@@ -247,10 +247,10 @@ that state can be skipped entirely — see below:
   `null` for an entire run that started mid-combat. Nothing currently
   re-resolves it if that happens; code that reads `LocationConfiguration`
   either runs somewhere that short-circuit can't reach mid-combat, or (like
-  the level-up-alert block in `EveryWorldStateUpdateTasks()`) guards on
-  `LocationConfiguration != null` first. `SetLogoutVariablesTask()`
-  does not guard, so it would throw if reached in that state — a known gap,
-  not yet fixed.
+  `SetLogoutVariablesTask()` and Shaman's nature-immune check) guards on
+  `LocationConfiguration != null` first. There's no per-route maximum level
+  (the old log-off-at-level-N `MaximumLevel` was removed); moving on from a
+  route as the character levels belongs to `WowLevelingConfigs` instead.
 
 On failure, `ResolveFarmingConfigurationTask()` checks `ClassState == null`
 first (i.e. `ResolveCombatConfiguration()` never managed to resolve it) before

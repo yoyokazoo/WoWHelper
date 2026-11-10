@@ -71,7 +71,6 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_41_TANARIS_TURTLES = new WowLocationConfiguration
         {
-            MaximumLevel = 48,
             Route = WowRoutes.LEVEL_41_TANARIS_TURTLES_ROUTE,
             TargetMacroMobNames = "Steeljaw",
 
@@ -97,7 +96,6 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_36_KODO_GRAVEYARD = new WowLocationConfiguration
         {
-            MaximumLevel = 43,
             Route = WowRoutes.LEVEL_36_KODO_GRAVEYARD_ROUTE,
             TargetMacroMobNames = "Aged,Dying,Ancient,Carrion",
             EngageMethod = EngagementMethod.Pull,
@@ -105,7 +103,6 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS = new WowLocationConfiguration
         {
-            MaximumLevel = 38,
             Route = WowRoutes.LEVEL_34_SHIMMERING_FLATS_ROUTE,
             TargetMacroMobNames = "Scorpid,Swirling,Saltstone,Sparkleshell,Ironeye",
             ChaseOutOfRangeTargets = false, // the ship wreck here is easy to get stuck on
@@ -117,7 +114,6 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_29_HILLSBRAD_RIVER = new WowLocationConfiguration
         {
-            MaximumLevel = 35,
             Route = WowRoutes.LEVEL_29_HILLSBRAD_RIVER_ROUTE,
             TargetMacroMobNames = "Snapjaw",
             TargetFindMethod = WowLocationConfiguration.WaypointTargetFindMethod.MACRO,
@@ -126,21 +122,18 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_26_STONETALON_CHARRED_FOREST = new WowLocationConfiguration
         {
-            MaximumLevel = 29,
             Route = WowRoutes.LEVEL_26_STONETALON_CHARRED_FOREST_ROUTE,
             TargetMacroMobNames = "Rogue,Blackened,Bloodfury",
         };
 
         public static readonly WowLocationConfiguration LEVEL_23_STONETALON = new WowLocationConfiguration
         {
-            MaximumLevel = 28,
             Route = WowRoutes.LEVEL_23_STONETALON_ROUTE,
             TargetMacroMobNames = "Antlered,Sap",
         };
 
         public static readonly WowLocationConfiguration LEVEL_20_ZORAMGAR = new WowLocationConfiguration
         {
-            MaximumLevel = 25,
             Route = WowRoutes.LEVEL_20_ZORAMGAR_ROUTE,
             TargetMacroMobNames = "Wild,Ghostpaw",
         };
@@ -151,21 +144,18 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS = new WowLocationConfiguration
         {
-            MaximumLevel = 21,
             Route = WowRoutes.LEVEL_17_NORTHERN_BARRENS_ROUTE,
             TargetMacroMobNames = "Zhevra,Savannah,Hecklefang,Ornery,Sunscale",
         };
 
         public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE = new WowLocationConfiguration
         {
-            MaximumLevel = 18,
             Route = WowRoutes.LEVEL_13_BARRENS_ENTRANCE_ROUTE,
             TargetMacroMobNames = "Fleeting,Zhevra,Sunscale",
         };
 
         public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST = new WowLocationConfiguration
         {
-            MaximumLevel = 14,
             Route = WowRoutes.LEVEL_11_DUROTAR_COAST_ROUTE,
             TargetMacroMobNames = "Venom,Elder,Blood,Corrupted",
         };
@@ -176,7 +166,6 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_9_DUROTAR_SKULL_ROCK_COAST = new WowLocationConfiguration
         {
-            MaximumLevel = 12,
             Route = WowRoutes.LEVEL_9_DUROTAR_SKULL_ROCK_COAST_ROUTE,
             TargetMacroMobNames = "Elder,Venom,Armored,Blood",
             ChaseOutOfRangeTargets = true,
@@ -184,7 +173,6 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration
         {
-            MaximumLevel = 10,
             Route = WowRoutes.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE,
             TargetMacroMobNames = "Dire,Clattering",
             ChaseOutOfRangeTargets = true,
@@ -192,7 +180,6 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration
         {
-            MaximumLevel = 7,
             Route = WowRoutes.LEVEL_4_DUROTAR_IMPS_ROUTE,
             TargetMacroMobNames = "Scorpid,Vile",
             ChaseOutOfRangeTargets = true,
@@ -200,14 +187,12 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_SCORPS = new WowLocationConfiguration
         {
-            MaximumLevel = 7,
             Route = WowRoutes.LEVEL_4_DUROTAR_SCORPS_ROUTE,
             TargetMacroMobNames = "Scorpid",
         };
 
         public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
         {
-            MaximumLevel = 4,
             Route = WowRoutes.LEVEL_1_DUROTAR_BOARS_AND_SCORPS_ROUTE,
             TargetMacroMobNames = "Mottled,Scorpid",
         };
@@ -218,7 +203,6 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_10_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
         {
-            MaximumLevel = 13,
             Route = WowRoutes.LEVEL_10_MULGORE_MIXED_BEASTS_ROUTE,
             TargetMacroMobNames = "Swoop,Flatland,Prairie",
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
@@ -226,28 +210,24 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_8_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
         {
-            MaximumLevel = 10,
             Route = WowRoutes.LEVEL_8_MULGORE_MIXED_BEASTS_ROUTE,
             TargetFindMethod = WaypointTargetFindMethod.MACRO, // Kodo packs wandering around
         };
 
         public static readonly WowLocationConfiguration LEVEL_6_MULGORE_BATTLEBOARS = new WowLocationConfiguration
         {
-            MaximumLevel = 8,
             Route = WowRoutes.LEVEL_6_MULGORE_BATTLEBOARS_ROUTE,
             TargetMacroMobNames = "Battleboar",
         };
 
         public static readonly WowLocationConfiguration LEVEL_4_MULGORE_MOUNTAIN_COUGARS = new WowLocationConfiguration
         {
-            MaximumLevel = 6,
             Route = WowRoutes.LEVEL_4_MULGORE_MOUNTAIN_COUGARS_ROUTE,
             TargetMacroMobNames = "Mountain",
         };
 
         public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
         {
-            MaximumLevel = 4,
             Route = WowRoutes.LEVEL_1_MULGORE_PLAINSTRIDERS_ROUTE,
             TargetMacroMobNames = "Plains",
         };
@@ -258,21 +238,18 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLocationConfiguration LEVEL_6_TIRISFAL_ZOMBIES = new WowLocationConfiguration
         {
-            MaximumLevel = 10,
             Route = WowRoutes.LEVEL_6_TIRISFAL_ZOMBIES_ROUTE,
             TargetMacroMobNames = "Decrepit,Greater,Rotting,Ravaged",
         };
 
         public static readonly WowLocationConfiguration LEVEL_4_TIRISFAL_ANIMALS = new WowLocationConfiguration
         {
-            MaximumLevel = 7,
             Route = WowRoutes.LEVEL_4_TIRISFAL_ANIMALS_ROUTE,
             TargetMacroMobNames = "Mangy,Ragged",
         };
 
         public static readonly WowLocationConfiguration LEVEL_1_TIRISFAL_UNDEAD = new WowLocationConfiguration
         {
-            MaximumLevel = 4,
             Route = WowRoutes.LEVEL_1_TIRISFAL_UNDEAD_ROUTE,
             TargetMacroMobNames = "Young,Duskbat,Mindless,Wretched,Rattlecage",
         };

@@ -40,9 +40,6 @@ namespace WoWHelper.Code.WorldState
             Pull // shoot bow/gun (Warrior) or cast a pull spell -- lightning bolt, shadow bolt, etc. (Shaman/Warlock)
         }
 
-        // TODO: is this needed any more with leveling configs?
-        public int MaximumLevel { get; set; } // Level to log off at
-
         public EngagementMethod EngageMethod { get; set; }
         public WaypointTargetFindMethod TargetFindMethod { get; set; }
 
@@ -72,8 +69,6 @@ namespace WoWHelper.Code.WorldState
 
             EngageMethod = EngagementMethod.Charge;
             ChaseOutOfRangeTargets = true;
-
-            MaximumLevel = 61;
 
             AllMobsInZoneAreNatureImmune = false;
         }
