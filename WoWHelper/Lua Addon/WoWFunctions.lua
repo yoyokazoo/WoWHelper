@@ -948,6 +948,33 @@ function HasDesiredWorldBuff()
     return false
 end
 
+-- Prints each IsPlayerUnderwater() flip plus the mirror timers it saw. Off by default.
+UNDERWATER_DEBUG = false
+local lastUnderwaterDebugValue = nil
+
+-- True while the breath bar is up, i.e. the "BREATH" mirror timer is running (it
+-- isn't with a water-breathing effect, which is fine -- nothing to worry about then).
+-- Replaces pixel-matching the breath bar's on-screen colors. Drawn into MultiBoolTwo's
+-- box 22 (B6), decoded on the C# side into WowWorldState.Underwater.
+function IsPlayerUnderwater()
+    local underwater = false
+    local seen = {}
+    for i = 1, (MIRRORTIMER_NUMTIMERS or 3) do
+        local timer, value, maxValue, scale, paused = GetMirrorTimerInfo(i)
+        if UNDERWATER_DEBUG then
+            table.insert(seen, tostring(i) .. "=" .. tostring(timer) .. "/" .. tostring(scale) .. "/" .. tostring(paused))
+        end
+        if timer == "BREATH" then
+            underwater = true
+        end
+    end
+    if UNDERWATER_DEBUG and underwater ~= lastUnderwaterDebugValue then
+        lastUnderwaterDebugValue = underwater
+        print("YoyokazooUI underwater=" .. tostring(underwater) .. " timers: " .. table.concat(seen, ", "))
+    end
+    return underwater
+end
+
 -- overpower rank 1, 7384
 -- fireblast rank 1, 2136
 -- cone of cold rank 1,
@@ -2592,6 +2619,7 @@ MULTI_BOOL_TWO_FIELDS = {
     "HasRecentOutOfRangeError",     -- 19 (B3)
     "HasRecentLineOfSightError",    -- 20 (B4)
     "HasRecentNoPathError",         -- 21 (B5)
+    "IsPlayerUnderwater",           -- 22 (B6) breath timer running
 }
 
 -- The player's class's list for one of the Class rows: listSuffix

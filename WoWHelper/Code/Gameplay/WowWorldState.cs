@@ -144,6 +144,8 @@ namespace WoWHelper
         // real. Everything decoded off the row is garbage unless this is true.
         public bool IsBotInAValidState => AddonLoaded && WowWindowHasFocus;
 
+        // MultiBoolTwo box 22. The breath timer is running (IsPlayerUnderwater() in
+        // WoWFunctions.lua).
         public bool Underwater { get; private set; }
 
         public Bitmap Bmp { get; private set; }
@@ -206,8 +208,6 @@ namespace WoWHelper
             UpdateMultiBoolOne(WowPixelRows.ReadBits(bmp, PixelRow.MultiBoolOne));
             UpdateMultiBoolTwo(WowPixelRows.ReadBits(bmp, PixelRow.MultiBoolTwo));
             UpdateMultiIntOne(WowPixelRows.ReadBits(bmp, PixelRow.MultiIntOne));
-
-            UpdateBreathBar(bmp);
         }
 
         // Box numbers MUST match MULTI_BOOL_ONE_FIELDS in WoWFunctions.lua.
@@ -284,6 +284,7 @@ namespace WoWHelper
             OutOfRange = bits[19];
             NotInLineOfSight = bits[20];
             NoPathAvailable = bits[21];
+            Underwater = bits[22];
         }
 
         // Byte order MUST match the EncodeBytes call for row 11 in InitializePixelRow()
@@ -293,11 +294,6 @@ namespace WoWHelper
             AttackerCount = bits.Byte(0);
             PlayerLevel = bits.Byte(1);
             CurrentZone = (WowZone)bits.Byte(2); // see GetCurrentZoneId() in WoWFunctions.lua
-        }
-
-        public void UpdateBreathBar(Bitmap bmp)
-        {
-            Underwater = ScreenConfig.BreathBarScreenPositions.MatchesSourceImage(bmp);
         }
     }
 }

@@ -9,10 +9,6 @@ namespace WoWHelper
     {
         #region Constants
 
-        public static readonly Color BREATH_BAR_COLOR_ONE = Color.FromArgb(0, 77, 155);
-        public static readonly Color BREATH_BAR_COLOR_TWO = Color.FromArgb(0, 31, 62);
-        public static readonly Color BREATH_BAR_COLOR_THREE = Color.FromArgb(0, 34, 69);
-
         public static readonly Color TRADE_SCREEN_COLOR_ONE = Color.FromArgb(93, 88, 86);
         public static readonly Color TRADE_SCREEN_COLOR_TWO = Color.FromArgb(167, 165, 161);
         public static readonly Color TRADE_SCREEN_COLOR_THREE = Color.FromArgb(212, 177, 42);
@@ -95,9 +91,6 @@ namespace WoWHelper
         public int MeleeRangeTargetMarkerDistance { get; set; }
         public int TooCloseToTurnWhileWalkingTargetMarkerDistance { get; set; }
 
-        // Breath bar detections
-        public ImageMatchColorPositions BreathBarScreenPositions { get; set; }
-
         // Trade window
         public ImageMatchColorPositions TradeWindowScreenPositions { get; set; }
         public ImageMatchColorPositions TradeWindowAcceptedScreenPositions { get; set; }
@@ -105,8 +98,8 @@ namespace WoWHelper
         public ImageMatchTextArea TradeWindowRecipientTextArea { get; set; }
 
         // Bounding rectangle covering every pixel anything in this codebase reads off a
-        // captured screen bitmap: the pixel rows (top-left corner, see WowPixelRows), the
-        // breath bar, and the trade-window matchers/OCR area (used by
+        // captured screen bitmap: the pixel rows (top-left corner, see WowPixelRows) and
+        // the trade-window matchers/OCR area (used by
         // CupidTradeLoopTask, WowManagementTasks.cs). Computed once from the fields below and
         // cached (this instance is a static readonly singleton per resolution, so the cache
         // lives for the process). Not every resolution defines every field (e.g. trade window
@@ -131,7 +124,6 @@ namespace WoWHelper
 
             var clusters = new[]
             {
-                BreathBarScreenPositions,
                 TradeWindowScreenPositions, TradeWindowAcceptedScreenPositions, TradeWindowConfirmationScreenPositions,
             };
 

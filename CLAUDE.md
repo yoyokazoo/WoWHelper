@@ -75,7 +75,7 @@ order. Row N covers physical y = 3N to 3N+2 (read at y = 3N+1):
 | 5 | Map Y | fixed point | `MapY` |
 | 6 | Facing, degrees | fixed point | `FacingDegrees` |
 | 7 | `MultiBoolOne` — `MULTI_BOOL_ONE_FIELDS` (class-agnostic, all 24 boxes used or reserved) | bool fields | various `WowWorldState` bools |
-| 8 | `MultiBoolTwo` — `MULTI_BOOL_TWO_FIELDS` (class-agnostic — boxes 1-21 used so far) | bool fields | `IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable`, plus the red error toast flags `FacingWrongWay`/`TargetNeedsToBeInFront`/`InvalidTarget`/`OutOfRange`/`NotInLineOfSight`/`NoPathAvailable` |
+| 8 | `MultiBoolTwo` — `MULTI_BOOL_TWO_FIELDS` (class-agnostic — boxes 1-22 used so far) | bool fields | `IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable`/`Underwater`, plus the red error toast flags `FacingWrongWay`/`TargetNeedsToBeInFront`/`InvalidTarget`/`OutOfRange`/`NotInLineOfSight`/`NoPathAvailable` |
 | 9 | `ClassBoolOne` — `<CLASS>_CLASS_BOOL_ONE_FIELDS` (class-specific) | bool fields | a `WowClassState` subtype (see C# architecture section) |
 | 10 | `ClassBoolTwo` — `<CLASS>_CLASS_BOOL_TWO_FIELDS` (class-specific — only Shaman's boxes 1-3 used so far) | bool fields | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 | 11 | `MultiIntOne` — attacker count, player level, zone ID | bytes | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
@@ -136,7 +136,7 @@ the rows (`EveryWorldStateUpdateTasks()`'s early-return, `FocusOnWindowTask`,
 the combat short-circuit in `CoreGameplayLoopTask`). "Actually logged out"
 (the disconnect alert, `CheckIfLoggedOutTask`) is
 `WowWindowHasFocus && !AddonLoaded`. Separately, **text/UI state
-matched by exact pixel signature** (trade window, breath bar) is still its own unrelated mechanism — resolution-specific coordinates
+matched by exact pixel signature** (trade window) is still its own unrelated mechanism — resolution-specific coordinates
 in `WowScreenConfigs.cs`, compared via `ImageMatchColorPositions.MatchesSourceImage`,
 some validated against bitmaps in `WoWHelperUnitTests/Source Images/`.
 
@@ -495,8 +495,16 @@ Box → global string → `WowWorldState` bool: 7 `ERR_BADATTACKFACING` →
 confirmed live with a debug dump). There's no flag for "You are too far
 away!" (`ERR_BADATTACKPOS`): it couldn't be triggered live, and nothing
 consumed it. `UI_ERROR_MESSAGE_DEBUG` (a local in `YoyokazooUI.lua`, off by
-default) prints every toast and which flag it set. Boxes 22-24 are still
-free for the next class-agnostic bool.
+default) prints every toast and which flag it set.
+
+B6 (box 22) is `WowWorldState.Underwater` (`IsPlayerUnderwater()`,
+`WoWFunctions.lua`): true while the `"BREATH"` mirror timer is running
+(`GetMirrorTimerInfo`), i.e. the breath bar is up. It replaced
+pixel-matching the breath bar's colors at per-resolution coordinates
+(`WowScreenConfiguration.BreathBarScreenPositions`, removed along with its
+bitmap-backed test). `UNDERWATER_DEBUG` (off by default) prints each flip
+plus the mirror timers seen. Nothing on the C# side consumes `Underwater`
+yet. Boxes 23-24 are still free for the next class-agnostic bool.
 
 **Per-route target macro:** the `"0 Targ"` macro (`TARGET_MACRO_NAME`) (`WowInput.FIND_TARGET_MACRO`) is the bot's target finder, and
 its `/target` lines are set per route: `WowLocationConfiguration.TargetMacroMobNames`
@@ -1343,7 +1351,7 @@ of truth — edits should be made here, not in the WoW install directory.
 ## Tests (`WoWHelperUnitTests/`)
 
 MSTest project. Feeds real captured `Source Images/*.bmp` screenshots (trade
-windows, HP bars, breath bar, login screens, etc.) through the
+windows, HP bars, login screens, etc.) through the
 same `WowScreenConfiguration` matchers the live bot uses, so the pixel-match
 logic can be verified without WoW running. Also covers `WowPathfinding` math
 directly. When you change screen-position matchers or add new encoded state,

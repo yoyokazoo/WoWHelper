@@ -273,12 +273,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Source Images\2560breathbar.bmp" />
     <Content Include="Source Images\2560trade.bmp" />
     <Content Include="Source Images\2560tradeaccepted.bmp" />
     <Content Include="Source Images\BattleShout.bmp" />
-    <Content Include="Source Images\breath1920.bmp" />
-    <Content Include="Source Images\breathbar.bmp" />
     <Content Include="Source Images\login screen.bmp" />
     <Content Include="Source Images\new login screen.bmp" />
     <Content Include="Source Images\NoBattleshout.bmp" />

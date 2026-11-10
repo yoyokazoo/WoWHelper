@@ -70,12 +70,6 @@ namespace WoWHelper.Code.Config
 
             MeleeRangeTargetMarkerDistance = 120,
             TooCloseToTurnWhileWalkingTargetMarkerDistance = 200,
-
-            BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1568, 173, WowScreenConfiguration.BREATH_BAR_COLOR_ONE),
-                    new ColorPosition(1561, 173, WowScreenConfiguration.BREATH_BAR_COLOR_TWO),
-                }),
         };
 
         public static readonly WowScreenConfiguration RESOLUTION_2560_X_1600 = new WowScreenConfiguration
@@ -97,12 +91,6 @@ namespace WoWHelper.Code.Config
 
             MeleeRangeTargetMarkerDistance = 140,
             TooCloseToTurnWhileWalkingTargetMarkerDistance = 240,
-
-            BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1141, 190, WowScreenConfiguration.BREATH_BAR_COLOR_ONE),
-                    new ColorPosition(1149, 186, WowScreenConfiguration.BREATH_BAR_COLOR_THREE),
-                }),
 
             TradeWindowScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
@@ -160,12 +148,6 @@ namespace WoWHelper.Code.Config
             MouseDragPixelsPerDegree = 1.44f,
             MouseDragOffsetDegrees = 5.72f,
             MouseDragMinEffectivePixels = 5,
-
-            BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(846, 130, WowScreenConfiguration.BREATH_BAR_COLOR_ONE),
-                    new ColorPosition(845, 134, WowScreenConfiguration.BREATH_BAR_COLOR_TWO),
-                }),
         };
     }
 }
