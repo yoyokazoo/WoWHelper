@@ -35,7 +35,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Ghrawt (Razor Hill)",
             Route = new WowRoute
             {
-                Name = "Valley of Trials Merchant",
+                Name = "Razor Hill Merchant",
                 Zone = WowZone.Durotar,
                 Waypoints = new List<Vector2> { new Vector2(52.98f, 41.03f) }
             },
@@ -48,7 +48,7 @@ namespace WoWHelper.Code.WorldState
             Class = Gameplay.WowCombatConfiguration.Warrior,
             Route = new WowRoute
             {
-                Name = "Valley of Trials Warrior Trainer",
+                Name = "Razor Hill Warrior Trainer",
                 Zone = WowZone.Durotar,
                 Waypoints = new List<Vector2> { new Vector2(54.19f, 42.47f), }
             },

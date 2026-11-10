@@ -41,8 +41,8 @@ namespace WoWHelper
         public string Name { get; set; }
         public Size Resolution { get; set; }
 
-        public int DynamiteAndDummyX { get; set; }
-        public int DynamiteAndDummyY { get; set; }
+        public int DynamiteAndDummyX => (Resolution.Width / 2);
+        public int DynamiteAndDummyY => (Resolution.Height / 2);
 
         public int LootHeatmapX { get; set; }
         public int LootHeatmapY { get; set; }

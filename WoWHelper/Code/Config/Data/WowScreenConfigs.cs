@@ -49,9 +49,6 @@ namespace WoWHelper.Code.Config
             Name = "3440x1440",
             Resolution = new Size(3440, 1440),
 
-            DynamiteAndDummyX = 1720,
-            DynamiteAndDummyY = 720,
-
             LootHeatmapX = 1495,
             LootHeatmapY = 516,
             LootHeatmapWidth = 426,
@@ -134,9 +131,6 @@ namespace WoWHelper.Code.Config
         {
             Name = "2560x1600",
             Resolution = new Size(2560, 1600),
-
-            DynamiteAndDummyX = 1280,
-            DynamiteAndDummyY = 800,
 
             LootHeatmapX = 1081,
             LootHeatmapY = 650,
@@ -237,9 +231,6 @@ namespace WoWHelper.Code.Config
         {
             Name = "1920x1080",
             Resolution = new Size(1920, 1080),
-
-            DynamiteAndDummyX = 960,
-            DynamiteAndDummyY = 540,
 
             LootHeatmapX = 812,
             LootHeatmapY = 395,
