@@ -9,8 +9,6 @@ namespace WoWHelper
     {
         #region Constants
 
-        public static readonly Color ERROR_TEXT_COLOR = Color.FromArgb(255, 25, 25);
-
         public static readonly Color BREATH_BAR_COLOR_ONE = Color.FromArgb(0, 77, 155);
         public static readonly Color BREATH_BAR_COLOR_TWO = Color.FromArgb(0, 31, 62);
         public static readonly Color BREATH_BAR_COLOR_THREE = Color.FromArgb(0, 34, 69);
@@ -97,15 +95,6 @@ namespace WoWHelper
         public int MeleeRangeTargetMarkerDistance { get; set; }
         public int TooCloseToTurnWhileWalkingTargetMarkerDistance { get; set; }
 
-        // Error text detections
-        public ImageMatchColorPositions FacingWrongWayPositions { get; set; }
-        public ImageMatchColorPositions TooFarAwayPositions { get; set; }
-        public ImageMatchColorPositions TargetNeedsToBeInFrontPositions { get; set; }
-        public ImageMatchColorPositions InvalidTargetPositions { get; set; }
-        public ImageMatchColorPositions OutOfRangePositions { get; set; }
-        public ImageMatchColorPositions NotInLineOfSightPositions { get; set; }
-        public ImageMatchColorPositions NoPathAvailablePositions { get; set; }
-
         // Breath bar detections
         public ImageMatchColorPositions BreathBarScreenPositions { get; set; }
 
@@ -116,8 +105,8 @@ namespace WoWHelper
         public ImageMatchTextArea TradeWindowRecipientTextArea { get; set; }
 
         // Bounding rectangle covering every pixel anything in this codebase reads off a
-        // captured screen bitmap: the pixel rows (top-left corner, see WowPixelRows), the red-error-text/
-        // breath-bar cluster, and the trade-window matchers/OCR area (used by
+        // captured screen bitmap: the pixel rows (top-left corner, see WowPixelRows), the
+        // breath bar, and the trade-window matchers/OCR area (used by
         // CupidTradeLoopTask, WowManagementTasks.cs). Computed once from the fields below and
         // cached (this instance is a static readonly singleton per resolution, so the cache
         // lives for the process). Not every resolution defines every field (e.g. trade window
@@ -142,8 +131,7 @@ namespace WoWHelper
 
             var clusters = new[]
             {
-                FacingWrongWayPositions, TargetNeedsToBeInFrontPositions, InvalidTargetPositions,
-                OutOfRangePositions, NotInLineOfSightPositions, NoPathAvailablePositions, BreathBarScreenPositions,
+                BreathBarScreenPositions,
                 TradeWindowScreenPositions, TradeWindowAcceptedScreenPositions, TradeWindowConfirmationScreenPositions,
             };
 

@@ -120,14 +120,14 @@ namespace WoWHelper
         // none is -- an unsupported class, or the addon isn't rendering a real row yet.
         public WowCombatConfiguration? PlayerClass { get; private set; }
 
-        // Red Error Text in middle of screen
-
+        // Red error toasts (UI_ERROR_MESSAGE). Each is true for 0.5s after the toast fires --
+        // see HasRecentUiError() in YoyokazooUI.lua.
         public bool FacingWrongWay { get; private set; } // Melee facing the wrong direction
         public bool TargetNeedsToBeInFront { get; private set; } // Spellcast facing the wrong direction
         public bool InvalidTarget { get; private set; } // Spellcast on allied/dead target
         public bool OutOfRange { get; private set; } // Spellcast too far away
-        public bool NotInLineOfSight { get; private set; }
-        public bool NoPathAvailable { get; private set; }
+        public bool NotInLineOfSight { get; private set; } // Spellcast blocked by geometry
+        public bool NoPathAvailable { get; private set; } // Charge can't reach target
         public bool TargetUnreachable => NotInLineOfSight || NoPathAvailable;
 
         // The sentinel box after the health bar reads exactly WowPixelRows.ADDON_LOADED_COLOR --
@@ -207,8 +207,6 @@ namespace WoWHelper
             UpdateMultiBoolTwo(WowPixelRows.ReadBits(bmp, PixelRow.MultiBoolTwo));
             UpdateMultiIntOne(WowPixelRows.ReadBits(bmp, PixelRow.MultiIntOne));
 
-            UpdateRedErrorTextMessages(bmp);
-
             UpdateBreathBar(bmp);
         }
 
@@ -269,7 +267,8 @@ namespace WoWHelper
 
             IsTargetBleedImmune = bits[5];
             IsTargetFearCaster = bits[6];
-            // 7-8 reserved
+            FacingWrongWay = bits[7];
+            TargetNeedsToBeInFront = bits[8];
 
             LogoutOnLowDynamiteEnabled = bits[9];
             LogoutOnFullBagsEnabled = bits[10];
@@ -281,6 +280,10 @@ namespace WoWHelper
             GearNeedsRepair = bits[16];
 
             IsTargetAttackable = bits[17];
+            InvalidTarget = bits[18];
+            OutOfRange = bits[19];
+            NotInLineOfSight = bits[20];
+            NoPathAvailable = bits[21];
         }
 
         // Byte order MUST match the EncodeBytes call for row 11 in InitializePixelRow()
@@ -292,43 +295,9 @@ namespace WoWHelper
             CurrentZone = (WowZone)bits.Byte(2); // see GetCurrentZoneId() in WoWFunctions.lua
         }
 
-        public void UpdateRedErrorTextMessages(Bitmap bmp)
-        {
-            FacingWrongWay = MatchesErrorTextColor(bmp, ScreenConfig.FacingWrongWayPositions);
-            TargetNeedsToBeInFront = MatchesErrorTextColor(bmp, ScreenConfig.TargetNeedsToBeInFrontPositions);
-            InvalidTarget = MatchesErrorTextColor(bmp, ScreenConfig.InvalidTargetPositions);
-            OutOfRange = MatchesErrorTextColor(bmp, ScreenConfig.OutOfRangePositions);
-            NotInLineOfSight = MatchesErrorTextColor(bmp, ScreenConfig.NotInLineOfSightPositions);
-            NoPathAvailable = MatchesErrorTextColor(bmp, ScreenConfig.NoPathAvailablePositions);
-        }
-
         public void UpdateBreathBar(Bitmap bmp)
         {
             Underwater = ScreenConfig.BreathBarScreenPositions.MatchesSourceImage(bmp);
-        }
-
-        public bool MatchesErrorTextColor(Bitmap bmp, ImageMatchColorPositions positions)
-        {
-            foreach (var position in positions.ColorPositions)
-            {
-                var color = bmp.GetPixel(position.X, position.Y);
-                if (color.R < WowScreenConfiguration.ERROR_TEXT_COLOR.R)
-                {
-                    return false;
-                }
-
-                if (color.G != color.B)
-                {
-                    return false;
-                }
-
-                if (color.G > color.R)
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
     }
 }

@@ -71,48 +71,6 @@ namespace WoWHelper.Code.Config
             MeleeRangeTargetMarkerDistance = 120,
             TooCloseToTurnWhileWalkingTargetMarkerDistance = 200,
 
-        FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1529, 217, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1606, 219, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1647, 218, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            TargetNeedsToBeInFrontPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1506, 216, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1524, 218, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    // new(1531, 219, errorText), // spotty.  Sometimes when the message spams it switches X position by a pixel.  Need to pick pixels where this can be ignored
-                }),
-
-            InvalidTargetPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1637, 217, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1654, 221, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1662, 216, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            OutOfRangePositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1644, 208, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1665, 225, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1677, 214, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            NotInLineOfSightPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1563, 216, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1601, 225, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1631, 220, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            NoPathAvailablePositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1610, 216, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1637, 226, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1657, 231, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
                     new ColorPosition(1568, 173, WowScreenConfiguration.BREATH_BAR_COLOR_ONE),
@@ -139,52 +97,6 @@ namespace WoWHelper.Code.Config
 
             MeleeRangeTargetMarkerDistance = 140,
             TooCloseToTurnWhileWalkingTargetMarkerDistance = 240,
-
-            // WoW Forever client (smaller font, higher up than Classic Era's): the "Y" of
-            // "You", the "h" of "the", and the "!" -- each the center of a 2px-wide stem.
-            FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1109, 198, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1289, 195, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1457, 190, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            TargetNeedsToBeInFrontPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1048, 243, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1060, 250, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1093, 259, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            InvalidTargetPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1187, 235, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1205, 240, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1231, 248, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            OutOfRangePositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1200, 233, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1225, 246, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1234, 246, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            NotInLineOfSightPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            // Not captured for this resolution yet -- (0,0) placeholders, same as
-            // NotInLineOfSightPositions above, so it just never matches.
-            NoPathAvailablePositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(0, 0, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
 
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
@@ -248,48 +160,6 @@ namespace WoWHelper.Code.Config
             MouseDragPixelsPerDegree = 1.44f,
             MouseDragOffsetDegrees = 5.72f,
             MouseDragMinEffectivePixels = 5,
-
-            FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(818, 163, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(830, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(842, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            TargetNeedsToBeInFrontPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(802, 157, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(812, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(820, 163, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            InvalidTargetPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(897, 162, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(908, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(919, 169, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            OutOfRangePositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(904, 157, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(919, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(929, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            NotInLineOfSightPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(843, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(857, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(872, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            NoPathAvailablePositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(877, 164, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(897, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(912, 174, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
 
             BreathBarScreenPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {

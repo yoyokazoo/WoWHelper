@@ -273,28 +273,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Source Images\1920los.bmp" />
-    <Content Include="Source Images\1920nopath.bmp" />
     <Content Include="Source Images\2560breathbar.bmp" />
-    <Content Include="Source Images\2560facing.bmp" />
-    <Content Include="Source Images\2560foreverfacing.bmp" />
     <Content Include="Source Images\2560trade.bmp" />
     <Content Include="Source Images\2560tradeaccepted.bmp" />
-    <Content Include="Source Images\3440los.bmp" />
-    <Content Include="Source Images\3440nopath.bmp" />
     <Content Include="Source Images\BattleShout.bmp" />
     <Content Include="Source Images\breath1920.bmp" />
     <Content Include="Source Images\breathbar.bmp" />
-    <Content Include="Source Images\FacingWrongWay.bmp" />
-    <Content Include="Source Images\invalidtarget.bmp" />
-    <Content Include="Source Images\lighttargetneedstobeinfront.bmp" />
     <Content Include="Source Images\login screen.bmp" />
     <Content Include="Source Images\new login screen.bmp" />
     <Content Include="Source Images\NoBattleshout.bmp" />
     <Content Include="Source Images\numbersAsColors3.bmp" />
-    <Content Include="Source Images\outofrange.bmp" />
-    <Content Include="Source Images\targetneedstobeinfront.bmp" />
-    <Content Include="Source Images\toofaraway.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\WoWHelper\packages\MSTest.Analyzers.4.0.2\analyzers\dotnet\cs\MSTest.Analyzers.CodeFixes.dll" />

@@ -2222,8 +2222,8 @@ MULTI_BOOL_TWO_FIELDS = {
     "IsPlayerWarlock",              --  4 (R4) supported-class bit, see MultiBoolOne box 18
     "IsTargetBleedImmune",          --  5 (R5)
     "IsTargetFearCaster",           --  6 (R6)
-    RESERVED,                       --  7 (R7)
-    RESERVED,                       --  8 (R8)
+    "HasRecentFacingWrongWayError", --  7 (R7) red error toasts: YoyokazooUI.lua
+    "HasRecentNotInFrontError",     --  8 (R8)
     "IsLogoutOnLowDynamiteEnabled", --  9 (G1) /yyconfig setting, YoyokazooUI.lua
     "IsLogoutOnFullBagsEnabled",    -- 10 (G2) /yyconfig setting, YoyokazooUI.lua
     "HasDesiredWorldBuff",          -- 11 (G3) buff picked via /yyconfig
@@ -2233,6 +2233,10 @@ MULTI_BOOL_TWO_FIELDS = {
     "CanAffordToTrainAllSkills",    -- 15 (G7)
     "GearNeedsRepair",              -- 16 (G8)
     "ShouldWeAttackTarget",         -- 17 (B1) pure eligibility -- no range/cooldown folded in
+    "HasRecentInvalidTargetError",  -- 18 (B2) red error toasts: YoyokazooUI.lua
+    "HasRecentOutOfRangeError",     -- 19 (B3)
+    "HasRecentLineOfSightError",    -- 20 (B4)
+    "HasRecentNoPathError",         -- 21 (B5)
 }
 
 -- The player's class's list for one of the Class rows: listSuffix

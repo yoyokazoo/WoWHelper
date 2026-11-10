@@ -30,17 +30,6 @@ namespace WoWHelperUnitTests
         }
         */
 
-        [TestMethod]
-        [DataRow(false, "..\\..\\Source Images\\numbersAsColors3.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\FacingWrongWay.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\2560foreverfacing.bmp")]
-        public void VerifyFacingWrongWay(bool expected, string fileName)
-        {
-            LoadPlayer(fileName);
-
-            Assert.AreEqual(expected, Player.WorldState.FacingWrongWay);
-        }
-
         /*
         [TestMethod]
         [DataRow(0, "..\\..\\Source Images\\numbersAsColors3.bmp")]
@@ -74,76 +63,6 @@ namespace WoWHelperUnitTests
             LoadPlayer(fileName);
 
             Assert.AreEqual(expected, Player.WorldState.Underwater);
-        }
-
-        [TestMethod]
-        [DataRow(false, "..\\..\\Source Images\\NoBattleshout.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\2560front.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\targetneedstobeinfront.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\lighttargetneedstobeinfront.bmp")]
-        public void VerifyTargetNeedsToBeInFront(bool expected, string fileName)
-        {
-            LoadPlayer(fileName);
-
-            Assert.AreEqual(expected, Player.WorldState.TargetNeedsToBeInFront);
-        }
-
-        [TestMethod]
-        [DataRow(false, "..\\..\\Source Images\\targetneedstobeinfront.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\2560invalid.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\invalidtarget.bmp")]
-        public void VerifyInvalidTarget(bool expected, string fileName)
-        {
-            LoadPlayer(fileName);
-
-            Assert.AreEqual(expected, Player.WorldState.InvalidTarget);
-        }
-
-        [TestMethod]
-        [DataRow(false, "..\\..\\Source Images\\targetneedstobeinfront.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\2560oor.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\outofrange.bmp")]
-        public void VerifyOutOfRange(bool expected, string fileName)
-        {
-            LoadPlayer(fileName);
-
-            Assert.AreEqual(expected, Player.WorldState.OutOfRange);
-        }
-
-        [TestMethod]
-        [DataRow(false, "..\\..\\Source Images\\2560toofar.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\3440los.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\1920los.bmp")]
-        public void VerifyNotInLineOfSight(bool expected, string fileName)
-        {
-            LoadPlayer(fileName);
-
-            Assert.AreEqual(expected, Player.WorldState.NotInLineOfSight);
-        }
-
-        [TestMethod]
-        [DataRow(false, "..\\..\\Source Images\\3440los.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\3440nopath.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\1920nopath.bmp")]
-        public void VerifyNoPathAvailable(bool expected, string fileName)
-        {
-            LoadPlayer(fileName);
-
-            Assert.AreEqual(expected, Player.WorldState.NoPathAvailable);
-        }
-
-        // Either toast should read as "unreachable" -- the two consumers in
-        // WowCommonCombatTasks.cs go through this rather than either flag alone.
-        [TestMethod]
-        [DataRow(false, "..\\..\\Source Images\\2560toofar.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\3440los.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\3440nopath.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\1920nopath.bmp")]
-        public void VerifyTargetUnreachable(bool expected, string fileName)
-        {
-            LoadPlayer(fileName);
-
-            Assert.AreEqual(expected, Player.WorldState.TargetUnreachable);
         }
     }
 }

@@ -29,6 +29,12 @@ local lastEvadeTime = nil
 -- EVADE misses deliberately do NOT count as activity -- they're exactly what
 -- a stuck mob produces when we swing at it, so counting them would mask the
 -- very case this exists for.
+-- Max camera zoom-out, applied on every PLAYER_ENTERING_WORLD (see that handler),
+-- so it's the same on every machine/client without typing the /console command.
+-- Screen-space measurements in WowScreenConfigs.cs (loot heatmap region,
+-- target-marker distances) depend on how far out the camera sits.
+local CAMERA_MAX_ZOOM_FACTOR = "2.6"
+
 local COMBAT_STALEMATE_SECONDS = 30
 local lastCombatActivityTime = nil
 -- Set true to print every combat-log event that counts as activity, for
@@ -272,6 +278,70 @@ if BLOCKED_ACTION_DEBUG then
         print(debugstack(2, 8, 0))
     end)
 end
+
+-- Red error toasts ("You are facing the wrong way!", etc.), read from
+-- UI_ERROR_MESSAGE instead of the C# side pixel-matching the on-screen text,
+-- which kept breaking across resolutions and the Forever client's font change.
+-- The event passes (messageType, message); message is compared against the
+-- client's own global string for each error, so wording/locale doesn't matter.
+-- Each error is latched for UI_ERROR_FLAG_WINDOW_SECONDS after it fires, since
+-- the event fires once but the bot polls the pixel row on its own cadence.
+-- Keys are the WowWorldState bool names each one decodes into (MultiBoolTwo,
+-- see the HasRecent*Error entries in MULTI_BOOL_TWO_FIELDS, WoWFunctions.lua).
+-- Every global below was confirmed live via a UI_ERROR_MESSAGE debug dump.
+local UI_ERROR_FLAG_WINDOW_SECONDS = 0.5
+local UI_ERROR_FLAG_GLOBALS = {
+    FacingWrongWay         = "ERR_BADATTACKFACING",
+    TargetNeedsToBeInFront = "SPELL_FAILED_UNIT_NOT_INFRONT",
+    InvalidTarget          = "ERR_GENERIC_NO_TARGET",
+    OutOfRange             = "ERR_OUT_OF_RANGE",
+    NotInLineOfSight       = "SPELL_FAILED_LINE_OF_SIGHT",
+    NoPathAvailable        = "SPELL_FAILED_NOPATH",
+}
+local lastUiErrorTime = {}
+-- Set true to print every UI_ERROR_MESSAGE and which flag (if any) it set.
+local UI_ERROR_MESSAGE_DEBUG = false
+
+local function HasRecentUiError(flag)
+    local t = lastUiErrorTime[flag]
+    return t ~= nil and (GetTime() - t) <= UI_ERROR_FLAG_WINDOW_SECONDS
+end
+
+function HasRecentFacingWrongWayError() return HasRecentUiError("FacingWrongWay") end
+function HasRecentNotInFrontError() return HasRecentUiError("TargetNeedsToBeInFront") end
+function HasRecentInvalidTargetError() return HasRecentUiError("InvalidTarget") end
+function HasRecentOutOfRangeError() return HasRecentUiError("OutOfRange") end
+function HasRecentLineOfSightError() return HasRecentUiError("NotInLineOfSight") end
+function HasRecentNoPathError() return HasRecentUiError("NoPathAvailable") end
+
+-- Own frame, registration and handler pcall'd, so a problem here can't break
+-- the rest of this file's event handling.
+local uiErrorFrame = CreateFrame("Frame")
+local uiErrorRegistered, uiErrorRegisterErr = pcall(uiErrorFrame.RegisterEvent, uiErrorFrame, "UI_ERROR_MESSAGE")
+if not uiErrorRegistered then
+    print("YoyokazooUI: could not register UI_ERROR_MESSAGE -- red error toast flags will never fire: " .. tostring(uiErrorRegisterErr))
+end
+uiErrorFrame:SetScript("OnEvent", function(_, _, messageType, message)
+    local ok, err = pcall(function()
+        if type(message) ~= "string" or (issecretvalue and issecretvalue(message)) then
+            return
+        end
+        local matched = nil
+        for flag, globalName in pairs(UI_ERROR_FLAG_GLOBALS) do
+            if _G[globalName] == message then
+                lastUiErrorTime[flag] = GetTime()
+                matched = flag
+            end
+        end
+        if UI_ERROR_MESSAGE_DEBUG then
+            print(string.format("|cffff8800[uierror]|r type=%s message=%q -> %s",
+                tostring(messageType), message, matched or "no flag"))
+        end
+    end)
+    if not ok then
+        print("YoyokazooUI: UI_ERROR_MESSAGE handler error: " .. tostring(err))
+    end
+end)
 
 frame:RegisterEvent("CHAT_MSG_WHISPER")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -809,6 +879,13 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- start the stalemate clock from here instead so it can still trip.
         if UnitAffectingCombat("player") and not lastCombatActivityTime then
             lastCombatActivityTime = GetTime()
+        end
+
+        -- Same as typing /console cameraDistanceMaxZoomFactor 2.6. pcall'd so a
+        -- client that rejects it can't abort the rest of this handler.
+        local zoomOk, zoomErr = pcall(SetCVar, "cameraDistanceMaxZoomFactor", CAMERA_MAX_ZOOM_FACTOR)
+        if not zoomOk then
+            print("YoyokazooUI: couldn't set cameraDistanceMaxZoomFactor: " .. tostring(zoomErr))
         end
 
         xpTracker.startLevel = UnitLevel("player")

@@ -75,7 +75,7 @@ order. Row N covers physical y = 3N to 3N+2 (read at y = 3N+1):
 | 5 | Map Y | fixed point | `MapY` |
 | 6 | Facing, degrees | fixed point | `FacingDegrees` |
 | 7 | `MultiBoolOne` — `MULTI_BOOL_ONE_FIELDS` (class-agnostic, all 24 boxes used or reserved) | bool fields | various `WowWorldState` bools |
-| 8 | `MultiBoolTwo` — `MULTI_BOOL_TWO_FIELDS` (class-agnostic — boxes 1-6, 9-17 used so far) | bool fields | `IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable` |
+| 8 | `MultiBoolTwo` — `MULTI_BOOL_TWO_FIELDS` (class-agnostic — boxes 1-21 used so far) | bool fields | `IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable`, plus the red error toast flags `FacingWrongWay`/`TargetNeedsToBeInFront`/`InvalidTarget`/`OutOfRange`/`NotInLineOfSight`/`NoPathAvailable` |
 | 9 | `ClassBoolOne` — `<CLASS>_CLASS_BOOL_ONE_FIELDS` (class-specific) | bool fields | a `WowClassState` subtype (see C# architecture section) |
 | 10 | `ClassBoolTwo` — `<CLASS>_CLASS_BOOL_TWO_FIELDS` (class-specific — only Shaman's boxes 1-3 used so far) | bool fields | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 | 11 | `MultiIntOne` — attacker count, player level, zone ID | bytes | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
@@ -136,8 +136,7 @@ the rows (`EveryWorldStateUpdateTasks()`'s early-return, `FocusOnWindowTask`,
 the combat short-circuit in `CoreGameplayLoopTask`). "Actually logged out"
 (the disconnect alert, `CheckIfLoggedOutTask`) is
 `WowWindowHasFocus && !AddonLoaded`. Separately, **text/UI state
-matched by exact pixel signature** (trade window, breath bar, red error toast
-text) is still its own unrelated mechanism — resolution-specific coordinates
+matched by exact pixel signature** (trade window, breath bar) is still its own unrelated mechanism — resolution-specific coordinates
 in `WowScreenConfigs.cs`, compared via `ImageMatchColorPositions.MatchesSourceImage`,
 some validated against bitmaps in `WoWHelperUnitTests/Source Images/`.
 
@@ -338,7 +337,7 @@ consumes either today (`WowWarriorTasks.cs`'s `WarriorCombatLoopTask` reads
 Berserker Rage) — this replaced an earlier, route-level `UseRend`/
 `PreemptFear` pair of booleans on `WowLocationConfiguration` that couldn't
 express "some mobs at this route bleed-immune/fear-cast, some don't." R7-8
-are still reserved.
+are red error toast flags (see "Red error toasts" below).
 
 G1 is `WowWorldState.LogoutOnLowDynamiteEnabled` and G2 is
 `WowWorldState.LogoutOnFullBagsEnabled` — unlike every other bit in this row,
@@ -478,8 +477,26 @@ level, and isn't already in combat. It is pure eligibility. The per-class
 `CanEngageTarget()`) AND this same check with range/cooldown, so on their
 own they can't tell "valid but out of range" from "not a valid target";
 this bit can. Consumed by `PathfindingLoopTask`'s out-of-range chase (see
-the target-marker bullet in the C# architecture section). Boxes 7-8 and
-18-24 are still free for the next class-agnostic bool.
+the target-marker bullet in the C# architecture section).
+
+**Red error toasts** (boxes 7-8 and 18-21) are read from the
+`UI_ERROR_MESSAGE` event in `YoyokazooUI.lua` instead of pixel-matching the
+on-screen text. That used to be resolution-specific `*Positions` coordinates
+in `WowScreenConfigs.cs`, which broke whenever the font or layout changed
+(e.g. on the Forever client). The handler compares the event's `message`
+against the client's own global string for each error and records a
+timestamp; each flag then reads true for `UI_ERROR_FLAG_WINDOW_SECONDS`
+(0.5s), since the event fires once but the bot polls on its own cadence.
+Box → global string → `WowWorldState` bool: 7 `ERR_BADATTACKFACING` →
+`FacingWrongWay`; 8 `SPELL_FAILED_UNIT_NOT_INFRONT` →
+`TargetNeedsToBeInFront`; 18 `ERR_GENERIC_NO_TARGET` → `InvalidTarget`;
+19 `ERR_OUT_OF_RANGE` → `OutOfRange`; 20 `SPELL_FAILED_LINE_OF_SIGHT` →
+`NotInLineOfSight`; 21 `SPELL_FAILED_NOPATH` → `NoPathAvailable` (all
+confirmed live with a debug dump). There's no flag for "You are too far
+away!" (`ERR_BADATTACKPOS`): it couldn't be triggered live, and nothing
+consumed it. `UI_ERROR_MESSAGE_DEBUG` (a local in `YoyokazooUI.lua`, off by
+default) prints every toast and which flag it set. Boxes 22-24 are still
+free for the next class-agnostic bool.
 
 **Per-route target macro:** the `"0 Targ"` macro (`TARGET_MACRO_NAME`) (`WowInput.FIND_TARGET_MACRO`) is the bot's target finder, and
 its `/target` lines are set per route: `WowLocationConfiguration.TargetMacroMobNames`
@@ -1109,6 +1126,9 @@ of truth — edits should be made here, not in the WoW install directory.
   built). Now a failure in either one is isolated to that one, and (since its
   flag stays false) retries on the next `PLAYER_ENTERING_WORLD` (zone change,
   death+release, hearth, `/reload`) instead of being stuck all session.
+  Every `PLAYER_ENTERING_WORLD` also sets the `cameraDistanceMaxZoomFactor`
+  CVar to `CAMERA_MAX_ZOOM_FACTOR` (2.6) via `SetCVar` (pcall'd), the same as
+  typing `/console cameraDistanceMaxZoomFactor 2.6`.
   Owns `YoyokazooUIDB` (the addon's `SavedVariablesPerCharacter`
   table) and every slash command built on it: `/yydebug` toggles the debug
   frame's visibility; `/yyconfig` opens/closes the `CreateSettingsMenu()`
@@ -1292,7 +1312,7 @@ of truth — edits should be made here, not in the WoW install directory.
 ## Tests (`WoWHelperUnitTests/`)
 
 MSTest project. Feeds real captured `Source Images/*.bmp` screenshots (trade
-windows, HP bars, breath bar, error text, login screens, etc.) through the
+windows, HP bars, breath bar, login screens, etc.) through the
 same `WowScreenConfiguration` matchers the live bot uses, so the pixel-match
 logic can be verified without WoW running. Also covers `WowPathfinding` math
 directly. When you change screen-position matchers or add new encoded state,

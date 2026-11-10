@@ -96,7 +96,7 @@ namespace WoWHelper
             // Both toasts get the same handling below -- see WowWorldState.TargetUnreachable.
             bool targetUnreachable = WorldState.TargetUnreachable;
 
-            Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, tooFarAway {tooFarAway}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}, notInLineOfSight {notInLineOfSight}, noPathAvailable {noPathAvailable}, targetIsEvading {targetIsEvading}");
+            Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}, notInLineOfSight {notInLineOfSight}, noPathAvailable {noPathAvailable}, targetIsEvading {targetIsEvading}");
 
             if (facingWrongWay || targetNeedsToBeInFront || targetIsEvading)
             {
@@ -106,7 +106,7 @@ namespace WoWHelper
             }
 
             // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up
-            if (tooFarAway || invalidTarget || outOfRange)
+            if (invalidTarget || outOfRange)
             {
                 // attacker count now updates immediately, so only clear target if the mob isn't
                 // actually in combat with us OR it is and there are multiple attackers (worth
@@ -128,13 +128,13 @@ namespace WoWHelper
                 await WowInput.PressKeyWithShift(WowInput.SHIFT_CLEAR_TARGET);
             }
 
-            if (attackerJustDied || inCombatButNotAutoAttacking || tooFarAway)
+            if (attackerJustDied || inCombatButNotAutoAttacking)
             {
                 // /startattack
                 await WowInput.PressKey(WowInput.START_ATTACK);
             }
 
-            return attackerJustDied || inCombatButNotAutoAttacking || tooFarAway || facingWrongWay || targetNeedsToBeInFront || targetIsEvading || invalidTarget || outOfRange || targetUnreachable;
+            return attackerJustDied || inCombatButNotAutoAttacking || facingWrongWay || targetNeedsToBeInFront || targetIsEvading || invalidTarget || outOfRange || targetUnreachable;
         }
 
         // Called from each class's *FaceCorrectDirectionToEngageTask (the CONTINUE_TO_TRY_TO_ENGAGE
