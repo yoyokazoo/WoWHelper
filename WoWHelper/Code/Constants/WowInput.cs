@@ -175,9 +175,6 @@ namespace WoWHelper.Code
 /use [mod:shift] Conjured Crystal Water
 /sit
 /use Thick-shelled Clam
-/stopmacro [mod:shift]
-/stopmacro [nomod]
-/target Derak Nightfall
         */
         public const Keys EAT_FOOD = Keys.D8;
         public const Keys SHIFT_DRINK_WATER = Keys.D8;

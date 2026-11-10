@@ -1866,7 +1866,7 @@ local function ComputeUnlearnedTrainerSpells()
         -- trainable, so it mustn't count as "unlearned" forever. Checked by
         -- name, not ID: once rank 2 is learned, rank 1's ID stops reading as
         -- known (see TrainerSpellRankKnown), which would un-gate rank 3.
-        local gateMet = spell.requiresSpellId == nil or IsSpellKnownByName(GetSpellInfo(spell.requiresSpellId))
+        local gateMet = spell.requiresSpellId == nil or IsSpellKnownByName(Compat_GetSpellInfo(spell.requiresSpellId))
         if spell.level <= playerLevel and gateMet and not TrainerSpellRankKnown(trainerSpells, i) then
             table.insert(unlearned, spell)
         end
@@ -1892,7 +1892,7 @@ function PrintTrainerSpellDebug()
     for _, spell in ipairs(fresh) do
         print("    L" .. spell.level .. " " .. spell.name .. " (spellId " .. spell.spellId .. ", " .. spell.cost .. "c)"
             .. " IsPlayerSpell=" .. tostring(IsPlayerSpell and IsPlayerSpell(spell.spellId))
-            .. " IsSpellKnown=" .. tostring(IsSpellKnown(spell.spellId)))
+            .. " IsSpellKnown=" .. tostring(Compat_IsSpellKnown(spell.spellId)))
     end
 end
 
