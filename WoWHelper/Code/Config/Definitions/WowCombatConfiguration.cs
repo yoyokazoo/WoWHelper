@@ -9,9 +9,7 @@
         // silently behaving like Warrior.
         Unknown = -1,
         Warrior = 0,
-        // 1 (Mage) retired -- Mage support was removed (never got the rotation working,
-        // and a lot has changed elsewhere since). Not reused, to avoid confusing anything
-        // that might have logged/persisted the old numeric value.
+        Mage = 1,
         Shaman = 2,
         Warlock = 3,
     }

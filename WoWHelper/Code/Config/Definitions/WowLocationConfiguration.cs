@@ -107,7 +107,7 @@ namespace WoWHelper.Code.WorldState
 
             foreach (string mobName in ExpectedMobNames)
             {
-                if (!CreatureConfig.NATURE_IMMUNE_MOB_NAMES.Contains(mobName))
+                if (!WowCreatureConfigs.NATURE_IMMUNE_MOB_NAMES.Contains(mobName))
                 {
                     return false;
                 }
