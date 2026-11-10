@@ -188,9 +188,8 @@ and the crossing's `HeadingDegrees` still need real values.
 
 **Expected mob roster (`WowLocationConfiguration.ExpectedMobNames`):** every
 mob name a route is expected to pull, e.g. `{ "Desert Rumbler" }` for
-`LEVEL_58_SILITHUS_RUMBLERS` — distinct from the `/target Foo` macro
-comments scattered through `WowLocationConfigs.cs`, which are partial name
-substrings for a target-cycling macro, not a complete/exact roster.
+`LEVEL_58_SILITHUS_RUMBLERS` — distinct from `TargetMacroMobNames` (see
+"Per-route target macro" below), which are partial name substrings for a target-cycling macro, not a complete/exact roster.
 `WowLocationConfiguration.AllMobsInZoneAreNatureImmune()` checks every name
 in that list against `CreatureConfig.NATURE_IMMUNE_MOB_NAMES`
 (`Config/Definitions/CreatureConfig.cs`) — a **C# mirror** of
@@ -495,10 +494,9 @@ reads it back to verify, and chat-prints the result. It never creates the
 macro, and refuses in combat or over 255 chars. A missing macro is
 surfaced in-game only, not over the pixel row: `IsTargetMacroMissing()`
 drives a red `UIErrorsFrame` toast plus a red chat line on `PLAYER_ENTERING_WORLD`, alongside the
-nameplates-off alerts. Only
-`LEVEL_1_DUROTAR_BOARS_AND_SCORPS` sets `TargetMacroMobNames` so far — the
-other routes still carry their `/target` lists as comments, and routes
-without it leave the macro untouched.
+nameplates-off alerts. Every route sets `TargetMacroMobNames` except
+`LEVEL_8_MULGORE_MIXED_BEASTS` (its list is still a TODO); a route
+without it leaves the macro untouched.
 
 **Rare-change state is interval-cached.** `AreBagsFull`,
 `AreWeLowOnHealthPotions`/`Dynamite`/`Ammo`, `GearNeedsRepair`, and the

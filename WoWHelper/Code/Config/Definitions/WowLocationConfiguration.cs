@@ -66,9 +66,9 @@ namespace WoWHelper.Code.WorldState
 
         // Every mob name expected to be encountered while running this route, e.g.
         // { "Desert Rumbler" } for LEVEL_58_SILITHUS_RUMBLERS -- used by
-        // AllMobsInZoneAreNatureImmune() below. NOT the same thing as the "/target Foo"
-        // macro comments scattered through WowLocationConfigs.cs -- those are partial
-        // name substrings for a target-cycling macro, not a complete/exact roster.
+        // AllMobsInZoneAreNatureImmune() below. NOT the same thing as TargetMacroMobNames
+        // below -- those are partial name substrings for a target-cycling macro, not a
+        // complete/exact roster.
         public List<string> ExpectedMobNames { get; set; }
 
         // Comma-separated /target names for the "0 Targ" target-finding macro, e.g.
