@@ -445,62 +445,9 @@ namespace WoWHelper
         }
         */
 
-        // How long to wait after a mouse turn before reading FacingDegrees back out, so the
-        // addon's pixel row has repainted with the post-turn heading. Without it, a stale
-        // read makes the caller think the turn fell short and turn again -- overshooting.
-        private const int TURN_SETTLE_MILLIS = 100;
-
-        // Turns with a single right-click mouse drag, sized via
-        // WowPathfinding.GetMouseDragPixelsForDegrees. Measured to land exactly (zero spread
-        // across repeats -- see WowTurnCalibrationTasks.cs), unlike a timed turn-key hold,
-        // which drifts with timer jitter. Skips drags too small for the game to register
-        // (they'd do nothing, and a right-click that doesn't drag risks counting as a click
-        // on whatever's under the cursor). Returns the pixels dragged (0 if skipped).
-        private async Task<int> TurnByMouseDragTask(float degreesToMove)
-        {
-            var screenConfig = ScreenConfiguration;
-            int dragPixels = WowPathfinding.GetMouseDragPixelsForDegrees(
-                degreesToMove, screenConfig.MouseDragPixelsPerDegree, screenConfig.MouseDragOffsetDegrees);
-            if (Math.Abs(dragPixels) < screenConfig.MouseDragMinEffectivePixels)
-            {
-                return 0;
-            }
-
-            await RightClickDragTask(dragPixels);
-            await Task.Delay(TURN_SETTLE_MILLIS);
-            return dragPixels;
-        }
-
-        // Right-click drags the camera deltaX pixels horizontally (positive = right), which
-        // turns the character with it. Starts from (width/2, height/4) -- the same point the
-        // turn-rate calibration was measured from.
-        private async Task RightClickDragTask(int deltaX)
-        {
-            var resolution = ScreenConfiguration.Resolution;
-            Mouse.Move(resolution.Width / 2, resolution.Height / 4);
-            await Task.Delay(50);
-
-            try
-            {
-                Mouse.ButtonDown(Mouse.MouseKeys.Right);
-                await Task.Delay(50);
-                Mouse.MoveRelative(deltaX, 0);
-                await Task.Delay(50);
-            }
-            finally
-            {
-                Mouse.ButtonUp(Mouse.MouseKeys.Right);
-            }
-        }
-
         public Task<bool> RotateToDirectionTaskWithKeyboard(float desiredDegrees, float distance)
         {
             return RotateToDirectionTask(desiredDegrees, distance, TurnByKeyboardTask, "ms held");
-        }
-
-        public Task<bool> RotateToDirectionTaskWithMouse(float desiredDegrees, float distance)
-        {
-            return RotateToDirectionTask(desiredDegrees, distance, TurnByMouseDragTask, "px dragged");
         }
 
         // Turns to face desiredDegrees: reads the current facing once, computes the
