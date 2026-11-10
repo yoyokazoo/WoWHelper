@@ -170,16 +170,6 @@ namespace WoWHelper
                     HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     continue;
                 }
-
-                if (WorldState.IsTargetLongRangeCaster && WorldState.TooFarAway && !hasWalkedTowardsLongRangeCaster)
-                {
-                    await StartWalkForwardTask();
-                    await Task.Delay(500);
-                    await EndWalkForwardTask();
-                    hasWalkedTowardsLongRangeCaster = true;
-                    continue;
-                }
-
             } while (WorldState.IsInCombat);
 
             return true;

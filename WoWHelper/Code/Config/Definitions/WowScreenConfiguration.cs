@@ -142,8 +142,8 @@ namespace WoWHelper
 
             var clusters = new[]
             {
-                FacingWrongWayPositions, TooFarAwayPositions, TargetNeedsToBeInFrontPositions,
-                InvalidTargetPositions, OutOfRangePositions, NotInLineOfSightPositions, NoPathAvailablePositions, BreathBarScreenPositions,
+                FacingWrongWayPositions, TargetNeedsToBeInFrontPositions, InvalidTargetPositions,
+                OutOfRangePositions, NotInLineOfSightPositions, NoPathAvailablePositions, BreathBarScreenPositions,
                 TradeWindowScreenPositions, TradeWindowAcceptedScreenPositions, TradeWindowConfirmationScreenPositions,
             };
 

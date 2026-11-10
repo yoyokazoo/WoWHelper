@@ -86,7 +86,6 @@ namespace WoWHelper
         {
             bool attackerJustDied = PreviousWorldState.AttackerCount > WorldState.AttackerCount && WorldState.AttackerCount > 0;
             bool inCombatButNotAutoAttacking = WorldState.IsInCombat && !WorldState.IsAutoAttacking;
-            bool tooFarAway = WorldState.TooFarAway;
             bool facingWrongWay = WorldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
             bool targetNeedsToBeInFront = WorldState.TargetNeedsToBeInFront;
             bool targetIsEvading = WorldState.TargetRecentlyEvaded;

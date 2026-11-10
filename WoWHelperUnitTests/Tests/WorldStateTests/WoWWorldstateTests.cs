@@ -33,23 +33,12 @@ namespace WoWHelperUnitTests
         [TestMethod]
         [DataRow(false, "..\\..\\Source Images\\numbersAsColors3.bmp")]
         [DataRow(true, "..\\..\\Source Images\\FacingWrongWay.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\2560facing.bmp")]
+        [DataRow(true, "..\\..\\Source Images\\2560foreverfacing.bmp")]
         public void VerifyFacingWrongWay(bool expected, string fileName)
         {
             LoadPlayer(fileName);
 
             Assert.AreEqual(expected, Player.WorldState.FacingWrongWay);
-        }
-
-        [TestMethod]
-        [DataRow(false, "..\\..\\Source Images\\FacingWrongWay.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\2560toofar.bmp")]
-        [DataRow(true, "..\\..\\Source Images\\toofaraway.bmp")]
-        public void VerifyTooFarAway(bool expected, string fileName)
-        {
-            LoadPlayer(fileName);
-
-            Assert.AreEqual(expected, Player.WorldState.TooFarAway);
         }
 
         /*

@@ -121,11 +121,11 @@ namespace WoWHelper
         public WowCombatConfiguration? PlayerClass { get; private set; }
 
         // Red Error Text in middle of screen
-        public bool FacingWrongWay { get; private set; }
-        public bool TooFarAway { get; private set; }
-        public bool TargetNeedsToBeInFront { get; private set; }
-        public bool InvalidTarget { get; private set; }
-        public bool OutOfRange { get; private set; }
+
+        public bool FacingWrongWay { get; private set; } // Melee facing the wrong direction
+        public bool TargetNeedsToBeInFront { get; private set; } // Spellcast facing the wrong direction
+        public bool InvalidTarget { get; private set; } // Spellcast on allied/dead target
+        public bool OutOfRange { get; private set; } // Spellcast too far away
         public bool NotInLineOfSight { get; private set; }
         public bool NoPathAvailable { get; private set; }
         public bool TargetUnreachable => NotInLineOfSight || NoPathAvailable;
@@ -295,7 +295,6 @@ namespace WoWHelper
         public void UpdateRedErrorTextMessages(Bitmap bmp)
         {
             FacingWrongWay = MatchesErrorTextColor(bmp, ScreenConfig.FacingWrongWayPositions);
-            TooFarAway = MatchesErrorTextColor(bmp, ScreenConfig.TooFarAwayPositions);
             TargetNeedsToBeInFront = MatchesErrorTextColor(bmp, ScreenConfig.TargetNeedsToBeInFrontPositions);
             InvalidTarget = MatchesErrorTextColor(bmp, ScreenConfig.InvalidTargetPositions);
             OutOfRange = MatchesErrorTextColor(bmp, ScreenConfig.OutOfRangePositions);

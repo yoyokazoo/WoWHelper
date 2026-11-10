@@ -11,7 +11,7 @@ namespace WoWHelper.Code.Config
 {
     public class WowScreenConfigs
     {
-        private const int RESOLUTION_MATCH_TOLERANCE = 5;
+        private const int RESOLUTION_MATCH_TOLERANCE = 20;
 
         public static WowScreenConfiguration GetForPrimaryScreen()
         {
@@ -78,13 +78,6 @@ namespace WoWHelper.Code.Config
                     new ColorPosition(1647, 218, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
-            TooFarAwayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1589, 217, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1641, 222, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1666, 220, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
             TargetNeedsToBeInFrontPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
                     new ColorPosition(1506, 216, WowScreenConfiguration.ERROR_TEXT_COLOR),
@@ -147,18 +140,13 @@ namespace WoWHelper.Code.Config
             MeleeRangeTargetMarkerDistance = 140,
             TooCloseToTurnWhileWalkingTargetMarkerDistance = 240,
 
+            // WoW Forever client (smaller font, higher up than Classic Era's): the "Y" of
+            // "You", the "h" of "the", and the "!" -- each the center of a 2px-wide stem.
             FacingWrongWayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
                 {
-                    new ColorPosition(1071, 242, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1102, 244, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1127, 249, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            TooFarAwayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(1137, 245, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1161, 245, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(1172, 252, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1109, 198, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1289, 195, WowScreenConfiguration.ERROR_TEXT_COLOR),
+                    new ColorPosition(1457, 190, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
             TargetNeedsToBeInFrontPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
@@ -266,13 +254,6 @@ namespace WoWHelper.Code.Config
                     new ColorPosition(818, 163, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(830, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
                     new ColorPosition(842, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                }),
-
-            TooFarAwayPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>
-                {
-                    new ColorPosition(863, 165, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(875, 161, WowScreenConfiguration.ERROR_TEXT_COLOR),
-                    new ColorPosition(887, 170, WowScreenConfiguration.ERROR_TEXT_COLOR),
                 }),
 
             TargetNeedsToBeInFrontPositions = new ImageMatchColorPositions(0, 0, new List<ColorPosition>

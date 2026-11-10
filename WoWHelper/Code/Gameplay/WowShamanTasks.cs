@@ -113,16 +113,6 @@ namespace WoWHelper
                     // we should already be attacking
                     //await WowInput.PressKey(WowInput.SHAMAN_ATTACK);
                 }
-
-                if (WorldState.IsTargetLongRangeCaster && WorldState.TooFarAway && !hasWalkedTowardsLongRangeCaster)
-                {
-                    await StartWalkForwardTask();
-                    await Task.Delay(500);
-                    await EndWalkForwardTask();
-                    hasWalkedTowardsLongRangeCaster = true;
-                    continue;
-                }
-
             } while (WorldState.IsInCombat);
 
             return true;
