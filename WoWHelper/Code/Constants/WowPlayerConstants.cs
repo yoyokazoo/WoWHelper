@@ -5,9 +5,16 @@ namespace WoWHelper.Code
     // Constants that don't relate to combat/gameplay logic but more about the operation of the bot
     public static partial class WowConstants
     {
+        // How often to pull worldstate from the screen.  Addon updates every 100ms
         public const long TIME_BETWEEN_WORLDSTATE_UPDATES = 200;
+
+        // How often to click tab/target macro
         public const long TIME_BETWEEN_FIND_TARGET_MILLIS = 800;
+
+        // How often to spam jump while running around
         public const long TIME_BETWEEN_JUMPS_MILLIS = 8 * 1000;
+
+        // Log off after this many hours of farming
         public const long FARM_TIME_LIMIT_MILLIS = 10 * 60 * 60 * 1000; // 10 hours
 
         // Wiggle so we don't get AFK DC'ed

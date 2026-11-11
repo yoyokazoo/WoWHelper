@@ -44,8 +44,6 @@ namespace WoWHelper
         public WowClassHandler ClassHandler { get; private set; }
 
         public PlayerMetaState CurrentPlayerMetaState { get; private set; }
-        public PlayerState CurrentPlayerState { get; private set; }
-        public PathfindingState CurrentPathfindingState { get; private set; }
         public PlayerGoal CurrentPlayerGoal { get; private set; }
         public LogoutState CurrentLogoutState { get; private set; }
         public FindEnemyTargetState CurrentFindEnemyTargetState { get; private set; }
@@ -62,7 +60,6 @@ namespace WoWHelper
         public int WaypointTraversalDirection { get; private set; }
 
         public bool IsOnMerchantRun { get; private set; }
-        public MerchantRunPhase CurrentMerchantRunPhase { get; private set; }
         public int CurrentMerchantWaypointIndex { get; private set; }
         public long MerchantRunStartTime { get; private set; }
 
@@ -87,8 +84,6 @@ namespace WoWHelper
         public WowPlayer(WowScreenConfiguration screenConfiguration)
         {
             CurrentPlayerMetaState = PlayerMetaState.WAITING_TO_FOCUS_ON_WINDOW;
-            CurrentPlayerState = PlayerState.WAITING_TO_FOCUS_ON_WINDOW;
-            CurrentPathfindingState = PathfindingState.PICKING_NEXT_WAYPOINT;
             CurrentPlayerGoal = PlayerGoal.NONE;
             CurrentBattleRecoveryState = BattleRecoveryState.STARTING_RECOVERY;
             CurrentStuckRecoveryState = StuckRecoveryState.NOT_STUCK;
@@ -98,7 +93,6 @@ namespace WoWHelper
             WaypointTraversalDirection = 1;
 
             IsOnMerchantRun = false;
-            CurrentMerchantRunPhase = MerchantRunPhase.WALKING_TO_MERCHANT;
             CurrentMerchantWaypointIndex = 0;
 
             FarmingLocationConfiguration = null;
