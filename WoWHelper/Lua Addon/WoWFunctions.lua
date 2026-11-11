@@ -749,15 +749,23 @@ function CountAttackers()
             local canAttack = UnitCanAttack("player", unit)
             local inCombat = UnitAffectingCombat(unit)
             local targetingMe = UnitIsUnit(unit.."target", "player")
+            local name = UnitName(unit)
+            -- pcall'd: on Midnight-rules clients the name may be a secret
+            -- value, which can't be used as a table key -- treat as not ignored.
+            local ok, isIgnored = pcall(function()
+                return name ~= nil and ATTACKER_COUNT_IGNORED_MOB_NAMES[name] == true
+            end)
+            local ignored = ok and isIgnored
 
             if COUNT_ATTACKERS_DEBUG then
                 print(string.format(
-                    "  %s (%s): canAttack=%s inCombat=%s targetingMe=%s",
-                    unit, UnitName(unit) or "?",
-                    tostring(canAttack), tostring(inCombat), tostring(targetingMe)))
+                    "  %s (%s): canAttack=%s inCombat=%s targetingMe=%s ignored=%s",
+                    unit, tostring(name or "?"),
+                    tostring(canAttack), tostring(inCombat), tostring(targetingMe),
+                    tostring(ignored)))
             end
 
-            if canAttack and inCombat and targetingMe then
+            if canAttack and inCombat and targetingMe and not ignored then
                 count = count + 1
             end
         end

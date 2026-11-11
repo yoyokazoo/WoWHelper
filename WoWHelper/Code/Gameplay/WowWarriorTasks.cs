@@ -176,7 +176,7 @@ namespace WoWHelper
         {
             return classState.KnowsSunderArmor &&
                 !classState.TargetHasSunderArmor &&
-                WorldState.TargetHpPercent >= WowPlayerConstants.SUNDER_ARMOR_HP_THRESHOLD;
+                WorldState.TargetHpPercent >= WowGameplayConstants.SUNDER_ARMOR_HP_THRESHOLD;
         }
 
         // Bleed-immune targets never get Rend, regardless of anything else. Otherwise, Rend
@@ -193,7 +193,7 @@ namespace WoWHelper
 
             return classState.KnowsRend &&
                 !classState.TargetHasRend &&
-                (WorldState.TargetHpPercent > WowPlayerConstants.REND_HP_THRESHOLD || WorldState.IsTargetRunnerMob);
+                (WorldState.TargetHpPercent > WowGameplayConstants.REND_HP_THRESHOLD || WorldState.IsTargetRunnerMob);
         }
 
         // classState.MortalStrikeOrBloodThirstCooledDown alone isn't a safe usability check --
@@ -256,7 +256,7 @@ namespace WoWHelper
             // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
 
-            bool hpRecovered = WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD;
+            bool hpRecovered = WorldState.PlayerHpPercent >= WowGameplayConstants.STOP_RESTING_HP_THRESHOLD;
             bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && potionIsCooledDown;
 
@@ -270,7 +270,7 @@ namespace WoWHelper
 
         public bool WarriorIsBattleReady(WowWarriorClassState classState)
         {
-            bool hpRecovered = WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD;
+            bool hpRecovered = WorldState.PlayerHpPercent >= WowGameplayConstants.STOP_RESTING_HP_THRESHOLD;
             bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && potionIsCooledDown;
             return battleReady;
@@ -351,7 +351,7 @@ namespace WoWHelper
         public async Task<bool> WarriorEmergencyActionTask()
         {
             bool tooManyAttackers = WorldState.AttackerCount >= WowPlayerConstants.TOO_MANY_ATTACKERS_THRESHOLD;
-            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowPlayerConstants.EMERGENCY_HP_THRESHOLD;
+            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowGameplayConstants.EMERGENCY_HP_THRESHOLD;
             bool takeEmergencyAction = !EmergencyCombatActionTaken && (tooManyAttackers || emergencyHpThreshold);
 
             if (takeEmergencyAction)

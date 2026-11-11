@@ -52,5 +52,17 @@
         public const int PETRIFICATION_FLASK_LEVEL = 50;
 
         public const int HEALING_POTION_HP_THRESHOLD = 45; // 50
+
+        public const int STOP_RESTING_HP_THRESHOLD = 94;
+        public const int STOP_RESTING_MP_THRESHOLD = 98;
+
+        public const int EAT_FOOD_HP_THRESHOLD = 80;
+        public const int DRINK_WATER_MP_THRESHOLD = 80;
+
+        public const int EMERGENCY_HP_THRESHOLD = 35;
+        public const int PETRI_ALTF4_HP_THRESHOLD = 20;
+
+        public const int REND_HP_THRESHOLD = 60;
+        public const int SUNDER_ARMOR_HP_THRESHOLD = 75;
     }
 }

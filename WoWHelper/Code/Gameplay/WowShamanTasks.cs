@@ -15,7 +15,7 @@ namespace WoWHelper
             bool emergencyActionTaken = false;
 
             bool isFacingLongRangeCaster = false;
-            bool hasWalkedTowardsLongRangeCaster = false;
+            //bool hasWalkedTowardsLongRangeCaster = false;
 
             await StartAttackTask();
 
@@ -235,14 +235,14 @@ namespace WoWHelper
 
         public async Task<bool> ShamanStartBattleReadyRecoverTask(WowShamanClassState classState)
         {
-            if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
+            if (WorldState.PlayerHpPercent < WowGameplayConstants.EAT_FOOD_HP_THRESHOLD)
             {
                 await WowInput.PressKey(WowInput.EAT_FOOD);
             }
 
             // water??
             await Task.Delay(500);
-            if (WorldState.ResourcePercent < WowPlayerConstants.DRINK_WATER_MP_THRESHOLD)
+            if (WorldState.ResourcePercent < WowGameplayConstants.DRINK_WATER_MP_THRESHOLD)
             {
                 await WowInput.PressKeyWithShift(WowInput.SHIFT_DRINK_WATER);
             }
@@ -255,8 +255,8 @@ namespace WoWHelper
             // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
 
-            bool hpRecovered = WorldState.PlayerHpPercent >= WowPlayerConstants.STOP_RESTING_HP_THRESHOLD;
-            bool mpRecovered = WorldState.ResourcePercent >= WowPlayerConstants.STOP_RESTING_MP_THRESHOLD;
+            bool hpRecovered = WorldState.PlayerHpPercent >= WowGameplayConstants.STOP_RESTING_HP_THRESHOLD;
+            bool mpRecovered = WorldState.ResourcePercent >= WowGameplayConstants.STOP_RESTING_MP_THRESHOLD;
             bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
 
@@ -378,7 +378,7 @@ namespace WoWHelper
         {
             await Task.Delay(0);
             bool tooManyAttackers = WorldState.AttackerCount >= WowPlayerConstants.TOO_MANY_ATTACKERS_THRESHOLD;
-            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowPlayerConstants.EMERGENCY_HP_THRESHOLD;
+            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowGameplayConstants.EMERGENCY_HP_THRESHOLD;
 
             if (tooManyAttackers || emergencyHpThreshold)
             //if(true)

@@ -953,7 +953,10 @@ of truth — edits should be made here, not in the WoW install directory.
   reliable creature-ID API exposed to addons, so these all key off
   `UnitName("target")`. Plain global tables (not `local`) so
   `WoWFunctions.lua`'s `IsTargetXxx()` checks can read them — addon globals
-  are one flat namespace, same as everything else here.
+  are one flat namespace, same as everything else here. One list isn't a
+  target check: `ATTACKER_COUNT_IGNORED_MOB_NAMES` (e.g. the Rotting Worms
+  some zombies spawn) is skipped per-nameplate by `CountAttackers()`, so
+  trivial spawned adds don't inflate `AttackerCount`.
 - **`WoWFunctions.lua`** — class-agnostic game-state queries (in melee range,
   in combat, should-attack-target checks, spell cooldown/range checks incl.
   GCD-aware cooldown detection, attacker counting, etc.) — the "is X true"

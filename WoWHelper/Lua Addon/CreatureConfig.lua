@@ -24,6 +24,13 @@ RUNNER_MOB_NAMES = {
     ["Ghostpaw Runner"] = true,
 }
 
+-- Mobs CountAttackers() skips, e.g. trivial adds spawned by another mob
+-- (the worms some zombies spawn) that shouldn't make a fight look like a
+-- multi-pull.
+ATTACKER_COUNT_IGNORED_MOB_NAMES = {
+    ["Rotting Worm"] = true,
+}
+
 -- Mobs immune (or effectively immune) to fire damage/effects.
 FIRE_IMMUNE_MOB_NAMES = {
     ["Rogue Flame Spirit"] = true,
