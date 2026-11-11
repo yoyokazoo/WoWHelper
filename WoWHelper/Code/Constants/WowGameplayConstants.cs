@@ -1,6 +1,6 @@
-﻿namespace WoWHelper.Code.WorldState
+﻿namespace WoWHelper.Code
 {
-    public class WowGameplayConstants
+    public static partial class WowConstants
     {
         // Warrior costs
         public const int HEROIC_STRIKE_RAGE_COST = 15;

@@ -65,9 +65,9 @@ namespace WoWHelper
                 // onto the same unreachable target we just cleared. Keep walking the route
                 // during the suppression window instead of standing still trying to retarget.
                 bool suppressedAfterLineOfSightBailout = GeneralHelpers.CurrentTimeInsideDuration(
-                    LastLineOfSightBailoutTime, WowPlayerConstants.LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS);
+                    LastLineOfSightBailoutTime, WowConstants.LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS);
 
-                if (!IsOnMerchantRun && !suppressedAfterLineOfSightBailout && !GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
+                if (!IsOnMerchantRun && !suppressedAfterLineOfSightBailout && !GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetTime, WowConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
@@ -94,7 +94,7 @@ namespace WoWHelper
                     targetChecks++;
                 }
 
-                if (!IsOnMerchantRun && !GeneralHelpers.CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
+                if (!IsOnMerchantRun && !GeneralHelpers.CurrentTimeInsideDuration(LastJumpTime, WowConstants.TIME_BETWEEN_JUMPS_MILLIS))
                 {
                     LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     await WowInput.PressKey(WowInput.JUMP);
@@ -205,9 +205,9 @@ namespace WoWHelper
                 // no extra plumbing needed.
                 if (IsOnMerchantRun)
                 {
-                    if (!GeneralHelpers.CurrentTimeInsideDuration(MerchantRunStartTime, WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS))
+                    if (!GeneralHelpers.CurrentTimeInsideDuration(MerchantRunStartTime, WowConstants.MERCHANT_RUN_TIMEOUT_MILLIS))
                     {
-                        SetLogoutVariablesAndSlack($"Merchant run took longer than {WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS / 60000} minutes (stuck in {CurrentMerchantRunPhase})");
+                        SetLogoutVariablesAndSlack($"Merchant run took longer than {WowConstants.MERCHANT_RUN_TIMEOUT_MILLIS / 60000} minutes (stuck in {CurrentMerchantRunPhase})");
                         await EndWalkForwardTask();
                         return true;
                     }
@@ -278,7 +278,7 @@ namespace WoWHelper
                             var merchant = LocationConfiguration.MerchantConfig;
                             if (!IsOnMerchantRun && merchant != null && WorldState.BagsAreFull &&
                                 Vector2.Distance(CurrentWaypoint, merchant.Waypoints[0])
-                                    <= WowPlayerConstants.MERCHANT_BRANCH_POINT_EPSILON)
+                                    <= WowConstants.MERCHANT_BRANCH_POINT_EPSILON)
                             {
                                 Console.WriteLine("Bags full at merchant branch point, starting merchant run");
                                 IsOnMerchantRun = true;
@@ -391,8 +391,8 @@ namespace WoWHelper
                 case MerchantRunPhase.WALKING_TO_MERCHANT:
                     bool isFinalLeg = CurrentMerchantWaypointIndex == merchant.Waypoints.Count - 1;
                     float approachTolerance = isFinalLeg
-                        ? WowPlayerConstants.NPC_FINAL_WAYPOINT_TOLERANCE
-                        : WowPlayerConstants.MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE;
+                        ? WowConstants.NPC_FINAL_WAYPOINT_TOLERANCE
+                        : WowConstants.MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE;
 
                     if (await MoveTowardsPointTask(merchant.Waypoints[CurrentMerchantWaypointIndex], approachTolerance, useMouseRotation: true))
                     {
@@ -422,13 +422,13 @@ namespace WoWHelper
                     // walking back either way: if the vendor window got interrupted before
                     // selling finished, bags stay full and the branch-off check in
                     // PathfindingLoopTask will simply retry on the next lap.
-                    await WaitUnlessInCombatTask(WowPlayerConstants.NPC_INTERACT_WAIT_MILLIS);
+                    await WaitUnlessInCombatTask(WowConstants.NPC_INTERACT_WAIT_MILLIS);
                     CurrentMerchantWaypointIndex = Math.Max(merchant.Waypoints.Count - 2, 0);
                     CurrentMerchantRunPhase = MerchantRunPhase.WALKING_BACK_TO_ROUTE;
                     break;
 
                 case MerchantRunPhase.WALKING_BACK_TO_ROUTE:
-                    if (await MoveTowardsPointTask(merchant.Waypoints[CurrentMerchantWaypointIndex], WowPlayerConstants.MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE, useMouseRotation: true))
+                    if (await MoveTowardsPointTask(merchant.Waypoints[CurrentMerchantWaypointIndex], WowConstants.MERCHANT_INTERMEDIATE_WAYPOINT_TOLERANCE, useMouseRotation: true))
                     {
                         if (CurrentMerchantWaypointIndex == 0)
                         {
@@ -1105,7 +1105,7 @@ namespace WoWHelper
                 await FaceWaypointTask();
             }
 
-            if (!GeneralHelpers.CurrentTimeInsideDuration(LastJumpTime, WowPlayerConstants.TIME_BETWEEN_JUMPS_MILLIS))
+            if (!GeneralHelpers.CurrentTimeInsideDuration(LastJumpTime, WowConstants.TIME_BETWEEN_JUMPS_MILLIS))
             {
                 LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 await WowInput.PressKey(WowInput.JUMP);
@@ -1126,7 +1126,7 @@ namespace WoWHelper
             }
             LastZoneCrossingTickTime = now;
 
-            if (now - ZoneCrossingStartTime > WowPlayerConstants.ZONE_CROSSING_TIMEOUT_MILLIS)
+            if (now - ZoneCrossingStartTime > WowConstants.ZONE_CROSSING_TIMEOUT_MILLIS)
             {
                 await EndWalkForwardTask();
                 SetLogoutVariablesAndSlack($"Timed out on {crossing}, still in {WorldState.CurrentZone} at {WorldState.PlayerLocation}");

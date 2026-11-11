@@ -255,7 +255,7 @@ namespace WoWHelper.Code
         }
 
         // Nearest-waypoint distance, used to validate the player actually started near the
-        // route (see WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT) rather than to guide
+        // route (see WowConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT) rather than to guide
         // in-progress pathing.
         public static float GetDistanceToClosestWaypoint(Vector2 playerPos, IReadOnlyList<Vector2> waypoints)
         {
@@ -473,7 +473,7 @@ namespace WoWHelper.Code
             var routesInZone = safeRoutes.Where(route => route.Zone == wowPlayer.WorldState.CurrentZone).ToList();
             WowRoute closestRoute = routesInZone
                 .Select(route => new { Route = route, Distance = WowPathfinding.GetDistanceToClosestWaypoint(wowPlayer.WorldState.PlayerLocation, route.Waypoints) })
-                .Where(x => x.Distance < WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT)
+                .Where(x => x.Distance < WowConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT)
                 .OrderBy(x => x.Distance)
                 .Select(x => x.Route)
                 .FirstOrDefault();

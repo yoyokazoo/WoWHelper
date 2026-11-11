@@ -51,8 +51,8 @@ namespace WoWHelper
 
         public async Task<bool> ThrowDynamiteTask(bool forceThrow = false)
         {
-            bool shouldThrowDynamite = forceThrow || (WorldState.AttackerCount > 1 && WorldState.PlayerLevel >= WowGameplayConstants.DYNAMITE_LEVEL);
-            bool canThrowDynamite = !GeneralHelpers.CurrentTimeInsideDuration(DynamiteTime, WowGameplayConstants.DYNAMITE_COOLDOWN_MILLIS);
+            bool shouldThrowDynamite = forceThrow || (WorldState.AttackerCount > 1 && WorldState.PlayerLevel >= WowConstants.DYNAMITE_LEVEL);
+            bool canThrowDynamite = !GeneralHelpers.CurrentTimeInsideDuration(DynamiteTime, WowConstants.DYNAMITE_COOLDOWN_MILLIS);
 
             if (shouldThrowDynamite && canThrowDynamite)
             {
@@ -68,8 +68,8 @@ namespace WoWHelper
 
         public async Task<bool> UseHealingPotionTask()
         {
-            bool shouldUseHealingPotion = WorldState.PlayerHpPercent <= WowGameplayConstants.HEALING_POTION_HP_THRESHOLD;
-            bool canUseHealingPotion = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+            bool shouldUseHealingPotion = WorldState.PlayerHpPercent <= WowConstants.HEALING_POTION_HP_THRESHOLD;
+            bool canUseHealingPotion = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowConstants.POTION_COOLDOWN_MILLIS);
 
             if (shouldUseHealingPotion && canUseHealingPotion)
             {

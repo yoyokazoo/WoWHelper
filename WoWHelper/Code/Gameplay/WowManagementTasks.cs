@@ -166,7 +166,7 @@ namespace WoWHelper
                 SlackHelper.SendMessageToChannel($"Logging out, combat stalemate detected (in combat but nothing happening -- unreachable mob?)");
                 await StartLogoutTask();
 
-                long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS;
+                long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS;
                 while (WorldState.AddonLoaded && DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
                 {
                     await Task.Delay(500);
@@ -181,7 +181,7 @@ namespace WoWHelper
 
                 // Logout got cancelled (the mob reached us after all?). LogoutTriggered stays
                 // set, so the normal CHECK_FOR_LOGOUT path picks it up once combat drops.
-                SlackHelper.SendMessageToChannel($"Combat stalemate logout didn't complete within {WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS / 1000}s -- back to the combat loop, will log out after combat");
+                SlackHelper.SendMessageToChannel($"Combat stalemate logout didn't complete within {WowConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS / 1000}s -- back to the combat loop, will log out after combat");
                 */
 
                 // Temporarily switched to just move a bit, since the only place I've seen
@@ -193,7 +193,7 @@ namespace WoWHelper
             }
 
             // If we're about to die, petri alt+f4
-            if (WorldState.PlayerHpPercent <= WowGameplayConstants.PETRI_ALTF4_HP_THRESHOLD && WorldState.PlayerLevel >= WowGameplayConstants.PETRIFICATION_FLASK_LEVEL)
+            if (WorldState.PlayerHpPercent <= WowConstants.PETRI_ALTF4_HP_THRESHOLD && WorldState.PlayerLevel >= WowConstants.PETRIFICATION_FLASK_LEVEL)
             {
                 SlackHelper.SendMessageToChannel($"Petri Alt+F4ed at ~{WorldState.PlayerHpPercent}%!  Consider using Unstuck instead of logging back in");
                 await PetriAltF4Task();
@@ -296,15 +296,15 @@ namespace WoWHelper
                 LogoutTriggered = true;
                 LogoutReason = $"Low on Ammo";
             }
-            else if (!GeneralHelpers.CurrentTimeInsideDuration(FarmStartTime, WowPlayerConstants.FARM_TIME_LIMIT_MILLIS))
+            else if (!GeneralHelpers.CurrentTimeInsideDuration(FarmStartTime, WowConstants.FARM_TIME_LIMIT_MILLIS))
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Farm Time Limit Reached";
             }
-            else if (EngageAttempts >= WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS)
+            else if (EngageAttempts >= WowConstants.ENGAGE_ROTATION_ATTEMPTS)
             {
                 LogoutTriggered = true;
-                LogoutReason = $"Failed to engage target after {WowPlayerConstants.ENGAGE_ROTATION_ATTEMPTS} loops.  Something wrong?";
+                LogoutReason = $"Failed to engage target after {WowConstants.ENGAGE_ROTATION_ATTEMPTS} loops.  Something wrong?";
             }
             // Same deal as LogoutOnLowDynamiteEnabled above -- toggled live via /yyconfig.
             else if (WorldState.LogoutOnFullBagsEnabled && WorldState.BagsAreFull)
@@ -334,7 +334,7 @@ namespace WoWHelper
         // checks for (Ony/Rend/ZG) is chosen in-game via the addon's /yyconfig "Desired world
         // buff" selector (YoyokazooUI.lua/WoWFunctions.lua), not hardcoded here. Meant to be
         // run while standing in a city/raid waiting area for a world buff to land: each
-        // iteration waits up to WowPlayerConstants.WORLD_BUFF_WAIT_MILLIS, polling WorldState
+        // iteration waits up to WowConstants.WORLD_BUFF_WAIT_MILLIS, polling WorldState
         // at the normal UpdateWorldStateAsync cadence (same pattern as WaitUnlessInCombatTask
         // in WowCommonCombatTasks.cs) so the buff is noticed the moment it lands instead of
         // only at the end of the wait, then taps strafe-left/strafe-right briefly to reset
@@ -351,7 +351,7 @@ namespace WoWHelper
 
             while (!WorldState.HasDesiredWorldBuff)
             {
-                long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.WORLD_BUFF_WAIT_MILLIS;
+                long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowConstants.WORLD_BUFF_WAIT_MILLIS;
                 while (!WorldState.HasDesiredWorldBuff && DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
                 {
                     await UpdateWorldStateAsync();
@@ -558,7 +558,7 @@ namespace WoWHelper
         {
             Mouse.Move(ScreenConfiguration.Resolution.Width / 2, ScreenConfiguration.Resolution.Height / 2);
             Mouse.PressButton(Mouse.MouseKeys.Right);
-            await WaitUnlessInCombatTask(WowPlayerConstants.NPC_INTERACT_WAIT_MILLIS);
+            await WaitUnlessInCombatTask(WowConstants.NPC_INTERACT_WAIT_MILLIS);
         }
     }
 }

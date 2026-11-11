@@ -155,7 +155,7 @@ right place/level before a farming route starts — `CurrentZone` is the
 runtime half of that check. That validation (plus a third check: is the
 player near *any* of the route's own waypoints, via
 `WowPathfinding.GetDistanceToClosestWaypoint` against the single global
-`WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT` threshold — deliberately
+`WowConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT` threshold — deliberately
 one constant sized off the loosest route's own largest adjacent-waypoint gap,
 not a per-config value) is wired into `WowManagementTasks.SetLogoutVariablesTask()`,
 checked first so a bad start gives the clearest possible logout reason.
@@ -238,7 +238,7 @@ that state can be skipped entirely — see below:
   player currently satisfies: the same three checks `SetLogoutVariablesTask()`
   uses to keep validating an already-running route (level, zone, waypoint
   proximity via `WowPathfinding.GetDistanceToClosestWaypoint`/
-  `WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT`), just run once up
+  `WowConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT`), just run once up
   front instead of every tick. Exactly one match wins; zero or more than one
   means there's no safe automatic choice. This one *is* still tied to
   `PlayerState.RESOLVE_FARMING_CONFIGURATION`, right after the window is
@@ -385,7 +385,7 @@ helper). Unlike the "Dynamite item"/"Healing potion" selectors, this one
 booleans above.
 Consumed by `WowManagementTasks.WaitForWorldBuffThenLogoffTask()`: loops
 idle (tapping strafe-left/strafe-right every
-`WowPlayerConstants.WORLD_BUFF_WAIT_MILLIS` to dodge WoW's AFK kick) until
+`WowConstants.WORLD_BUFF_WAIT_MILLIS` to dodge WoW's AFK kick) until
 this bit comes true, then Slack-alerts and logs out. Wired up to the
 `AdHocTest` button (`WowPlayer.AdHocTestTask()`) for now rather than a
 dedicated `PlayerState`.
@@ -427,7 +427,7 @@ consumer in `EveryWorldStateUpdateTasks()` can't just set `LogoutTriggered`
 like `LogoffMobSeen`/`HighLatency` do (the logout states are only reachable
 once combat drops) — it sets it, Slack-alerts, presses the logout macro
 itself via `StartLogoutTask()`, and then polls for `!AddonLoaded` right
-there (up to `WowPlayerConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS`, 45s)
+there (up to `WowConstants.COMBAT_STALEMATE_LOGOUT_WAIT_MILLIS`, 45s)
 before `Environment.Exit`, rather than returning to the combat loop — whose
 scoot-backwards/re-face handling would move the character and cancel the
 logout timer. Logging out in combat is fine here precisely because it's a
@@ -810,7 +810,7 @@ of truth — edits should be made here, not in the WoW install directory.
   `LogoutOnFullBagsEnabled && BagsAreFull` check, unaffected by this feature).
   It's a `Name` (human-readable label only — **not** fed into any macro, see
   below) plus a `List<Vector2> Waypoints`: `Waypoints[0]` MUST equal (within
-  `WowPlayerConstants.MERCHANT_BRANCH_POINT_EPSILON`) one of the owning
+  `WowConstants.MERCHANT_BRANCH_POINT_EPSILON`) one of the owning
   route's own `Route.Waypoints` — that's the point the bot branches off from —
   and `Waypoints[^1]` is the merchant's exact standing spot. Enforced by
   `WoWHelperUnitTests/Tests/Pathfinding Tests/MerchantConfigTests.cs` rather
@@ -901,7 +901,7 @@ of truth — edits should be made here, not in the WoW install directory.
   walks back once the wait ends; bags may remain full, but the branch-off
   check above will simply retry on the route's next lap.
   **Timeout**: branch-off stamps `WowPlayer.MerchantRunStartTime`; if
-  `IsOnMerchantRun` is still true `WowPlayerConstants.MERCHANT_RUN_TIMEOUT_MILLIS`
+  `IsOnMerchantRun` is still true `WowConstants.MERCHANT_RUN_TIMEOUT_MILLIS`
   (5 min, wall-clock from branch-off, combat time included) later,
   `PathfindingLoopTask` sets `LogoutTriggered`/`LogoutReason` (naming the
   phase it got stuck in) and returns, same as the stuck-on-terrain give-up.
@@ -910,7 +910,7 @@ of truth — edits should be made here, not in the WoW install directory.
   on the first pathfinding tick after combat ends.
 - **`Constants/`** — `WowInput.cs` maps logical actions to keybinds/macros the
   bot presses (expects specific in-game keybinds/macros to be set up to match),
-  `WowPlayerConstants.cs` / `WowGameplayConstants.cs` hold thresholds/timings.
+  `WowPlayerConstants.cs` / `WowGameplayConstants.cs` hold thresholds/timings -- both are halves of one `static partial class WowConstants` (namespace `WoWHelper.Code`), so a constant can move between files without touching call sites.
 - **`Shared/`** — `KeyPoller` (global ESC-to-stop hotkey + cleanup),
   `GeneralHelpers` (stateless `ChangeStateBasedOnTaskResult`/`CurrentTimeInsideDuration`),
   `BitmapDifferenceVisualizer` (loot-heatmap detection by diffing frames to

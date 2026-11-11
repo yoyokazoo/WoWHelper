@@ -28,12 +28,12 @@ namespace WoWHelper
 
             using (Bitmap fullBmp = ScreenCapture.CaptureBitmapFromDesktopAndRectangle(fullScreenRect))
             {
-                Point? centroid = BitmapDifferenceVisualizer.FindColorCentroid(fullBmp, WowPlayerConstants.TARGET_MARKER_COLOR);
+                Point? centroid = BitmapDifferenceVisualizer.FindColorCentroid(fullBmp, WowConstants.TARGET_MARKER_COLOR);
 
                 // TEMP DEBUG (WalkIntoMeleeRangeTask troubleshooting): confirm whether the
                 // marker is actually being found at all, and where -- remove once resolved.
                 Console.WriteLine(centroid == null
-                    ? $"DEBUG FindTargetMarkerOnScreen: marker NOT found (color {WowPlayerConstants.TARGET_MARKER_COLOR}, resolution {resolution})"
+                    ? $"DEBUG FindTargetMarkerOnScreen: marker NOT found (color {WowConstants.TARGET_MARKER_COLOR}, resolution {resolution})"
                     : $"DEBUG FindTargetMarkerOnScreen: marker found at {centroid.Value}");
 
                 return centroid;

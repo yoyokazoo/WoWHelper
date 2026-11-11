@@ -3,7 +3,7 @@
 namespace WoWHelper.Code
 {
     // Constants that don't relate to combat/gameplay logic but more about the operation of the bot
-    public static class WowPlayerConstants
+    public static partial class WowConstants
     {
         public const long TIME_BETWEEN_WORLDSTATE_UPDATES = 200;
         public const long TIME_BETWEEN_FIND_TARGET_MILLIS = 800;

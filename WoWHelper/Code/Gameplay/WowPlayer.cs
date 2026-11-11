@@ -133,7 +133,7 @@ namespace WoWHelper
             WorldState = WowWorldState.GetWoWWorldState(ScreenConfiguration);
             UpdateClassState();
 
-            NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowPlayerConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
+            NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WowConstants.TIME_BETWEEN_WORLDSTATE_UPDATES;
         }
 
         private void UpdateClassState()
@@ -506,7 +506,7 @@ namespace WoWHelper
 
                     float targetDistance = Vector2.Distance(WorldState.PlayerLocation, CurrentWaypoint);
                     bool isFinalWaypointInRoute = CurrentWaypointIndex == CurrentRoute.Waypoints.Count - 1;
-                    float distanceTolerance = isFinalWaypointInRoute && zoneCrossing == null ? WowPlayerConstants.NPC_FINAL_WAYPOINT_TOLERANCE : CurrentRoute.DistanceTolerance;
+                    float distanceTolerance = isFinalWaypointInRoute && zoneCrossing == null ? WowConstants.NPC_FINAL_WAYPOINT_TOLERANCE : CurrentRoute.DistanceTolerance;
                     bool arrived = targetDistance <= distanceTolerance;
                     if (arrived)
                     {
@@ -546,7 +546,7 @@ namespace WoWHelper
             }
 
             float closestWaypointDistance = WowPathfinding.GetDistanceToClosestWaypoint(WorldState.PlayerLocation, CurrentRoute.Waypoints);
-            return closestWaypointDistance <= WowPlayerConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT;
+            return closestWaypointDistance <= WowConstants.MAX_DISTANCE_FROM_ROUTE_WAYPOINT;
         }
 
         public async Task PlayerFindEnemyTargetGoalTask()
@@ -667,7 +667,7 @@ namespace WoWHelper
 
         public async Task TargetEnemyTask()
         {
-            if (GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetTime, WowPlayerConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
+            if (GeneralHelpers.CurrentTimeInsideDuration(LastFindTargetTime, WowConstants.TIME_BETWEEN_FIND_TARGET_MILLIS))
             {
                 return;
             }

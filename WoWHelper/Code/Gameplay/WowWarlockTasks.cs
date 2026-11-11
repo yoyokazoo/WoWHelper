@@ -16,13 +16,13 @@ namespace WoWHelper
         // ranged-pull/melee-sustain pattern to follow.
         public async Task<bool> WarlockStartBattleReadyRecoverTask(WowWarlockClassState classState)
         {
-            if (WorldState.PlayerHpPercent < WowGameplayConstants.EAT_FOOD_HP_THRESHOLD)
+            if (WorldState.PlayerHpPercent < WowConstants.EAT_FOOD_HP_THRESHOLD)
             {
                 await WowInput.PressKey(WowInput.EAT_FOOD);
                 await Task.Delay(200);
             }
 
-            if (WorldState.ResourcePercent < WowGameplayConstants.DRINK_WATER_MP_THRESHOLD)
+            if (WorldState.ResourcePercent < WowConstants.DRINK_WATER_MP_THRESHOLD)
             {
                 await WowInput.PressKeyWithShift(WowInput.SHIFT_DRINK_WATER);
             }
@@ -35,9 +35,9 @@ namespace WoWHelper
             // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
 
-            bool hpRecovered = WorldState.PlayerHpPercent >= WowGameplayConstants.STOP_RESTING_HP_THRESHOLD;
-            bool mpRecovered = WorldState.ResourcePercent >= WowGameplayConstants.STOP_RESTING_MP_THRESHOLD;
-            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+            bool hpRecovered = WorldState.PlayerHpPercent >= WowConstants.STOP_RESTING_HP_THRESHOLD;
+            bool mpRecovered = WorldState.ResourcePercent >= WowConstants.STOP_RESTING_MP_THRESHOLD;
+            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
 
             if (battleReady)
@@ -191,9 +191,9 @@ namespace WoWHelper
         // ending the fight by any means available is the priority.
         public bool WarlockShouldConsiderCastingDot()
         {
-            return WorldState.TargetHpPercent > WowGameplayConstants.WARLOCK_DOT_TARGET_HP_THRESHOLD
+            return WorldState.TargetHpPercent > WowConstants.WARLOCK_DOT_TARGET_HP_THRESHOLD
                 //|| WorldState.AttackerCount > 1
-                || WorldState.PlayerHpPercent <= WowGameplayConstants.HEALING_POTION_HP_THRESHOLD;
+                || WorldState.PlayerHpPercent <= WowConstants.HEALING_POTION_HP_THRESHOLD;
         }
 
         // classState.ShouldCastImmolate goes true the instant Immolate is cast (it just
@@ -208,7 +208,7 @@ namespace WoWHelper
                 return false;
             }
 
-            if (GeneralHelpers.CurrentTimeInsideDuration(ImmolateCastTime, WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS))
+            if (GeneralHelpers.CurrentTimeInsideDuration(ImmolateCastTime, WowConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS))
             {
                 return false;
             }
@@ -224,7 +224,7 @@ namespace WoWHelper
                 return false;
             }
 
-            if (GeneralHelpers.CurrentTimeInsideDuration(CorruptionCastTime, WowGameplayConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS))
+            if (GeneralHelpers.CurrentTimeInsideDuration(CorruptionCastTime, WowConstants.WARLOCK_DOT_RECAST_SUPPRESS_MILLIS))
             {
                 return false;
             }
@@ -235,8 +235,8 @@ namespace WoWHelper
         public async Task<bool> WarlockEmergencyTask()
         {
             await Task.Delay(0);
-            bool tooManyAttackers = WorldState.AttackerCount >= WowPlayerConstants.TOO_MANY_ATTACKERS_THRESHOLD;
-            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowGameplayConstants.EMERGENCY_HP_THRESHOLD;
+            bool tooManyAttackers = WorldState.AttackerCount >= WowConstants.TOO_MANY_ATTACKERS_THRESHOLD;
+            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowConstants.EMERGENCY_HP_THRESHOLD;
 
             if (tooManyAttackers || emergencyHpThreshold)
             //if(true)

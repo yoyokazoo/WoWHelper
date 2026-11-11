@@ -50,7 +50,7 @@ namespace WoWHelper
 
             if (WarriorShouldCastBattleShout(classState))
             {
-                if (WorldState.ResourcePercent >= WowGameplayConstants.BATTLE_SHOUT_RAGE_COST)
+                if (WorldState.ResourcePercent >= WowConstants.BATTLE_SHOUT_RAGE_COST)
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_BATTLE_SHOUT);
                     BattleShoutPressTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
@@ -58,42 +58,42 @@ namespace WoWHelper
             }
             else if (WarriorShouldCastSweepingStrikes(classState))
             {
-                if (WorldState.ResourcePercent >= WowGameplayConstants.SWEEPING_STRIKES_RAGE_COST)
+                if (WorldState.ResourcePercent >= WowConstants.SWEEPING_STRIKES_RAGE_COST)
                 {
                     await WowInput.PressKeyWithControl(WowInput.WARRIOR_CTRL_SWEEPING_STRIKES);
                 }
             }
             else if (WarriorShouldCastOverpower(classState))
             {
-                if (WorldState.ResourcePercent >= WowGameplayConstants.OVERPOWER_RAGE_COST)
+                if (WorldState.ResourcePercent >= WowConstants.OVERPOWER_RAGE_COST)
                 {
                     await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_OVERPOWER);
                 }
             }
             else if (WarriorShouldCastExecute(classState))
             {
-                if (WorldState.ResourcePercent >= WowGameplayConstants.EXECUTE_RAGE_COST)
+                if (WorldState.ResourcePercent >= WowConstants.EXECUTE_RAGE_COST)
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_EXECUTE);
                 }
             }
             else if (WarriorShouldCastSunderArmor(classState))
             {
-                if (WorldState.ResourcePercent >= WowGameplayConstants.SUNDER_ARMOR_RAGE_COST)
+                if (WorldState.ResourcePercent >= WowConstants.SUNDER_ARMOR_RAGE_COST)
                 {
                     await WowInput.PressKeyWithShift(WowInput.WARRIOR_SHIFT_SUNDER_ARMOR);
                 }
             }
             else if (WarriorShouldCastRend(classState))
             {
-                if (WorldState.ResourcePercent >= WowGameplayConstants.REND_RAGE_COST)
+                if (WorldState.ResourcePercent >= WowConstants.REND_RAGE_COST)
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_REND);
                 }
             }
             else if (WarriorShouldCastMortalStrikeOrBloodthirst(classState))
             {
-                if (WorldState.ResourcePercent >= WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
+                if (WorldState.ResourcePercent >= WowConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST)
                 {
                     await WowInput.PressKey(WowInput.WARRIOR_MORTALSTRIKE_BLOODTHIRST);
                 }
@@ -124,7 +124,7 @@ namespace WoWHelper
         // Fear-casters are worth opening on preemptively, rather than reacting once feared.
         public bool WarriorShouldOpenWithBerserkerRage()
         {
-            return WorldState.IsTargetFearCaster && !GeneralHelpers.CurrentTimeInsideDuration(BerserkerRageTime, WowGameplayConstants.BERSERKER_RAGE_COOLDOWN_MILLIS);
+            return WorldState.IsTargetFearCaster && !GeneralHelpers.CurrentTimeInsideDuration(BerserkerRageTime, WowConstants.BERSERKER_RAGE_COOLDOWN_MILLIS);
         }
 
         // None of the WarriorShouldCastX checks below look at rage -- they only decide
@@ -141,7 +141,7 @@ namespace WoWHelper
             // trust our own press time instead. Out of combat the read is real, so the press
             // time is ignored (a press that didn't land gets retried after the fight).
             bool recentlyPressedInCombat = WorldState.IsInCombat &&
-                GeneralHelpers.CurrentTimeInsideDuration(BattleShoutPressTime, WowGameplayConstants.BATTLE_SHOUT_DURATION_MILLIS);
+                GeneralHelpers.CurrentTimeInsideDuration(BattleShoutPressTime, WowConstants.BATTLE_SHOUT_DURATION_MILLIS);
             return !classState.BattleShoutActive && !recentlyPressedInCombat && knowsBattleShout;
         }
 
@@ -164,7 +164,7 @@ namespace WoWHelper
         public bool WarriorShouldCastExecute(WowWarriorClassState classState)
         {
             return classState.KnowsExecute &&
-                WorldState.TargetHpPercent <= WowGameplayConstants.EXECUTE_HP_THRESHOLD;
+                WorldState.TargetHpPercent <= WowConstants.EXECUTE_HP_THRESHOLD;
         }
 
         // One Sunder Armor per target, and only while it's still worth it: a single stack's
@@ -176,7 +176,7 @@ namespace WoWHelper
         {
             return classState.KnowsSunderArmor &&
                 !classState.TargetHasSunderArmor &&
-                WorldState.TargetHpPercent >= WowGameplayConstants.SUNDER_ARMOR_HP_THRESHOLD;
+                WorldState.TargetHpPercent >= WowConstants.SUNDER_ARMOR_HP_THRESHOLD;
         }
 
         // Bleed-immune targets never get Rend, regardless of anything else. Otherwise, Rend
@@ -193,7 +193,7 @@ namespace WoWHelper
 
             return classState.KnowsRend &&
                 !classState.TargetHasRend &&
-                (WorldState.TargetHpPercent > WowGameplayConstants.REND_HP_THRESHOLD || WorldState.IsTargetRunnerMob);
+                (WorldState.TargetHpPercent > WowConstants.REND_HP_THRESHOLD || WorldState.IsTargetRunnerMob);
         }
 
         // classState.MortalStrikeOrBloodThirstCooledDown alone isn't a safe usability check --
@@ -227,23 +227,23 @@ namespace WoWHelper
         // comes back up. No reserve if we haven't trained MS/BT yet and can't cast it at all.
         public int WarriorCleaveRageRequired(WowWarriorClassState classState)
         {
-            return WowGameplayConstants.CLEAVE_RAGE_COST + WarriorMortalStrikeOrBloodthirstRageReserve(classState);
+            return WowConstants.CLEAVE_RAGE_COST + WarriorMortalStrikeOrBloodthirstRageReserve(classState);
         }
 
         public int WarriorHeroicStrikeRageRequired(WowWarriorClassState classState)
         {
-            return WowGameplayConstants.HEROIC_STRIKE_RAGE_COST + WarriorMortalStrikeOrBloodthirstRageReserve(classState);
+            return WowConstants.HEROIC_STRIKE_RAGE_COST + WarriorMortalStrikeOrBloodthirstRageReserve(classState);
         }
 
         private int WarriorMortalStrikeOrBloodthirstRageReserve(WowWarriorClassState classState)
         {
-            return classState.KnowsMortalStrikeOrBloodthirst ? WowGameplayConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST : 0;
+            return classState.KnowsMortalStrikeOrBloodthirst ? WowConstants.MORTAL_STRIKE_BLOODTHIRST_RAGE_COST : 0;
         }
 
         public async Task<bool> WarriorStartBattleReadyRecoverTask(WowWarriorClassState classState)
         {
             // clams
-            //if (WorldState.PlayerHpPercent < WowPlayerConstants.EAT_FOOD_HP_THRESHOLD)
+            //if (WorldState.PlayerHpPercent < WowConstants.EAT_FOOD_HP_THRESHOLD)
             //{
                 await WowInput.PressKey(WowInput.EAT_FOOD);
             //}
@@ -256,8 +256,8 @@ namespace WoWHelper
             // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
 
-            bool hpRecovered = WorldState.PlayerHpPercent >= WowGameplayConstants.STOP_RESTING_HP_THRESHOLD;
-            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+            bool hpRecovered = WorldState.PlayerHpPercent >= WowConstants.STOP_RESTING_HP_THRESHOLD;
+            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && potionIsCooledDown;
 
             if (battleReady)
@@ -270,8 +270,8 @@ namespace WoWHelper
 
         public bool WarriorIsBattleReady(WowWarriorClassState classState)
         {
-            bool hpRecovered = WorldState.PlayerHpPercent >= WowGameplayConstants.STOP_RESTING_HP_THRESHOLD;
-            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowGameplayConstants.POTION_COOLDOWN_MILLIS);
+            bool hpRecovered = WorldState.PlayerHpPercent >= WowConstants.STOP_RESTING_HP_THRESHOLD;
+            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && potionIsCooledDown;
             return battleReady;
         }
@@ -350,8 +350,8 @@ namespace WoWHelper
 
         public async Task<bool> WarriorEmergencyActionTask()
         {
-            bool tooManyAttackers = WorldState.AttackerCount >= WowPlayerConstants.TOO_MANY_ATTACKERS_THRESHOLD;
-            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowGameplayConstants.EMERGENCY_HP_THRESHOLD;
+            bool tooManyAttackers = WorldState.AttackerCount >= WowConstants.TOO_MANY_ATTACKERS_THRESHOLD;
+            bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowConstants.EMERGENCY_HP_THRESHOLD;
             bool takeEmergencyAction = !EmergencyCombatActionTaken && (tooManyAttackers || emergencyHpThreshold);
 
             if (takeEmergencyAction)
