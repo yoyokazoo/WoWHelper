@@ -46,12 +46,14 @@
             GAVE_UP
         }
 
+        // >_>
         public enum LogoutState
         {
             STARTING_LOGOUT,
             WAITING_FOR_LOGOUT,
         }
 
+        // Run around and find enemy to fight
         public enum FindEnemyTargetState
         {
             PICK_FARMING_LOCATION_CONFIG,
@@ -65,16 +67,18 @@
             EXECUTE_ENGAGE_TARGETED_ENEMY
         }
 
+        // Navigate from start of route to end of route
         public enum NavigateToEndOfCurrentRouteState
         {
             PICK_NEXT_WAYPOINT,
             FACE_WAYPOINT,
             WALK_TO_WAYPOINT,
-            CROSSING_ZONE, // reached the route's ZoneCrossingAtEnd, walking through it
-            CROSSED_ZONE, // in the new zone, caller needs to build the next leg
+            CROSSING_ZONE,
+            CROSSED_ZONE,
             ARRIVED_AT_END_OF_ROUTE
         }
 
+        // Find, move to, and interact with a merchant/trainer/etc.
         public enum InteractWithNPCState
         {
             PICK_NPC_TO_INTERACT_WITH,

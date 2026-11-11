@@ -4,22 +4,9 @@ using WoWHelper.Code.Gameplay;
 
 namespace WoWHelper
 {
-    // Everything class-specific the bot does: rotation, engage, rest/buff, plus the
-    // class's own keybinds (a private nested Input class in each subtype), tuning
-    // constants and timers. These used to be partial-class methods on WowPlayer, which
-    // meant every class's inputs/helpers were visible to every other class's code; as
-    // separate types, a Warrior keybind or helper is simply unreachable from Shaman code.
-    //
-    // WowPlayer builds exactly one of these (see WowPlayer.UpdateClassState) once the
-    // player's class is detected, and calls into it through the thin wrappers in
-    // WowPlayerCombatConfig.cs. Each handler also owns its class's typed WowClassState
-    // (see WowClassHandler<TState>) -- nothing outside the handler can read it.
     public abstract class WowClassHandler
     {
         protected WowPlayer Player { get; }
-
-        // Shorthand so handler code reads like it did as a WowPlayer partial. Re-read on
-        // every access, since WowPlayer swaps in a new WowWorldState each update.
         protected WowWorldState WorldState => Player.WorldState;
 
         protected WowClassHandler(WowPlayer player)
