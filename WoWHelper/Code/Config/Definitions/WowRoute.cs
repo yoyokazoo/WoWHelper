@@ -3,9 +3,6 @@ using System.Numerics;
 
 namespace WoWHelper.Code.WorldState
 {
-    // A farming route's path: the waypoints to walk, how to walk them, how close counts as
-    // "arrived", which zone they're in, and the minimum level to run it. Every instance lives
-    // in WowRoutes.cs; each WowLocationConfiguration points at its own one via its Route property.
     public class WowRoute
     {
         public const float DEFAULT_DISTANCE_TOLERANCE = 0.2f;
@@ -16,28 +13,20 @@ namespace WoWHelper.Code.WorldState
             LINEAR // go from start -> end -> start
         }
 
-        // Human-readable name, including the minimum level, e.g. "Durotar Imps (Level 4+)".
         public string Name { get; set; }
-        public WowZone Zone { get; set; } // for validation -- character should be in this zone before starting
-        public int MinimumLevel { get; set; } // for validation -- character should be at least this level before starting
+        public WowZone Zone { get; set; }
+        public int MinimumLevel { get; set; }
         public WaypointTraversalMethod TraversalMethod { get; set; }
         public float DistanceTolerance { get; set; }
 
         public List<Vector2> Waypoints { get; set; }
 
-        // Set on a route WowPathfinding built as one leg of a trip into another zone -- arriving
-        // at the last waypoint means take this crossing, not that the trip is over.
         public WowZoneCrossing ZoneCrossingAtEnd { get; set; }
 
         public WowRoute()
         {
-            // LINEAR, not CIRCULAR -- walking routes (A -> B and back) are far more common to
-            // author than loops, which have to set CIRCULAR explicitly.
             TraversalMethod = WaypointTraversalMethod.LINEAR;
             DistanceTolerance = DEFAULT_DISTANCE_TOLERANCE;
-
-            // Default to Unknown, not the implicit Durotar (enum value 0) -- a route that
-            // forgets to set Zone should fail loudly/obviously, not silently claim Durotar.
             Zone = WowZone.Unknown;
         }
 
