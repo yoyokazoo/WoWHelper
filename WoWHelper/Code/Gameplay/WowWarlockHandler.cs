@@ -10,6 +10,8 @@ namespace WoWHelper
     // is the closest existing ranged-pull/melee-sustain pattern to follow.
     public class WowWarlockHandler : WowClassHandler<WowWarlockClassState>
     {
+        #region Input
+
         // Warlock keybinds/macros. Private so only this handler can press them -- shared
         // keys (food, attack, dynamite, etc.) stay on WowInput.
         private static class Input
@@ -41,15 +43,27 @@ namespace WoWHelper
             public const Keys SHIFT_DEMON_ARMOR = Keys.D4;
         }
 
+        #endregion
+
+        #region Constants
+
         private const int DOT_TARGET_HP_THRESHOLD = 25;
         // was having issues where it would recast the dot immediately before seeing the debuff on the mob
         // probably just needs a bug fix instead of this
         private const int DOT_RECAST_SUPPRESS_MILLIS = 4000;
 
+        #endregion
+
+        #region State
+
         private long ImmolateCastTime;
         private long CorruptionCastTime;
 
         public WowWarlockHandler(WowPlayer player) : base(player) { }
+
+        #endregion
+
+        #region Tasks
 
         public override async Task<bool> StartBattleReadyRecoverTask()
         {
@@ -298,5 +312,7 @@ namespace WoWHelper
 
             return false;
         }
+
+        #endregion
     }
 }

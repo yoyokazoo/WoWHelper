@@ -8,6 +8,8 @@ namespace WoWHelper
 {
     public class WowShamanHandler : WowClassHandler<WowShamanClassState>
     {
+        #region Input
+
         // Shaman keybinds/macros. Private so only this handler can press them -- shared
         // keys (food, attack, dynamite, etc.) stay on WowInput.
         private static class Input
@@ -60,7 +62,21 @@ namespace WoWHelper
             public const Keys SHIFT_7 = Keys.D7;
         }
 
+        #endregion
+
+        #region Constants
+
+        // None yet -- Shaman tuning still uses the shared WowConstants.
+
+        #endregion
+
+        #region State
+
         public WowShamanHandler(WowPlayer player) : base(player) { }
+
+        #endregion
+
+        #region Tasks
 
         public override async Task<bool> CombatLoopTask()
         {
@@ -458,5 +474,7 @@ namespace WoWHelper
 
             return false;
         }
+
+        #endregion
     }
 }

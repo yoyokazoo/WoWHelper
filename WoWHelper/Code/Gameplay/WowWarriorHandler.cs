@@ -8,6 +8,8 @@ namespace WoWHelper
 {
     public class WowWarriorHandler : WowClassHandler<WowWarriorClassState>
     {
+        #region Input
+
         // Warrior keybinds/macros. Private so only this handler can press them -- shared
         // keys (food, attack, dynamite, etc.) stay on WowInput.
         // Using Shift Keys built into the macros instead of binding a bar to the shift keys,
@@ -72,6 +74,10 @@ namespace WoWHelper
             public const Keys SHIFT_RETALIATION = Keys.D7;
         }
 
+        #endregion
+
+        #region Constants
+
         // Warrior costs
         private const int HEROIC_STRIKE_RAGE_COST = 15;
         private const int BATTLE_SHOUT_RAGE_COST = 10;
@@ -93,6 +99,10 @@ namespace WoWHelper
         private const int BERSERKER_RAGE_COOLDOWN_MILLIS = 30 * 1000;    // 30 seconds
         private const int BATTLE_SHOUT_DURATION_MILLIS = 3 * 60 * 1000;  // 3 minutes
 
+        #endregion
+
+        #region State
+
         // When the bot last pressed Battle Shout -- see ShouldCastBattleShout.
         private long BattleShoutPressTime;
         private long BerserkerRageTime;
@@ -100,6 +110,10 @@ namespace WoWHelper
         private bool EmergencyCombatActionTaken;
 
         public WowWarriorHandler(WowPlayer player) : base(player) { }
+
+        #endregion
+
+        #region Tasks
 
         public override void OnEnterFight()
         {
@@ -476,5 +490,7 @@ namespace WoWHelper
 
             return true;
         }
+
+        #endregion
     }
 }
