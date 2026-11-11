@@ -1,15 +1,68 @@
-﻿using InputManager;
 using System;
 using System.Threading.Tasks;
-using WindowsGameAutomationTools.Slack;
+using System.Windows.Forms;
 using WoWHelper.Code;
 using WoWHelper.Code.WorldState;
 
 namespace WoWHelper
 {
-    public partial class WowPlayer
+    public class WowShamanHandler : WowClassHandler<WowShamanClassState>
     {
-        public async Task<bool> ShamanCombatLoopTask(WowShamanClassState classState)
+        // Shaman keybinds/macros. Private so only this handler can press them -- shared
+        // keys (food, attack, dynamite, etc.) stay on WowInput.
+        private static class Input
+        {
+            /*
+             * 2 Bolt
+#showtooltip [mod:shift] Lightning Bolt(Rank 1); Lightning Bolt
+/cast [nomod] Lightning Bolt
+/cast [mod:shift] Lightning Bolt(Rank 1)
+            */
+            public const Keys LIGHTNING_BOLT = Keys.D2;
+            public const Keys SHIFT_LIGHTNING_BOLT_RANK_1 = Keys.D2;
+
+            /*
+             * 3 Shock
+#showtooltip [mod:shift] Flame Shock; Earth Shock
+/use [nomod] Earth Shock
+/use [mod:shift] Flame Shock
+            */
+            public const Keys EARTH_SHOCK = Keys.D3;
+            public const Keys SHIFT_FLAME_SHOCK = Keys.D3;
+
+            /*
+             * 4 Buff
+#showtooltip [mod:shift] Rockbiter Weapon; Lightning Shield
+/use [nomod] Lightning Shield
+/use [mod:shift] Rockbiter Weapon
+            */
+            public const Keys LIGHTNING_SHIELD = Keys.D4;
+            public const Keys SHIFT_ROCKBITER_WEAPON = Keys.D4;
+
+            /*
+             * 5 Cure
+#showtooltip [mod:shift] Cure Disease; Cure Poison
+/use [nomod] Cure Poison
+/use [mod:shift] Cure Disease
+             */
+            public const Keys CURE_POISON = Keys.D5;
+            public const Keys SHIFT_CURE_DISEASE = Keys.D5;
+
+            /*
+             * 6 Frost Shock
+#showtooltip Frost Shock
+/cast Frost Shock
+            */
+            public const Keys FROST_SHOCK = Keys.D6;
+            public const Keys SHIFT_6 = Keys.D6;
+
+            public const Keys KEY_7 = Keys.D7;
+            public const Keys SHIFT_7 = Keys.D7;
+        }
+
+        public WowShamanHandler(WowPlayer player) : base(player) { }
+
+        public override async Task<bool> CombatLoopTask()
         {
             Console.WriteLine("Kicking off core combat loop");
             bool emergencyActionTaken = false;
@@ -17,96 +70,94 @@ namespace WoWHelper
             bool isFacingLongRangeCaster = false;
             //bool hasWalkedTowardsLongRangeCaster = false;
 
-            await StartAttackTask();
+            await Player.StartAttackTask();
 
             do
             {
-                await UpdateWorldStateAsync();
+                await Player.UpdateWorldStateAsync();
 
-                await EveryWorldStateUpdateTasks();
+                await Player.EveryWorldStateUpdateTasks();
 
                 // Make sure to buff
                 // TODO: this needs to be changed to raw resource
                 // TODO: move this to a helper too since it's used in a couple places (see
-                // ShamanShouldCastLightningShield/EarthShock/FlameShock below)?
-                if (classState.ShouldCastRockbiterWeapon)
+                // ShouldCastLightningShield/EarthShock/FlameShock below)?
+                if (ClassState.ShouldCastRockbiterWeapon)
                 {
-                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
+                    await WowInput.PressKeyWithShift(Input.SHIFT_ROCKBITER_WEAPON);
                     continue;
                 }
-                else if (ShamanShouldCastLightningShield(classState))
+                else if (ShouldCastLightningShield())
                 {
-                    await WowInput.PressKey(WowInput.SHAMAN_LIGHTNING_SHIELD);
+                    await WowInput.PressKey(Input.LIGHTNING_SHIELD);
                     continue;
                 }
 
                 // First do our "Make sure we're not standing around doing nothing" checks
-                if (!WorldState.IsTargetLongRangeCaster && await MeleeMakeSureWeAreAttackingEnemyTask())
+                if (!WorldState.IsTargetLongRangeCaster && await Player.MeleeMakeSureWeAreAttackingEnemyTask())
                 {
                     continue;
                 }
 
-                if ((WorldState.IsTargetLongRangeCaster && !isFacingLongRangeCaster) || 
+                if ((WorldState.IsTargetLongRangeCaster && !isFacingLongRangeCaster) ||
                     (WorldState.TargetNeedsToBeInFront && WorldState.IsTargetLongRangeCaster))
                 {
-                    await TurnToFaceTargetMarkerTask();
+                    await Player.TurnToFaceTargetMarkerTask();
                     isFacingLongRangeCaster = true;
                     continue;
                 }
 
-                if (WorldState.IsTargetLongRangeCaster && !classState.IsInEarthShockRange)
+                if (WorldState.IsTargetLongRangeCaster && !ClassState.IsInEarthShockRange)
                 {
-                    await ShamanRunIntoEarthShockRange(classState);
+                    await RunIntoEarthShockRange();
                 }
 
                 // Next, check if we need to pop any big cooldowns
-                if (!emergencyActionTaken && await ShamanEmergencyTask())
+                if (!emergencyActionTaken && await EmergencyTask())
                 {
                     emergencyActionTaken = true;
                     continue;
                 }
 
-                if (await ThrowDynamiteTask())
+                if (await Player.ThrowDynamiteTask())
                 {
-                    DynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     continue;
                 }
 
-                if (await UseHealingPotionTask())
+                if (await Player.UseHealingPotionTask())
                 {
-                    HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     continue;
                 }
 
-                if (ShamanShouldCastFlameShock(classState))
+                if (ShouldCastFlameShock())
                 {
                     Console.WriteLine($"Trying to Flame Shock!");
-                    await WaitForGlobalCooldownTask();
-                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_FLAME_SHOCK);
+                    await Player.WaitForGlobalCooldownTask();
+                    await WowInput.PressKeyWithShift(Input.SHIFT_FLAME_SHOCK);
                 }
-                else if (ShamanShouldCastEarthShock(classState))
+                else if (ShouldCastEarthShock())
                 {
                     Console.WriteLine($"Trying to Earth Shock!");
-                    await WaitForGlobalCooldownTask();
-                    await WowInput.PressKey(WowInput.SHAMAN_EARTH_SHOCK);
+                    await Player.WaitForGlobalCooldownTask();
+                    await WowInput.PressKey(Input.EARTH_SHOCK);
                 }
-                else if (ShamanShouldCastFrostShock(classState))
+                else if (ShouldCastFrostShock())
                 {
                     Console.WriteLine($"Trying to Frost Shock!");
-                    await WaitForGlobalCooldownTask();
-                    await WowInput.PressKey(WowInput.SHAMAN_FROST_SHOCK);
+                    await Player.WaitForGlobalCooldownTask();
+                    await WowInput.PressKey(Input.FROST_SHOCK);
                 }
-                else if (ShamanShouldCastCureDisease(classState))
+                else if (ShouldCastCureDisease())
                 {
                     Console.WriteLine($"Trying to Cure Disease!");
-                    await WaitForGlobalCooldownTask();
-                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_CURE_DISEASE);
+                    await Player.WaitForGlobalCooldownTask();
+                    await WowInput.PressKeyWithShift(Input.SHIFT_CURE_DISEASE);
                 }
-                else if (ShamanShouldCastCurePoison(classState))
+                else if (ShouldCastCurePoison())
                 {
                     Console.WriteLine($"Trying to Cure Poison!");
-                    await WaitForGlobalCooldownTask();
-                    await WowInput.PressKey(WowInput.SHAMAN_CURE_POISON);
+                    await Player.WaitForGlobalCooldownTask();
+                    await WowInput.PressKey(Input.CURE_POISON);
                 }
                 else// if (WorldState.AttackerCount <= 1)
                 {
@@ -118,24 +169,31 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> ShamanRunIntoEarthShockRange(WowShamanClassState classState)
+        // Shaman's rotation is loop-based (CombatLoopTask runs until combat ends), so a
+        // "single" combat step is just the whole loop.
+        public override async Task SingleCombatTask()
         {
-            await TurnToFaceTargetMarkerTask();
-            await StartWalkForwardTask();
-            for(int i = 0; i < 5; i++)
+            await CombatLoopTask();
+        }
+
+        private async Task<bool> RunIntoEarthShockRange()
+        {
+            await Player.TurnToFaceTargetMarkerTask();
+            await Player.StartWalkForwardTask();
+            for (int i = 0; i < 5; i++)
             {
                 await Task.Delay(1000);
-                UpdateWorldState();
-                if (classState.IsInEarthShockRange)
+                Player.UpdateWorldState();
+                if (ClassState.IsInEarthShockRange)
                 {
                     break;
                 }
             }
-            await EndWalkForwardTask();
-            return classState.IsInEarthShockRange;
+            await Player.EndWalkForwardTask();
+            return ClassState.IsInEarthShockRange;
         }
 
-        public bool ShamanShouldCastLightningShield(WowShamanClassState classState)
+        private bool ShouldCastLightningShield()
         {
             // Skip entirely if every mob this route can pull is nature immune -- Lightning
             // Shield's return-damage proc is nature damage, so it can never land here, unlike
@@ -144,7 +202,8 @@ namespace WoWHelper
             // this runs inside the combat loop, which can be reached with it still unresolved
             // if the bot was (re)started mid-fight (see "Automatic farming-config resolution"
             // in CLAUDE.md).
-            if (FarmingLocationConfiguration != null && FarmingLocationConfiguration.AllMobsInZoneAreNatureImmune)
+            var location = Player.FarmingLocationConfiguration;
+            if (location != null && location.AllMobsInZoneAreNatureImmune)
             {
                 return false;
             }
@@ -158,10 +217,10 @@ namespace WoWHelper
                 return false;
             }
 
-            return classState.ShouldCastLightningShield;
+            return ClassState.ShouldCastLightningShield;
         }
 
-        public bool ShamanShouldCastFlameShock(WowShamanClassState classState)
+        private bool ShouldCastFlameShock()
         {
             // Skip if fire immune
             bool skipFlameShock = WorldState.IsTargetFireImmune;
@@ -175,13 +234,13 @@ namespace WoWHelper
                 return false;
             }
 
-            return classState.ShouldCastFlameShock;
+            return ClassState.ShouldCastFlameShock;
         }
 
-        public bool ShamanShouldCastEarthShock(WowShamanClassState classState)
+        private bool ShouldCastEarthShock()
         {
             // Skip if nature immune -- Frost Shock takes over entirely for those targets,
-            // see ShamanShouldCastFrostShock below.
+            // see ShouldCastFrostShock below.
             bool skipEarthShock = WorldState.IsTargetNatureImmune;
             // Always shock runners, if we're low hp, if there are multiple mobs, or if the mob is high hp
             skipEarthShock |= !WorldState.IsTargetRunnerMob && WorldState.PlayerHpPercent > 50 && WorldState.AttackerCount <= 1 && WorldState.TargetHpPercent < 20 && !WorldState.IsTargetCasterMob && !WorldState.IsTargetCasting;
@@ -194,14 +253,14 @@ namespace WoWHelper
                 return false;
             }
 
-            return classState.CanCastEarthShock;
+            return ClassState.CanCastEarthShock;
         }
 
         // Frost Shock does the same damage as Earth Shock but never interrupts a cast, so
         // it's strictly worse than Earth Shock whenever Earth Shock is usable -- this only
         // fires as Earth Shock's substitute against nature-immune targets, which Earth
         // Shock (nature damage) does nothing to.
-        public bool ShamanShouldCastFrostShock(WowShamanClassState classState)
+        private bool ShouldCastFrostShock()
         {
             if (!WorldState.IsTargetNatureImmune)
             {
@@ -220,20 +279,20 @@ namespace WoWHelper
                 return false;
             }
 
-            return classState.CanCastFrostShock;
+            return ClassState.CanCastFrostShock;
         }
 
-        public bool ShamanShouldCastCurePoison(WowShamanClassState classState)
+        private bool ShouldCastCurePoison()
         {
-            return WorldState.PlayerIsPoisoned && classState.CanCurePoison;
+            return WorldState.PlayerIsPoisoned && ClassState.CanCurePoison;
         }
 
-        public bool ShamanShouldCastCureDisease(WowShamanClassState classState)
+        private bool ShouldCastCureDisease()
         {
-            return WorldState.PlayerIsDiseased && classState.CanCureDisease;
+            return WorldState.PlayerIsDiseased && ClassState.CanCureDisease;
         }
 
-        public async Task<bool> ShamanStartBattleReadyRecoverTask(WowShamanClassState classState)
+        public override async Task<bool> StartBattleReadyRecoverTask()
         {
             if (WorldState.PlayerHpPercent < WowConstants.EAT_FOOD_HP_THRESHOLD)
             {
@@ -250,42 +309,42 @@ namespace WoWHelper
             return true;
         }
 
-        public async Task<bool> ShamanWaitUntilBattleReadyTask(WowShamanClassState classState)
+        public override async Task<bool> WaitUntilBattleReadyTask()
         {
             // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
             // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
 
             bool hpRecovered = WorldState.PlayerHpPercent >= WowConstants.STOP_RESTING_HP_THRESHOLD;
             bool mpRecovered = WorldState.ResourcePercent >= WowConstants.STOP_RESTING_MP_THRESHOLD;
-            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(HealthPotionTime, WowConstants.POTION_COOLDOWN_MILLIS);
+            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(Player.HealthPotionTime, WowConstants.POTION_COOLDOWN_MILLIS);
             bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
 
-            if (ShamanShouldCastCurePoison(classState))
+            if (ShouldCastCurePoison())
             {
-                await WaitForGlobalCooldownTask();
-                await WowInput.PressKey(WowInput.SHAMAN_CURE_POISON);
+                await Player.WaitForGlobalCooldownTask();
+                await WowInput.PressKey(Input.CURE_POISON);
             }
 
-            if (ShamanShouldCastCureDisease(classState))
+            if (ShouldCastCureDisease())
             {
-                await WaitForGlobalCooldownTask();
-                await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_CURE_DISEASE);
+                await Player.WaitForGlobalCooldownTask();
+                await WowInput.PressKeyWithShift(Input.SHIFT_CURE_DISEASE);
             }
 
             if (battleReady)
             {
                 bool buffed = false;
-                if (classState.ShouldCastRockbiterWeapon)
+                if (ClassState.ShouldCastRockbiterWeapon)
                 {
-                    await WaitForGlobalCooldownTask();
-                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_ROCKBITER_WEAPON);
+                    await Player.WaitForGlobalCooldownTask();
+                    await WowInput.PressKeyWithShift(Input.SHIFT_ROCKBITER_WEAPON);
                     buffed = true;
                 }
 
-                if (ShamanShouldCastLightningShield(classState))
+                if (ShouldCastLightningShield())
                 {
-                    await WaitForGlobalCooldownTask();
-                    await WowInput.PressKey(WowInput.SHAMAN_LIGHTNING_SHIELD);
+                    await Player.WaitForGlobalCooldownTask();
+                    await WowInput.PressKey(Input.LIGHTNING_SHIELD);
                     buffed = true;
                 }
 
@@ -294,87 +353,86 @@ namespace WoWHelper
                     return false;
                 }
 
-                await ScootForwardsTask();
+                await Player.ScootForwardsTask();
             }
 
             return battleReady;
         }
 
+        // Not implemented for Shaman yet (only Warrior has one).
+        public override bool IsBattleReady()
+        {
+            throw new System.NotImplementedException($"{nameof(WowShamanHandler)}.{nameof(IsBattleReady)} isn't implemented yet.");
+        }
+
         // Simplified while the engage flow is being reworked around the new target-marker
         // bearing detection (see WowMovementTasks.TurnToFaceTargetMarkerTask) -- no longer
         // presses the pull cast here at all; that's moving into
-        // ShamanFaceCorrectDirectionToEngageTask below, after facing is actually corrected.
+        // ExecuteEngageTask below, after facing is actually corrected.
         // Not yet complete.
-        public async Task<bool> ShamanKickOffEngageTask(WowShamanClassState classState)
+        public override async Task<bool> KickOffEngageTask()
         {
-            await Task.Delay(0);
-            EngageAttempts = 1;
-            await TurnToFaceTargetMarkerTask();
+            await Player.TurnToFaceTargetMarkerTask();
             // TODO: figure out distance to walk forward
-            if (!classState.IsInEarthShockRange)
+            if (!ClassState.IsInEarthShockRange)
             {
-                await StartWalkForwardTask();
+                await Player.StartWalkForwardTask();
                 await Task.Delay(1000);
-                await EndWalkForwardTask();
+                await Player.EndWalkForwardTask();
             }
             return true;
         }
 
-        public async Task<bool> ShamanExecuteEngageTask(WowShamanClassState classState)
+        public override async Task<bool> ExecuteEngageTask()
         {
-            EngageAttempts++;
-
-            if (await AbandonUnreachableEngageTarget())
+            if (await Player.AbandonUnreachableEngageTarget())
             {
                 return false;
             }
 
-            if (WorldState.IsTargetLongRangeCaster && !classState.IsInEarthShockRange)
+            if (WorldState.IsTargetLongRangeCaster && !ClassState.IsInEarthShockRange)
             {
-                await ShamanRunIntoEarthShockRange(classState);
+                await RunIntoEarthShockRange();
             }
 
-            Console.WriteLine($"ShamanFaceCorrectDirectionToEngageTask, EngageAttempts {EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}, WorldState.IsInCombat? {WorldState.IsInCombat}");
+            Console.WriteLine($"Shaman ExecuteEngageTask, EngageAttempts {Player.EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}, WorldState.IsInCombat? {WorldState.IsInCombat}");
             if (!WorldState.IsCurrentlyCasting && !WorldState.IsInCombat)
             {
                 // Replaces the old blind TurnABitToTheLeftTask() -- see
                 // WowMovementTasks.TurnToFaceTargetMarkerTask for the target-marker-based
                 // bearing detection this now uses instead.
-                await TurnToFaceTargetMarkerTask();
+                await Player.TurnToFaceTargetMarkerTask();
 
                 // Rank 1 does exactly as much damage as top rank against a nature-immune
                 // target -- zero -- so pull with Rank 1 there instead, to avoid wasting mana
                 // on a full-rank cast that can't land any damage either way. See the "2 Bolt"
-                // macro comment in WowInput.cs.
+                // macro comment on Input above.
                 if (WorldState.IsTargetNatureImmune)
                 {
-                    await WowInput.PressKeyWithShift(WowInput.SHAMAN_SHIFT_LIGHTNING_BOLT_RANK_1);
+                    await WowInput.PressKeyWithShift(Input.SHIFT_LIGHTNING_BOLT_RANK_1);
                 }
                 else
                 {
-                    await WowInput.PressKey(WowInput.SHAMAN_LIGHTNING_BOLT);
+                    await WowInput.PressKey(Input.LIGHTNING_BOLT);
                 }
 
                 await Task.Delay(500); // IsCurrentlyCasting can take a little bit to update, give it a buffer
-                await UpdateWorldStateAsync();
+                await Player.UpdateWorldStateAsync();
             }
 
-            return ShamanCanEngageTarget(classState);
+            return CanEngageTarget();
         }
 
-        // Replaces the old shared CanEngageTarget() for the Shaman case --
-        // CanSpellcastPullTarget is shared with Warlock under the same name but
-        // each class gets its own ClassState type, so each also gets its own
-        // thin CanEngageTarget wrapper. Shaman always pulls with a spell
-        // regardless of LocationConfiguration.EngageMethod (Charge/Pull only matters for
-        // Warrior -- see the enum's own comment on WowLocationConfiguration.cs),
-        // so unlike WarriorCanEngageTarget this doesn't need to dispatch on it at all.
-        public bool ShamanCanEngageTarget(WowShamanClassState classState)
+        // Shaman always pulls with a spell regardless of LocationConfiguration.EngageMethod
+        // (Charge/Pull only matters for Warrior -- see the enum's own comment on
+        // WowLocationConfiguration.cs), so unlike WowWarriorHandler.CanEngageTarget this
+        // doesn't need to dispatch on it at all.
+        public override bool CanEngageTarget()
         {
-            return classState.CanSpellcastPullTarget;
+            return ClassState.CanSpellcastPullTarget;
         }
 
-        public async Task<bool> ShamanEmergencyTask()
+        private async Task<bool> EmergencyTask()
         {
             await Task.Delay(0);
             bool tooManyAttackers = WorldState.AttackerCount >= WowConstants.TOO_MANY_ATTACKERS_THRESHOLD;
@@ -384,16 +442,16 @@ namespace WoWHelper
             //if(true)
             {
                 string warningMessage = tooManyAttackers ? "TOO MANY ATTACKERS HELP" : $"Emergency HP Threshold hit ({WorldState.PlayerHpPercent})";
-                SetLogoutVariablesAndSlack($"Got into an emergency situation ({warningMessage}), logging off for safety");
+                Player.SetLogoutVariablesAndSlack($"Got into an emergency situation ({warningMessage}), logging off for safety");
 
                 // Figure out what to do here.  War stomp? Magma Totem? War stomp -> ghost wolf -> run to safety?
                 // Stoneskin totem for now
                 //await WowInput.PressKey(WowInput.THROW_DYNAMITE);
-                await WaitForGlobalCooldownTask();
-                await ThrowDynamiteTask(forceThrow: true);
+                await Player.WaitForGlobalCooldownTask();
+                await Player.ThrowDynamiteTask(forceThrow: true);
 
-                await WaitForGlobalCooldownTask();
-                await ThrowTargetDummyTask();
+                await Player.WaitForGlobalCooldownTask();
+                await Player.ThrowTargetDummyTask();
 
                 return true;
             }

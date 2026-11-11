@@ -50,23 +50,23 @@ namespace WoWHelper
             NextSwingSpellQueued = bits[6];
             OverpowerUsable = bits[7];
             // Whether Rend is actually trained yet -- used instead of a hardcoded
-            // "PlayerLevel >= 4" check in WowWarriorTasks.WarriorShouldCastRend.
+            // "PlayerLevel >= 4" check in WowWarriorHandler.ShouldCastRend.
             KnowsRend = bits[8];
 
             // Whether Execute is actually trained yet -- used instead of a hardcoded
-            // "PlayerLevel >= 24" check in WowWarriorTasks.WarriorShouldCastExecute.
+            // "PlayerLevel >= 24" check in WowWarriorHandler.ShouldCastExecute.
             KnowsExecute = bits[9];
             MortalStrikeOrBloodThirstCooledDown = bits[10];
             // Whether Mortal Strike/Bloodthirst is actually trained yet -- used instead of a
-            // hardcoded "PlayerLevel >= 40" check in WowWarriorTasks.cs's
-            // WarriorShouldCastMortalStrikeOrBloodthirst/WarriorShouldCastHeroicStrike.
+            // hardcoded "PlayerLevel >= 40" check in WowWarriorHandler's
+            // ShouldCastMortalStrikeOrBloodthirst/HeroicStrikeRageRequired.
             KnowsMortalStrikeOrBloodthirst = bits[11];
             // Whether Charge is actually trained yet -- used instead of a hardcoded
-            // "PlayerLevel >= 4" check in WowWarriorTasks.cs's
-            // WarriorFaceCorrectDirectionToEngageTask/WarriorCanEngageTarget.
+            // "PlayerLevel >= 4" check in
+            // WowWarriorHandler.ExecuteEngageTask/CanEngageTarget.
             KnowsCharge = bits[12];
             // Any stack of Sunder Armor on the target at all (anyone's), not a stack count --
-            // WowWarriorTasks.WarriorShouldCastSunderArmor only wants one application on
+            // WowWarriorHandler.ShouldCastSunderArmor only wants one application on
             // the target, not a full 5-stack.
             TargetHasSunderArmor = bits[13];
             KnowsSunderArmor = bits[14];

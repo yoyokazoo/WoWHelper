@@ -1,120 +1,56 @@
-using System.Runtime.Remoting.Messaging;
 using System.Threading.Tasks;
-using WoWHelper.Code.WorldState;
 
 namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        // Each dispatch below casts ClassState to the class-specific type the
-        // target method expects. Since ClassState is built once from
-        // CombatConfiguration (see WowPlayer's constructor) and
-        // never changes afterward, this cast should always succeed in
-        // practice -- if it doesn't, that means ClassState and
-        // CombatConfiguration have gone out of sync, and throwing
-        // immediately here is the right outcome (silently reading the wrong
-        // class's state would be worse).
-        //
-        // Shared message builder for all six dispatchers below, so the explanation of
-        // *why* an unhandled CombatConfiguration is possible only needs to be written
-        // (and kept in sync) once. Unknown (-1) is the value CombatConfiguration
-        // starts with; anything else
-        // unhandled means a class was added to WowCombatConfiguration without adding a
-        // case to this dispatcher.
-        private string UnhandledCombatConfigurationMessage(string dispatcherName) =>
-            $"{dispatcherName}: no dispatch implemented for CombatConfiguration \"{CombatConfiguration}\".";
-
-        public async Task<bool> StartBattleReadyTask()
+        // Thin forwarders into ClassHandler (see WowClassHandler.cs), the one object
+        // holding everything class-specific. ClassHandler is built once the player's class
+        // is detected (see UpdateClassState); calling any of these before then means
+        // CombatConfiguration is still Unknown, which throws rather than guessing.
+        private WowClassHandler RequireClassHandler(string callerName)
         {
-            switch (CombatConfiguration)
+            if (ClassHandler == null)
             {
-                case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorStartBattleReadyRecoverTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanStartBattleReadyRecoverTask((WowShamanClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockStartBattleReadyRecoverTask((WowWarlockClassState)ClassState);
-                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(StartBattleReadyTask)));
+                throw new System.NotImplementedException(
+                    $"{callerName}: no class handler for CombatConfiguration \"{CombatConfiguration}\" (class not detected yet?).");
             }
+
+            return ClassHandler;
         }
 
-        public async Task<bool> WaitUntilBattleReadyTask()
+        public Task<bool> StartBattleReadyTask() =>
+            RequireClassHandler(nameof(StartBattleReadyTask)).StartBattleReadyRecoverTask();
+
+        public Task<bool> WaitUntilBattleReadyTask() =>
+            RequireClassHandler(nameof(WaitUntilBattleReadyTask)).WaitUntilBattleReadyTask();
+
+        public bool PlayerIsBattleReady() =>
+            RequireClassHandler(nameof(PlayerIsBattleReady)).IsBattleReady();
+
+        public Task<bool> StartEngageTask()
         {
-            switch (CombatConfiguration)
-            {
-                case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorWaitUntilBattleReadyTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanWaitUntilBattleReadyTask((WowShamanClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockWaitUntilBattleReadyTask((WowWarlockClassState)ClassState);
-                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(WaitUntilBattleReadyTask)));
-            }
+            var handler = RequireClassHandler(nameof(StartEngageTask));
+            EngageAttempts = 1;
+            return handler.KickOffEngageTask();
         }
 
-        public bool PlayerIsBattleReady()
+        public Task<bool> ExecuteEngageTask()
         {
-            switch (CombatConfiguration)
-            {
-                case Code.Gameplay.WowCombatConfiguration.Warrior: return WarriorIsBattleReady((WowWarriorClassState)ClassState);
-                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(WaitUntilBattleReadyTask)));
-            }
+            var handler = RequireClassHandler(nameof(ExecuteEngageTask));
+            EngageAttempts++;
+            return handler.ExecuteEngageTask();
         }
 
-        public async Task<bool> StartEngageTask()
-        {
-            switch (CombatConfiguration)
-            {
-                case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorKickOffEngageTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanKickOffEngageTask((WowShamanClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockKickOffEngageTask((WowWarlockClassState)ClassState);
-                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(StartEngageTask)));
-            }
-        }
+        public Task<bool> CombatLoopTask() =>
+            RequireClassHandler(nameof(CombatLoopTask)).CombatLoopTask();
 
-        public async Task<bool> ExecuteEngageTask()
-        {
-            switch (CombatConfiguration)
-            {
-                case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorExecuteEngageTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanExecuteEngageTask((WowShamanClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockExecuteEngageTask((WowWarlockClassState)ClassState);
-                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(ExecuteEngageTask)));
-            }
-        }
+        public Task PlayerSingleCombatTask() =>
+            RequireClassHandler(nameof(PlayerSingleCombatTask)).SingleCombatTask();
 
-        public async Task<bool> CombatLoopTask()
-        {
-            switch (CombatConfiguration)
-            {
-                case Code.Gameplay.WowCombatConfiguration.Warrior: return await WarriorCombatLoopTask((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return await ShamanCombatLoopTask((WowShamanClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Warlock: return await WarlockCombatLoopTask((WowWarlockClassState)ClassState);
-                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(CombatLoopTask)));
-            }
-        }
-
-        public async Task PlayerSingleCombatTask()
-        {
-            switch (CombatConfiguration)
-            {
-                case Code.Gameplay.WowCombatConfiguration.Warrior: { await WarriorSingleCombatTask((WowWarriorClassState)ClassState); return; }
-                case Code.Gameplay.WowCombatConfiguration.Shaman: { await ShamanCombatLoopTask((WowShamanClassState)ClassState); return; }
-                case Code.Gameplay.WowCombatConfiguration.Warlock: { await WarlockCombatLoopTask((WowWarlockClassState)ClassState); return; }
-                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(CombatLoopTask)));
-            }
-        }
-
-        // The real per-class logic lives in WarriorCanEngageTarget/ShamanCanEngageTarget/
-        // WarlockCanEngageTarget (each in its own Wow*Tasks.cs, called there with
-        // that class's own typed ClassState directly -- no dispatch needed since
-        // the caller already knows its class). This thin wrapper exists only for
-        // genuinely class-agnostic callers, like WowMovementTasks.cs's
-        // PathfindingLoopTask, which runs identically for every class and can't
-        // know which typed ClassState to use at compile time.
-        public bool CanEngageTarget()
-        {
-            switch (CombatConfiguration)
-            {
-                case Code.Gameplay.WowCombatConfiguration.Warrior: return WarriorCanEngageTarget((WowWarriorClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Shaman: return ShamanCanEngageTarget((WowShamanClassState)ClassState);
-                case Code.Gameplay.WowCombatConfiguration.Warlock: return WarlockCanEngageTarget((WowWarlockClassState)ClassState);
-                default: throw new System.NotImplementedException(UnhandledCombatConfigurationMessage(nameof(CanEngageTarget)));
-            }
-        }
+        // For class-agnostic callers, like WowMovementTasks.cs's PathfindingLoopTask,
+        // which runs identically for every class.
+        public bool CanEngageTarget() =>
+            RequireClassHandler(nameof(CanEngageTarget)).CanEngageTarget();
     }
 }

@@ -55,7 +55,7 @@ namespace WoWHelper
         public bool IsCurrentlySkinning { get; private set; }
         // Mob-name-list lookups (BLEED_IMMUNE_MOB_NAMES/FEAR_CASTER_MOB_NAMES in
         // CreatureConfig.lua), same pattern as IsTargetLongRangeCaster above -- class-agnostic
-        // even though only Warrior consumes them today (see WarriorCombatLoopTask).
+        // even though only Warrior consumes them today (see WowWarriorHandler.SingleCombatTask).
         public bool IsTargetBleedImmune { get; private set; }
         public bool IsTargetFearCaster { get; private set; }
 

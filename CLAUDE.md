@@ -216,21 +216,21 @@ mechanisms in
 `WowConfigResolutionTasks.cs`, deliberately split apart (they used to be one
 method run only from `PlayerState.RESOLVE_FARMING_CONFIGURATION`) because
 that state can be skipped entirely — see below:
-- `WowPlayer.ResolveCombatConfiguration()` sets `CombatConfiguration` straight
+- `WowPlayer.UpdateClassState()` sets `CombatConfiguration` straight
   from `WowWorldState.PlayerClass` (see the `MultiBoolOne` B-byte bits 2-4
-  note below) and builds the matching `ClassState` subtype. It's called every
-  tick from `WowManagementTasks.EveryWorldStateUpdateTasks()` — **not** tied
-  to `PlayerState.RESOLVE_FARMING_CONFIGURATION` — and early-outs quietly
-  (no logging) once `ClassState` is already set, or for as many ticks as
-  `WorldState.PlayerClass` is still `null` (addon not rendering a real row
-  yet, e.g. still on the login screen). It needed to be tick-driven rather
+  note below) and builds the matching `WowClassHandler` subtype
+  (`WowPlayer.ClassHandler`, which owns its class's `WowClassState`). It's
+  called every tick from `UpdateWorldState()` — **not** tied
+  to `PlayerState.RESOLVE_FARMING_CONFIGURATION` — and does nothing once
+  `ClassHandler` is already set, or while the bot isn't in a valid state
+  (addon not rendering a real row yet, e.g. still on the login screen). It needed to be tick-driven rather
   than a one-time startup step because `CoreGameplayLoopTask`'s own "already
   in combat" short-circuit (top of its `while` loop) can jump straight to
   `PlayerState.IN_CORE_COMBAT_LOOP` on literally the first tick — e.g. the
   bot was (re)started while the character was already mid-fight — bypassing
   `RESOLVE_FARMING_CONFIGURATION` for the rest of the run. Before this split,
   that meant the combat loop could try to dispatch on a still-`Unknown`
-  `CombatConfiguration` with a still-null `ClassState`.
+  `CombatConfiguration` with no class state built yet.
 - `WowPlayer.ResolveFarmingConfigurationTask()` picks `LocationConfiguration`
   from `WowLocationConfigs.ALL_LOCATIONS` — an explicit list (deliberately
   not reflection over the class's static fields, so a route can be pulled
@@ -252,17 +252,11 @@ that state can be skipped entirely — see below:
   (the old log-off-at-level-N `MaximumLevel` was removed); moving on from a
   route as the character levels belongs to `WowLevelingConfigs` instead.
 
-On failure, `ResolveFarmingConfigurationTask()` checks `ClassState == null`
-first (i.e. `ResolveCombatConfiguration()` never managed to resolve it) before
-doing its own location matching — since the two are independent now, this is
-the one place that still needs to fail the whole startup if combat config
-truly never resolved. Either failure sends a Slack alert via
-`SlackHelper.SendMessageToChannel()`, returns `false`, and `CoreGameplayLoopTask`
-sends the state machine straight to `EXITING_CORE_GAMEPLAY_LOOP` (which exits
-the process) rather than guessing. `WowPlayer.ClassState` starts `null`
-(`UpdateWorldStateAsync`/`UpdateWorldState`/`UpdateFromBitmap` all null-guard
-the per-tick `ClassState.UpdateFromBitmap` call) until `ResolveCombatConfiguration()`
-builds the concrete subtype; nothing reads `ClassState` before that.
+`WowPlayer.ClassHandler` starts `null`
+(`UpdateClassState`/`UpdateWorldStateFromBitmap` null-guard the per-tick
+`ClassHandler.UpdateFromBitmap` call) until `UpdateClassState()` builds the
+concrete subtype; the class-dispatch wrappers in `WowPlayerCombatConfig.cs`
+throw if called before that.
 
 **`MultiBoolOne`'s B boxes (17-24):** B1 carries `TargetRecentlyEvaded` — true for a
 few seconds after the player's own attack drew an `EVADE` combat-log miss
@@ -331,7 +325,7 @@ in `CreatureConfig.lua` — mobs not worth (re)applying Rend to) and R6 is
 than reacting after the fact); both live here rather than in
 `ClassBoolOne`/Warrior's own slice because they're mob-identity facts, the
 same class as `IsTargetLongRangeCaster` above, even though only Warrior
-consumes either today (`WowWarriorTasks.cs`'s `WarriorCombatLoopTask` reads
+consumes either today (`WowWarriorHandler.SingleCombatTask` reads
 `WorldState.IsTargetBleedImmune` when deciding whether to Rend, and
 `WorldState.IsTargetFearCaster` when deciding whether to preemptively pop
 Berserker Rage) — this replaced an earlier, route-level `UseRend`/
@@ -541,8 +535,8 @@ Shaman's `HasClearcasting` (Elemental Focus's proc buff, name-matched via
 `HasBuffNamed("Clearcasting")`), and box 3 is Shaman's `CanCastFrostShock`
 (cooldown/usability check via `SpellIsCooledDown(8056)`/`IsSpellUsable(8056)`,
 same pattern as `CanCastEarthShock`). Frost Shock does the same damage as
-Earth Shock but never interrupts a cast, so `WowShamanTasks.cs`'s
-`ShamanShouldCastFrostShock()` only uses it as Earth Shock's substitute
+Earth Shock but never interrupts a cast, so `WowShamanHandler`'s
+`ShouldCastFrostShock()` only uses it as Earth Shock's substitute
 against nature-immune targets (`WorldState.IsTargetNatureImmune`) — Earth
 Shock is nature damage and does nothing to them. Shocks share both a
 cooldown category and a 20-yard range in Classic, so box 1
@@ -567,8 +561,8 @@ by name — `WARRIOR_CLASS_BOOL_ONE_FIELDS` in `WarriorFunctions.lua`,
 `SHAMAN_...` in `ShamanFunctions.lua`, `WARLOCK_...` in
 `WarlockFunctions.lua` (an unsupported class gets an empty, all-red row) — so
 the *same* box means something different depending on which class is
-playing. On the C# side, `WowPlayer.ClassState` (a
-`WowClassState` subtype — see the C# architecture section) decodes the
+playing. On the C# side, the class's `WowClassState` subtype (owned by its
+`WowClassHandler` — see the C# architecture section) decodes the
 matching bits, selected once from `CombatConfiguration` —
 itself auto-set at startup from the player's detected class (see "Automatic
 farming-config resolution" below), not hardcoded. Note
@@ -577,11 +571,10 @@ split into the class files — it's shared between Shaman and Warlock under
 the same name, and duplicating that name into multiple class files would
 collide (last-loaded file wins silently, since addon globals are one flat
 namespace). The C#-side mirror of that same constraint: `CanEngageTarget()`
-in `WowPlayerCombatConfig.cs` is a thin class-dispatching wrapper for
+in `WowPlayerCombatConfig.cs` is a thin forwarder for
 class-agnostic callers (e.g. `WowMovementTasks.PathfindingLoopTask`), while
-`WarriorCanEngageTarget`/`ShamanCanEngageTarget`/`WarlockCanEngageTarget`
-(one per `Wow*Tasks.cs`) hold the real per-class
-logic and take that class's typed `ClassState` directly. **Warlock is a
+each `Wow*Handler.CanEngageTarget()` holds the real per-class
+logic against that class's typed `ClassState`. **Warlock is a
 work in progress**, filled in incrementally the same way Shaman was — so far
 `WowWarlockClassState` decodes ClassBoolOne's R1 (`CanSpellcastPullTarget`,
 Shadow Bolt), R2 (`ShouldCastDemonArmor`, true when neither Demon Skin nor
@@ -595,9 +588,8 @@ spell and the target doesn't already have that DoT on it -- same
 name-matched-against-`TargetHasDebuffSpellName()` pattern Shaman's
 `ShouldCastFlameShock`/`TargetHasFlameShock` use); the rest of
 `ClassBoolOne` and all of `ClassBoolTwo` are still free. The rest of the dispatch wiring (enum
-value, `WowClassState.Create`, all six
-`WowPlayerCombatConfig.cs` switches, the `MultiBoolTwo` R4 class-detect bit)
-is also in place.
+value, `WowClassHandler.Create`, `WowWarlockHandler`, the `MultiBoolTwo` R4
+class-detect bit) is also in place.
 
 The `Screen.PrimaryScreen.Bounds`-based per-resolution lookup
 (`WowScreenConfigs.GetForPrimaryScreen()`) still selects a `WowScreenConfiguration`, but that
@@ -636,31 +628,45 @@ of truth — edits should be made here, not in the WoW install directory.
   every class's fields (where nothing would stop e.g. Shaman code from reading
   a Warrior-only field and silently getting stale data), each class gets its
   own concrete subtype exposing *only* its own fields — a wrong-class field
-  reference is a compile error, not a runtime surprise. `WowPlayer.ClassState`
-  holds the one built for `CombatConfiguration` — `null` until
-  `ResolveCombatConfiguration()` sets that from the player's detected class
-  and builds the matching subtype (see "Automatic farming-config resolution"
-  above) — and updates it (in place, same instance — no `PreviousClassState`
-  exists, nothing has needed one yet) every tick alongside `WorldState`, off
-  the same captured bitmap.
-- **`Gameplay/Wow*Tasks.cs`** — behavior/task implementations grouped by
+  reference is a compile error, not a runtime surprise. Each instance is
+  owned privately by its class's handler (below), which builds it and
+  updates it (in place, same instance — no `PreviousClassState` exists,
+  nothing has needed one yet) every tick alongside `WorldState`, off the
+  same captured bitmap.
+- **`Gameplay/WowClassHandler.cs`** (abstract) / **`WowWarriorHandler.cs`** /
+  **`WowShamanHandler.cs`** / **`WowWarlockHandler.cs`** (in progress) —
+  everything class-specific: rotation, engage, rest/buff, plus that class's
+  keybinds (a `private static class Input` nested in each handler), tuning
+  constants (rage costs, DoT thresholds — private consts on the handler, not
+  `WowConstants`) and timers (`BattleShoutPressTime`, `ImmolateCastTime`,
+  etc.). These are separate classes, **not** `WowPlayer` partials, precisely
+  so one class's inputs/helpers/state are unreachable from another's code.
+  `WowClassHandler<TState>` holds the class's typed `WowClassState` as a
+  protected `ClassState`, so there are no casts anywhere. `WowPlayer.ClassHandler`
+  holds the one built for `CombatConfiguration` (`WowClassHandler.Create`,
+  called from `WowPlayer.UpdateClassState()` once the class is detected —
+  `null` until then). Handlers reach shared behavior through
+  `Player` (the owning `WowPlayer` — its shared tasks are all public) and
+  read `WorldState` via a shorthand property. `WowPlayerCombatConfig.cs`
+  is just thin forwarders (`StartBattleReadyTask`, `StartEngageTask`,
+  `CombatLoopTask`, `CanEngageTarget`, ...) that throw if no handler exists
+  yet; the engage forwarders also own `EngageAttempts` (reset/increment),
+  and `OnEnterFight()` is called on entering `PlayerGoal.FIGHT` for per-fight
+  resets (Warrior's once-per-fight Retaliation flag). Shared timers stay on
+  `WowPlayer` and are stamped by the shared tasks themselves
+  (`ThrowDynamiteTask` → `DynamiteTime`, `UseHealingPotionTask` →
+  `HealthPotionTime`). Only Warrior implements `IsBattleReady()` so far —
+  Shaman/Warlock throw `NotImplementedException` — and Shaman/Warlock's
+  `SingleCombatTask()` just runs their full `CombatLoopTask()`.
+- **`Gameplay/Wow*Tasks.cs`** — shared `WowPlayer` partial-class behavior grouped by
   concern: `WowMovementTasks` (pathfinding/turning/strafing/jumping),
-  `WowCommonCombatTasks` (shared combat logic), `WowWarriorTasks` /
-  `WowShamanTasks` / `WowWarlockTasks` (class-specific
-  rotations, selected via `WowCombatConfiguration` — `WowWarlockTasks` is
-  currently a stub, every entry point throws `NotImplementedException`),
-  `WowManagementTasks` (logout conditions, low
+  `WowCommonCombatTasks` (shared combat logic), `WowManagementTasks` (logout conditions, low
   supplies, trade window handling, Slack alerts, the `WaitForWorldBuffThenLogoffTask()`
   world-buff-waiting loop — see the `MultiBoolTwo` G3 note in the
-  color-encoding contract above). The class-specific task
-  files' entry points (dispatched from `WowPlayerCombatConfig.cs`) take their
-  own class's `WowClassState` subtype as a **method parameter**, not read off
-  `this` — so a Shaman-only field is unreachable from inside a Warrior method's
-  scope, not just absent on some shared type. `WowPlayerCombatConfig.cs`
-  casts `ClassState` to the right concrete type at each dispatch call site;
-  if that cast ever fails, `ClassState` and `CombatConfiguration` have gone
-  out of sync, and throwing immediately there is intentional — silently
-  reading the wrong class's state would be worse.
+  color-encoding contract above). Class-specific behavior lives in the
+  handlers above instead; shared tasks that need a class-specific decision
+  take it as a callback (e.g. `WalkIntoMeleeRangeTask(giveUpCondition)`)
+  rather than inspecting class state.
 - **Stuck detection** (`StuckRecoveryTask`, `WowMovementTasks.cs`) — its own
   small sub-state machine (`StuckRecoveryState`: `NOT_STUCK` → `JUMPED` →
   `WIGGLED_LEFT` → `WIGGLED_RIGHT` → `GAVE_UP`, one step per
@@ -908,9 +914,9 @@ of truth — edits should be made here, not in the WoW install directory.
   The check sits at the top of the `IsOnMerchantRun` block, so it's only
   evaluated while pathfinding runs — a timeout that elapses mid-combat fires
   on the first pathfinding tick after combat ends.
-- **`Constants/`** — `WowInput.cs` maps logical actions to keybinds/macros the
+- **`Constants/`** — `WowInput.cs` maps shared (class-agnostic) logical actions to keybinds/macros the
   bot presses (expects specific in-game keybinds/macros to be set up to match),
-  `WowPlayerConstants.cs` / `WowGameplayConstants.cs` hold thresholds/timings -- both are halves of one `static partial class WowConstants` (namespace `WoWHelper.Code`), so a constant can move between files without touching call sites.
+  `WowPlayerConstants.cs` / `WowGameplayConstants.cs` hold shared thresholds/timings (class-specific keybinds and tuning live privately on each `Wow*Handler`) -- both are halves of one `static partial class WowConstants` (namespace `WoWHelper.Code`), so a constant can move between files without touching call sites.
 - **`Shared/`** — `KeyPoller` (global ESC-to-stop hotkey + cleanup),
   `GeneralHelpers` (stateless `ChangeStateBasedOnTaskResult`/`CurrentTimeInsideDuration`),
   `BitmapDifferenceVisualizer` (loot-heatmap detection by diffing frames to
@@ -980,7 +986,7 @@ of truth — edits should be made here, not in the WoW install directory.
   `lastAuraQueryWasBlind`) it answers from the expiration time remembered from
   the last read that worked, so a pre-pull buff stays true through combat.
   A buff cast *mid-combat* is invisible to it, so the C# side also remembers
-  its own key press: `WarriorShouldCastBattleShout` skips recasting in combat
+  its own key press: `WowWarriorHandler.ShouldCastBattleShout` skips recasting in combat
   within `BATTLE_SHOUT_DURATION_MILLIS` of `BattleShoutPressTime` (this used
   to recast Battle Shout every tick in combat). Only `HasBattleShout()` uses
   it so far; Demon Skin/Armor would fit too, but charge-consumed buffs
@@ -1038,7 +1044,7 @@ of truth — edits should be made here, not in the WoW install directory.
   / **`WarlockFunctions.lua`**
   — that class's specific checks (e.g. `TargetHasRend`, `CanCastMortalStrikeOrBloodthirst`,
   `TargetHasSunderArmor`/`KnowsSunderArmor` — ClassBoolOne G5/G6, feeding
-  `WarriorShouldCastSunderArmor` in `WowWarriorTasks.cs`, which applies exactly
+  `ShouldCastSunderArmor` in `WowWarriorHandler.cs`, which applies exactly
   one Sunder per target (any stack at all counts, it's a bool not a count)
   right after Battle Shout/Overpower/Execute in the rotation priority — for
   Warrior. `CanCastSweepingStrikes` — ClassBoolOne G8 (G7 reserved) — is a
@@ -1055,7 +1061,7 @@ of truth — edits should be made here, not in the WoW install directory.
   "ready" — for a spell ID the player has never trained at all (same
   false-ready quirk `KnowsMortalStrikeOrBloodthirst`'s own comment documents
   for Mortal Strike/Bloodthirst), so without the guard a Warrior without the
-  talent would read "can cast" and, sitting second in `WarriorCombatLoopTask`'s
+  talent would read "can cast" and, sitting second in `WowWarriorHandler.SingleCombatTask`'s
   priority chain, block every lower-priority ability every tick for an
   ability that was never actually going to fire. (This bit was also
   hardcoded to the wrong spell ID for a while — 12328, Death Wish, not
@@ -1081,10 +1087,10 @@ of truth — edits should be made here, not in the WoW install directory.
   Before this, both functions separately probed the dedicated GCD spell ID
   (61304), confirmed via testing to never show a cooldown on Classic Era for
   any class (and on the Forever client it returns no cooldown info at all) — `SpellIsCooledDownIgnoringGCD()` was silently non-functional
-  until this fix. Note the Warrior rotation's `WarriorShouldCastX` checks are
+  until this fix. Note the Warrior rotation's `ShouldCastX` checks are
   game-state only (buff up? proc available? target already debuffed?) and
   deliberately don't look at rage: the `if/else if` chain in
-  `WarriorCombatLoopTask` picks one ability by priority, then the chosen
+  `WowWarriorHandler.SingleCombatTask` picks one ability by priority, then the chosen
   branch checks rage (`WorldState.ResourcePercent >= cost`) and does
   *nothing* that tick if it can't afford it — waiting for rage rather than falling
   through to a cheaper filler, so a 30-rage Mortal Strike/Bloodthirst isn't

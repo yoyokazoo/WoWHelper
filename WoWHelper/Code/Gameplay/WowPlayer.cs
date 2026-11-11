@@ -27,12 +27,7 @@ namespace WoWHelper
         public long LastJumpTime { get; private set; }
         public long DynamiteTime { get; private set; }
         public long HealthPotionTime { get; private set; }
-        // When the bot last pressed Battle Shout -- see WarriorShouldCastBattleShout.
-        public long BattleShoutPressTime { get; private set; }
         public long HealingTrinketTime { get; private set; }
-        public long BerserkerRageTime { get; private set; }
-        public long ImmolateCastTime { get; private set; }
-        public long CorruptionCastTime { get; private set; }
         public long NextUpdateTime { get; private set; }
         public bool FullBagsAlertSent { get; private set; }
         public int EngageAttempts { get; private set; }
@@ -40,12 +35,13 @@ namespace WoWHelper
         public int LootY { get; private set; }
         public int? MostRecentTargetMarkerX { get; private set; }
         public int? MostRecentTargetMarkerY { get; private set; }
-        public bool EmergencyCombatActionTaken { get; private set; }
 
         public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }
 
-        public WowClassState ClassState { get; private set; }
+        // Everything class-specific (rotation, keybinds, class pixel-row state) -- null
+        // until the player's class is detected. See WowClassHandler.cs.
+        public WowClassHandler ClassHandler { get; private set; }
 
         public PlayerMetaState CurrentPlayerMetaState { get; private set; }
         public PlayerState CurrentPlayerState { get; private set; }
@@ -111,7 +107,7 @@ namespace WoWHelper
 
             PreviousWorldState = new WowWorldState(screenConfiguration);
             WorldState = new WowWorldState(screenConfiguration);
-            ClassState = null;
+            ClassHandler = null;
 
             NextUpdateTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
@@ -138,21 +134,21 @@ namespace WoWHelper
 
         private void UpdateClassState()
         {
-            if (ClassState == null && WorldState.IsBotInAValidState)
+            if (ClassHandler == null && WorldState.IsBotInAValidState)
             {
                 CombatConfiguration = WorldState.PlayerClass.Value;
-                ClassState = WowClassState.Create(CombatConfiguration);
+                ClassHandler = WowClassHandler.Create(CombatConfiguration, this);
                 Console.WriteLine($"Auto-detected combat config {CombatConfiguration}");
             }
 
-            ClassState?.UpdateFromBitmap(WorldState.Bmp);
+            ClassHandler?.UpdateFromBitmap(WorldState.Bmp);
         }
 
         // For Testing only, otherwise use UpdateWorldState
         public void UpdateWorldStateFromBitmap(Bitmap bmp)
         {
             WorldState.UpdateFromBitmap(bmp);
-            ClassState?.UpdateFromBitmap(bmp);
+            ClassHandler?.UpdateFromBitmap(bmp);
         }
 
         private static void ReleaseInputsAndExit()
@@ -330,7 +326,7 @@ namespace WoWHelper
                     LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     break;
                 case PlayerGoal.FIGHT:
-                    EmergencyCombatActionTaken = false;
+                    ClassHandler?.OnEnterFight();
                     break;
                 case PlayerGoal.RECOVER_FROM_BATTLE:
                     CurrentBattleRecoveryState = BattleRecoveryState.LOOT_ATTEMPT_ONE;

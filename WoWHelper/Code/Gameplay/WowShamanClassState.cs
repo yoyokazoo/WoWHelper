@@ -24,7 +24,7 @@ namespace WoWHelper
 
         // Frost Shock -- same damage as Earth Shock but doesn't interrupt a cast, so it's
         // only used as Earth Shock's substitute against nature-immune targets (see
-        // ShamanShouldCastFrostShock in WowShamanTasks.cs). Shares Earth Shock's range and
+        // WowShamanHandler.ShouldCastFrostShock). Shares Earth Shock's range and
         // cooldown category, so IsInEarthShockRange above covers range for both.
         public bool CanCastFrostShock { get; private set; }
 

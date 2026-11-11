@@ -59,6 +59,7 @@ namespace WoWHelper
                 Mouse.Move(ScreenConfiguration.DynamiteAndDummyX, ScreenConfiguration.DynamiteAndDummyY);
                 await Task.Delay(50);
                 await WowInput.PressKey(WowInput.THROW_DYNAMITE);
+                DynamiteTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 await Task.Delay(1000);
                 return true;
             }
@@ -76,6 +77,7 @@ namespace WoWHelper
                 SlackHelper.SendMessageToChannel("Potion used!");
                 await Task.Delay(200); // there's a brief, non-gcd limiter that prevents clicking everything simultaneously
                 await WowInput.PressKey(WowInput.HEALING_POTION);
+                HealthPotionTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 return true;
             }
 

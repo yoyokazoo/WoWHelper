@@ -600,9 +600,11 @@ namespace WoWHelper
         //   2. Otherwise, has it drifted outside the finer TARGET_FACING_CONE_DEGREES cone?
         //      If so, re-turn via TurnToFaceTargetMarkerTask (without stopping the walk --
         //      this is normal gradual drift, not an overshoot) before continuing.
-        // Returns false (and stops walking) if the marker is lost for too long, or if we time
-        // out without ever entering combat.
-        public async Task<bool> WalkIntoMeleeRangeTask(WowClassState classState)
+        // Returns false (and stops walking) if the marker is lost for too long, if we time
+        // out without ever entering combat, or if the caller's optional giveUpCondition
+        // (checked every iteration, after each world-state update) reads true -- e.g.
+        // Warrior gives up once the target is no longer chargeable.
+        public async Task<bool> WalkIntoMeleeRangeTask(Func<bool> giveUpCondition = null)
         {
             int consecutiveMisses = 0;
             int iteration = 0;
@@ -626,9 +628,9 @@ namespace WoWHelper
                         return true;
                     }
 
-                    if (ClassState is WowWarriorClassState warr && !warr.CanChargeTarget)
+                    if (giveUpCondition != null && giveUpCondition())
                     {
-                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] !ClassState.CanChargeTarget -> success");
+                        Console.WriteLine($"DEBUG WalkIntoMeleeRangeTask: [{iteration}] caller's giveUpCondition hit, giving up");
                         return false;
                     }
 

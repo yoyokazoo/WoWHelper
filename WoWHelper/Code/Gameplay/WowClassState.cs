@@ -1,5 +1,4 @@
 using System.Drawing;
-using WoWHelper.Code.Gameplay;
 
 namespace WoWHelper
 {
@@ -14,31 +13,14 @@ namespace WoWHelper
     // concrete subtype exposing ONLY its own fields -- see
     // WowWarriorClassState/WowShamanClassState/WowWarlockClassState.
     //
-    // WowPlayer builds the right concrete instance once (based on
-    // CombatConfiguration) and updates it every tick alongside
-    // WorldState. The class-specific Wow*Tasks.cs methods receive their
-    // class's concrete ClassState as a method parameter (not read off
-    // `this`), so a wrong-class field reference is a compile error, not a
-    // runtime surprise -- and the cast at each dispatch call site in
-    // WowPlayerCombatConfig.cs throws immediately if ClassState and
-    // CombatConfiguration ever disagree about which class is active.
+    // Each instance is owned privately by its class's WowClassHandler (see
+    // WowClassHandler<TState>), which builds it once and updates it every tick
+    // alongside WorldState. Nothing outside that handler can reach it, so a
+    // wrong-class field reference is a compile error, not a runtime surprise.
     public abstract class WowClassState
     {
         public bool Initialized { get; protected set; }
 
         public abstract void UpdateFromBitmap(Bitmap bmp);
-
-        public static WowClassState Create(WowCombatConfiguration combatConfiguration)
-        {
-            switch (combatConfiguration)
-            {
-                case WowCombatConfiguration.Warrior: return new WowWarriorClassState();
-                case WowCombatConfiguration.Shaman: return new WowShamanClassState();
-                case WowCombatConfiguration.Warlock: return new WowWarlockClassState();
-                default: throw new System.NotImplementedException(
-                    $"{nameof(WowClassState)}.{nameof(Create)}: no ClassState implemented for CombatConfiguration \"{combatConfiguration}\" -- " +
-                    $"this should only be called with a resolved (non-Unknown) CombatConfiguration.");
-            }
-        }
     }
 }
