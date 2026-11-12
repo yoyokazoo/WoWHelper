@@ -500,7 +500,7 @@ namespace WoWHelper.Code
         private static List<WowRoute> GetAllSafeRoutes(WowPlayer wowPlayer)
         {
             List<WowRoute> safeRoutes = new List<WowRoute>();
-            safeRoutes.AddRange(WowRoutes.ALL_WALKING_ROUTES);
+            safeRoutes.AddRange(WowWalkingRoutes.ALL_WALKING_ROUTES);
             safeRoutes.AddRange(WowLocationConfigs.ALL_LOCATIONS.Select(config => config.Route));
             safeRoutes.AddRange(WowNPCConfigs.ALL_NPCS.Select(config => config.Route));
             return safeRoutes

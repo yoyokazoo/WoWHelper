@@ -9,9 +9,9 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Durotar To Orgrimmar",
             FromZone = WowZone.Durotar,
-            FromPoint = WowRoutes.RAZOR_HILL_TO_ORG_ENTRANCE.Waypoints.Last(),
+            FromPoint = WowWalkingRoutes.RAZOR_HILL_TO_ORG_ENTRANCE.Waypoints.Last(),
             ToZone = WowZone.Orgrimmar,
-            ToPoint = WowRoutes.ORGRIMMAR_ENTRANCE_ROUTE.Waypoints.First(),
+            ToPoint = WowWalkingRoutes.ORGRIMMAR_ENTRANCE_ROUTE.Waypoints.First(),
             HeadingDegrees = 7.35f
         };
 

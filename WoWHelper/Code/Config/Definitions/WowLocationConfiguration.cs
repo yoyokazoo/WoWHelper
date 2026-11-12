@@ -49,7 +49,7 @@ namespace WoWHelper.Code.WorldState
         // which mobs to add to /target
         public string TargetMacroMobNames { get; set; }
 
-        // Name, waypoints, traversal method, distance tolerance, zone and minimum level -- see WowRoutes.cs.
+        // Name, waypoints, traversal method, distance tolerance, zone and minimum level -- see WowFarmingRoutes.cs.
         public WowRoute Route { get; set; }
 
         public bool AllMobsInZoneAreNatureImmune { get; set; }

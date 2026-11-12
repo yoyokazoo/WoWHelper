@@ -132,7 +132,7 @@ namespace WoWHelperUnitTests
 
         private static bool HasRouteThrough(WowZone zone, Vector2 point)
         {
-            return WowRoutes.ALL_WALKING_ROUTES
+            return WowWalkingRoutes.ALL_WALKING_ROUTES
                 .Concat(WowLocationConfigs.ALL_LOCATIONS.Select(location => location.Route))
                 .Concat(WowNPCConfigs.ALL_NPCS.Select(npc => npc.Route))
                 .Any(route => route.Zone == zone && route.Waypoints.Contains(point));

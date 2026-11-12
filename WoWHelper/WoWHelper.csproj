@@ -149,7 +149,8 @@
     <Compile Include="Code\Config\Definitions\WowZoneCrossing.cs" />
     <Compile Include="Code\Config\Definitions\WowLevelingConfiguration.cs" />
     <Compile Include="Code\Config\Data\WowLocationConfigs.cs" />
-    <Compile Include="Code\Config\Data\WowRoutes.cs" />
+    <Compile Include="Code\Config\Data\WowFarmingRoutes.cs" />
+    <Compile Include="Code\Config\Data\WowWalkingRoutes.cs" />
     <Compile Include="Code\Config\Data\WowZoneCrossings.cs" />
     <Compile Include="Code\Config\Data\WowLevelingConfigs.cs" />
     <Compile Include="Code\Gameplay\WowCommonCombatTasks.cs" />

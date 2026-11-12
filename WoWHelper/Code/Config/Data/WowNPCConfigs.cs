@@ -11,6 +11,7 @@ namespace WoWHelper.Code.WorldState
             Route = new WowRoute {
                 Name = "Valley of Trials Merchant",
                 Zone = WowZone.Durotar,
+                Faction = WowFaction.HORDE,
                 Waypoints = new List<Vector2> { new Vector2(42.58f, 67.34f) } 
             },
             Roles = NPCRoles.Sell
@@ -24,6 +25,7 @@ namespace WoWHelper.Code.WorldState
             {
                 Name = "Valley of Trials Warrior Trainer",
                 Zone = WowZone.Durotar,
+                Faction = WowFaction.HORDE,
                 Waypoints = new List<Vector2> { new Vector2(42.89f, 69.44f) }
             },
             Roles = NPCRoles.Train,
@@ -37,6 +39,7 @@ namespace WoWHelper.Code.WorldState
             {
                 Name = "Razor Hill Merchant",
                 Zone = WowZone.Durotar,
+                Faction = WowFaction.HORDE,
                 Waypoints = new List<Vector2> { new Vector2(52.98f, 41.03f) }
             },
             Roles = NPCRoles.Sell | NPCRoles.Repair | NPCRoles.Arrows
@@ -50,6 +53,7 @@ namespace WoWHelper.Code.WorldState
             {
                 Name = "Razor Hill Warrior Trainer",
                 Zone = WowZone.Durotar,
+                Faction = WowFaction.HORDE,
                 Waypoints = new List<Vector2> { new Vector2(54.19f, 42.47f), }
             },
             Roles = NPCRoles.Train

@@ -192,7 +192,7 @@ namespace WoWHelper
             Vector2? startingPoint = null;
             startingPoint = new Vector2(43.80f, 68.36f);
             var (boarsAndScorpsWaypoint, impsWaypoint, distance) = WowPathfinding.GetClosestWaypointsBetweenRoutes(
-                WowRoutes.BOARS_AND_SCORPS_TO_MERCHANT_ROUTE, WowRoutes.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE, startingPoint);
+                WowWalkingRoutes.BOARS_AND_SCORPS_TO_MERCHANT_ROUTE, WowFarmingRoutes.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE, startingPoint);
             Console.WriteLine($"Closest waypoints: boars and scorps {boarsAndScorpsWaypoint}, imps {impsWaypoint}, distance {distance}");
             return true;
         }

@@ -808,9 +808,12 @@ of truth — edits should be made here, not in the WoW install directory.
   route is explicitly `HORDE` for safety (they were all built on Horde
   characters); a route gets opted into `EITHER` once it's been tested on
   Alliance and confirmed clear of Horde guards. Nothing reads it yet — faction-aware farming-location picking is still to
-  come. Every route lives in
-  `Config/Data/WowRoutes.cs`, named after its location config plus `_ROUTE`
-  (e.g. `LEVEL_53_NORTH_FELWOOD_ROUTE` for `LEVEL_53_NORTH_FELWOOD`). Each
+  come. Routes are split across two files in `Config/Data/`:
+  `WowFarmingRoutes.cs` holds each location config's grinding route, named
+  after it plus `_ROUTE` (e.g. `LEVEL_53_NORTH_FELWOOD_ROUTE` for
+  `LEVEL_53_NORTH_FELWOOD`); `WowWalkingRoutes.cs` holds the connector
+  routes between farming routes, towns, NPCs and zone crossings, plus
+  `ALL_WALKING_ROUTES` (which pathfinding uses as its safe-route graph). Each
   location config also has `ExpectedMobNames` and the
   `AllMobsInZoneAreNatureImmune()` helper built on it; see "Expected mob
   roster" above. `Config/Definitions/CreatureConfig.cs` is the C# mirror of
