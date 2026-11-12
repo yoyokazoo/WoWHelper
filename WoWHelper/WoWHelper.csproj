@@ -159,9 +159,9 @@
     <Compile Include="Code\Gameplay\WowPathfinding.cs" />
     <Compile Include="Code\Gameplay\WowPlayerCombatConfig.cs" />
     <Compile Include="Code\Gameplay\WowClassHandler.cs" />
-    <Compile Include="Code\Gameplay\WowShamanHandler.cs" />
-    <Compile Include="Code\Gameplay\WowWarlockHandler.cs" />
-    <Compile Include="Code\Gameplay\WowWarriorHandler.cs" />
+    <Compile Include="Code\Class Specific\WowShamanHandler.cs" />
+    <Compile Include="Code\Class Specific\WowWarlockHandler.cs" />
+    <Compile Include="Code\Class Specific\WowWarriorHandler.cs" />
     <Compile Include="Code\Shared\BitmapDifferenceVisualizer.cs" />
     <Compile Include="Code\Shared\GeneralHelpers.cs" />
     <Compile Include="Code\Shared\KeyPoller.cs" />
@@ -171,9 +171,9 @@
     <Compile Include="Code\Gameplay\WowPixelRows.cs" />
     <Compile Include="Code\Gameplay\WowWorldState.cs" />
     <Compile Include="Code\Gameplay\WowClassState.cs" />
-    <Compile Include="Code\Gameplay\WowWarriorClassState.cs" />
-    <Compile Include="Code\Gameplay\WowShamanClassState.cs" />
-    <Compile Include="Code\Gameplay\WowWarlockClassState.cs" />
+    <Compile Include="Code\Class Specific\WowWarriorClassState.cs" />
+    <Compile Include="Code\Class Specific\WowShamanClassState.cs" />
+    <Compile Include="Code\Class Specific\WowWarlockClassState.cs" />
     <Compile Include="Code\Shared\PathSubdivision.cs" />
     <Compile Include="Code\Shared\TessaractSingleton.cs" />
     <Compile Include="Code\Shared\SlackFileUploadWorkaround.cs" />

@@ -9,8 +9,7 @@ namespace WoWHelper
 {
     public partial class WowPlayer
     {
-        // ensureValidState updates state before checking
-        // Set to false only if you're sure we haven't clicked a button between the last world state update
+        // ensureValidState updates state before checking, set to false only if you're sure we haven't clicked a button between the last world state update
         public async Task<bool> WaitForGlobalCooldownTask(bool ensureValidState = true)
         {
             if (ensureValidState)
@@ -26,12 +25,7 @@ namespace WoWHelper
             return true;
         }
 
-        // Waits up to totalMillis, but polls WorldState at the normal
-        // UpdateWorldStateAsync/TIME_BETWEEN_WORLDSTATE_UPDATES cadence instead of blocking
-        // blind through Task.Delay, so a fight starting mid-wait is noticed instead of missed.
-        // Returns true if the full wait elapsed without ever being in combat; returns false
-        // (immediately, no waiting at all) if already in combat, or as soon as combat starts
-        // during the wait.
+        // Waits up to totalMillis, but exits early if you get into combat
         public async Task<bool> WaitUnlessInCombatTask(long totalMillis, bool ensureValidState = true)
         {
             if (ensureValidState)
@@ -88,22 +82,22 @@ namespace WoWHelper
         {
             bool attackerJustDied = PreviousWorldState.AttackerCount > WorldState.AttackerCount && WorldState.AttackerCount > 0;
             bool inCombatButNotAutoAttacking = WorldState.IsInCombat && !WorldState.IsAutoAttacking;
-            bool facingWrongWay = WorldState.FacingWrongWay; // potentially need to turn in case we're webbed and backing up wont work
+            bool facingWrongWay = WorldState.FacingWrongWay;
             bool targetNeedsToBeInFront = WorldState.TargetNeedsToBeInFront;
             bool targetIsEvading = WorldState.TargetRecentlyEvaded;
             bool invalidTarget = WorldState.InvalidTarget;
             bool outOfRange = WorldState.OutOfRange;
             bool notInLineOfSight = WorldState.NotInLineOfSight;
             bool noPathAvailable = WorldState.NoPathAvailable;
-            // Both toasts get the same handling below -- see WowWorldState.TargetUnreachable.
             bool targetUnreachable = WorldState.TargetUnreachable;
+            bool notAttackingEnemy = attackerJustDied || inCombatButNotAutoAttacking || facingWrongWay || targetNeedsToBeInFront || targetIsEvading || invalidTarget || outOfRange || notInLineOfSight || noPathAvailable || targetUnreachable;
 
             Console.WriteLine($"attackerJustDied {attackerJustDied}, inCombatButNotAutoAttacking {inCombatButNotAutoAttacking}, facingWrongWay {facingWrongWay}, targetNeedsToBeInFront {targetNeedsToBeInFront}, invalidTarget {invalidTarget}, outOfRange {outOfRange}, notInLineOfSight {notInLineOfSight}, noPathAvailable {noPathAvailable}, targetIsEvading {targetIsEvading}");
 
             if (facingWrongWay || targetNeedsToBeInFront || targetIsEvading)
             {
-                // scoot back to make sure the mob is in front of you
-                //await ScootBackwardsTask();
+                // should we ever scoot anymore?
+                // await ScootBackwardsTask();
                 await TurnToFaceTargetMarkerTask();
             }
 
@@ -132,26 +126,14 @@ namespace WoWHelper
 
             if (attackerJustDied || inCombatButNotAutoAttacking)
             {
-                // /startattack
-                await WowInput.PressKey(WowInput.START_ATTACK);
+                await StartAttackTask();
             }
 
-            return attackerJustDied || inCombatButNotAutoAttacking || facingWrongWay || targetNeedsToBeInFront || targetIsEvading || invalidTarget || outOfRange || targetUnreachable;
+            // Right now we skip the rest of the combat tasks if we're doing any of these. Is this necessary? Maybe only on clear target?
+            return notAttackingEnemy;
         }
 
-        // Called from each class's *FaceCorrectDirectionToEngageTask (the CONTINUE_TO_TRY_TO_ENGAGE
-        // loop body, i.e. before we've ever landed a hit) right before attempting to pull. If the
-        // target we tab/macro-picked isn't actually reachable (WorldState.TargetUnreachable, i.e.
-        // either the "not in line of sight" or "no path available" toast -- e.g. it's leashed on
-        // the far side of terrain), that flag alone can stay true indefinitely, so
-        // the class-specific CanEngageTarget() readiness check (which only reflects cooldown/GCD,
-        // not reachability) would otherwise keep returning true forever and the engage loop would
-        // never fall through to CHECK_FOR_LOGOUT to re-evaluate anything (see EngageAttempts /
-        // ENGAGE_ROTATION_ATTEMPTS in WowManagementTasks.cs, which never gets checked while that
-        // loop keeps "succeeding"). Clears the target so PathfindingLoopTask picks a fresh one, and
-        // stamps LastLineOfSightBailoutTime so that pathfinding loop doesn't just immediately
-        // re-press find-target and pick the same unreachable mob right back up -- see
-        // LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS.
+        // Clear target and suppress targeting for a while if we detected that we can't engage our current target
         public async Task<bool> AbandonUnreachableEngageTarget()
         {
             if (!WorldState.TargetUnreachable)
@@ -167,7 +149,6 @@ namespace WoWHelper
 
         public async Task<bool> StartAttackTask()
         {
-            // always kick things off with /startattack
             await WowInput.PressKey(WowInput.START_ATTACK);
 
             return true;

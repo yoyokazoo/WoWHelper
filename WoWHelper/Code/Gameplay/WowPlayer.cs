@@ -712,6 +712,11 @@ namespace WoWHelper
                 return;
             }
 
+            if (GeneralHelpers.CurrentTimeInsideDuration(LastLineOfSightBailoutTime, WowConstants.LINE_OF_SIGHT_RETARGET_SUPPRESS_MILLIS))
+            {
+                return;
+            }
+
             if (CanEngageTarget())
             {
                 CurrentFindEnemyTargetState = FindEnemyTargetState.START_ENGAGE_TARGETED_ENEMY;
