@@ -71,15 +71,15 @@ namespace WoWHelper
                 {
                     LastFindTargetTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
-                    if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.TAB)
+                    if (LocationConfiguration.TargetFindMethod == WowFarmingConfiguration.WaypointTargetFindMethod.TAB)
                     {
                         await WowInput.PressKey(WowInput.TAB_TARGET);
                     }
-                    else if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.MACRO)
+                    else if (LocationConfiguration.TargetFindMethod == WowFarmingConfiguration.WaypointTargetFindMethod.MACRO)
                     {
                         await WowInput.PressKey(WowInput.FIND_TARGET_MACRO);
                     }
-                    else if (LocationConfiguration.TargetFindMethod == WowLocationConfiguration.WaypointTargetFindMethod.ALTERNATE)
+                    else if (LocationConfiguration.TargetFindMethod == WowFarmingConfiguration.WaypointTargetFindMethod.ALTERNATE)
                     {
                         if (targetChecks % 2 == 0)
                         {

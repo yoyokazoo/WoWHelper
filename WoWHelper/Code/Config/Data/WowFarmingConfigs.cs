@@ -1,28 +1,28 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
 using WoWHelper.Code.Gameplay;
-using static WoWHelper.Code.WorldState.WowLocationConfiguration;
+using static WoWHelper.Code.WorldState.WowFarmingConfiguration;
 
 namespace WoWHelper.Code.WorldState
 {
-    public static class WowLocationConfigs
+    public static class WowFarmingConfigs
     {
         #region Levels 50-60
 
-        public static readonly WowLocationConfiguration LEVEL_58_SILITHUS_RUMBLERS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_58_SILITHUS_RUMBLERS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_58_SILITHUS_RUMBLERS_ROUTE,
             TargetMacroMobNames = "Desert Rumbler",
             AllMobsInZoneAreNatureImmune = true,
         };
 
-        public static readonly WowLocationConfiguration LEVEL_57_WINTERSPRING_YETIS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_57_WINTERSPRING_YETIS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_57_WINTERSPRING_YETIS_ROUTE,
             TargetMacroMobNames = "Ice Thistle",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL_ROUTE,
             TargetMacroMobNames = "Blighted,Rotting",
@@ -31,7 +31,7 @@ namespace WoWHelper.Code.WorldState
 
         // Water elementals spawn here during invasion, bot will log off if they are seen.
         // Supposedly they only show up once every 48 hours or so
-        public static readonly WowLocationConfiguration LEVEL_55_WINTERSPRING_LAKE = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_55_WINTERSPRING_LAKE = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_55_WINTERSPRING_LAKE_ROUTE,
             TargetMacroMobNames = "Suffering,Anguished,Watery",
@@ -40,20 +40,20 @@ namespace WoWHelper.Code.WorldState
         // Legashi Hellcallers stand still and cast.  Only use this camp if you have handling
         // for LongRangeCasters set up (Earth shock, etc.)
         // FWIW I was getting stuck on geometry a lot at this specific one, so probably only run supervised
-        public static readonly WowLocationConfiguration LEVEL_53_ASZHARA_SATYR_CIRCLE = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_53_ASZHARA_SATYR_CIRCLE = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_53_ASZHARA_SATYR_CIRCLE_ROUTE,
             TargetMacroMobNames = "Legashi",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_53_NORTH_FELWOOD = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_53_NORTH_FELWOOD = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_53_NORTH_FELWOOD_ROUTE,
             TargetMacroMobNames = "Ironbeak,Angerclaw,Warpwood,Felpaw",
             ChaseOutOfRangeTargets = false, // Tall cliffs nearby, can't risk it
         };
 
-        public static readonly WowLocationConfiguration LEVEL_50_FELWOOD_SOUTH = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_50_FELWOOD_SOUTH = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_50_FELWOOD_SOUTH_ROUTE,
             TargetMacroMobNames = "Ironbeak,Angerclaw,Warpwood,Felpaw",
@@ -63,13 +63,13 @@ namespace WoWHelper.Code.WorldState
 
         #region Levels 40-50
 
-        public static readonly WowLocationConfiguration LEVEL_46_FERALAS_HIPPOGRYPHS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_46_FERALAS_HIPPOGRYPHS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_46_FERALAS_HIPPOGRYPHS_ROUTE,
             TargetMacroMobNames = "Ironfur,Cursed,Wandering,Frayfeather",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_41_TANARIS_TURTLES = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_41_TANARIS_TURTLES = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_41_TANARIS_TURTLES_ROUTE,
             TargetMacroMobNames = "Steeljaw",
@@ -94,14 +94,14 @@ namespace WoWHelper.Code.WorldState
 
         #region Levels 30-40
 
-        public static readonly WowLocationConfiguration LEVEL_36_KODO_GRAVEYARD = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_36_KODO_GRAVEYARD = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_36_KODO_GRAVEYARD_ROUTE,
             TargetMacroMobNames = "Aged,Dying,Ancient,Carrion",
             EngageMethod = EngagementMethod.Pull,
         };
 
-        public static readonly WowLocationConfiguration LEVEL_34_SHIMMERING_FLATS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_34_SHIMMERING_FLATS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_34_SHIMMERING_FLATS_ROUTE,
             TargetMacroMobNames = "Scorpid,Swirling,Saltstone,Sparkleshell,Ironeye",
@@ -112,7 +112,7 @@ namespace WoWHelper.Code.WorldState
 
         #region Levels 20-30
 
-        public static readonly WowLocationConfiguration LEVEL_29_HILLSBRAD_RIVER = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_29_HILLSBRAD_RIVER = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_29_HILLSBRAD_RIVER_ROUTE,
             TargetMacroMobNames = "Snapjaw",
@@ -120,19 +120,19 @@ namespace WoWHelper.Code.WorldState
             ChaseOutOfRangeTargets = false, // elite dragon nearby if we get dragged too far
         };
 
-        public static readonly WowLocationConfiguration LEVEL_26_STONETALON_CHARRED_FOREST = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_26_STONETALON_CHARRED_FOREST = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_26_STONETALON_CHARRED_FOREST_ROUTE,
             TargetMacroMobNames = "Rogue,Blackened,Bloodfury",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_23_STONETALON = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_23_STONETALON = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_23_STONETALON_ROUTE,
             TargetMacroMobNames = "Antlered,Sap",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_20_ZORAMGAR = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_20_ZORAMGAR = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_20_ZORAMGAR_ROUTE,
             TargetMacroMobNames = "Wild,Ghostpaw",
@@ -142,19 +142,19 @@ namespace WoWHelper.Code.WorldState
 
         #region Levels 10-20
 
-        public static readonly WowLocationConfiguration LEVEL_17_NORTHERN_BARRENS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_17_NORTHERN_BARRENS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_17_NORTHERN_BARRENS_ROUTE,
             TargetMacroMobNames = "Zhevra,Savannah,Hecklefang,Ornery,Sunscale",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_13_BARRENS_ENTRANCE = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_13_BARRENS_ENTRANCE = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_13_BARRENS_ENTRANCE_ROUTE,
             TargetMacroMobNames = "Fleeting,Zhevra,Sunscale",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_11_DUROTAR_COAST = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_11_DUROTAR_COAST = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_11_DUROTAR_COAST_ROUTE,
             TargetMacroMobNames = "Venom,Elder,Blood,Corrupted",
@@ -164,34 +164,34 @@ namespace WoWHelper.Code.WorldState
 
         #region Levels 1-10 Durotar
 
-        public static readonly WowLocationConfiguration LEVEL_9_DUROTAR_SKULL_ROCK_COAST = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_9_DUROTAR_SKULL_ROCK_COAST = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_9_DUROTAR_SKULL_ROCK_COAST_ROUTE,
             TargetMacroMobNames = "Elder,Venom,Armored,Blood",
             ChaseOutOfRangeTargets = true,
         };
 
-        public static readonly WowLocationConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE,
             TargetMacroMobNames = "Dire,Clattering",
             ChaseOutOfRangeTargets = true,
         };
 
-        public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_IMPS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_4_DUROTAR_IMPS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_4_DUROTAR_IMPS_ROUTE,
             TargetMacroMobNames = "Scorpid,Vile",
             ChaseOutOfRangeTargets = true,
         };
 
-        public static readonly WowLocationConfiguration LEVEL_4_DUROTAR_SCORPS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_4_DUROTAR_SCORPS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_4_DUROTAR_SCORPS_ROUTE,
             TargetMacroMobNames = "Scorpid",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_1_DUROTAR_BOARS_AND_SCORPS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_1_DUROTAR_BOARS_AND_SCORPS_ROUTE,
             TargetMacroMobNames = "Mottled,Scorpid",
@@ -201,32 +201,32 @@ namespace WoWHelper.Code.WorldState
 
         #region Levels 1-10 Mulgore
 
-        public static readonly WowLocationConfiguration LEVEL_10_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_10_MULGORE_MIXED_BEASTS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_10_MULGORE_MIXED_BEASTS_ROUTE,
             TargetMacroMobNames = "Swoop,Flatland,Prairie",
             TargetFindMethod = TargetFindMethod.MACRO, // Kodo packs wandering around
         };
 
-        public static readonly WowLocationConfiguration LEVEL_8_MULGORE_MIXED_BEASTS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_8_MULGORE_MIXED_BEASTS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_8_MULGORE_MIXED_BEASTS_ROUTE,
             TargetFindMethod = TargetFindMethod.MACRO, // Kodo packs wandering around
         };
 
-        public static readonly WowLocationConfiguration LEVEL_6_MULGORE_BATTLEBOARS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_6_MULGORE_BATTLEBOARS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_6_MULGORE_BATTLEBOARS_ROUTE,
             TargetMacroMobNames = "Battleboar",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_4_MULGORE_MOUNTAIN_COUGARS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_4_MULGORE_MOUNTAIN_COUGARS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_4_MULGORE_MOUNTAIN_COUGARS_ROUTE,
             TargetMacroMobNames = "Mountain",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_1_MULGORE_PLAINSTRIDERS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_1_MULGORE_PLAINSTRIDERS_ROUTE,
             TargetMacroMobNames = "Plains",
@@ -236,19 +236,19 @@ namespace WoWHelper.Code.WorldState
 
         #region Levels 1-10 Tirisfal
 
-        public static readonly WowLocationConfiguration LEVEL_6_TIRISFAL_ZOMBIES = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_6_TIRISFAL_ZOMBIES = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_6_TIRISFAL_ZOMBIES_ROUTE,
             TargetMacroMobNames = "Decrepit,Greater,Rotting,Ravaged",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_4_TIRISFAL_ANIMALS = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_4_TIRISFAL_ANIMALS = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_4_TIRISFAL_ANIMALS_ROUTE,
             TargetMacroMobNames = "Mangy,Ragged",
         };
 
-        public static readonly WowLocationConfiguration LEVEL_1_TIRISFAL_UNDEAD = new WowLocationConfiguration
+        public static readonly WowFarmingConfiguration LEVEL_1_TIRISFAL_UNDEAD = new WowFarmingConfiguration
         {
             Route = WowFarmingRoutes.LEVEL_1_TIRISFAL_UNDEAD_ROUTE,
             TargetMacroMobNames = "Young,Duskbat,Mindless,Wretched,Rattlecage",
@@ -256,7 +256,7 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
-        public static readonly List<WowLocationConfiguration> ALL_LOCATIONS = new List<WowLocationConfiguration>
+        public static readonly List<WowFarmingConfiguration> ALL_LOCATIONS = new List<WowFarmingConfiguration>
         {
             LEVEL_58_SILITHUS_RUMBLERS,
             LEVEL_57_WINTERSPRING_YETIS,

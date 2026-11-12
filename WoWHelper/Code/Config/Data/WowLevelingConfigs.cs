@@ -10,11 +10,11 @@ namespace WoWHelper.Code.WorldState
         {
             Levels = new List<int> { 1, 2, 3},
 
-            LocationConfigs = new List<WowLocationConfiguration>
+            FarmingConfigs = new List<WowFarmingConfiguration>
             {
-                WowLocationConfigs.LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
-                WowLocationConfigs.LEVEL_1_MULGORE_PLAINSTRIDERS,
-                WowLocationConfigs.LEVEL_1_TIRISFAL_UNDEAD,
+                WowFarmingConfigs.LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
+                WowFarmingConfigs.LEVEL_1_MULGORE_PLAINSTRIDERS,
+                WowFarmingConfigs.LEVEL_1_TIRISFAL_UNDEAD,
             },
         };
 
@@ -22,12 +22,12 @@ namespace WoWHelper.Code.WorldState
         {
             Levels = new List<int> { 4, 5, 6 },
 
-            LocationConfigs = new List<WowLocationConfiguration>
+            FarmingConfigs = new List<WowFarmingConfiguration>
             {
-                //WowLocationConfigs.LEVEL_4_DUROTAR_IMPS, // Too crowded
-                WowLocationConfigs.LEVEL_4_DUROTAR_SCORPS,
-                WowLocationConfigs.LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
-                WowLocationConfigs.LEVEL_4_TIRISFAL_ANIMALS,
+                //WowFarmingConfigs.LEVEL_4_DUROTAR_IMPS, // Too crowded
+                WowFarmingConfigs.LEVEL_4_DUROTAR_SCORPS,
+                WowFarmingConfigs.LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
+                WowFarmingConfigs.LEVEL_4_TIRISFAL_ANIMALS,
             },
         };
 
@@ -35,11 +35,11 @@ namespace WoWHelper.Code.WorldState
         {
             Levels = new List<int> { 7, 8, 9, 10 },
 
-            LocationConfigs = new List<WowLocationConfiguration>
+            FarmingConfigs = new List<WowFarmingConfiguration>
             {
-                WowLocationConfigs.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
-                WowLocationConfigs.LEVEL_6_MULGORE_BATTLEBOARS,
-                WowLocationConfigs.LEVEL_6_TIRISFAL_ZOMBIES,
+                WowFarmingConfigs.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
+                WowFarmingConfigs.LEVEL_6_MULGORE_BATTLEBOARS,
+                WowFarmingConfigs.LEVEL_6_TIRISFAL_ZOMBIES,
             },
         };
 
@@ -47,9 +47,9 @@ namespace WoWHelper.Code.WorldState
         {
             Levels = new List<int> { 11, 12 },
 
-            LocationConfigs = new List<WowLocationConfiguration>
+            FarmingConfigs = new List<WowFarmingConfiguration>
             {
-                WowLocationConfigs.LEVEL_9_DUROTAR_SKULL_ROCK_COAST,
+                WowFarmingConfigs.LEVEL_9_DUROTAR_SKULL_ROCK_COAST,
             },
         };
 

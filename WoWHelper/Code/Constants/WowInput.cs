@@ -44,7 +44,7 @@ namespace WoWHelper.Code
 
         /*
          * 0 Targ -- body is rewritten per route by the addon's /yytarget command (see
-         * WowLocationConfiguration.TargetMacroMobNames); the macro just has to exist.
+         * WowFarmingConfiguration.TargetMacroMobNames); the macro just has to exist.
 /cleartarget
 /stopmacro [mod:shift]
 /target Mottled

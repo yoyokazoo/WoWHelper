@@ -76,7 +76,7 @@ namespace WoWHelper
         public string LogoutReason { get; private set; }
         public Bitmap LogoutBitmap { get; private set; }
 
-        public WowLocationConfiguration FarmingLocationConfiguration { get; private set; }
+        public WowFarmingConfiguration FarmingLocationConfiguration { get; private set; }
         public WowCombatConfiguration CombatConfiguration { get; private set; }
         public WowScreenConfiguration ScreenConfiguration { get; private set; }
 

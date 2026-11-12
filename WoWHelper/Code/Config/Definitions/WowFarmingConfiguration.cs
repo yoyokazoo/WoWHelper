@@ -38,7 +38,7 @@ namespace WoWHelper.Code.WorldState
         Pull // shoot bow/gun (Warrior) or cast a pull spell -- lightning bolt, shadow bolt, etc. (Shaman/Warlock)
     }
 
-    public class WowLocationConfiguration
+    public class WowFarmingConfiguration
     {
         public EngagementMethod EngageMethod { get; set; }
         public TargetFindMethod TargetFindMethod { get; set; }
@@ -54,7 +54,7 @@ namespace WoWHelper.Code.WorldState
 
         public bool AllMobsInZoneAreNatureImmune { get; set; }
 
-        public WowLocationConfiguration()
+        public WowFarmingConfiguration()
         {
             EngageMethod = EngagementMethod.Charge;
             TargetFindMethod = TargetFindMethod.ALTERNATE;

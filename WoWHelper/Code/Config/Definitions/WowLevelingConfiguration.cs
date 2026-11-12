@@ -9,13 +9,13 @@ namespace WoWHelper.Code.WorldState
         public WowCombatConfiguration? Class { get; set; }
         public List<int> Levels { get; set; }
 
-        public List<WowLocationConfiguration> LocationConfigs { get; set; }
+        public List<WowFarmingConfiguration> FarmingConfigs { get; set; }
 
         public WowLevelingConfiguration()
         {
             Class = null;
             Levels = new List<int>();
-            LocationConfigs = new List<WowLocationConfiguration>();
+            FarmingConfigs = new List<WowFarmingConfiguration>();
         }
     }
 }

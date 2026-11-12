@@ -441,7 +441,7 @@ namespace WoWHelper
 
         // Shaman always pulls with a spell regardless of LocationConfiguration.EngageMethod
         // (Charge/Pull only matters for Warrior -- see the enum's own comment on
-        // WowLocationConfiguration.cs), so unlike WowWarriorHandler.CanEngageTarget this
+        // WowFarmingConfiguration.cs), so unlike WowWarriorHandler.CanEngageTarget this
         // doesn't need to dispatch on it at all.
         public override bool CanEngageTarget()
         {

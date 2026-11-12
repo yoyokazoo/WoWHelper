@@ -15,8 +15,8 @@ namespace WoWHelper
             var levelingConfig = WowLevelingConfigs.GetFor(CombatConfiguration, WorldState.PlayerLevel);
 
             // Any config we can reach, fewest zone crossings first, so a config in the current
-            // zone always wins. Ties keep the order in LocationConfigs.
-            var newLocationConfig = levelingConfig.LocationConfigs
+            // zone always wins. Ties keep the order in FarmingConfigs.
+            var newLocationConfig = levelingConfig.FarmingConfigs
                 .Select(locationConfig => new
                 {
                     Config = locationConfig,

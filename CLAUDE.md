@@ -145,10 +145,10 @@ WowHelper-defined numeric zone ID, NOT Blizzard's internal map ID (which
 doesn't fit in a byte). Lua's `GetCurrentZoneId()`
 (`WoWFunctions.lua`) looks up `GetRealZoneText()` against a
 `ZONE_NAME_TO_ID` table (255 = not a known zone); the numeric values there
-MUST stay in sync with the `WowZone` enum in `WowLocationConfiguration.cs`
+MUST stay in sync with the `WowZone` enum in `WowFarmingConfiguration.cs`
 (`Unknown = 255`) — two independent hardcoded tables that have to agree,
 same class of coupling as everything else in this contract. Each
-`WowLocationConfiguration` in `WowLocationConfigs.cs` also carries a `Zone`
+`WowFarmingConfiguration` in `WowFarmingConfigs.cs` also carries a `Zone`
 and `MinimumLevel` (both on its `Route` — see the `Config/` bullet below),
 for validating the character is in the
 right place/level before a farming route starts — `CurrentZone` is the
@@ -185,11 +185,11 @@ is still an unused stub, since this lives inside navigation rather than a goal.
 The Durotar/Orgrimmar crossing is stubbed: `ORGRIMMAR_ENTRANCE_ROUTE`'s waypoint
 and the crossing's `HeadingDegrees` still need real values.
 
-**Expected mob roster (`WowLocationConfiguration.ExpectedMobNames`):** every
+**Expected mob roster (`WowFarmingConfiguration.ExpectedMobNames`):** every
 mob name a route is expected to pull, e.g. `{ "Desert Rumbler" }` for
 `LEVEL_58_SILITHUS_RUMBLERS` — distinct from `TargetMacroMobNames` (see
 "Per-route target macro" below), which are partial name substrings for a target-cycling macro, not a complete/exact roster.
-`WowLocationConfiguration.AllMobsInZoneAreNatureImmune()` checks every name
+`WowFarmingConfiguration.AllMobsInZoneAreNatureImmune()` checks every name
 in that list against `CreatureConfig.NATURE_IMMUNE_MOB_NAMES`
 (`Config/Definitions/CreatureConfig.cs`) — a **C# mirror** of
 `CreatureConfig.lua`'s `NATURE_IMMUNE_MOB_NAMES` table, since this check
@@ -202,8 +202,10 @@ needs them. An empty/unset `ExpectedMobNames` makes
 `AllMobsInZoneAreNatureImmune()` return `false` rather than vacuously `true`.
 
 **Automatic farming-config resolution:** there's no static "current config"
-singleton anymore -- `WowFarmingConfigs.cs`/`CURRENT_CONFIG` were removed,
-and so was the `WowFarmingConfiguration` wrapper that replaced it: `WowPlayer`
+singleton anymore -- the old `CURRENT_CONFIG` static and the wrapper class
+that replaced it were both removed (the `WowFarmingConfigs`/
+`WowFarmingConfiguration` names now belong to what used to be
+`WowLocationConfigs`/`WowLocationConfiguration`, the per-route configs): `WowPlayer`
 holds `LocationConfiguration`, `CombatConfiguration` and `ScreenConfiguration`
 as three plain properties of its own (there's no `ManagementConfiguration`
 anymore either — see the `Config/` bullet in the C# architecture section
@@ -232,7 +234,7 @@ that state can be skipped entirely — see below:
   that meant the combat loop could try to dispatch on a still-`Unknown`
   `CombatConfiguration` with no class state built yet.
 - `WowPlayer.ResolveFarmingConfigurationTask()` picks `LocationConfiguration`
-  from `WowLocationConfigs.ALL_LOCATIONS` — an explicit list (deliberately
+  from `WowFarmingConfigs.ALL_LOCATIONS` — an explicit list (deliberately
   not reflection over the class's static fields, so a route can be pulled
   out of auto-selection without deleting it) — by filtering to configs the
   player currently satisfies: the same three checks `SetLogoutVariablesTask()`
@@ -329,7 +331,7 @@ consumes either today (`WowWarriorHandler.SingleCombatTask` reads
 `WorldState.IsTargetBleedImmune` when deciding whether to Rend, and
 `WorldState.IsTargetFearCaster` when deciding whether to preemptively pop
 Berserker Rage) — this replaced an earlier, route-level `UseRend`/
-`PreemptFear` pair of booleans on `WowLocationConfiguration` that couldn't
+`PreemptFear` pair of booleans on `WowFarmingConfiguration` that couldn't
 express "some mobs at this route bleed-immune/fear-cast, some don't." R7-8
 are red error toast flags (see "Red error toasts" below).
 
@@ -501,7 +503,7 @@ plus the mirror timers seen. Nothing on the C# side consumes `Underwater`
 yet. Boxes 23-24 are still free for the next class-agnostic bool.
 
 **Per-route target macro:** the `"0 Targ"` macro (`TARGET_MACRO_NAME`) (`WowInput.FIND_TARGET_MACRO`) is the bot's target finder, and
-its `/target` lines are set per route: `WowLocationConfiguration.TargetMacroMobNames`
+its `/target` lines are set per route: `WowFarmingConfiguration.TargetMacroMobNames`
 (comma-separated partial names, e.g. `"Mottled,Scorpid"`) gets typed into
 chat by `ResolveFarmingConfigurationTask()` as `/yytarget Mottled,Scorpid`
 (via `WowInput.TypeChatLineTask`, which maps each char to a US-layout key —
@@ -756,17 +758,17 @@ of truth — edits should be made here, not in the WoW install directory.
   target's *current* shown plate (or nowhere). Without that, a target walking
   out of nameplate range left the marker frozen on screen at the plate's last
   position.
-  Per-route opt-out: `WowLocationConfiguration.ChaseOutOfRangeTargets`
+  Per-route opt-out: `WowFarmingConfiguration.ChaseOutOfRangeTargets`
   (default `true`, set in the constructor) — `false` skips the scan and the
   chase entirely, for routes where straying off the waypoints risks getting
   hung up on geometry or wandering into something dangerous (currently
   `LEVEL_53_NORTH_FELWOOD` and `LEVEL_34_SHIMMERING_FLATS`).
 - **`Config/`** — per-location farming routes/waypoints
-  (`WowLocationConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
+  (`WowFarmingConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
   farming-config resolution" above) and per-resolution screen pixel maps
   (`WowScreenConfigs.cs`). There's no separate farming-profile config file
-  anymore either — `WowFarmingConfigs.cs`/`CURRENT_CONFIG` were removed;
+  anymore either — the old `CURRENT_CONFIG` static was removed;
   `WowPlayer` holds `LocationConfiguration`/`CombatConfiguration`/
   `ScreenConfiguration` as its own properties instead, with the first two
   resolved at runtime, not set on any static instance. The
@@ -783,7 +785,7 @@ of truth — edits should be made here, not in the WoW install directory.
   the color-encoding contract above. `Config/Definitions/` holds the POCOs
   these configs are instances of. `WowLevelingConfigs.cs` (instances of
   `WowLevelingConfiguration`) is a per-level leveling plan: the
-  `LocationConfigs` acceptable for gaining XP/money at that level (one entry
+  `FarmingConfigs` acceptable for gaining XP/money at that level (one entry
   spans every starting zone — the goal logic picks by matching each
   location's `Route.Zone` to `WorldState.CurrentZone`) and `TrainerConfigs`
   (stubbed as plain name strings for now), looked up via
@@ -794,13 +796,13 @@ of truth — edits should be made here, not in the WoW install directory.
   behind G6/G7). Only levels 1-2 exist so far (both any-class), and nothing
   reads it yet — the goal-setting logic (train vs. grind
   for money vs. grind for XP, off the `MultiBoolTwo` G6/G7 bits) is still to
-  be written. Each `WowLocationConfiguration` carries a
+  be written. Each `WowFarmingConfiguration` carries a
   `Route` (`WowRoute`, `Config/Definitions/WowRoute.cs`): the route's
   `Name` (human-readable, includes the minimum level — it used to be
-  `WowLocationConfiguration.Title`), `Waypoints`, `TraversalMethod` (`WowRoute.WaypointTraversalMethod`,
+  `WowFarmingConfiguration.Title`), `Waypoints`, `TraversalMethod` (`WowRoute.WaypointTraversalMethod`,
   `CIRCULAR`/`LINEAR` — defaults to `LINEAR`, so loop routes must set
   `CIRCULAR` explicitly), `DistanceTolerance`, `MinimumLevel`, and `Zone` (`WowZone` enum,
-  still declared in `WowLocationConfiguration.cs`) — see the zone ID
+  still declared in `WowFarmingConfiguration.cs`) — see the zone ID
   note in the color-encoding contract above for how `Zone` ties to
   `WowWorldState.CurrentZone` — plus `Faction` (`WowFaction`,
   `Config/Definitions/WowFaction.cs`: `EITHER`/`HORDE`/`ALLIANCE`, defaults
@@ -818,7 +820,7 @@ of truth — edits should be made here, not in the WoW install directory.
   `AllMobsInZoneAreNatureImmune()` helper built on it; see "Expected mob
   roster" above. `Config/Definitions/CreatureConfig.cs` is the C# mirror of
   the Lua addon's `CreatureConfig.lua` name lists that `ExpectedMobNames`
-  checks against. `WowLocationConfiguration.MerchantConfig`
+  checks against. `WowFarmingConfiguration.MerchantConfig`
   (`WowMerchantConfiguration`, `Config/Definitions/WowMerchantConfiguration.cs`)
   is an optional "sell run" detour — default `null`, most routes just log out
   on full bags instead (`SetLogoutVariablesTask()`'s

@@ -227,7 +227,7 @@ namespace WoWHelper
                 // Newly-unlocked routes only (MinimumLevel exactly matches the level just
                 // reached) -- a config that was already eligible before this level-up isn't
                 // "new" news, so it's left out to keep the message short.
-                List<string> newlyEligibleConfigTitles = WowLocationConfigs.ALL_LOCATIONS
+                List<string> newlyEligibleConfigTitles = WowFarmingConfigs.ALL_LOCATIONS
                     .Where(config => config.Route.MinimumLevel == WorldState.PlayerLevel)
                     .Select(config => config.Route.Name)
                     .ToList();

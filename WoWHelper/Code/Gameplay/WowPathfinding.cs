@@ -501,7 +501,7 @@ namespace WoWHelper.Code
         {
             List<WowRoute> safeRoutes = new List<WowRoute>();
             safeRoutes.AddRange(WowWalkingRoutes.ALL_WALKING_ROUTES);
-            safeRoutes.AddRange(WowLocationConfigs.ALL_LOCATIONS.Select(config => config.Route));
+            safeRoutes.AddRange(WowFarmingConfigs.ALL_LOCATIONS.Select(config => config.Route));
             safeRoutes.AddRange(WowNPCConfigs.ALL_NPCS.Select(config => config.Route));
             return safeRoutes
                 .Where(route => route.MinimumLevel <= 0 || wowPlayer.WorldState.PlayerLevel >= route.MinimumLevel)
