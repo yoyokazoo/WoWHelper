@@ -143,6 +143,7 @@
     <Compile Include="Code\Constants\WowPlayerConstants.cs" />
     <Compile Include="Code\Constants\WowPlayerStates.cs" />
     <Compile Include="Code\Config\Definitions\WowCombatConfiguration.cs" />
+    <Compile Include="Code\Config\Definitions\WowFaction.cs" />
     <Compile Include="Code\Config\Definitions\WowLocationConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowRoute.cs" />
     <Compile Include="Code\Config\Definitions\WowZoneCrossing.cs" />

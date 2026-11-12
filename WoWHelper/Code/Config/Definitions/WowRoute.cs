@@ -16,6 +16,7 @@ namespace WoWHelper.Code.WorldState
         public string Name { get; set; }
         public WowZone Zone { get; set; }
         public int MinimumLevel { get; set; }
+        public WowFaction Faction { get; set; }
         public WaypointTraversalMethod TraversalMethod { get; set; }
         public float DistanceTolerance { get; set; }
 
@@ -28,6 +29,7 @@ namespace WoWHelper.Code.WorldState
             TraversalMethod = WaypointTraversalMethod.LINEAR;
             DistanceTolerance = DEFAULT_DISTANCE_TOLERANCE;
             Zone = WowZone.Unknown;
+            Faction = WowFaction.EITHER;
         }
 
         public override string ToString()

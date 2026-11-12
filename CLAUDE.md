@@ -802,7 +802,13 @@ of truth — edits should be made here, not in the WoW install directory.
   `CIRCULAR` explicitly), `DistanceTolerance`, `MinimumLevel`, and `Zone` (`WowZone` enum,
   still declared in `WowLocationConfiguration.cs`) — see the zone ID
   note in the color-encoding contract above for how `Zone` ties to
-  `WowWorldState.CurrentZone`. Every route lives in
+  `WowWorldState.CurrentZone` — plus `Faction` (`WowFaction`,
+  `Config/Definitions/WowFaction.cs`: `EITHER`/`HORDE`/`ALLIANCE`, defaults
+  to `EITHER`), which faction can safely walk the route. `HORDE` marks
+  routes inside a Horde town or close enough to one that its guards would
+  aggro an Alliance character (borderline ones are commented as such).
+  Nothing reads it yet — faction-aware farming-location picking is still to
+  come. Every route lives in
   `Config/Data/WowRoutes.cs`, named after its location config plus `_ROUTE`
   (e.g. `LEVEL_53_NORTH_FELWOOD_ROUTE` for `LEVEL_53_NORTH_FELWOOD`). Each
   location config also has `ExpectedMobNames` and the

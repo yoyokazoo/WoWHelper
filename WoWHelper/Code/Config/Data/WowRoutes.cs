@@ -3,11 +3,6 @@ using System.Numerics;
 
 namespace WoWHelper.Code.WorldState
 {
-    // Every WowRoute (waypoint path + how to walk it + which zone it's in), one per
-    // WowLocationConfigs entry -- each WowLocationConfiguration points at its own
-    // FOO_ROUTE here via its Route property. Declared in its own static class, so
-    // WowLocationConfigs' static initializers can reference these freely (a static
-    // class's fields are all initialized before first access from another class).
     public static class WowRoutes
     {
         #region Durotar
@@ -17,6 +12,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Durotar Coast (Level 11+)",
             MinimumLevel = 11,
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -37,6 +33,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Durotar Skull Rock Coast (Level 9+)",
             MinimumLevel = 9,
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -68,6 +65,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Durotar Boar Razor Hill Loop (Level 6+)",
             MinimumLevel = 6,
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -100,6 +98,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Durotar Scorps (Level 4+)",
             MinimumLevel = 4,
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -136,6 +135,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Durotar Boars and Scorpions (Level 1+)",
             MinimumLevel = 1,
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -154,6 +154,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Durotar Boars and Scorpions to Merchant",
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -168,6 +169,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Durotar Boars and Scorpions to Warrior Trainer",
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -182,6 +184,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Durotar Boars and Scorpions to Imps",
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -195,6 +198,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Durotar Boars and Scorpions to Imps",
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -209,6 +213,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Valley of Trials to Razor Hill Loop",
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -230,6 +235,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Razor Hill Loop To Razor Hill",
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -246,6 +252,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Razor Hill To Merchant",
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -258,6 +265,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Razor Hill To Warrior Trainer",
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -275,6 +283,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Razor Hill To Org Entrance",
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -295,6 +304,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Org Entrance To Durotar Skull Rock Coast",
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -313,6 +323,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Org Entrance to Skinning Trainer",
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -330,6 +341,7 @@ namespace WoWHelper.Code.WorldState
         {
             Name = "Orgrimmar Entrance",
             Zone = WowZone.Orgrimmar,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -351,6 +363,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Mulgore Mixed Beasts (Level 10+)",
             MinimumLevel = 10,
             Zone = WowZone.Mulgore,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -369,6 +382,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Mulgore Mixed Beasts (Level 8+)",
             MinimumLevel = 8,
             Zone = WowZone.Mulgore,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -388,6 +402,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Mulgore Battleboars (Level 6+)",
             MinimumLevel = 6,
             Zone = WowZone.Mulgore,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -407,6 +422,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Mulgore Mountain Cougars (Level 4+)",
             MinimumLevel = 4,
             Zone = WowZone.Mulgore,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -426,6 +442,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Mulgore Plainstriders (Level 1+)",
             MinimumLevel = 1,
             Zone = WowZone.Mulgore,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -447,6 +464,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Northern Barrens (Level 17+)",
             MinimumLevel = 17,
             Zone = WowZone.TheBarrens,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -468,6 +486,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Barrens Entrance (Level 13+)",
             MinimumLevel = 13,
             Zone = WowZone.TheBarrens,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -535,6 +554,7 @@ namespace WoWHelper.Code.WorldState
             Name = "North Stonetalon (Level 26+)",
             MinimumLevel = 26,
             Zone = WowZone.StonetalonMountains,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -940,6 +960,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Tirisfal Zombies (Level 6+)",
             MinimumLevel = 6,
             Zone = WowZone.TirisfalGlades,
+            Faction = WowFaction.HORDE, // just west of Brill (borderline)
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -965,6 +986,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Tirisfal Bats and Wolves (Level 4+)",
             MinimumLevel = 4,
             Zone = WowZone.TirisfalGlades,
+            Faction = WowFaction.HORDE, // just outside Deathknell (borderline)
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -985,6 +1007,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Tirisfal Zombies (Level 1+)",
             MinimumLevel = 1,
             Zone = WowZone.TirisfalGlades,
+            Faction = WowFaction.HORDE, // inside/next to Deathknell
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
