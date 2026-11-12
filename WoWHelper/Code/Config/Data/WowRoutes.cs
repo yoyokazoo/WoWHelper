@@ -117,6 +117,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Durotar Imps (Level 4+)",
             MinimumLevel = 4,
             Zone = WowZone.Durotar,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -511,6 +512,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Zoram'gar, Ashenvale (Level 20+)",
             MinimumLevel = 20,
             Zone = WowZone.Ashenvale,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -577,6 +579,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Stonetalon Mountains (Level 23+)",
             MinimumLevel = 23,
             Zone = WowZone.StonetalonMountains,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -606,6 +609,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Hillsbrad River (Level 29+)",
             MinimumLevel = 29,
             Zone = WowZone.HillsbradFoothills,
+            Faction = WowFaction.HORDE,
             DistanceTolerance = 0.3f,
 
             Waypoints = new List<Vector2>
@@ -632,6 +636,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
             MinimumLevel = 34,
             Zone = WowZone.ThousandNeedles,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -657,6 +662,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Kodo Graveyard, Desolace (Level 36+)",
             MinimumLevel = 36,
             Zone = WowZone.Desolace,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -690,6 +696,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Tanaris Turtles (Level 41+)",
             MinimumLevel = 41,
             Zone = WowZone.Tanaris,
+            Faction = WowFaction.HORDE,
 
             Waypoints = new List<Vector2>
             {
@@ -713,6 +720,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Feralas Hippogryphs (Level 46+)",
             MinimumLevel = 46,
             Zone = WowZone.Feralas,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
             DistanceTolerance = 0.06f,
 
@@ -746,6 +754,7 @@ namespace WoWHelper.Code.WorldState
             Name = "North Felwood (Level 53+)",
             MinimumLevel = 53,
             Zone = WowZone.Felwood,
+            Faction = WowFaction.HORDE,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -773,6 +782,7 @@ namespace WoWHelper.Code.WorldState
             Name = "South Felwood (Level 50+)",
             MinimumLevel = 50,
             Zone = WowZone.Felwood,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
             DistanceTolerance = 0.06f,
 
@@ -818,6 +828,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Dalton's Tears Frontside, Western Plaguelands (Level 56+)",
             MinimumLevel = 56,
             Zone = WowZone.WesternPlaguelands,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
             DistanceTolerance = 0.1f,
 
@@ -847,6 +858,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Silithus Rumblers (Level 58+)",
             MinimumLevel = 58,
             Zone = WowZone.Silithus,
+            Faction = WowFaction.HORDE,
             DistanceTolerance = 0.1f,
 
             Waypoints = new List<Vector2>
@@ -874,6 +886,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Azshara (Level 53+)",
             MinimumLevel = 53,
             Zone = WowZone.Azshara,
+            Faction = WowFaction.HORDE,
             DistanceTolerance = 0.06f,
 
             Waypoints = new List<Vector2>
@@ -901,6 +914,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Winterspring Yetis (Level 57+)",
             MinimumLevel = 57,
             Zone = WowZone.Winterspring,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
             DistanceTolerance = 0.1f,
 
@@ -927,6 +941,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Winterspring Lake (Level 56+)",
             MinimumLevel = 56,
             Zone = WowZone.Winterspring,
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
             DistanceTolerance = 0.06f,
 
@@ -960,7 +975,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Tirisfal Zombies (Level 6+)",
             MinimumLevel = 6,
             Zone = WowZone.TirisfalGlades,
-            Faction = WowFaction.HORDE, // just west of Brill (borderline)
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -986,7 +1001,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Tirisfal Bats and Wolves (Level 4+)",
             MinimumLevel = 4,
             Zone = WowZone.TirisfalGlades,
-            Faction = WowFaction.HORDE, // just outside Deathknell (borderline)
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
@@ -1007,7 +1022,7 @@ namespace WoWHelper.Code.WorldState
             Name = "Tirisfal Zombies (Level 1+)",
             MinimumLevel = 1,
             Zone = WowZone.TirisfalGlades,
-            Faction = WowFaction.HORDE, // inside/next to Deathknell
+            Faction = WowFaction.HORDE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
             Waypoints = new List<Vector2>
