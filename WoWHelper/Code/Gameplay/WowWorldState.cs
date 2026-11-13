@@ -148,6 +148,11 @@ namespace WoWHelper
         // WoWFunctions.lua).
         public bool Underwater { get; private set; }
 
+        // MultiBoolTwo box 23. UnitFactionGroup("player") is Horde (IsPlayerHorde() in
+        // WoWFunctions.lua); false means Alliance. Gates which routes, NPCs and zone
+        // crossings are eligible -- see WowFactionExtensions.AllowsPlayer.
+        public bool PlayerIsHorde { get; private set; }
+
         public Bitmap Bmp { get; private set; }
 
         public WowScreenConfiguration ScreenConfig { get; private set; }
@@ -285,6 +290,7 @@ namespace WoWHelper
             NotInLineOfSight = bits[20];
             NoPathAvailable = bits[21];
             Underwater = bits[22];
+            PlayerIsHorde = bits[23];
         }
 
         // Byte order MUST match the EncodeBytes call for row 11 in InitializePixelRow()

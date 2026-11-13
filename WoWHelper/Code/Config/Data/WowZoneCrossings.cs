@@ -12,7 +12,8 @@ namespace WoWHelper.Code.WorldState
             FromPoint = WowWalkingRoutes.RAZOR_HILL_TO_ORG_ENTRANCE.Waypoints.Last(),
             ToZone = WowZone.Orgrimmar,
             ToPoint = WowWalkingRoutes.ORGRIMMAR_ENTRANCE_ROUTE.Waypoints.First(),
-            HeadingDegrees = 7.35f
+            HeadingDegrees = 7.35f,
+            Faction = WowFaction.HORDE,
         };
 
         private static readonly List<WowZoneCrossing> DEFINED_ZONE_CROSSINGS = new List<WowZoneCrossing>

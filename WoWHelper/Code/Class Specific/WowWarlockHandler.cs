@@ -6,14 +6,11 @@ using WoWHelper.Code.WorldState;
 
 namespace WoWHelper
 {
-    // Warlock rotation -- in progress. Modeled closely on WowShamanHandler since Shaman
-    // is the closest existing ranged-pull/melee-sustain pattern to follow.
+    // TODO: Very old and needs love before actually being used
     public class WowWarlockHandler : WowClassHandler<WowWarlockClassState>
     {
         #region Input
 
-        // Warlock keybinds/macros. Private so only this handler can press them -- shared
-        // keys (food, attack, dynamite, etc.) stay on WowInput.
         private static class Input
         {
             /*
@@ -83,9 +80,6 @@ namespace WoWHelper
 
         public override async Task<bool> WaitUntilBattleReadyTask()
         {
-            // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
-            // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
-
             bool hpRecovered = WorldState.PlayerHpPercent >= WowConstants.STOP_RESTING_HP_THRESHOLD;
             bool mpRecovered = WorldState.ResourcePercent >= WowConstants.STOP_RESTING_MP_THRESHOLD;
             bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(Player.HealthPotionTime, WowConstants.POTION_COOLDOWN_MILLIS);
@@ -119,7 +113,6 @@ namespace WoWHelper
             return battleReady;
         }
 
-        // Not implemented for Warlock yet (only Warrior has one).
         public override bool IsBattleReady()
         {
             throw new System.NotImplementedException($"{nameof(WowWarlockHandler)}.{nameof(IsBattleReady)} isn't implemented yet.");
@@ -138,7 +131,6 @@ namespace WoWHelper
                 return false;
             }
 
-            //Console.WriteLine($"Warlock ExecuteEngageTask, EngageAttempts {Player.EngageAttempts}, WorldState.IsCurrentlyCasting? {WorldState.IsCurrentlyCasting}, WorldState.IsInCombat? {WorldState.IsInCombat}");
             if (!WorldState.IsCurrentlyCasting && !WorldState.IsInCombat)
             {
                 await Player.TurnToFaceTargetMarkerTask();
@@ -156,7 +148,6 @@ namespace WoWHelper
             bool emergencyActionTaken = false;
 
             bool isFacingLongRangeCaster = false;
-            //bool hasWalkedTowardsLongRangeCaster = false;
 
             bool startedWanding = false;
 
@@ -226,8 +217,6 @@ namespace WoWHelper
             return true;
         }
 
-        // Warlock's rotation is loop-based (CombatLoopTask runs until combat ends), so a
-        // "single" combat step is just the whole loop.
         public override async Task SingleCombatTask()
         {
             await CombatLoopTask();
@@ -238,11 +227,6 @@ namespace WoWHelper
             return ClassState.CanSpellcastPullTarget;
         }
 
-        // Shared gate for both DoTs below: only worth spending a GCD on a fresh DoT if the
-        // mob isn't already about to die from direct damage
-        // (DOT_TARGET_HP_THRESHOLD) -- unless we're fighting more than one
-        // attacker (the extra sustained damage helps) or we're low enough on HP that
-        // ending the fight by any means available is the priority.
         private bool ShouldConsiderCastingDot()
         {
             return WorldState.TargetHpPercent > DOT_TARGET_HP_THRESHOLD
@@ -250,11 +234,6 @@ namespace WoWHelper
                 || WorldState.PlayerHpPercent <= WowConstants.HEALING_POTION_HP_THRESHOLD;
         }
 
-        // ClassState.ShouldCastImmolate goes true the instant Immolate is cast (it just
-        // checks TargetHasDebuffSpellName("Immolate")), but the debuff icon/pixel takes a
-        // little while to actually show up, so without a cooldown of our own here the combat
-        // loop re-presses Immolate several times before the first cast is ever reflected.
-        // ImmolateCastTime is set right after we press the key (see CombatLoopTask).
         private bool ShouldCastImmolate()
         {
             if (!ShouldConsiderCastingDot())
@@ -270,7 +249,6 @@ namespace WoWHelper
             return ClassState.ShouldCastImmolate;
         }
 
-        // Same double-cast problem/fix as ShouldCastImmolate above, for Corruption.
         private bool ShouldCastCorruption()
         {
             if (!ShouldConsiderCastingDot())
@@ -293,14 +271,10 @@ namespace WoWHelper
             bool emergencyHpThreshold = WorldState.PlayerHpPercent <= WowConstants.EMERGENCY_HP_THRESHOLD;
 
             if (tooManyAttackers || emergencyHpThreshold)
-            //if(true)
             {
                 string warningMessage = tooManyAttackers ? "TOO MANY ATTACKERS HELP" : $"Emergency HP Threshold hit ({WorldState.PlayerHpPercent})";
                 Player.SetLogoutVariablesAndSlack($"Got into an emergency situation ({warningMessage}), logging off for safety");
 
-                // Figure out what to do here.  War stomp? Magma Totem? War stomp -> ghost wolf -> run to safety?
-                // Stoneskin totem for now
-                //await WowInput.PressKey(WowInput.THROW_DYNAMITE);
                 await Player.WaitForGlobalCooldownTask();
                 await Player.ThrowDynamiteTask(forceThrow: true);
 

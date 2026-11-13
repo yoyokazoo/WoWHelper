@@ -288,7 +288,7 @@ namespace WoWHelper.Code
                 // rest of the trip can't be walked as one route. The caller comes back here once
                 // it's in the next zone, which also means nothing needs saving if a fight or a
                 // restart interrupts the trip.
-                List<WowZoneCrossing> crossings = GetZoneCrossingsBetween(currentZone, targetRoute.Zone, wowPlayer.WorldState.PlayerLevel);
+                List<WowZoneCrossing> crossings = GetZoneCrossingsBetween(currentZone, targetRoute.Zone, wowPlayer.WorldState.PlayerLevel, wowPlayer.WorldState.PlayerIsHorde);
 
                 if (crossings == null)
                 {
@@ -317,11 +317,13 @@ namespace WoWHelper.Code
 
         // Breadth-first search over the zones, where each crossing is a one-way edge. Returns the
         // crossings to take in order, using as few as possible -- empty if already in targetZone,
-        // null if targetZone can't be reached. crossings defaults to ALL_ZONE_CROSSINGS.
-        public static List<WowZoneCrossing> GetZoneCrossingsBetween(WowZone startingZone, WowZone targetZone, int playerLevel, IEnumerable<WowZoneCrossing> crossings = null)
+        // null if targetZone can't be reached. crossings defaults to ALL_ZONE_CROSSINGS. Only
+        // crossings the player's level and faction allow are used.
+        public static List<WowZoneCrossing> GetZoneCrossingsBetween(WowZone startingZone, WowZone targetZone, int playerLevel, bool playerIsHorde, IEnumerable<WowZoneCrossing> crossings = null)
         {
             List<WowZoneCrossing> eligibleCrossings = (crossings ?? WowZoneCrossings.ALL_ZONE_CROSSINGS)
                 .Where(crossing => crossing.MinimumLevel <= 0 || playerLevel >= crossing.MinimumLevel)
+                .Where(crossing => crossing.Faction.AllowsPlayer(playerIsHorde))
                 .ToList();
 
             // Each visited zone maps to the crossing we reached it through (null for the start).
@@ -505,6 +507,7 @@ namespace WoWHelper.Code
             safeRoutes.AddRange(WowNPCConfigs.ALL_NPCS.Select(config => config.Route));
             return safeRoutes
                 .Where(route => route.MinimumLevel <= 0 || wowPlayer.WorldState.PlayerLevel >= route.MinimumLevel)
+                .Where(route => route.Faction.AllowsPlayer(wowPlayer.WorldState.PlayerIsHorde))
                 .ToList();
         }
 

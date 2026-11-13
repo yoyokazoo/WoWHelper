@@ -2577,6 +2577,9 @@ end
 function IsPlayerWarrior() return select(2, UnitClass("player")) == "WARRIOR" end
 function IsPlayerShaman()  return select(2, UnitClass("player")) == "SHAMAN"  end
 function IsPlayerWarlock() return select(2, UnitClass("player")) == "WARLOCK" end
+-- MultiBoolTwo box 23 (B7), decoded into WowWorldState.PlayerIsHorde -- picks which
+-- faction's routes/NPCs/zone crossings the bot may use. False means Alliance.
+function IsPlayerHorde() return UnitFactionGroup("player") == "Horde" end
 
 MULTI_BOOL_ONE_FIELDS = {
     "IsAttacking",                  --  1 (R1)
@@ -2628,6 +2631,7 @@ MULTI_BOOL_TWO_FIELDS = {
     "HasRecentLineOfSightError",    -- 20 (B4)
     "HasRecentNoPathError",         -- 21 (B5)
     "IsPlayerUnderwater",           -- 22 (B6) breath timer running
+    "IsPlayerHorde",                -- 23 (B7) faction, for route/NPC/zone crossing picking
 }
 
 -- The player's class's list for one of the Class rows: listSuffix

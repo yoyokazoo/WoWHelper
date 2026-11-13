@@ -25,7 +25,7 @@ namespace WoWHelperUnitTests
         [TestMethod]
         public void SameZoneNeedsNoCrossings()
         {
-            var path = WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.Durotar, 1, new List<WowZoneCrossing>());
+            var path = WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.Durotar, 1, true, new List<WowZoneCrossing>());
 
             Assert.IsNotNull(path);
             Assert.AreEqual(0, path.Count);
@@ -36,7 +36,7 @@ namespace WoWHelperUnitTests
         {
             var crossings = new List<WowZoneCrossing> { BARRENS_TO_ASHENVALE, DUROTAR_TO_BARRENS };
 
-            var path = WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.Ashenvale, 1, crossings);
+            var path = WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.Ashenvale, 1, true, crossings);
 
             CollectionAssert.AreEqual(new List<WowZoneCrossing> { DUROTAR_TO_BARRENS, BARRENS_TO_ASHENVALE }, path);
         }
@@ -46,7 +46,7 @@ namespace WoWHelperUnitTests
         {
             var crossings = new List<WowZoneCrossing> { DUROTAR_TO_BARRENS, BARRENS_TO_ASHENVALE, DUROTAR_TO_ASHENVALE };
 
-            var path = WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.Ashenvale, 1, crossings);
+            var path = WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.Ashenvale, 1, true, crossings);
 
             CollectionAssert.AreEqual(new List<WowZoneCrossing> { DUROTAR_TO_ASHENVALE }, path);
         }
@@ -56,7 +56,7 @@ namespace WoWHelperUnitTests
         {
             var crossings = new List<WowZoneCrossing> { DUROTAR_TO_BARRENS };
 
-            Assert.IsNull(WowPathfinding.GetZoneCrossingsBetween(WowZone.TheBarrens, WowZone.Durotar, 1, crossings));
+            Assert.IsNull(WowPathfinding.GetZoneCrossingsBetween(WowZone.TheBarrens, WowZone.Durotar, 1, true, crossings));
         }
 
         [TestMethod]
@@ -64,8 +64,29 @@ namespace WoWHelperUnitTests
         {
             var crossings = new List<WowZoneCrossing> { Crossing(WowZone.Durotar, WowZone.TheBarrens, minimumLevel: 10) };
 
-            Assert.IsNull(WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.TheBarrens, 9, crossings));
-            Assert.AreEqual(1, WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.TheBarrens, 10, crossings).Count);
+            Assert.IsNull(WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.TheBarrens, 9, true, crossings));
+            Assert.AreEqual(1, WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.TheBarrens, 10, true, crossings).Count);
+        }
+
+        [TestMethod]
+        public void WrongFactionCrossingsAreSkipped()
+        {
+            var hordeCrossing = Crossing(WowZone.Durotar, WowZone.TheBarrens);
+            hordeCrossing.Faction = WowFaction.HORDE;
+            var crossings = new List<WowZoneCrossing> { hordeCrossing, hordeCrossing.Reversed() };
+
+            Assert.IsNotNull(WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.TheBarrens, 1, true, crossings));
+            Assert.IsNull(WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.TheBarrens, 1, false, crossings));
+            Assert.IsNull(WowPathfinding.GetZoneCrossingsBetween(WowZone.TheBarrens, WowZone.Durotar, 1, false, crossings));
+        }
+
+        [TestMethod]
+        public void EitherFactionCrossingsAllowBoth()
+        {
+            var crossings = new List<WowZoneCrossing> { DUROTAR_TO_BARRENS };
+
+            Assert.IsNotNull(WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.TheBarrens, 1, true, crossings));
+            Assert.IsNotNull(WowPathfinding.GetZoneCrossingsBetween(WowZone.Durotar, WowZone.TheBarrens, 1, false, crossings));
         }
 
         [TestMethod]
@@ -105,7 +126,7 @@ namespace WoWHelperUnitTests
         {
             foreach (var crossing in WowZoneCrossings.ALL_ZONE_CROSSINGS)
             {
-                Assert.IsNotNull(WowPathfinding.GetZoneCrossingsBetween(crossing.ToZone, crossing.FromZone, 60),
+                Assert.IsNotNull(WowPathfinding.GetZoneCrossingsBetween(crossing.ToZone, crossing.FromZone, 60, crossing.Faction != WowFaction.ALLIANCE),
                     $"{crossing} has no way back from {crossing.ToZone} to {crossing.FromZone}.");
             }
         }

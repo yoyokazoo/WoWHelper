@@ -228,7 +228,8 @@ namespace WoWHelper
                 // reached) -- a config that was already eligible before this level-up isn't
                 // "new" news, so it's left out to keep the message short.
                 List<string> newlyEligibleConfigTitles = WowFarmingConfigs.ALL_LOCATIONS
-                    .Where(config => config.Route.MinimumLevel == WorldState.PlayerLevel)
+                    .Where(config => config.Route.MinimumLevel == WorldState.PlayerLevel &&
+                        config.Route.Faction.AllowsPlayer(WorldState.PlayerIsHorde))
                     .Select(config => config.Route.Name)
                     .ToList();
                 if (newlyEligibleConfigTitles.Count > 0)
@@ -264,6 +265,11 @@ namespace WoWHelper
             {
                 LogoutTriggered = true;
                 LogoutReason = $"Below minimum level for this route (level {WorldState.PlayerLevel}, need {CurrentRoute.MinimumLevel}+)";
+            }
+            else if (!CurrentRoute.Faction.AllowsPlayer(WorldState.PlayerIsHorde))
+            {
+                LogoutTriggered = true;
+                LogoutReason = $"Wrong faction for this route (player is {(WorldState.PlayerIsHorde ? "Horde" : "Alliance")}, route is {CurrentRoute.Faction})";
             }
             // Zone.Unknown means this route's config forgot to set Zone -- skip the check rather
             // than have a misconfigured route always immediately abort every session.
@@ -534,11 +540,12 @@ namespace WoWHelper
             // Fewest zone crossings first, so an NPC in the current zone always wins.
             var validNPCs = WowNPCConfigs.ALL_NPCS
                 .Where(npc => npc.Roles.HasFlag(requiredRoles) &&
-                    npc.MaximumLevel >= WorldState.PlayerLevel)
+                    npc.MaximumLevel >= WorldState.PlayerLevel &&
+                    npc.Route.Faction.AllowsPlayer(WorldState.PlayerIsHorde))
                 .Select(npc => new
                 {
                     NPC = npc,
-                    Crossings = WowPathfinding.GetZoneCrossingsBetween(WorldState.CurrentZone, npc.Route.Zone, WorldState.PlayerLevel)
+                    Crossings = WowPathfinding.GetZoneCrossingsBetween(WorldState.CurrentZone, npc.Route.Zone, WorldState.PlayerLevel, WorldState.PlayerIsHorde)
                 })
                 .Where(x => x.Crossings != null)
                 .OrderBy(x => x.Crossings.Count)

@@ -14,13 +14,14 @@ namespace WoWHelper
         {
             var levelingConfig = WowLevelingConfigs.GetFor(CombatConfiguration, WorldState.PlayerLevel);
 
-            // Any config we can reach, fewest zone crossings first, so a config in the current
-            // zone always wins. Ties keep the order in FarmingConfigs.
+            // Any config our faction can use and we can reach, fewest zone crossings first, so a
+            // config in the current zone always wins. Ties keep the order in FarmingConfigs.
             var newLocationConfig = levelingConfig.FarmingConfigs
+                .Where(locationConfig => locationConfig.Route.Faction.AllowsPlayer(WorldState.PlayerIsHorde))
                 .Select(locationConfig => new
                 {
                     Config = locationConfig,
-                    Crossings = WowPathfinding.GetZoneCrossingsBetween(WorldState.CurrentZone, locationConfig.Route.Zone, WorldState.PlayerLevel)
+                    Crossings = WowPathfinding.GetZoneCrossingsBetween(WorldState.CurrentZone, locationConfig.Route.Zone, WorldState.PlayerLevel, WorldState.PlayerIsHorde)
                 })
                 .Where(x => x.Crossings != null)
                 .OrderBy(x => x.Crossings.Count)

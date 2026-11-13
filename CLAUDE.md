@@ -75,7 +75,7 @@ order. Row N covers physical y = 3N to 3N+2 (read at y = 3N+1):
 | 5 | Map Y | fixed point | `MapY` |
 | 6 | Facing, degrees | fixed point | `FacingDegrees` |
 | 7 | `MultiBoolOne` — `MULTI_BOOL_ONE_FIELDS` (class-agnostic, all 24 boxes used or reserved) | bool fields | various `WowWorldState` bools |
-| 8 | `MultiBoolTwo` — `MULTI_BOOL_TWO_FIELDS` (class-agnostic — boxes 1-22 used so far) | bool fields | `IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable`/`Underwater`, plus the red error toast flags `FacingWrongWay`/`TargetNeedsToBeInFront`/`InvalidTarget`/`OutOfRange`/`NotInLineOfSight`/`NoPathAvailable` |
+| 8 | `MultiBoolTwo` — `MULTI_BOOL_TWO_FIELDS` (class-agnostic — boxes 1-23 used so far) | bool fields | `IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable`/`Underwater`/`PlayerIsHorde`, plus the red error toast flags `FacingWrongWay`/`TargetNeedsToBeInFront`/`InvalidTarget`/`OutOfRange`/`NotInLineOfSight`/`NoPathAvailable` |
 | 9 | `ClassBoolOne` — `<CLASS>_CLASS_BOOL_ONE_FIELDS` (class-specific) | bool fields | a `WowClassState` subtype (see C# architecture section) |
 | 10 | `ClassBoolTwo` — `<CLASS>_CLASS_BOOL_TWO_FIELDS` (class-specific — only Shaman's boxes 1-3 used so far) | bool fields | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 | 11 | `MultiIntOne` — attacker count, player level, zone ID | bytes | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
@@ -500,7 +500,13 @@ pixel-matching the breath bar's colors at per-resolution coordinates
 (`WowScreenConfiguration.BreathBarScreenPositions`, removed along with its
 bitmap-backed test). `UNDERWATER_DEBUG` (off by default) prints each flip
 plus the mirror timers seen. Nothing on the C# side consumes `Underwater`
-yet. Boxes 23-24 are still free for the next class-agnostic bool.
+yet.
+
+B7 (box 23) is `WowWorldState.PlayerIsHorde` (`IsPlayerHorde()`,
+`WoWFunctions.lua`: `UnitFactionGroup("player") == "Horde"`; false means
+Alliance). It gates faction-tagged routes, NPCs and zone crossings — see the
+`Faction` note in the `Config/` bullet below. Box 24 is still free for the
+next class-agnostic bool.
 
 **Per-route target macro:** the `"0 Targ"` macro (`TARGET_MACRO_NAME`) (`WowInput.FIND_TARGET_MACRO`) is the bot's target finder, and
 its `/target` lines are set per route: `WowFarmingConfiguration.TargetMacroMobNames`
@@ -809,8 +815,17 @@ of truth — edits should be made here, not in the WoW install directory.
   to `EITHER`), which faction can safely walk the route. Every existing
   route is explicitly `HORDE` for safety (they were all built on Horde
   characters); a route gets opted into `EITHER` once it's been tested on
-  Alliance and confirmed clear of Horde guards. Nothing reads it yet — faction-aware farming-location picking is still to
-  come. Routes are split across two files in `Config/Data/`:
+  Alliance and confirmed clear of Horde guards. `WowZoneCrossing` has the
+  same `Faction` (default `EITHER`, copied by `Reversed()`; the Orgrimmar
+  crossing is `HORDE`). `WowFaction.AllowsPlayer(playerIsHorde)`
+  (`WowFactionExtensions`, `EITHER` matches both) checks a tag against
+  `WowWorldState.PlayerIsHorde` (the `MultiBoolTwo` B7 bit). It filters
+  `PickFarmingLocationConfig`'s candidates, `PickNPCToInteractWith`'s NPCs,
+  `GetAllSafeRoutes` (the pathfinding route graph),
+  `GetZoneCrossingsBetween` (which now takes `playerIsHorde`) and the
+  level-up "newly eligible routes" message. `SetLogoutVariablesTask()` also
+  logs out if `CurrentRoute`'s faction doesn't allow the player, right after
+  the minimum-level check. Routes are split across two files in `Config/Data/`:
   `WowFarmingRoutes.cs` holds each location config's grinding route, named
   after it plus `_ROUTE` (e.g. `LEVEL_53_NORTH_FELWOOD_ROUTE` for
   `LEVEL_53_NORTH_FELWOOD`); `WowWalkingRoutes.cs` holds the connector

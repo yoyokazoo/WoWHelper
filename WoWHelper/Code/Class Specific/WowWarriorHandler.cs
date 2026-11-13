@@ -10,10 +10,6 @@ namespace WoWHelper
     {
         #region Input
 
-        // Warrior keybinds/macros. Private so only this handler can press them -- shared
-        // keys (food, attack, dynamite, etc.) stay on WowInput.
-        // Using Shift Keys built into the macros instead of binding a bar to the shift keys,
-        // as it screws up regular bars if we bind a bar to shift
         private static class Input
         {
             /*
@@ -78,7 +74,6 @@ namespace WoWHelper
 
         #region Constants
 
-        // Warrior costs
         private const int HEROIC_STRIKE_RAGE_COST = 15;
         private const int BATTLE_SHOUT_RAGE_COST = 10;
         private const int REND_RAGE_COST = 10;
@@ -103,10 +98,8 @@ namespace WoWHelper
 
         #region State
 
-        // When the bot last pressed Battle Shout -- see ShouldCastBattleShout.
         private long BattleShoutPressTime;
         private long BerserkerRageTime;
-        // Retaliation is a once-per-fight emergency button; reset in OnEnterFight.
         private bool EmergencyCombatActionTaken;
 
         public WowWarriorHandler(WowPlayer player) : base(player) { }

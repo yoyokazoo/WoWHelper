@@ -30,6 +30,9 @@ namespace WoWHelper.Code.WorldState
 
         public int MinimumLevel { get; set; }
 
+        // Which faction can safely take this crossing (both directions). EITHER matches both.
+        public WowFaction Faction { get; set; } = WowFaction.EITHER;
+
         public WowZoneCrossing Reversed()
         {
             return new WowZoneCrossing
@@ -42,6 +45,7 @@ namespace WoWHelper.Code.WorldState
                 HeadingDegrees = ReturnHeadingDegrees ?? (HeadingDegrees + 180f) % 360f,
                 ReturnHeadingDegrees = HeadingDegrees,
                 MinimumLevel = MinimumLevel,
+                Faction = Faction,
             };
         }
 
