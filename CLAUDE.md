@@ -1369,12 +1369,15 @@ of truth — edits should be made here, not in the WoW install directory.
   **off**) is on, `LearnNextTalentIfAny()` (`YoyokazooUI.lua`) spends one
   free point (`UnitCharacterPoints`) via `LearnTalent(tab, index)`, picked by
   `FindNextTalentToLearn()` (`WoWFunctions.lua`) from the class's ordered
-  build table — `WARRIOR_TALENT_BUILD` (`TalentConfig.lua`, its own file
-  since builds are long), entries `{ name, rank }` meaning "get this talent
+  build table — `WARRIOR_TALENT_BUILD`/`SHAMAN_TALENT_BUILD`
+  (`TalentConfig.lua`, its own file since builds are long, picked by
+  `GetClassTalentBuild()`), entries `{ name, rank }` meaning "get this talent
   to rank N" (a talent revisited later reappears with a higher rank), matched
-  by exact talent name (not tab/index). Warrior only — other classes have no
-  build and do nothing. The Warrior build covers all 51 points, levels 10-60,
-  from a talent calculator export. A build name that isn't
+  by exact talent name (not tab/index). Warrior and Shaman only — other
+  classes have no build and do nothing. Both builds cover all 51 points,
+  levels 10-60, from talent calculator exports (Shaman's with its Resto block
+  moved ahead of Elemental; it's provisional — may change if Maelstrom Weapon
+  proves too hard for the bot to use well). A build name that isn't
   found stops the scan rather than skipping it. Triggered (debounced 0.5s,
   `ScheduleAutoTalentPick()`) by `CHARACTER_POINTS_CHANGED` — registered
   through `pcall` since it isn't confirmed on this client — plus

@@ -2737,8 +2737,8 @@ function FindNextAffordableTrainerService()
 end
 
 -- Auto-pick talents: spends free talent points following the class's talent
--- build table (WARRIOR_TALENT_BUILD in TalentConfig.lua -- Warrior only
--- so far; any other class has no build and does nothing). Driven from
+-- build table (WARRIOR_TALENT_BUILD/SHAMAN_TALENT_BUILD in TalentConfig.lua
+-- -- any other class has no build and does nothing). Driven from
 -- YoyokazooUI.lua (CHARACTER_POINTS_CHANGED etc.), gated by the /yyconfig
 -- "Auto-pick talents" checkbox. Lua-only; nothing reaches the pixel row.
 --
@@ -2759,6 +2759,8 @@ local function GetClassTalentBuild()
 
     if classFile == "WARRIOR" then
         return WARRIOR_TALENT_BUILD
+    elseif classFile == "SHAMAN" then
+        return SHAMAN_TALENT_BUILD
     end
 
     return nil
