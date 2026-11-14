@@ -382,9 +382,12 @@ booleans above.
 Consumed by `WowManagementTasks.WaitForWorldBuffThenLogoffTask()`: loops
 idle (tapping strafe-left/strafe-right every
 `WowConstants.WORLD_BUFF_WAIT_MILLIS` to dodge WoW's AFK kick) until
-this bit comes true, then Slack-alerts and logs out. Wired up to the
-`AdHocTest` button (`WowPlayer.AdHocTestTask()`) for now rather than a
-dedicated `PlayerState`.
+this bit comes true, then Slack-alerts and logs out. Not wired to any
+`PlayerState` or button yet — call it from `WowPlayer.AdHocTestTask()` to
+run it. (The `AdHocTest` button currently runs `RecordRouteTask()`
+(`Gameplay/WowRouteRecorderTasks.cs`): Space records the player's map
+position as a waypoint, Enter finishes and prints a copy-pasteable
+`WowRoute` in one console write.)
 
 G4 is `WowWorldState.HighLatency` — unlike G1-G3 above, this is back to being
 a plain live game-state query (same category as the R flags), not a

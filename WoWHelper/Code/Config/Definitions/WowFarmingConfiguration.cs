@@ -21,6 +21,7 @@ namespace WoWHelper.Code.WorldState
         Winterspring = 14,
         TirisfalGlades = 15,
         Orgrimmar = 16,
+        Teldrassil = 17,
 
         Unknown = 255, // current zone doesn't match any known entry
     }

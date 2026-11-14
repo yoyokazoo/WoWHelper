@@ -702,6 +702,7 @@ local ZONE_NAME_TO_ID = {
     ["Winterspring"] = 14,
     ["Tirisfal Glades"] = 15,
     ["Orgrimmar"] = 16,
+    ["Teldrassil"] = 17,
 }
 
 -- 255 = current zone isn't one of the known farming zones on the decoding

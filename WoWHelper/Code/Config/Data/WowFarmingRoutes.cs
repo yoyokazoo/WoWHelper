@@ -834,5 +834,30 @@ namespace WoWHelper.Code.WorldState
         };
 
         #endregion
+
+        #region Teldrassil
+
+        public static readonly WowRoute LEVEL_1_TELDRASSIL_ANIMALS = new WowRoute
+        {
+            Name = "Level 1 Teldrassil Animals",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(62.37f, 38.78f),
+                new Vector2(62.48f, 37.12f),
+                new Vector2(61.73f, 35.95f),
+                new Vector2(60.79f, 35.32f),
+                new Vector2(59.91f, 35.99f),
+                new Vector2(59.17f, 36.55f),
+                new Vector2(59.93f, 38.41f),
+                new Vector2(61.39f, 39.30f),
+                new Vector2(62.16f, 39.20f),
+            },
+        };
+
+        #endregion
     }
 }
