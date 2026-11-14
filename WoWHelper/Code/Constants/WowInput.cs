@@ -27,12 +27,13 @@ namespace WoWHelper.Code
 #showtooltip [mod:shift] Conjured Crystal Water; Raw Bristle Whisker Catfish
 /use [nomod] Raw Bristle Whisker Catfish
 /use [mod:shift] Conjured Crystal Water
+/stopmacro [nomod][mod:shift]
 /sit
 /use Thick-shelled Clam
         */
         public const Keys EAT_FOOD = Keys.D8;
         public const Keys SHIFT_DRINK_WATER = Keys.D8;
-        public const Keys CTRL_TARGET_MERCHANT = Keys.D8;
+        public const Keys CTRL_SIT_AND_OPEN_CLAM = Keys.D8;
 
         /*
          * 9 Pot

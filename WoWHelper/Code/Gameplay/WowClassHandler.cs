@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Threading.Tasks;
+using WoWHelper.Code;
 using WoWHelper.Code.Gameplay;
 
 namespace WoWHelper
@@ -16,7 +17,27 @@ namespace WoWHelper
 
         public abstract void UpdateFromBitmap(Bitmap bmp);
 
-        public abstract Task<bool> StartBattleReadyRecoverTask();
+        public virtual bool ResourceIsMana => true;
+
+        public virtual async Task<bool> StartBattleReadyRecoverTask()
+        {
+            if (WorldState.PlayerHpPercent < WowConstants.EAT_FOOD_HP_THRESHOLD)
+            {
+                await WowInput.PressKey(WowInput.EAT_FOOD);
+                await Task.Delay(200);
+            }
+
+            if (ResourceIsMana && WorldState.ResourcePercent < WowConstants.DRINK_WATER_MP_THRESHOLD)
+            {
+                await WowInput.PressKeyWithShift(WowInput.SHIFT_DRINK_WATER);
+                await Task.Delay(200);
+            }
+
+            await WowInput.PressKeyWithControl(WowInput.EAT_FOOD);
+
+            return true;
+        }
+
         public abstract Task<bool> WaitUntilBattleReadyTask();
         public abstract bool IsBattleReady();
         public abstract Task<bool> KickOffEngageTask();

@@ -62,22 +62,6 @@ namespace WoWHelper
 
         #region Tasks
 
-        public override async Task<bool> StartBattleReadyRecoverTask()
-        {
-            if (WorldState.PlayerHpPercent < WowConstants.EAT_FOOD_HP_THRESHOLD)
-            {
-                await WowInput.PressKey(WowInput.EAT_FOOD);
-                await Task.Delay(200);
-            }
-
-            if (WorldState.ResourcePercent < WowConstants.DRINK_WATER_MP_THRESHOLD)
-            {
-                await WowInput.PressKeyWithShift(WowInput.SHIFT_DRINK_WATER);
-            }
-
-            return true;
-        }
-
         public override async Task<bool> WaitUntilBattleReadyTask()
         {
             bool hpRecovered = WorldState.PlayerHpPercent >= WowConstants.STOP_RESTING_HP_THRESHOLD;

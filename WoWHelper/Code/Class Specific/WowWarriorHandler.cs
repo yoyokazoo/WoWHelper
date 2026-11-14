@@ -348,16 +348,7 @@ namespace WoWHelper
             return ClassState.KnowsMortalStrikeOrBloodthirst ? MORTAL_STRIKE_BLOODTHIRST_RAGE_COST : 0;
         }
 
-        public override async Task<bool> StartBattleReadyRecoverTask()
-        {
-            // clams
-            //if (WorldState.PlayerHpPercent < WowConstants.EAT_FOOD_HP_THRESHOLD)
-            //{
-                await WowInput.PressKey(WowInput.EAT_FOOD);
-            //}
-
-            return true;
-        }
+        public override bool ResourceIsMana => false;
 
         public override async Task<bool> WaitUntilBattleReadyTask()
         {
