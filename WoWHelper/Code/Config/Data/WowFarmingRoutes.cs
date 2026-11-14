@@ -911,7 +911,7 @@ namespace WoWHelper.Code.WorldState
 
         #region Elwynn Forest
 
-        public static readonly WowRoute LEVEL_1_ELWYNN_ANIMALS = new WowRoute
+        public static readonly WowRoute LEVEL_1_ELWYNN_ANIMALS_ROUTE = new WowRoute
         {
             Name = "LEVEL_1_ELWYNN_ANIMALS",
             Zone = WowZone.ElwynnForest,
@@ -926,10 +926,10 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(50.14f, 35.91f),
                 new Vector2(48.55f, 36.08f),
                 new Vector2(47.29f, 38.85f),
-                new Vector2(45.58f, 44.66f),
-                new Vector2(45.90f, 43.24f),
-                new Vector2(46.41f, 40.53f),
                 new Vector2(47.15f, 39.23f),
+                new Vector2(46.41f, 40.53f),
+                new Vector2(45.90f, 43.24f),
+                new Vector2(45.58f, 44.66f),
             },
         };
 

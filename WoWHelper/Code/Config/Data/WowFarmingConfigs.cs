@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
+using System.Security.Cryptography;
 using WoWHelper.Code.Gameplay;
 using static WoWHelper.Code.WorldState.WowFarmingConfiguration;
 
@@ -278,6 +279,16 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
+        #region Levels 1-10 Elwynn Forest
+
+        public static readonly WowFarmingConfiguration LEVEL_1_ELWYNN_FOREST_ANIMALS = new WowFarmingConfiguration
+        {
+            Route = WowFarmingRoutes.LEVEL_1_ELWYNN_ANIMALS_ROUTE,
+            TargetMacroMobNames = "Young,Timber,Kobold",
+        };
+
+        #endregion
+
         public static readonly List<WowFarmingConfiguration> ALL_LOCATIONS = new List<WowFarmingConfiguration>
         {
             LEVEL_58_SILITHUS_RUMBLERS,
@@ -313,7 +324,8 @@ namespace WoWHelper.Code.WorldState
             LEVEL_1_TIRISFAL_UNDEAD,
             LEVEL_1_TELDRASSIL_ANIMALS,
             LEVEL_4_TELDRASSIL_ANIMALS,
-            LEVEL_7_TELDRASSIL_ANIMALS
+            LEVEL_7_TELDRASSIL_ANIMALS,
+            LEVEL_1_ELWYNN_FOREST_ANIMALS
         };
     }
 }
