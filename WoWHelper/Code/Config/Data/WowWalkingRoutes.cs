@@ -279,7 +279,7 @@ namespace WoWHelper.Code.WorldState
 
             Waypoints = new List<Vector2>
             {
-                new Vector2(60.05f, 42.53f),
+                new Vector2(60.11f, 42.64f),
                 new Vector2(60.68f, 43.75f),
                 new Vector2(61.37f, 44.98f),
                 new Vector2(61.22f, 46.40f),
@@ -287,7 +287,7 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(61.26f, 48.05f),
                 new Vector2(61.43f, 49.88f),
                 new Vector2(61.50f, 50.74f),
-                new Vector2(63.22f, 52.26f),
+                new Vector2(63.13f, 52.32f),
             },
         };
 

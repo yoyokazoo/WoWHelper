@@ -21,7 +21,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLevelingConfiguration LEVEL_4_THRU_6 = new WowLevelingConfiguration
         {
-            Levels = new List<int> { 4, 5, 6 },
+            Levels = new List<int> { 4, 5 },
 
             FarmingConfigs = new List<WowFarmingConfiguration>
             {
@@ -35,7 +35,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowLevelingConfiguration LEVEL_7_THRU_10 = new WowLevelingConfiguration
         {
-            Levels = new List<int> { 7, 8, 9, 10 },
+            Levels = new List<int> { 6, 7, 8, 9, 10 },
 
             FarmingConfigs = new List<WowFarmingConfiguration>
             {
