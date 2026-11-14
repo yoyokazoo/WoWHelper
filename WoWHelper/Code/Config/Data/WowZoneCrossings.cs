@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,14 +17,13 @@ namespace WoWHelper.Code.WorldState
             Faction = WowFaction.HORDE,
         };
 
-        private static readonly List<WowZoneCrossing> DEFINED_ZONE_CROSSINGS = new List<WowZoneCrossing>
-        {
-            DUROTAR_TO_ORGRIMMAR,
-        };
-
-        // Both directions of every link, searched by WowPathfinding.GetZoneCrossingsBetween.
-        public static readonly List<WowZoneCrossing> ALL_ZONE_CROSSINGS = DEFINED_ZONE_CROSSINGS
-            .SelectMany(crossing => new[] { crossing, crossing.Reversed() })
-            .ToList();
+        // Both directions of every crossing above (found via reflection), searched by
+        // WowPathfinding.GetZoneCrossingsBetween.
+        private static readonly Lazy<IReadOnlyList<WowZoneCrossing>> ALL_ZONE_CROSSINGS_LAZY = new Lazy<IReadOnlyList<WowZoneCrossing>>(() =>
+            StaticConfigCollector.Collect<WowZoneCrossing>(typeof(WowZoneCrossings))
+                .SelectMany(crossing => new[] { crossing, crossing.Reversed() })
+                .ToList()
+                .AsReadOnly());
+        public static IReadOnlyList<WowZoneCrossing> ALL_ZONE_CROSSINGS => ALL_ZONE_CROSSINGS_LAZY.Value;
     }
 }

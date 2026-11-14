@@ -234,9 +234,9 @@ that state can be skipped entirely — see below:
   that meant the combat loop could try to dispatch on a still-`Unknown`
   `CombatConfiguration` with no class state built yet.
 - `WowPlayer.ResolveFarmingConfigurationTask()` picks `LocationConfiguration`
-  from `WowFarmingConfigs.ALL_LOCATIONS` — an explicit list (deliberately
-  not reflection over the class's static fields, so a route can be pulled
-  out of auto-selection without deleting it) — by filtering to configs the
+  from `WowFarmingConfigs.ALL_LOCATIONS` (built by reflection — see the
+  `Config/` bullet; mark a config `[ExcludeFromAll]` to pull it out of
+  auto-selection without deleting it) — by filtering to configs the
   player currently satisfies: the same three checks `SetLogoutVariablesTask()`
   uses to keep validating an already-running route (level, zone, waypoint
   proximity via `WowPathfinding.GetDistanceToClosestWaypoint`/
@@ -772,8 +772,15 @@ of truth — edits should be made here, not in the WoW install directory.
   chase entirely, for routes where straying off the waypoints risks getting
   hung up on geometry or wandering into something dangerous (currently
   `LEVEL_53_NORTH_FELWOOD` and `LEVEL_34_SHIMMERING_FLATS`).
-- **`Config/`** — per-location farming routes/waypoints
-  (`WowFarmingConfigs.cs` — also holds `ALL_LOCATIONS`, the explicit list
+- **`Config/`** — none of the `ALL_` lists in `Config/Data/`
+  (`ALL_LOCATIONS`, `ALL_LEVELING_CONFIGS`, `ALL_NPCS`, `ALL_WALKING_ROUTES`,
+  `ALL_ZONE_CROSSINGS`) are hand-maintained: each is a lazily-built property
+  that `StaticConfigCollector` (`Config/Definitions/`) fills by reflecting over
+  its class's public static fields of the element type, in declaration order,
+  on first access (lazy, because collecting inside a static initializer would
+  read later fields as null). Adding a `public static readonly` field is all
+  it takes; `[ExcludeFromAll]` on a field leaves it out. Per-location farming routes/waypoints
+  (`WowFarmingConfigs.cs` — also holds `ALL_LOCATIONS`, the list
   `ResolveFarmingConfigurationTask()` auto-selects from; see "Automatic
   farming-config resolution" above) and per-resolution screen pixel maps
   (`WowScreenConfigs.cs`). There's no separate farming-profile config file

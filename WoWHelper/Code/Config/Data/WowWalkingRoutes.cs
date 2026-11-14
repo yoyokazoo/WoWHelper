@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace WoWHelper.Code.WorldState
@@ -293,23 +294,8 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
-        public static readonly List<WowRoute> ALL_WALKING_ROUTES = new List<WowRoute>
-        {
-            BOARS_AND_SCORPS_TO_MERCHANT_ROUTE,
-            BOARS_AND_SCORPS_TO_WARRIOR_TRAINER_ROUTE,
-            BOARS_AND_SCORPS_TO_IMPS,
-            BOARS_AND_SCORPS_TO_SCORPS,
-            VALLEY_OF_TRIALS_TO_RAZOR_HILL_LOOP,
-            RAZOR_HILL_LOOP_TO_RAZOR_HILL,
-            RAZOR_HILL_TO_MERCHANT,
-            RAZOR_HILL_TO_WARRIOR_TRAINER,
-            RAZOR_HILL_TO_ORG_ENTRANCE,
-            ORG_ENTRANCE_TO_DUROTAR_SKULL_ROCK_COAST,
-            ORGRIMMAR_ENTRANCE_ROUTE,
-            TELDRASSIL_ANIMALS_TO_MERCHANT_ROUTE,
-            TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE,
-            TELDRASSIL_LEVEL_1_TO_4_ROUTE,
-            TELDRASSIL_LEVEL_4_TO_7_ROUTE
-        };
+        // Every route above, via reflection.
+        private static readonly Lazy<IReadOnlyList<WowRoute>> ALL_WALKING_ROUTES_LAZY = StaticConfigCollector.LazyCollect<WowRoute>(typeof(WowWalkingRoutes));
+        public static IReadOnlyList<WowRoute> ALL_WALKING_ROUTES => ALL_WALKING_ROUTES_LAZY.Value;
     }
 }

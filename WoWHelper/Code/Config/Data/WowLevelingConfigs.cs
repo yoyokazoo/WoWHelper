@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using WoWHelper.Code.Gameplay;
@@ -57,13 +58,9 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
-        public static readonly List<WowLevelingConfiguration> ALL_LEVELING_CONFIGS = new List<WowLevelingConfiguration>
-        {
-            LEVEL_1_THRU_3,
-            LEVEL_4_THRU_6,
-            LEVEL_7_THRU_10,
-            LEVEL_11_THRU_12,
-        };
+        // Every config above, via reflection.
+        private static readonly Lazy<IReadOnlyList<WowLevelingConfiguration>> ALL_LEVELING_CONFIGS_LAZY = StaticConfigCollector.LazyCollect<WowLevelingConfiguration>(typeof(WowLevelingConfigs));
+        public static IReadOnlyList<WowLevelingConfiguration> ALL_LEVELING_CONFIGS => ALL_LEVELING_CONFIGS_LAZY.Value;
 
         public static WowLevelingConfiguration GetFor(WowCombatConfiguration playerClass, int level)
         {

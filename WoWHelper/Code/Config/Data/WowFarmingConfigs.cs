@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Security.Cryptography;
 using WoWHelper.Code.Gameplay;
@@ -289,43 +290,8 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
-        public static readonly List<WowFarmingConfiguration> ALL_LOCATIONS = new List<WowFarmingConfiguration>
-        {
-            LEVEL_58_SILITHUS_RUMBLERS,
-            LEVEL_57_WINTERSPRING_YETIS,
-            LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL,
-            LEVEL_55_WINTERSPRING_LAKE,
-            LEVEL_53_ASZHARA_SATYR_CIRCLE,
-            LEVEL_53_NORTH_FELWOOD,
-            LEVEL_50_FELWOOD_SOUTH,
-            LEVEL_46_FERALAS_HIPPOGRYPHS,
-            LEVEL_41_TANARIS_TURTLES,
-            LEVEL_36_KODO_GRAVEYARD,
-            LEVEL_34_SHIMMERING_FLATS,
-            LEVEL_29_HILLSBRAD_RIVER,
-            LEVEL_26_STONETALON_CHARRED_FOREST,
-            LEVEL_23_STONETALON,
-            LEVEL_20_ZORAMGAR,
-            LEVEL_17_NORTHERN_BARRENS,
-            LEVEL_13_BARRENS_ENTRANCE,
-            LEVEL_11_DUROTAR_COAST,
-            LEVEL_9_DUROTAR_SKULL_ROCK_COAST,
-            LEVEL_6_TIRISFAL_ZOMBIES,
-            LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
-            LEVEL_10_MULGORE_MIXED_BEASTS,
-            LEVEL_8_MULGORE_MIXED_BEASTS,
-            LEVEL_6_MULGORE_BATTLEBOARS,
-            LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
-            LEVEL_4_TIRISFAL_ANIMALS,
-            LEVEL_4_DUROTAR_IMPS,
-            LEVEL_4_DUROTAR_SCORPS,
-            LEVEL_1_MULGORE_PLAINSTRIDERS,
-            LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
-            LEVEL_1_TIRISFAL_UNDEAD,
-            LEVEL_1_TELDRASSIL_ANIMALS,
-            LEVEL_4_TELDRASSIL_ANIMALS,
-            LEVEL_7_TELDRASSIL_ANIMALS,
-            LEVEL_1_ELWYNN_FOREST_ANIMALS
-        };
+        // Every config above, via reflection. Mark one [ExcludeFromAll] to pull it out of auto-selection.
+        private static readonly Lazy<IReadOnlyList<WowFarmingConfiguration>> ALL_LOCATIONS_LAZY = StaticConfigCollector.LazyCollect<WowFarmingConfiguration>(typeof(WowFarmingConfigs));
+        public static IReadOnlyList<WowFarmingConfiguration> ALL_LOCATIONS => ALL_LOCATIONS_LAZY.Value;
     }
 }

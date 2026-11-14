@@ -146,6 +146,7 @@
     <Compile Include="Code\Config\Definitions\WowFaction.cs" />
     <Compile Include="Code\Config\Definitions\WowFarmingConfiguration.cs" />
     <Compile Include="Code\Config\Definitions\WowRoute.cs" />
+    <Compile Include="Code\Config\Definitions\StaticConfigCollector.cs" />
     <Compile Include="Code\Config\Definitions\WowZoneCrossing.cs" />
     <Compile Include="Code\Config\Definitions\WowLevelingConfiguration.cs" />
     <Compile Include="Code\Config\Data\WowFarmingConfigs.cs" />

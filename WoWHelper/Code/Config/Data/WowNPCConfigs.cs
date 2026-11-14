@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
@@ -81,14 +82,8 @@ namespace WoWHelper.Code.WorldState
             Roles = NPCRoles.Train
         };
 
-        public static readonly List<WowNPCConfiguration> ALL_NPCS = new List<WowNPCConfiguration>()
-        {
-            VALLEY_OF_TRIALS_MERCHANT,
-            VALLEY_OF_TRIALS_WARRIOR_TRAINER,
-            RAZOR_HILL_WARRIOR_TRAINER,
-            RAZOR_HILL_MERCHANT,
-            TELDRASSIL_MERCHANT,
-            TELDRASSIL_WARRIOR_TRAINER
-        };
+        // Every NPC above, via reflection.
+        private static readonly Lazy<IReadOnlyList<WowNPCConfiguration>> ALL_NPCS_LAZY = StaticConfigCollector.LazyCollect<WowNPCConfiguration>(typeof(WowNPCConfigs));
+        public static IReadOnlyList<WowNPCConfiguration> ALL_NPCS => ALL_NPCS_LAZY.Value;
     }
 }
