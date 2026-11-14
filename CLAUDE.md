@@ -974,7 +974,7 @@ of truth — edits should be made here, not in the WoW install directory.
 ## Lua addon (`WoWHelper/Lua Addon/`, `YoyokazooUI`)
 
 - **`YoyokazooUI.toc`** — addon manifest/load order. Loads
-  `MathFunctions.lua` → `CreatureConfig.lua` → `WoWFunctions.lua` →
+  `MathFunctions.lua` → `CreatureConfig.lua` → `TalentConfig.lua` → `WoWFunctions.lua` →
   `WarriorFunctions.lua` → `ShamanFunctions.lua` →
   `WarlockFunctions.lua` → `UIFunctions.lua` → `YoyokazooUI.lua`. Load order doesn't actually matter
   for correctness here (everything is a plain global function/table,
@@ -1369,11 +1369,12 @@ of truth — edits should be made here, not in the WoW install directory.
   **off**) is on, `LearnNextTalentIfAny()` (`YoyokazooUI.lua`) spends one
   free point (`UnitCharacterPoints`) via `LearnTalent(tab, index)`, picked by
   `FindNextTalentToLearn()` (`WoWFunctions.lua`) from the class's ordered
-  build table — `WARRIOR_TALENT_BUILD` (`WarriorFunctions.lua`), entries
-  `{ name, rank }` meaning "get this talent to rank N", matched by talent
-  name (not tab/index). Warrior only — other classes have no build and do
-  nothing. Only the first 11 points are stubbed in (Deflection 2, Improved
-  Rend 3, Tactical Mastery 5, Anger Management 1). A build name that isn't
+  build table — `WARRIOR_TALENT_BUILD` (`TalentConfig.lua`, its own file
+  since builds are long), entries `{ name, rank }` meaning "get this talent
+  to rank N" (a talent revisited later reappears with a higher rank), matched
+  by exact talent name (not tab/index). Warrior only — other classes have no
+  build and do nothing. The Warrior build covers all 51 points, levels 10-60,
+  from a talent calculator export. A build name that isn't
   found stops the scan rather than skipping it. Triggered (debounced 0.5s,
   `ScheduleAutoTalentPick()`) by `CHARACTER_POINTS_CHANGED` — registered
   through `pcall` since it isn't confirmed on this client — plus

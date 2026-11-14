@@ -9,6 +9,7 @@
 
 MathFunctions.lua
 CreatureConfig.lua
+TalentConfig.lua
 WoWFunctions.lua
 WarriorFunctions.lua
 ShamanFunctions.lua
