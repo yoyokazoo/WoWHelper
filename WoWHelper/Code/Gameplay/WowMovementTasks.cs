@@ -699,59 +699,6 @@ namespace WoWHelper
         // all, and each scan is a full-screen capture.
         private const int PATHFINDING_TARGET_MARKER_SCAN_INTERVAL_MILLIS = 1000;
 
-        // Longest WalkTowardsTargetMarkerTask keeps walking before handing control back to
-        // PathfindingLoopTask. Deliberately short -- this isn't WalkIntoMeleeRangeTask's
-        // "commit until we're in combat" walk, just a nudge to get an out-of-range target
-        // into range. If that isn't enough, the next periodic scan will try again.
-        private const int WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS = 4000;
-
-        // PathfindingLoopTask's "we have a target on screen but can't engage it yet" step:
-        // stop route-walking, turn to face the target marker, then walk straight at it for up
-        // to WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS, or until any of PathfindingLoopTask's own
-        // exit conditions (CanEngageTarget / IsInCombat / LogoutTriggered) comes true --
-        // whichever is first. Doesn't return on those itself; the caller re-checks them and
-        // decides what to return. Always releases the movement keys before returning.
-        public async Task<bool> WalkTowardsTargetMarkerTask()
-        {
-            // Stop the route walk (and any strafing) so the turn below is clean.
-            await EndWalkForwardTask();
-
-            if (!await TurnToFaceTargetMarkerTask())
-            {
-                // Marker vanished, or we're still not facing it after the turn -- walking
-                // forward now would just be walking in some random direction.
-                Console.WriteLine("DEBUG WalkTowardsTargetMarkerTask: couldn't face the target marker, not walking");
-                return false;
-            }
-
-            long deadline = DateTimeOffset.Now.ToUnixTimeMilliseconds() + WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS;
-            Console.WriteLine($"DEBUG WalkTowardsTargetMarkerTask: facing target, walking towards it for up to {WALK_TOWARDS_TARGET_MARKER_MAX_MILLIS}ms");
-
-            await StartWalkForwardTask();
-
-            try
-            {
-                while (DateTimeOffset.Now.ToUnixTimeMilliseconds() < deadline)
-                {
-                    await UpdateWorldStateAsync();
-                    await EveryWorldStateUpdateTasks();
-
-                    if (CanEngageTarget() || WorldState.IsInCombat || LogoutTriggered)
-                    {
-                        Console.WriteLine($"DEBUG WalkTowardsTargetMarkerTask: stopping early (CanEngageTarget={CanEngageTarget()}, IsInCombat={WorldState.IsInCombat}, LogoutTriggered={LogoutTriggered})");
-                        return true;
-                    }
-                }
-            }
-            finally
-            {
-                await EndWalkForwardTask();
-            }
-
-            Console.WriteLine("DEBUG WalkTowardsTargetMarkerTask: hit the time limit, handing back to pathfinding");
-            return false;
-        }
-
         public async Task<bool> StartWalkForwardTask()
         {
             WalkingForward = true;

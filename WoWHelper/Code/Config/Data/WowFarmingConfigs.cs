@@ -264,6 +264,12 @@ namespace WoWHelper.Code.WorldState
             TargetMacroMobNames = "Young,Grellkin,Mangy,Thistle",
         };
 
+        public static readonly WowFarmingConfiguration LEVEL_4_TELDRASSIL_ANIMALS = new WowFarmingConfiguration
+        {
+            Route = WowFarmingRoutes.LEVEL_1_TELDRASSIL_ANIMALS_ROUTE,
+            TargetMacroMobNames = "Strigid,Nightsaber",
+        };
+
         #endregion
 
         public static readonly List<WowFarmingConfiguration> ALL_LOCATIONS = new List<WowFarmingConfiguration>
@@ -299,7 +305,8 @@ namespace WoWHelper.Code.WorldState
             LEVEL_1_MULGORE_PLAINSTRIDERS,
             LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
             LEVEL_1_TIRISFAL_UNDEAD,
-            LEVEL_1_TELDRASSIL_ANIMALS
+            LEVEL_1_TELDRASSIL_ANIMALS,
+            LEVEL_4_TELDRASSIL_ANIMALS
         };
     }
 }

@@ -252,6 +252,27 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute TELDRASSIL_LEVEL_1_TO_4_ROUTE = new WowRoute
+        {
+            Name = "TELDRASSIL_LEVEL_1_TO_4_ROUTE",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(60.05f, 42.53f),
+                new Vector2(60.68f, 43.75f),
+                new Vector2(61.37f, 44.98f),
+                new Vector2(61.22f, 46.40f),
+                new Vector2(61.14f, 47.13f),
+                new Vector2(61.26f, 48.05f),
+                new Vector2(61.43f, 49.88f),
+                new Vector2(61.50f, 50.74f),
+                new Vector2(63.22f, 52.26f),
+            },
+        };
+
         #endregion
 
         public static readonly List<WowRoute> ALL_WALKING_ROUTES = new List<WowRoute>
@@ -268,7 +289,8 @@ namespace WoWHelper.Code.WorldState
             ORG_ENTRANCE_TO_DUROTAR_SKULL_ROCK_COAST,
             ORGRIMMAR_ENTRANCE_ROUTE,
             TELDRASSIL_ANIMALS_TO_MERCHANT_ROUTE,
-            TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE
+            TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE,
+            TELDRASSIL_LEVEL_1_TO_4_ROUTE
         };
     }
 }
