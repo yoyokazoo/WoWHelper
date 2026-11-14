@@ -266,8 +266,14 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowFarmingConfiguration LEVEL_4_TELDRASSIL_ANIMALS = new WowFarmingConfiguration
         {
-            Route = WowFarmingRoutes.LEVEL_1_TELDRASSIL_ANIMALS_ROUTE,
-            TargetMacroMobNames = "Strigid,Nightsaber",
+            Route = WowFarmingRoutes.LEVEL_4_TELDRASSIL_ANIMALS_ROUTE,
+            TargetMacroMobNames = "Webwood,Grellkin",
+        };
+
+        public static readonly WowFarmingConfiguration LEVEL_7_TELDRASSIL_ANIMALS = new WowFarmingConfiguration
+        {
+            Route = WowFarmingRoutes.LEVEL_7_TELDRASSIL_ANIMALS_ROUTE,
+            TargetMacroMobNames = "Strigid,Nightsaber,Webwood",
         };
 
         #endregion
@@ -306,7 +312,8 @@ namespace WoWHelper.Code.WorldState
             LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
             LEVEL_1_TIRISFAL_UNDEAD,
             LEVEL_1_TELDRASSIL_ANIMALS,
-            LEVEL_4_TELDRASSIL_ANIMALS
+            LEVEL_4_TELDRASSIL_ANIMALS,
+            LEVEL_7_TELDRASSIL_ANIMALS
         };
     }
 }

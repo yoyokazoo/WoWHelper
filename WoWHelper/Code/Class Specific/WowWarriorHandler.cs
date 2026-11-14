@@ -288,6 +288,11 @@ namespace WoWHelper
         // helps finish it off) even after it breaks line of sight/melee range.
         private bool ShouldCastRend()
         {
+            // in WowForever, TargetHasRend is broken.  Until I can find a workaround,
+            // always return false
+
+            return false;
+            /*
             if (WorldState.IsTargetBleedImmune)
             {
                 return false;
@@ -296,6 +301,7 @@ namespace WoWHelper
             return ClassState.KnowsRend &&
                 !ClassState.TargetHasRend &&
                 (WorldState.TargetHpPercent > REND_HP_THRESHOLD || WorldState.IsTargetRunnerMob);
+            */
         }
 
         // ClassState.MortalStrikeOrBloodThirstCooledDown alone isn't a safe usability check --

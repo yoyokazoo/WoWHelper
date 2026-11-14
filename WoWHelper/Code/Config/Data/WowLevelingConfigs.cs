@@ -29,6 +29,7 @@ namespace WoWHelper.Code.WorldState
                 WowFarmingConfigs.LEVEL_4_DUROTAR_SCORPS,
                 WowFarmingConfigs.LEVEL_4_MULGORE_MOUNTAIN_COUGARS,
                 WowFarmingConfigs.LEVEL_4_TIRISFAL_ANIMALS,
+                WowFarmingConfigs.LEVEL_4_TELDRASSIL_ANIMALS,
             },
         };
 
@@ -41,6 +42,7 @@ namespace WoWHelper.Code.WorldState
                 WowFarmingConfigs.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP,
                 WowFarmingConfigs.LEVEL_6_MULGORE_BATTLEBOARS,
                 WowFarmingConfigs.LEVEL_6_TIRISFAL_ZOMBIES,
+                WowFarmingConfigs.LEVEL_7_TELDRASSIL_ANIMALS,
             },
         };
 

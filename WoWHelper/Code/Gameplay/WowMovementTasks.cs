@@ -1054,11 +1054,17 @@ namespace WoWHelper
                 await FaceWaypointTask();
             }
 
-            if (!GeneralHelpers.CurrentTimeInsideDuration(LastJumpTime, WowConstants.TIME_BETWEEN_JUMPS_MILLIS))
+            if (ShouldJumpWhileRunning())
             {
                 LastJumpTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 await WowInput.PressKey(WowInput.JUMP);
             }
+        }
+
+        public bool ShouldJumpWhileRunning()
+        {
+            return !GeneralHelpers.CurrentTimeInsideDuration(LastJumpTime, WowConstants.TIME_BETWEEN_JUMPS_MILLIS) &&
+                !CurrentPlayerGoalIsNPCGoal();
         }
 
         // One tick of walking through a WowZoneCrossing, once we're at its FromPoint. There's no

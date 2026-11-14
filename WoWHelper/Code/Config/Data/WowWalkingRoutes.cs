@@ -254,6 +254,24 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute TELDRASSIL_LEVEL_1_TO_4_ROUTE = new WowRoute
         {
+            Name = "Ad Hoc 1794630607988 Reversed",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(61.73f, 35.95f),
+                new Vector2(61.98f, 35.37f),
+                new Vector2(60.71f, 34.76f),
+                new Vector2(60.23f, 34.38f),
+                new Vector2(59.27f, 33.39f),
+                new Vector2(58.04f, 32.94f),
+            },
+        };
+
+        public static readonly WowRoute TELDRASSIL_LEVEL_4_TO_7_ROUTE = new WowRoute
+        {
             Name = "TELDRASSIL_LEVEL_1_TO_4_ROUTE",
             Zone = WowZone.Teldrassil,
             Faction = WowFaction.ALLIANCE,
@@ -290,7 +308,8 @@ namespace WoWHelper.Code.WorldState
             ORGRIMMAR_ENTRANCE_ROUTE,
             TELDRASSIL_ANIMALS_TO_MERCHANT_ROUTE,
             TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE,
-            TELDRASSIL_LEVEL_1_TO_4_ROUTE
+            TELDRASSIL_LEVEL_1_TO_4_ROUTE,
+            TELDRASSIL_LEVEL_4_TO_7_ROUTE
         };
     }
 }

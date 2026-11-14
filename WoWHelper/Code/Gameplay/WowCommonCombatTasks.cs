@@ -96,9 +96,13 @@ namespace WoWHelper
 
             if (facingWrongWay || targetNeedsToBeInFront || targetIsEvading)
             {
-                // should we ever scoot anymore?
-                // await ScootBackwardsTask();
-                await TurnToFaceTargetMarkerTask();
+                // We don't show the pink square on mobs that other players tagged.
+                // We could get into a scenario where someone else tags but we grab threat
+                // before that registers, so just in case, scoot back
+                if (!await TurnToFaceTargetMarkerTask())
+                {
+                    await ScootBackwardsTask();
+                }
             }
 
             // we may have targeted something in the distance then got aggroed by something else, clear target so we pick them up

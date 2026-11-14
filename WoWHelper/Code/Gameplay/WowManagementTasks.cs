@@ -532,6 +532,13 @@ namespace WoWHelper
             }
         }
 
+        public bool CurrentPlayerGoalIsNPCGoal()
+        {
+            return CurrentPlayerGoal == PlayerGoal.TRAIN || 
+                CurrentPlayerGoal == PlayerGoal.SELL || 
+                CurrentPlayerGoal == PlayerGoal.REPAIR;
+        }
+
         // never end a sentence with a preposition at
         public WowNPCConfiguration PickNPCToInteractWith()
         {

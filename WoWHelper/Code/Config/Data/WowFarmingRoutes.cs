@@ -858,7 +858,54 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute LEVEL_4_TELDRASSIL_ANIMALS_ROUTE = new WowRoute
+        {
+            Name = "Ad Hoc 1794630280238",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
 
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(58.04f, 32.57f),
+                new Vector2(56.92f, 32.38f),
+                new Vector2(56.27f, 32.80f),
+                new Vector2(56.79f, 34.46f),
+                new Vector2(56.31f, 36.74f),
+                new Vector2(55.53f, 37.86f),
+                new Vector2(54.78f, 38.43f),
+                new Vector2(54.05f, 38.26f),
+                new Vector2(54.48f, 39.33f),
+                new Vector2(54.79f, 39.73f),
+                new Vector2(55.65f, 38.99f),
+                new Vector2(56.31f, 37.83f),
+                new Vector2(56.70f, 36.12f),
+                new Vector2(57.10f, 34.32f),
+                new Vector2(57.85f, 33.60f),
+                new Vector2(58.04f, 32.94f),
+            },
+        };
+
+        public static readonly WowRoute LEVEL_7_TELDRASSIL_ANIMALS_ROUTE = new WowRoute
+        {
+            Name = "Ad Hoc 1794629575921",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(63.13f, 52.32f),
+                new Vector2(63.92f, 51.68f),
+                new Vector2(64.85f, 51.65f),
+                new Vector2(66.03f, 51.51f),
+                new Vector2(65.59f, 52.89f),
+                new Vector2(65.57f, 53.97f),
+                new Vector2(64.48f, 54.44f),
+                new Vector2(64.46f, 55.66f),
+                new Vector2(63.36f, 53.79f),
+            },
+        };
 
         #endregion
     }
