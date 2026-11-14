@@ -28,12 +28,16 @@
         // Where we are in battle recovery
         public enum BattleRecoveryState
         {
+            POST_BATTLE_RECOVERY,
             LOOT_ATTEMPT_ONE,
             LOOT_ATTEMPT_TWO,
             SKIN_ATTEMPT_ONE,
             SKIN_ATTEMPT_TWO,
             STARTING_RECOVERY,
             WAITING_FOR_RECOVERY,
+            POST_BATTLE_DOUBLE_CHECK,
+            PRE_BATTLE_BUFFING,
+            FULLY_RECOVERED
         }
 
         // Movement substate to try and recover from being stuck

@@ -22,8 +22,11 @@ namespace WoWHelper
         public Task<bool> StartBattleReadyTask() =>
             RequireClassHandler(nameof(StartBattleReadyTask)).StartBattleReadyRecoverTask();
 
-        public Task<bool> WaitUntilBattleReadyTask() =>
-            RequireClassHandler(nameof(WaitUntilBattleReadyTask)).WaitUntilBattleReadyTask();
+        public Task<bool> PostBattleRecoveryTask() =>
+            RequireClassHandler(nameof(PostBattleRecoveryTask)).PostBattleRecoveryTask();
+
+        public Task<bool> PreBattleBuffingTask() =>
+            RequireClassHandler(nameof(PreBattleBuffingTask)).PreBattleBuffingTask();
 
         public bool PlayerIsBattleReady() =>
             RequireClassHandler(nameof(PlayerIsBattleReady)).IsBattleReady();

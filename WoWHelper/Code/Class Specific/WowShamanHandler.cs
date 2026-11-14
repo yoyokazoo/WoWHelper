@@ -282,7 +282,7 @@ namespace WoWHelper
             return WorldState.PlayerIsDiseased && ClassState.CanCureDisease;
         }
 
-        public override async Task<bool> PostBattleReadyTask()
+        public override async Task<bool> PostBattleRecoveryTask()
         {
             if (ShouldCastCurePoison())
             {
@@ -299,7 +299,7 @@ namespace WoWHelper
             return true;
         }
 
-        public override async Task<bool> PreBattleReadyTask()
+        public override async Task<bool> PreBattleBuffingTask()
         {
             if (ClassState.ShouldCastRockbiterWeapon)
             {

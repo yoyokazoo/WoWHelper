@@ -62,7 +62,7 @@ namespace WoWHelper
 
         #region Tasks
 
-        public override async Task<bool> PostBattleReadyTask()
+        public override async Task<bool> PostBattleRecoveryTask()
         {
             if (ClassState.ShouldSummonPet)
             {
@@ -73,7 +73,7 @@ namespace WoWHelper
             return true;
         }
 
-        public override async Task<bool> PreBattleReadyTask()
+        public override async Task<bool> PreBattleBuffingTask()
         {
             if (ClassState.ShouldCastDemonArmor)
             {

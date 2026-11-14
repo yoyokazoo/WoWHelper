@@ -350,7 +350,7 @@ namespace WoWHelper
 
         public override bool ResourceIsMana => false;
 
-        public override async Task<bool> PostBattleReadyTask()
+        public override async Task<bool> PostBattleRecoveryTask()
         {
             if (WorldState.ResourcePercent >= BATTLE_SHOUT_RAGE_COST)
             {

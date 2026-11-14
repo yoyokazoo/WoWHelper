@@ -39,28 +39,17 @@ namespace WoWHelper
         }
 
         // Immediate post battle actions like curing poison, using surplus rage, etc.
-        public virtual async Task<bool> PostBattleReadyTask()
+        public virtual async Task<bool> PostBattleRecoveryTask()
         {
             await Task.Delay(0);
             return true;
         }
 
         // Pre battle actions we want to wait as long as possible to do so we don't waste duration AKA buffing
-        public virtual async Task<bool> PreBattleReadyTask()
+        public virtual async Task<bool> PreBattleBuffingTask()
         {
             await Task.Delay(0);
             return true;
-        }
-
-        public virtual async Task<bool> WaitUntilBattleReadyTask()
-        {
-            bool battleReady = IsBattleReady();
-            if (battleReady)
-            {
-                await Player.ScootForwardsTask();
-            }
-
-            return battleReady;
         }
 
         public virtual bool IsBattleReady()

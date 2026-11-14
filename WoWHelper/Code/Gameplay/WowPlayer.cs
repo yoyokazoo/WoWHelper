@@ -323,7 +323,8 @@ namespace WoWHelper
                     ClassHandler?.OnEnterFight();
                     break;
                 case PlayerGoal.RECOVER_FROM_BATTLE:
-                    CurrentBattleRecoveryState = BattleRecoveryState.LOOT_ATTEMPT_ONE;
+                    // TODO: keep track of time we enter recovery state
+                    CurrentBattleRecoveryState = BattleRecoveryState.POST_BATTLE_RECOVERY;
                     break;
             }
 
@@ -423,6 +424,10 @@ namespace WoWHelper
         {
             switch (CurrentBattleRecoveryState)
             {
+                case BattleRecoveryState.POST_BATTLE_RECOVERY:
+                    await PostBattleRecoveryTask();
+                    CurrentBattleRecoveryState = BattleRecoveryState.LOOT_ATTEMPT_ONE;
+                    break;
                 case BattleRecoveryState.LOOT_ATTEMPT_ONE:
                     await WaitUnlessInCombatTask(1500);
                     LootX = ScreenConfiguration.LootDefaultX;
@@ -450,11 +455,22 @@ namespace WoWHelper
                     CurrentBattleRecoveryState = BattleRecoveryState.WAITING_FOR_RECOVERY;
                     break;
                 case BattleRecoveryState.WAITING_FOR_RECOVERY:
-                    if (await WaitUntilBattleReadyTask())
+                    if (PlayerIsBattleReady())
                     {
                         await ScootForwardsTask();
-                        await SetPlayerGoalTask(PlayerGoal.NONE);
+                        CurrentBattleRecoveryState = BattleRecoveryState.POST_BATTLE_DOUBLE_CHECK;
                     }
+                    break;
+                case BattleRecoveryState.POST_BATTLE_DOUBLE_CHECK:
+                    await PostBattleRecoveryTask();
+                    CurrentBattleRecoveryState = BattleRecoveryState.PRE_BATTLE_BUFFING;
+                    break;
+                case BattleRecoveryState.PRE_BATTLE_BUFFING:
+                    await PreBattleBuffingTask();
+                    CurrentBattleRecoveryState = BattleRecoveryState.FULLY_RECOVERED;
+                    break;
+                case BattleRecoveryState.FULLY_RECOVERED:
+                    await SetPlayerGoalTask(PlayerGoal.NONE);
                     break;
             }
         }
