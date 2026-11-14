@@ -62,44 +62,26 @@ namespace WoWHelper
 
         #region Tasks
 
-        public override async Task<bool> WaitUntilBattleReadyTask()
+        public override async Task<bool> PostBattleReadyTask()
         {
-            bool hpRecovered = WorldState.PlayerHpPercent >= WowConstants.STOP_RESTING_HP_THRESHOLD;
-            bool mpRecovered = WorldState.ResourcePercent >= WowConstants.STOP_RESTING_MP_THRESHOLD;
-            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(Player.HealthPotionTime, WowConstants.POTION_COOLDOWN_MILLIS);
-            bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
-
-            if (battleReady)
+            if (ClassState.ShouldSummonPet)
             {
-                bool buffed = false;
-                if (ClassState.ShouldCastDemonArmor)
-                {
-                    await Player.WaitForGlobalCooldownTask();
-                    await WowInput.PressKeyWithShift(Input.SHIFT_DEMON_ARMOR);
-                    buffed = true;
-                }
-
-                if (ClassState.ShouldSummonPet)
-                {
-                    await Player.WaitForGlobalCooldownTask();
-                    await WowInput.PressKey(Input.SUMMON_PET);
-                    buffed = true;
-                }
-
-                if (buffed)
-                {
-                    return false;
-                }
-
-                await Player.ScootForwardsTask();
+                await Player.WaitForGlobalCooldownTask();
+                await WowInput.PressKey(Input.SUMMON_PET);
             }
 
-            return battleReady;
+            return true;
         }
 
-        public override bool IsBattleReady()
+        public override async Task<bool> PreBattleReadyTask()
         {
-            throw new System.NotImplementedException($"{nameof(WowWarlockHandler)}.{nameof(IsBattleReady)} isn't implemented yet.");
+            if (ClassState.ShouldCastDemonArmor)
+            {
+                await Player.WaitForGlobalCooldownTask();
+                await WowInput.PressKeyWithShift(Input.SHIFT_DEMON_ARMOR);
+            }
+
+            return true;
         }
 
         public override async Task<bool> KickOffEngageTask()

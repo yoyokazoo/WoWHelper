@@ -350,27 +350,15 @@ namespace WoWHelper
 
         public override bool ResourceIsMana => false;
 
-        public override async Task<bool> WaitUntilBattleReadyTask()
+        public override async Task<bool> PostBattleReadyTask()
         {
-            // For now, I don't care if dynamite is cooled down.  If we dynamited and didn't have to potion, we're probably safe enough to keep going
-            // especially since the dynamite cooldown is so short it'll probably be up by the time we need it again.
-
-            bool battleReady = IsBattleReady();
-
-            if (battleReady)
+            if (WorldState.ResourcePercent >= BATTLE_SHOUT_RAGE_COST)
             {
-                await Player.ScootForwardsTask();
+                await WowInput.PressKey(Input.BATTLE_SHOUT);
+                BattleShoutPressTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             }
 
-            return battleReady;
-        }
-
-        public override bool IsBattleReady()
-        {
-            bool hpRecovered = WorldState.PlayerHpPercent >= WowConstants.STOP_RESTING_HP_THRESHOLD;
-            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(Player.HealthPotionTime, WowConstants.POTION_COOLDOWN_MILLIS);
-            bool battleReady = hpRecovered && potionIsCooledDown;
-            return battleReady;
+            return true;
         }
 
         public override async Task<bool> KickOffEngageTask()

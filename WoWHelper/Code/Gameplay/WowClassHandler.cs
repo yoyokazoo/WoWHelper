@@ -38,8 +38,40 @@ namespace WoWHelper
             return true;
         }
 
-        public abstract Task<bool> WaitUntilBattleReadyTask();
-        public abstract bool IsBattleReady();
+        // Immediate post battle actions like curing poison, using surplus rage, etc.
+        public virtual async Task<bool> PostBattleReadyTask()
+        {
+            await Task.Delay(0);
+            return true;
+        }
+
+        // Pre battle actions we want to wait as long as possible to do so we don't waste duration AKA buffing
+        public virtual async Task<bool> PreBattleReadyTask()
+        {
+            await Task.Delay(0);
+            return true;
+        }
+
+        public virtual async Task<bool> WaitUntilBattleReadyTask()
+        {
+            bool battleReady = IsBattleReady();
+            if (battleReady)
+            {
+                await Player.ScootForwardsTask();
+            }
+
+            return battleReady;
+        }
+
+        public virtual bool IsBattleReady()
+        {
+            bool hpRecovered = WorldState.PlayerHpPercent >= WowConstants.STOP_RESTING_HP_THRESHOLD;
+            bool mpRecovered = !ResourceIsMana || WorldState.ResourcePercent >= WowConstants.STOP_RESTING_MP_THRESHOLD;
+            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(Player.HealthPotionTime, WowConstants.POTION_COOLDOWN_MILLIS);
+            bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
+            return battleReady;
+        }
+
         public abstract Task<bool> KickOffEngageTask();
         public abstract Task<bool> ExecuteEngageTask();
         public abstract Task<bool> CombatLoopTask();

@@ -282,13 +282,8 @@ namespace WoWHelper
             return WorldState.PlayerIsDiseased && ClassState.CanCureDisease;
         }
 
-        public override async Task<bool> WaitUntilBattleReadyTask()
+        public override async Task<bool> PostBattleReadyTask()
         {
-            bool hpRecovered = WorldState.PlayerHpPercent >= WowConstants.STOP_RESTING_HP_THRESHOLD;
-            bool mpRecovered = WorldState.ResourcePercent >= WowConstants.STOP_RESTING_MP_THRESHOLD;
-            bool potionIsCooledDown = !GeneralHelpers.CurrentTimeInsideDuration(Player.HealthPotionTime, WowConstants.POTION_COOLDOWN_MILLIS);
-            bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
-
             if (ShouldCastCurePoison())
             {
                 await Player.WaitForGlobalCooldownTask();
@@ -301,37 +296,24 @@ namespace WoWHelper
                 await WowInput.PressKeyWithShift(Input.SHIFT_CURE_DISEASE);
             }
 
-            if (battleReady)
-            {
-                bool buffed = false;
-                if (ClassState.ShouldCastRockbiterWeapon)
-                {
-                    await Player.WaitForGlobalCooldownTask();
-                    await WowInput.PressKeyWithShift(Input.SHIFT_ROCKBITER_WEAPON);
-                    buffed = true;
-                }
-
-                if (ShouldCastLightningShield())
-                {
-                    await Player.WaitForGlobalCooldownTask();
-                    await WowInput.PressKey(Input.LIGHTNING_SHIELD);
-                    buffed = true;
-                }
-
-                if (buffed)
-                {
-                    return false;
-                }
-
-                await Player.ScootForwardsTask();
-            }
-
-            return battleReady;
+            return true;
         }
 
-        public override bool IsBattleReady()
+        public override async Task<bool> PreBattleReadyTask()
         {
-            throw new System.NotImplementedException($"{nameof(WowShamanHandler)}.{nameof(IsBattleReady)} isn't implemented yet.");
+            if (ClassState.ShouldCastRockbiterWeapon)
+            {
+                await Player.WaitForGlobalCooldownTask();
+                await WowInput.PressKeyWithShift(Input.SHIFT_ROCKBITER_WEAPON);
+            }
+
+            if (ShouldCastLightningShield())
+            {
+                await Player.WaitForGlobalCooldownTask();
+                await WowInput.PressKey(Input.LIGHTNING_SHIELD);
+            }
+
+            return true;
         }
 
         public override async Task<bool> KickOffEngageTask()
