@@ -837,7 +837,7 @@ namespace WoWHelper.Code.WorldState
 
         #region Teldrassil
 
-        public static readonly WowRoute LEVEL_1_TELDRASSIL_ANIMALS = new WowRoute
+        public static readonly WowRoute LEVEL_1_TELDRASSIL_ANIMALS_ROUTE = new WowRoute
         {
             Name = "Level 1 Teldrassil Animals",
             Zone = WowZone.Teldrassil,

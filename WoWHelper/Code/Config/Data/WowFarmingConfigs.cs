@@ -256,6 +256,16 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
+        #region Levels 1-10 Teldrassil
+
+        public static readonly WowFarmingConfiguration LEVEL_1_TELDRASSIL_ANIMALS = new WowFarmingConfiguration
+        {
+            Route = WowFarmingRoutes.LEVEL_1_TELDRASSIL_ANIMALS_ROUTE,
+            TargetMacroMobNames = "Young,Grellkin,Mangy,Thistle",
+        };
+
+        #endregion
+
         public static readonly List<WowFarmingConfiguration> ALL_LOCATIONS = new List<WowFarmingConfiguration>
         {
             LEVEL_58_SILITHUS_RUMBLERS,
@@ -289,6 +299,7 @@ namespace WoWHelper.Code.WorldState
             LEVEL_1_MULGORE_PLAINSTRIDERS,
             LEVEL_1_DUROTAR_BOARS_AND_SCORPS,
             LEVEL_1_TIRISFAL_UNDEAD,
+            LEVEL_1_TELDRASSIL_ANIMALS
         };
     }
 }

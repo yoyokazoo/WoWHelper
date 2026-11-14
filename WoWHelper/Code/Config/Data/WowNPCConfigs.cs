@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace WoWHelper.Code.WorldState
@@ -59,12 +60,41 @@ namespace WoWHelper.Code.WorldState
             Roles = NPCRoles.Train
         };
 
+        public static readonly WowNPCConfiguration TELDRASSIL_MERCHANT = new WowNPCConfiguration
+        {
+            Name = "Teldrassil Merchant",
+            Route = new WowRoute
+            {
+                Name = "Teldrassil Merchant",
+                Zone = WowZone.Teldrassil,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.TELDRASSIL_ANIMALS_TO_MERCHANT_ROUTE.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Sell | NPCRoles.Repair | NPCRoles.Arrows
+        };
+
+        public static readonly WowNPCConfiguration TELDRASSIL_WARRIOR_TRAINER = new WowNPCConfiguration
+        {
+            Name = "Teldrassil Warrior Trainer",
+            Class = Gameplay.WowCombatConfiguration.Warrior,
+            Route = new WowRoute
+            {
+                Name = "Teldrassil Warrior Trainer",
+                Zone = WowZone.Teldrassil,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train
+        };
+
         public static readonly List<WowNPCConfiguration> ALL_NPCS = new List<WowNPCConfiguration>()
         {
             VALLEY_OF_TRIALS_MERCHANT,
             VALLEY_OF_TRIALS_WARRIOR_TRAINER,
             RAZOR_HILL_WARRIOR_TRAINER,
             RAZOR_HILL_MERCHANT,
+            TELDRASSIL_MERCHANT,
+            TELDRASSIL_WARRIOR_TRAINER
         };
     }
 }

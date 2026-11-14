@@ -90,10 +90,31 @@ namespace WoWHelper
 
             var sb = new StringBuilder();
             sb.AppendLine();
-            sb.AppendLine($"public static readonly WowRoute AD_HOC_ROUTE_{endMillis} = new WowRoute");
+            AppendRouteDeclaration(sb, $"AD_HOC_ROUTE_{endMillis}", $"Ad Hoc {endMillis}", WorldState.CurrentZone, faction, traversal, waypoints);
+
+            // A linear route only gets walked start -> end -> start, so also print the reversed
+            // copy, for when the route's natural starting point is the other end.
+            if (traversal == WowRoute.WaypointTraversalMethod.LINEAR)
+            {
+                var reversed = new List<Vector2>(waypoints);
+                reversed.Reverse();
+                sb.AppendLine();
+                sb.AppendLine();
+                AppendRouteDeclaration(sb, $"AD_HOC_ROUTE_{endMillis}_REVERSED", $"Ad Hoc {endMillis} Reversed", WorldState.CurrentZone, faction, traversal, reversed);
+            }
+
+            // One write for the whole thing, so it copy-pastes without per-line timestamps.
+            Console.WriteLine(sb.ToString());
+            return true;
+        }
+
+        private static void AppendRouteDeclaration(StringBuilder sb, string fieldName, string name, WowZone zone,
+            WowFaction faction, WowRoute.WaypointTraversalMethod traversal, List<Vector2> waypoints)
+        {
+            sb.AppendLine($"public static readonly WowRoute {fieldName} = new WowRoute");
             sb.AppendLine("{");
-            sb.AppendLine($"    Name = \"Ad Hoc {endMillis}\",");
-            sb.AppendLine($"    Zone = WowZone.{WorldState.CurrentZone},");
+            sb.AppendLine($"    Name = \"{name}\",");
+            sb.AppendLine($"    Zone = WowZone.{zone},");
             sb.AppendLine($"    Faction = WowFaction.{faction},");
             sb.AppendLine($"    TraversalMethod = WowRoute.WaypointTraversalMethod.{traversal},");
             sb.AppendLine();
@@ -105,9 +126,6 @@ namespace WoWHelper
             }
             sb.AppendLine("    },");
             sb.Append("};");
-
-            Console.WriteLine(sb.ToString());
-            return true;
         }
 
         private static string FormatRouteFloat(float value) => value.ToString("0.00", CultureInfo.InvariantCulture);

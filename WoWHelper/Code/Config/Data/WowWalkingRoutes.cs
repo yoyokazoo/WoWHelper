@@ -213,6 +213,47 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
+        #region Teldrassil
+
+        public static readonly WowRoute TELDRASSIL_ANIMALS_TO_MERCHANT_ROUTE = new WowRoute
+        {
+            Name = "Animals to Merchant Route",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(62.37f, 38.78f),
+                new Vector2(61.87f, 40.18f),
+                new Vector2(62.03f, 42.28f),
+                new Vector2(61.25f, 42.43f),
+                new Vector2(60.11f, 42.64f),
+                new Vector2(59.80f, 42.02f),
+                new Vector2(59.31f, 41.09f),
+            },
+        };
+
+        public static readonly WowRoute TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE = new WowRoute
+        {
+            Name = "Ad Hoc 1794627159741 Reversed",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(59.80f, 42.02f),
+                new Vector2(59.48f, 41.05f),
+                new Vector2(59.16f, 40.27f),
+                new Vector2(59.21f, 39.64f),
+                new Vector2(59.27f, 39.10f),
+                new Vector2(59.64f, 38.44f),
+            },
+        };
+
+        #endregion
+
         public static readonly List<WowRoute> ALL_WALKING_ROUTES = new List<WowRoute>
         {
             BOARS_AND_SCORPS_TO_MERCHANT_ROUTE,
@@ -225,7 +266,9 @@ namespace WoWHelper.Code.WorldState
             RAZOR_HILL_TO_WARRIOR_TRAINER,
             RAZOR_HILL_TO_ORG_ENTRANCE,
             ORG_ENTRANCE_TO_DUROTAR_SKULL_ROCK_COAST,
-            ORGRIMMAR_ENTRANCE_ROUTE
+            ORGRIMMAR_ENTRANCE_ROUTE,
+            TELDRASSIL_ANIMALS_TO_MERCHANT_ROUTE,
+            TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE
         };
     }
 }
