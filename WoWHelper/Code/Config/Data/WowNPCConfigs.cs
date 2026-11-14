@@ -8,9 +8,8 @@ namespace WoWHelper.Code.WorldState
     {
         public static readonly WowNPCConfiguration VALLEY_OF_TRIALS_MERCHANT = new WowNPCConfiguration
         {
-            Name = "Duokna",
             Route = new WowRoute {
-                Name = "Valley of Trials Merchant",
+                Name = "VALLEY_OF_TRIALS_MERCHANT",
                 Zone = WowZone.Durotar,
                 Faction = WowFaction.HORDE,
                 Waypoints = new List<Vector2> { new Vector2(42.58f, 67.34f) } 
@@ -20,11 +19,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowNPCConfiguration VALLEY_OF_TRIALS_WARRIOR_TRAINER = new WowNPCConfiguration
         {
-            Name = "Frang",
             Class = Gameplay.WowCombatConfiguration.Warrior,
             Route = new WowRoute
             {
-                Name = "Valley of Trials Warrior Trainer",
+                Name = "VALLEY_OF_TRIALS_WARRIOR_TRAINER",
                 Zone = WowZone.Durotar,
                 Faction = WowFaction.HORDE,
                 Waypoints = new List<Vector2> { new Vector2(42.89f, 69.44f) }
@@ -35,10 +33,9 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowNPCConfiguration RAZOR_HILL_MERCHANT = new WowNPCConfiguration
         {
-            Name = "Ghrawt (Razor Hill)",
             Route = new WowRoute
             {
-                Name = "Razor Hill Merchant",
+                Name = "RAZOR_HILL_MERCHANT",
                 Zone = WowZone.Durotar,
                 Faction = WowFaction.HORDE,
                 Waypoints = new List<Vector2> { new Vector2(52.98f, 41.03f) }
@@ -48,11 +45,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowNPCConfiguration RAZOR_HILL_WARRIOR_TRAINER = new WowNPCConfiguration
         {
-            Name = "??? Razor hill warrior trainer",
             Class = Gameplay.WowCombatConfiguration.Warrior,
             Route = new WowRoute
             {
-                Name = "Razor Hill Warrior Trainer",
+                Name = "RAZOR_HILL_WARRIOR_TRAINER",
                 Zone = WowZone.Durotar,
                 Faction = WowFaction.HORDE,
                 Waypoints = new List<Vector2> { new Vector2(54.19f, 42.47f), }
@@ -62,10 +58,9 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowNPCConfiguration TELDRASSIL_MERCHANT = new WowNPCConfiguration
         {
-            Name = "Teldrassil Merchant",
             Route = new WowRoute
             {
-                Name = "Teldrassil Merchant",
+                Name = "TELDRASSIL_MERCHANT",
                 Zone = WowZone.Teldrassil,
                 Faction = WowFaction.ALLIANCE,
                 Waypoints = new List<Vector2> { WowWalkingRoutes.TELDRASSIL_ANIMALS_TO_MERCHANT_ROUTE.Waypoints.Last() }
@@ -75,11 +70,10 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowNPCConfiguration TELDRASSIL_WARRIOR_TRAINER = new WowNPCConfiguration
         {
-            Name = "Teldrassil Warrior Trainer",
             Class = Gameplay.WowCombatConfiguration.Warrior,
             Route = new WowRoute
             {
-                Name = "Teldrassil Warrior Trainer",
+                Name = "TELDRASSIL_WARRIOR_TRAINER",
                 Zone = WowZone.Teldrassil,
                 Faction = WowFaction.ALLIANCE,
                 Waypoints = new List<Vector2> { WowWalkingRoutes.TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE.Waypoints.Last() }

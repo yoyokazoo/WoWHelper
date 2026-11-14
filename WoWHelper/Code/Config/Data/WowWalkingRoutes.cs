@@ -9,7 +9,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute BOARS_AND_SCORPS_TO_MERCHANT_ROUTE = new WowRoute
         {
-            Name = "Durotar Boars and Scorpions to Merchant",
+            Name = "BOARS_AND_SCORPS_TO_MERCHANT_ROUTE",
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
 
@@ -24,7 +24,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute BOARS_AND_SCORPS_TO_WARRIOR_TRAINER_ROUTE = new WowRoute
         {
-            Name = "Durotar Boars and Scorpions to Warrior Trainer",
+            Name = "BOARS_AND_SCORPS_TO_WARRIOR_TRAINER_ROUTE",
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
 
@@ -39,7 +39,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute BOARS_AND_SCORPS_TO_IMPS = new WowRoute
         {
-            Name = "Durotar Boars and Scorpions to Imps",
+            Name = "BOARS_AND_SCORPS_TO_IMPS",
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
 
@@ -53,7 +53,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute BOARS_AND_SCORPS_TO_SCORPS = new WowRoute
         {
-            Name = "Durotar Boars and Scorpions to Imps",
+            Name = "BOARS_AND_SCORPS_TO_SCORPS",
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
 
@@ -68,7 +68,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute VALLEY_OF_TRIALS_TO_RAZOR_HILL_LOOP = new WowRoute
         {
-            Name = "Valley of Trials to Razor Hill Loop",
+            Name = "VALLEY_OF_TRIALS_TO_RAZOR_HILL_LOOP",
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
 
@@ -90,7 +90,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute RAZOR_HILL_LOOP_TO_RAZOR_HILL = new WowRoute
         {
-            Name = "Razor Hill Loop To Razor Hill",
+            Name = "RAZOR_HILL_LOOP_TO_RAZOR_HILL",
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
 
@@ -107,7 +107,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute RAZOR_HILL_TO_MERCHANT = new WowRoute
         {
-            Name = "Razor Hill To Merchant",
+            Name = "RAZOR_HILL_TO_MERCHANT",
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
 
@@ -120,7 +120,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute RAZOR_HILL_TO_WARRIOR_TRAINER = new WowRoute
         {
-            Name = "Razor Hill To Warrior Trainer",
+            Name = "RAZOR_HILL_TO_WARRIOR_TRAINER",
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
 
@@ -138,7 +138,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute RAZOR_HILL_TO_ORG_ENTRANCE = new WowRoute
         {
-            Name = "Razor Hill To Org Entrance",
+            Name = "RAZOR_HILL_TO_ORG_ENTRANCE",
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
 
@@ -159,7 +159,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute ORG_ENTRANCE_TO_DUROTAR_SKULL_ROCK_COAST = new WowRoute
         {
-            Name = "Org Entrance To Durotar Skull Rock Coast",
+            Name = "ORG_ENTRANCE_TO_DUROTAR_SKULL_ROCK_COAST",
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
 
@@ -178,7 +178,7 @@ namespace WoWHelper.Code.WorldState
         /*
         public static readonly WowRoute ORG_ENTRANCE_TO_SKINNING_TRAINER = new WowRoute
         {
-            Name = "Org Entrance to Skinning Trainer",
+            Name = "ORG_ENTRANCE_TO_SKINNING_TRAINER",
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
 
@@ -196,7 +196,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute ORGRIMMAR_ENTRANCE_ROUTE = new WowRoute
         {
-            Name = "Orgrimmar Entrance",
+            Name = "ORGRIMMAR_ENTRANCE_ROUTE",
             Zone = WowZone.Orgrimmar,
             Faction = WowFaction.HORDE,
 
@@ -217,7 +217,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute TELDRASSIL_ANIMALS_TO_MERCHANT_ROUTE = new WowRoute
         {
-            Name = "Animals to Merchant Route",
+            Name = "TELDRASSIL_ANIMALS_TO_MERCHANT_ROUTE",
             Zone = WowZone.Teldrassil,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
@@ -236,7 +236,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE = new WowRoute
         {
-            Name = "Ad Hoc 1794627159741 Reversed",
+            Name = "TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE",
             Zone = WowZone.Teldrassil,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
@@ -254,7 +254,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute TELDRASSIL_LEVEL_1_TO_4_ROUTE = new WowRoute
         {
-            Name = "Ad Hoc 1794630607988 Reversed",
+            Name = "TELDRASSIL_LEVEL_1_TO_4_ROUTE",
             Zone = WowZone.Teldrassil,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
@@ -272,7 +272,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute TELDRASSIL_LEVEL_4_TO_7_ROUTE = new WowRoute
         {
-            Name = "TELDRASSIL_LEVEL_1_TO_4_ROUTE",
+            Name = "TELDRASSIL_LEVEL_4_TO_7_ROUTE",
             Zone = WowZone.Teldrassil,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,

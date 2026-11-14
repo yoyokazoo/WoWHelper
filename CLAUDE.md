@@ -807,8 +807,9 @@ of truth — edits should be made here, not in the WoW install directory.
   for money vs. grind for XP, off the `MultiBoolTwo` G6/G7 bits) is still to
   be written. Each `WowFarmingConfiguration` carries a
   `Route` (`WowRoute`, `Config/Definitions/WowRoute.cs`): the route's
-  `Name` (human-readable, includes the minimum level — it used to be
-  `WowFarmingConfiguration.Title`), `Waypoints`, `TraversalMethod` (`WowRoute.WaypointTraversalMethod`,
+  `Name` (exactly the name of the variable holding the route, e.g.
+  `"LEVEL_6_TIRISFAL_ZOMBIES_ROUTE"`; an NPC's inline route uses the NPC
+  config's variable name, and `WowNPCConfiguration` has no `Name` of its own), `Waypoints`, `TraversalMethod` (`WowRoute.WaypointTraversalMethod`,
   `CIRCULAR`/`LINEAR` — defaults to `LINEAR`, so loop routes must set
   `CIRCULAR` explicitly), `DistanceTolerance`, `MinimumLevel`, and `Zone` (`WowZone` enum,
   still declared in `WowFarmingConfiguration.cs`) — see the zone ID

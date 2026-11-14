@@ -9,7 +9,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_11_DUROTAR_COAST_ROUTE = new WowRoute
         {
-            Name = "Durotar Coast (Level 11+)",
+            Name = "LEVEL_11_DUROTAR_COAST_ROUTE",
             MinimumLevel = 11,
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
@@ -30,7 +30,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_9_DUROTAR_SKULL_ROCK_COAST_ROUTE = new WowRoute
         {
-            Name = "Durotar Skull Rock Coast (Level 9+)",
+            Name = "LEVEL_9_DUROTAR_SKULL_ROCK_COAST_ROUTE",
             MinimumLevel = 9,
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
@@ -62,7 +62,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE = new WowRoute
         {
-            Name = "Durotar Boar Razor Hill Loop (Level 6+)",
+            Name = "LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE",
             MinimumLevel = 6,
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
@@ -95,7 +95,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_4_DUROTAR_SCORPS_ROUTE = new WowRoute
         {
-            Name = "Durotar Scorps (Level 4+)",
+            Name = "LEVEL_4_DUROTAR_SCORPS_ROUTE",
             MinimumLevel = 4,
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
@@ -114,7 +114,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_4_DUROTAR_IMPS_ROUTE = new WowRoute
         {
-            Name = "Durotar Imps (Level 4+)",
+            Name = "LEVEL_4_DUROTAR_IMPS_ROUTE",
             MinimumLevel = 4,
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
@@ -133,7 +133,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_1_DUROTAR_BOARS_AND_SCORPS_ROUTE = new WowRoute
         {
-            Name = "Durotar Boars and Scorpions (Level 1+)",
+            Name = "LEVEL_1_DUROTAR_BOARS_AND_SCORPS_ROUTE",
             MinimumLevel = 1,
             Zone = WowZone.Durotar,
             Faction = WowFaction.HORDE,
@@ -157,7 +157,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_10_MULGORE_MIXED_BEASTS_ROUTE = new WowRoute
         {
-            Name = "Mulgore Mixed Beasts (Level 10+)",
+            Name = "LEVEL_10_MULGORE_MIXED_BEASTS_ROUTE",
             MinimumLevel = 10,
             Zone = WowZone.Mulgore,
             Faction = WowFaction.HORDE,
@@ -176,7 +176,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_8_MULGORE_MIXED_BEASTS_ROUTE = new WowRoute
         {
-            Name = "Mulgore Mixed Beasts (Level 8+)",
+            Name = "LEVEL_8_MULGORE_MIXED_BEASTS_ROUTE",
             MinimumLevel = 8,
             Zone = WowZone.Mulgore,
             Faction = WowFaction.HORDE,
@@ -196,7 +196,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_6_MULGORE_BATTLEBOARS_ROUTE = new WowRoute
         {
-            Name = "Mulgore Battleboars (Level 6+)",
+            Name = "LEVEL_6_MULGORE_BATTLEBOARS_ROUTE",
             MinimumLevel = 6,
             Zone = WowZone.Mulgore,
             Faction = WowFaction.HORDE,
@@ -216,7 +216,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_4_MULGORE_MOUNTAIN_COUGARS_ROUTE = new WowRoute
         {
-            Name = "Mulgore Mountain Cougars (Level 4+)",
+            Name = "LEVEL_4_MULGORE_MOUNTAIN_COUGARS_ROUTE",
             MinimumLevel = 4,
             Zone = WowZone.Mulgore,
             Faction = WowFaction.HORDE,
@@ -236,7 +236,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_1_MULGORE_PLAINSTRIDERS_ROUTE = new WowRoute
         {
-            Name = "Mulgore Plainstriders (Level 1+)",
+            Name = "LEVEL_1_MULGORE_PLAINSTRIDERS_ROUTE",
             MinimumLevel = 1,
             Zone = WowZone.Mulgore,
             Faction = WowFaction.HORDE,
@@ -258,7 +258,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_17_NORTHERN_BARRENS_ROUTE = new WowRoute
         {
-            Name = "Northern Barrens (Level 17+)",
+            Name = "LEVEL_17_NORTHERN_BARRENS_ROUTE",
             MinimumLevel = 17,
             Zone = WowZone.TheBarrens,
             Faction = WowFaction.HORDE,
@@ -280,7 +280,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_13_BARRENS_ENTRANCE_ROUTE = new WowRoute
         {
-            Name = "Barrens Entrance (Level 13+)",
+            Name = "LEVEL_13_BARRENS_ENTRANCE_ROUTE",
             MinimumLevel = 13,
             Zone = WowZone.TheBarrens,
             Faction = WowFaction.HORDE,
@@ -305,7 +305,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_20_ZORAMGAR_ROUTE = new WowRoute
         {
-            Name = "Zoram'gar, Ashenvale (Level 20+)",
+            Name = "LEVEL_20_ZORAMGAR_ROUTE",
             MinimumLevel = 20,
             Zone = WowZone.Ashenvale,
             Faction = WowFaction.HORDE,
@@ -349,7 +349,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_26_STONETALON_CHARRED_FOREST_ROUTE = new WowRoute
         {
-            Name = "North Stonetalon (Level 26+)",
+            Name = "LEVEL_26_STONETALON_CHARRED_FOREST_ROUTE",
             MinimumLevel = 26,
             Zone = WowZone.StonetalonMountains,
             Faction = WowFaction.HORDE,
@@ -372,7 +372,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_23_STONETALON_ROUTE = new WowRoute
         {
-            Name = "Stonetalon Mountains (Level 23+)",
+            Name = "LEVEL_23_STONETALON_ROUTE",
             MinimumLevel = 23,
             Zone = WowZone.StonetalonMountains,
             Faction = WowFaction.HORDE,
@@ -402,7 +402,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_29_HILLSBRAD_RIVER_ROUTE = new WowRoute
         {
-            Name = "Hillsbrad River (Level 29+)",
+            Name = "LEVEL_29_HILLSBRAD_RIVER_ROUTE",
             MinimumLevel = 29,
             Zone = WowZone.HillsbradFoothills,
             Faction = WowFaction.HORDE,
@@ -429,7 +429,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_34_SHIMMERING_FLATS_ROUTE = new WowRoute
         {
-            Name = "Shimmering Flats Alternate, Thousand Needles (Level 34+)",
+            Name = "LEVEL_34_SHIMMERING_FLATS_ROUTE",
             MinimumLevel = 34,
             Zone = WowZone.ThousandNeedles,
             Faction = WowFaction.HORDE,
@@ -455,7 +455,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_36_KODO_GRAVEYARD_ROUTE = new WowRoute
         {
-            Name = "Kodo Graveyard, Desolace (Level 36+)",
+            Name = "LEVEL_36_KODO_GRAVEYARD_ROUTE",
             MinimumLevel = 36,
             Zone = WowZone.Desolace,
             Faction = WowFaction.HORDE,
@@ -489,7 +489,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_41_TANARIS_TURTLES_ROUTE = new WowRoute
         {
-            Name = "Tanaris Turtles (Level 41+)",
+            Name = "LEVEL_41_TANARIS_TURTLES_ROUTE",
             MinimumLevel = 41,
             Zone = WowZone.Tanaris,
             Faction = WowFaction.HORDE,
@@ -513,7 +513,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_46_FERALAS_HIPPOGRYPHS_ROUTE = new WowRoute
         {
-            Name = "Feralas Hippogryphs (Level 46+)",
+            Name = "LEVEL_46_FERALAS_HIPPOGRYPHS_ROUTE",
             MinimumLevel = 46,
             Zone = WowZone.Feralas,
             Faction = WowFaction.HORDE,
@@ -547,7 +547,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_53_NORTH_FELWOOD_ROUTE = new WowRoute
         {
-            Name = "North Felwood (Level 53+)",
+            Name = "LEVEL_53_NORTH_FELWOOD_ROUTE",
             MinimumLevel = 53,
             Zone = WowZone.Felwood,
             Faction = WowFaction.HORDE,
@@ -575,7 +575,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_50_FELWOOD_SOUTH_ROUTE = new WowRoute
         {
-            Name = "South Felwood (Level 50+)",
+            Name = "LEVEL_50_FELWOOD_SOUTH_ROUTE",
             MinimumLevel = 50,
             Zone = WowZone.Felwood,
             Faction = WowFaction.HORDE,
@@ -621,7 +621,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL_ROUTE = new WowRoute
         {
-            Name = "Dalton's Tears Frontside, Western Plaguelands (Level 56+)",
+            Name = "LEVEL_56_DALTONS_TEARS_FRONTSIDE_WPL_ROUTE",
             MinimumLevel = 56,
             Zone = WowZone.WesternPlaguelands,
             Faction = WowFaction.HORDE,
@@ -651,7 +651,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_58_SILITHUS_RUMBLERS_ROUTE = new WowRoute
         {
-            Name = "Silithus Rumblers (Level 58+)",
+            Name = "LEVEL_58_SILITHUS_RUMBLERS_ROUTE",
             MinimumLevel = 58,
             Zone = WowZone.Silithus,
             Faction = WowFaction.HORDE,
@@ -679,7 +679,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_53_ASZHARA_SATYR_CIRCLE_ROUTE = new WowRoute
         {
-            Name = "Azshara (Level 53+)",
+            Name = "LEVEL_53_ASZHARA_SATYR_CIRCLE_ROUTE",
             MinimumLevel = 53,
             Zone = WowZone.Azshara,
             Faction = WowFaction.HORDE,
@@ -707,7 +707,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_57_WINTERSPRING_YETIS_ROUTE = new WowRoute
         {
-            Name = "Winterspring Yetis (Level 57+)",
+            Name = "LEVEL_57_WINTERSPRING_YETIS_ROUTE",
             MinimumLevel = 57,
             Zone = WowZone.Winterspring,
             Faction = WowFaction.HORDE,
@@ -734,7 +734,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_55_WINTERSPRING_LAKE_ROUTE = new WowRoute
         {
-            Name = "Winterspring Lake (Level 56+)",
+            Name = "LEVEL_55_WINTERSPRING_LAKE_ROUTE",
             MinimumLevel = 56,
             Zone = WowZone.Winterspring,
             Faction = WowFaction.HORDE,
@@ -768,7 +768,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_6_TIRISFAL_ZOMBIES_ROUTE = new WowRoute
         {
-            Name = "Tirisfal Zombies (Level 6+)",
+            Name = "LEVEL_6_TIRISFAL_ZOMBIES_ROUTE",
             MinimumLevel = 6,
             Zone = WowZone.TirisfalGlades,
             Faction = WowFaction.HORDE,
@@ -794,7 +794,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_4_TIRISFAL_ANIMALS_ROUTE = new WowRoute
         {
-            Name = "Tirisfal Bats and Wolves (Level 4+)",
+            Name = "LEVEL_4_TIRISFAL_ANIMALS_ROUTE",
             MinimumLevel = 4,
             Zone = WowZone.TirisfalGlades,
             Faction = WowFaction.HORDE,
@@ -815,7 +815,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_1_TIRISFAL_UNDEAD_ROUTE = new WowRoute
         {
-            Name = "Tirisfal Zombies (Level 1+)",
+            Name = "LEVEL_1_TIRISFAL_UNDEAD_ROUTE",
             MinimumLevel = 1,
             Zone = WowZone.TirisfalGlades,
             Faction = WowFaction.HORDE,
@@ -839,7 +839,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_1_TELDRASSIL_ANIMALS_ROUTE = new WowRoute
         {
-            Name = "Level 1 Teldrassil Animals",
+            Name = "LEVEL_1_TELDRASSIL_ANIMALS_ROUTE",
             Zone = WowZone.Teldrassil,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
@@ -860,7 +860,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_4_TELDRASSIL_ANIMALS_ROUTE = new WowRoute
         {
-            Name = "Ad Hoc 1794630280238",
+            Name = "LEVEL_4_TELDRASSIL_ANIMALS_ROUTE",
             Zone = WowZone.Teldrassil,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
@@ -888,7 +888,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_7_TELDRASSIL_ANIMALS_ROUTE = new WowRoute
         {
-            Name = "Ad Hoc 1794629575921",
+            Name = "LEVEL_7_TELDRASSIL_ANIMALS_ROUTE",
             Zone = WowZone.Teldrassil,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
@@ -913,7 +913,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowRoute LEVEL_1_ELWYNN_ANIMALS = new WowRoute
         {
-            Name = "Ad Hoc 1794693175482 Reversed",
+            Name = "LEVEL_1_ELWYNN_ANIMALS",
             Zone = WowZone.ElwynnForest,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
