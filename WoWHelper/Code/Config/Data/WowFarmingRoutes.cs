@@ -908,5 +908,31 @@ namespace WoWHelper.Code.WorldState
         };
 
         #endregion
+
+        #region Elwynn Forest
+
+        public static readonly WowRoute LEVEL_1_ELWYNN_ANIMALS = new WowRoute
+        {
+            Name = "Ad Hoc 1794693175482 Reversed",
+            Zone = WowZone.ElwynnForest,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(52.75f, 39.24f),
+                new Vector2(51.72f, 38.07f),
+                new Vector2(51.58f, 36.33f),
+                new Vector2(50.14f, 35.91f),
+                new Vector2(48.55f, 36.08f),
+                new Vector2(47.29f, 38.85f),
+                new Vector2(45.58f, 44.66f),
+                new Vector2(45.90f, 43.24f),
+                new Vector2(46.41f, 40.53f),
+                new Vector2(47.15f, 39.23f),
+            },
+        };
+
+        #endregion
     }
 }
