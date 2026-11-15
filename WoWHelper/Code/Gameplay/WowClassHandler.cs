@@ -61,7 +61,6 @@ namespace WoWHelper
             return battleReady;
         }
 
-        public abstract Task<bool> KickOffEngageTask();
         public abstract Task<bool> ExecuteEngageTask();
         public abstract Task<bool> CombatLoopTask();
         public abstract Task SingleCombatTask();

@@ -659,9 +659,12 @@ of truth — edits should be made here, not in the WoW install directory.
   `null` until then). Handlers reach shared behavior through
   `Player` (the owning `WowPlayer` — its shared tasks are all public) and
   read `WorldState` via a shorthand property. `WowPlayerCombatConfig.cs`
-  is just thin forwarders (`StartBattleReadyTask`, `StartEngageTask`,
+  is just thin forwarders (`StartBattleReadyTask`, `ExecuteEngageTask`,
   `CombatLoopTask`, `CanEngageTarget`, ...) that throw if no handler exists
-  yet; the engage forwarders also own `EngageAttempts` (reset/increment),
+  yet, except `StartEngageTask`, which is class-agnostic (stop walking, face
+  the target marker) and lives there directly; the two engage tasks own
+  `EngageAttempts` (`StartEngageTask` resets it to 1, `ExecuteEngageTask`
+  increments it),
   and `OnEnterFight()` is called on entering `PlayerGoal.FIGHT` for per-fight
   resets (Warrior's once-per-fight Retaliation flag). Shared timers stay on
   `WowPlayer` and are stamped by the shared tasks themselves

@@ -31,11 +31,12 @@ namespace WoWHelper
         public bool PlayerIsBattleReady() =>
             RequireClassHandler(nameof(PlayerIsBattleReady)).IsBattleReady();
 
-        public Task<bool> StartEngageTask()
+        public async Task<bool> StartEngageTask()
         {
-            var handler = RequireClassHandler(nameof(StartEngageTask));
             EngageAttempts = 1;
-            return handler.KickOffEngageTask();
+            await EndWalkForwardTask();
+            await TurnToFaceTargetMarkerTask();
+            return true;
         }
 
         public Task<bool> ExecuteEngageTask()

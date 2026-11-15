@@ -361,13 +361,6 @@ namespace WoWHelper
             return true;
         }
 
-        public override async Task<bool> KickOffEngageTask()
-        {
-            await Player.EndWalkForwardTask();
-            await Player.TurnToFaceTargetMarkerTask();
-            return true;
-        }
-
         public override async Task<bool> ExecuteEngageTask()
         {
             if (await Player.AbandonUnreachableEngageTarget())

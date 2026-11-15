@@ -316,19 +316,6 @@ namespace WoWHelper
             return true;
         }
 
-        public override async Task<bool> KickOffEngageTask()
-        {
-            await Player.TurnToFaceTargetMarkerTask();
-
-            if (!ClassState.IsInEarthShockRange)
-            {
-                await Player.StartWalkForwardTask();
-                await Task.Delay(1000);
-                await Player.EndWalkForwardTask();
-            }
-            return true;
-        }
-
         public override async Task<bool> ExecuteEngageTask()
         {
             if (await Player.AbandonUnreachableEngageTarget())
