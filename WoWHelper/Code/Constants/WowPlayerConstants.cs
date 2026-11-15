@@ -14,6 +14,8 @@ namespace WoWHelper.Code
         // How often to spam jump while running around
         public const long TIME_BETWEEN_JUMPS_MILLIS = 8 * 1000;
 
+        public const long POST_BATTLE_LOOT_DELAY_MILLIS = 1500;
+
         // Log off after this many hours of farming
         public const long FARM_TIME_LIMIT_MILLIS = 10 * 60 * 60 * 1000; // 10 hours
 

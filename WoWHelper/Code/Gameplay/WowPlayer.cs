@@ -63,6 +63,8 @@ namespace WoWHelper
         public int CurrentMerchantWaypointIndex { get; private set; }
         public long MerchantRunStartTime { get; private set; }
 
+        public long EnteredBattleRecoveryTime { get; private set; }
+
         // Stuck detection -- see StuckRecoveryTask (WowMovementTasks.cs)
         public Vector2 StuckAnchor { get; private set; }
         public long StuckAnchorTime { get; private set; }
@@ -88,6 +90,7 @@ namespace WoWHelper
             CurrentBattleRecoveryState = BattleRecoveryState.STARTING_RECOVERY;
             CurrentStuckRecoveryState = StuckRecoveryState.NOT_STUCK;
             LastStuckCheckTime = 0; // guarantees the first StuckRecoveryTask call starts a fresh episode
+            EnteredBattleRecoveryTime = 0;
 
             CurrentWaypointIndex = -1;
             WaypointTraversalDirection = 1;
@@ -323,8 +326,8 @@ namespace WoWHelper
                     ClassHandler?.OnEnterFight();
                     break;
                 case PlayerGoal.RECOVER_FROM_BATTLE:
-                    // TODO: keep track of time we enter recovery state
                     CurrentBattleRecoveryState = BattleRecoveryState.POST_BATTLE_RECOVERY;
+                    EnteredBattleRecoveryTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     break;
             }
 
@@ -429,7 +432,9 @@ namespace WoWHelper
                     CurrentBattleRecoveryState = BattleRecoveryState.LOOT_ATTEMPT_ONE;
                     break;
                 case BattleRecoveryState.LOOT_ATTEMPT_ONE:
-                    await WaitUnlessInCombatTask(1500);
+                    long timeElapsedSinceEnteredBattleRecovery = DateTimeOffset.Now.ToUnixTimeMilliseconds() - EnteredBattleRecoveryTime;
+                    long timeToWaitBeforeLooting = WowConstants.POST_BATTLE_LOOT_DELAY_MILLIS -timeElapsedSinceEnteredBattleRecovery;
+                    await WaitUnlessInCombatTask(timeToWaitBeforeLooting);
                     LootX = ScreenConfiguration.LootDefaultX;
                     LootY = ScreenConfiguration.LootDefaultY;
                     await LootTask();
