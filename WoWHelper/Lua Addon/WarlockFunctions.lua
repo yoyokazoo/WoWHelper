@@ -20,8 +20,14 @@ WARLOCK_TRAINER_SPELLS = {
 -- HasBuffNamed() (WoWFunctions.lua) rather than hardcoded spell IDs, same as
 -- CanCurePoison/CanCureDisease in ShamanFunctions.lua, so this doesn't need
 -- to rank-track which one the player currently knows.
+--
+-- Uses HasBuffNamedOrRemembered() (WoWFunctions.lua), same as HasBattleShout():
+-- on Midnight-rules clients aura reads are blind in combat, so a buff from
+-- before the pull keeps reading true until its remembered expiration. One cast
+-- mid-combat is invisible here -- WowWarlockHandler covers that with its own
+-- press time (DemonArmorPressTime).
 function ShouldCastDemonArmor()
-    if HasBuffNamed("Demon Skin") or HasBuffNamed("Demon Armor") then
+    if HasBuffNamedOrRemembered("Demon Skin") or HasBuffNamedOrRemembered("Demon Armor") then
         return false
     end
 

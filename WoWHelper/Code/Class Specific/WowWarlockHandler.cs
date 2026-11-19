@@ -32,10 +32,13 @@ namespace WoWHelper
         // probably just needs a bug fix instead of this
         private const int DOT_RECAST_SUPPRESS_MILLIS = 4000;
 
+        private const int DEMON_ARMOR_DURATION_MILLIS = 30 * 60 * 1000;  // 30 minutes (Demon Skin and Demon Armor alike)
+
         #endregion
 
         #region State
 
+        private long DemonArmorPressTime;
         private long ImmolateCastTime;
         private long CorruptionCastTime;
 
@@ -58,10 +61,11 @@ namespace WoWHelper
 
         public override async Task<bool> PreBattleBuffingTask()
         {
-            if (ClassState.ShouldCastDemonArmor)
+            if (ShouldCastDemonArmor())
             {
                 await Player.WaitForGlobalCooldownTask();
                 await WowInput.PressKeyWithShift(Input.SHIFT_DEMON_ARMOR);
+                DemonArmorPressTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
             }
 
             return true;
@@ -98,9 +102,10 @@ namespace WoWHelper
 
             await Player.EveryWorldStateUpdateTasks();
 
-            if (ClassState.ShouldCastDemonArmor)
+            if (ShouldCastDemonArmor())
             {
                 await WowInput.PressKeyWithShift(Input.SHIFT_DEMON_ARMOR);
+                DemonArmorPressTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                 return;
             }
 
@@ -158,6 +163,19 @@ namespace WoWHelper
         public override bool CanEngageTarget()
         {
             return ClassState.CanSpellcastPullTarget;
+        }
+
+        // Same as WowWarriorHandler.ShouldCastBattleShout: on Midnight-rules clients the
+        // addon can't read auras in combat, so in combat ShouldCastDemonArmor only knows
+        // about a buff from before the pull (the addon remembers its expiration). A cast
+        // mid-fight is invisible to it, so trust our own press time instead. Out of combat
+        // the read is real, so the press time is ignored (a press that didn't land gets
+        // retried after the fight).
+        private bool ShouldCastDemonArmor()
+        {
+            bool recentlyPressedInCombat = WorldState.IsInCombat &&
+                GeneralHelpers.CurrentTimeInsideDuration(DemonArmorPressTime, DEMON_ARMOR_DURATION_MILLIS);
+            return ClassState.ShouldCastDemonArmor && !recentlyPressedInCombat;
         }
 
         private bool ShouldConsiderCastingDot()

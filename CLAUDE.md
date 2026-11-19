@@ -1038,8 +1038,10 @@ of truth — edits should be made here, not in the WoW install directory.
   A buff cast *mid-combat* is invisible to it, so the C# side also remembers
   its own key press: `WowWarriorHandler.ShouldCastBattleShout` skips recasting in combat
   within `BATTLE_SHOUT_DURATION_MILLIS` of `BattleShoutPressTime` (this used
-  to recast Battle Shout every tick in combat). Only `HasBattleShout()` uses
-  it so far; Demon Skin/Armor would fit too, but charge-consumed buffs
+  to recast Battle Shout every tick in combat). Warlock's
+  `ShouldCastDemonArmor()` uses it the same way, paired with
+  `WowWarlockHandler.ShouldCastDemonArmor` skipping in combat within
+  `DEMON_ARMOR_DURATION_MILLIS` (30 min) of `DemonArmorPressTime`. Charge-consumed buffs
   (Lightning Shield) and procs (Clearcasting) would read true after they're
   gone. `BUFF_READ_DEBUG` (`WoWFunctions.lua`, off by default)
   prints each distinct `SafeAuraQuery` outcome plus each `HasBattleShout()`
@@ -1159,8 +1161,10 @@ of truth — edits should be made here, not in the WoW install directory.
   else was built to depend on Mage-specific behavior.)
   `WarlockFunctions.lua` is a work in progress — `WARLOCK_CLASS_BOOL_ONE_FIELDS`
   lists `CanSpellcastPullTarget()` (shared, from `WoWFunctions.lua`),
-  `ShouldCastDemonArmor()` (checks `HasBuffNamed("Demon Skin")`/
-  `HasBuffNamed("Demon Armor")` — only one is ever active — and
+  `ShouldCastDemonArmor()` (checks `HasBuffNamedOrRemembered("Demon Skin")`/
+  `HasBuffNamedOrRemembered("Demon Armor")` — only one is ever active, and
+  the "remembered" read keeps a pre-pull buff true through blind in-combat
+  aura reads, like Battle Shout — and
   `IsSpellKnownByName()` for either, the same name-matching pattern
   `CanCurePoison`/`CanCureDisease` use in `ShamanFunctions.lua`, since
   Demon Skin/Demon Armor are different spell IDs at different ranks),
