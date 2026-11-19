@@ -13,47 +13,18 @@ namespace WoWHelper
 
         private static class Input
         {
-            /*
-             * 2 Bolt
-#showtooltip [mod:shift] Lightning Bolt(Rank 1); Lightning Bolt
-/cast [nomod] Lightning Bolt
-/cast [mod:shift] Lightning Bolt(Rank 1)
-            */
             public const Keys LIGHTNING_BOLT = Keys.D2;
             public const Keys SHIFT_LIGHTNING_BOLT_RANK_1 = Keys.D2;
 
-            /*
-             * 3 Shock
-#showtooltip [mod:shift] Flame Shock; Earth Shock
-/use [nomod] Earth Shock
-/use [mod:shift] Flame Shock
-            */
             public const Keys EARTH_SHOCK = Keys.D3;
             public const Keys SHIFT_FLAME_SHOCK = Keys.D3;
 
-            /*
-             * 4 Buff
-#showtooltip [mod:shift] Rockbiter Weapon; Lightning Shield
-/use [nomod] Lightning Shield
-/use [mod:shift] Rockbiter Weapon
-            */
             public const Keys LIGHTNING_SHIELD = Keys.D4;
             public const Keys SHIFT_ROCKBITER_WEAPON = Keys.D4;
 
-            /*
-             * 5 Cure
-#showtooltip [mod:shift] Cure Disease; Cure Poison
-/use [nomod] Cure Poison
-/use [mod:shift] Cure Disease
-             */
             public const Keys CURE_POISON = Keys.D5;
             public const Keys SHIFT_CURE_DISEASE = Keys.D5;
 
-            /*
-             * 6 Frost Shock
-#showtooltip Frost Shock
-/cast Frost Shock
-            */
             public const Keys FROST_SHOCK = Keys.D6;
             public const Keys SHIFT_6 = Keys.D6;
 

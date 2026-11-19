@@ -360,3 +360,39 @@ WARRIOR_CLASS_BOOL_ONE_FIELDS = {
 }
 
 WARRIOR_CLASS_BOOL_TWO_FIELDS = {}
+
+-- Warrior macros for CreateOrUpdateMacros() (WoWFunctions.lua) -- the source of
+-- truth for what's behind each WowWarriorHandler.cs Input key.
+WARRIOR_MACROS = {
+    { name = "2 Pull", lines = {
+        "#showtooltip [mod:shift] Shoot; Charge",
+        "/cast [nomod] Charge",
+        "/cast [mod:shift] Shoot",
+    } },
+    { name = "3 H/C", lines = {
+        "#showtooltip [mod:shift] Cleave; Heroic Strike",
+        "/cast [nomod] Heroic Strike",
+        "/cast [mod:shift] Cleave",
+    } },
+    { name = "4 Buff", lines = {
+        "#showtooltip [mod:shift] Berserker Rage; [mod:ctrl] Sweeping Strikes; Battle Shout",
+        "/cast [nomod] Battle Shout",
+        "/cast [mod:shift] Berserker Rage",
+        "/cast [mod:ctrl] Sweeping Strikes",
+    } },
+    { name = "5 Dmg", lines = {
+        "#showtooltip [mod:shift] Sunder Armor; Mortal Strike",
+        "/cast [nomod] Mortal Strike",
+        "/cast [mod:shift] Sunder Armor",
+    } },
+    { name = "6 Rend", lines = {
+        "#showtooltip [mod:shift] Overpower; Rend",
+        "/cast [nomod] Rend",
+        "/cast [mod:shift] Overpower",
+    } },
+    { name = "7 shit", lines = {
+        "#showtooltip [mod:shift] Retaliation; Execute",
+        "/cast [nomod] Execute",
+        "/cast [mod:shift] Retaliation",
+    } },
+}

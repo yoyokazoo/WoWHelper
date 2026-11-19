@@ -521,7 +521,17 @@ add any new character to `GetKeyForChar`). The addon's `/yytarget`
 existing macro's body in place (keeping its name/icon/keybind) to
 `/cleartarget`, `/stopmacro [mod:shift]`, then one `/target X` per name,
 reads it back to verify, and chat-prints the result. It never creates the
-macro, and refuses in combat or over 255 chars. A missing macro is
+macro, and refuses in combat or over 255 chars. The `/yyconfig` "Create
+Macros" button (`CreateOrUpdateMacros()`, `WoWFunctions.lua`;
+`CreateSettingsMenu()`'s third option shape, `type = "button"`) creates or
+rewrites, keyed by name, every macro the bot presses: `COMMON_MACROS`
+(`WoWFunctions.lua`, for `WowInput.cs`'s common keys) plus the class's
+`<CLASS>_MACROS` (in its class file, for that `Wow*Handler`'s `Input` keys).
+These Lua lists are the only place macro bodies are written down — the C#
+key constants just point at them. New ones are
+per-character with the question-mark icon (so `#showtooltip` picks it);
+existing ones keep their name/icon and get their body replaced, except
+`"0 Targ"` (`createOnly`), whose per-route body is left alone. A missing macro is
 surfaced in-game only, not over the pixel row: `IsTargetMacroMissing()`
 drives a red `UIErrorsFrame` toast plus a red chat line on `PLAYER_ENTERING_WORLD`, alongside the
 enemy-nameplates-off alert. Every route sets `TargetMacroMobNames` except

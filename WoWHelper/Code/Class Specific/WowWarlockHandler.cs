@@ -13,29 +13,12 @@ namespace WoWHelper
 
         private static class Input
         {
-            /*
-             * 2 Bolt
-#showtooltip Shadow Bolt
-/cast Shadow Bolt
-            */
             public const Keys SHADOW_BOLT = Keys.D2;
             public const Keys SHIFT_2 = Keys.D2;
 
-            /*
-             * 3 Dot
-#showtooltip [mod:shift] Immolate; Corruption
-/use [nomod] Corruption
-/use [mod:shift] Immolate
-             */
             public const Keys CORRUPTION = Keys.D3;
             public const Keys SHIFT_IMMOLATE = Keys.D3;
 
-            /*
-             * 4 Buff
-#showtooltip [mod:shift] Demon Skin; Summon Imp
-/use [nomod] Summon Imp
-/use [mod:shift] Demon Skin
-            */
             public const Keys SUMMON_PET = Keys.D4;
             public const Keys SHIFT_DEMON_ARMOR = Keys.D4;
         }

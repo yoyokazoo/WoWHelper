@@ -12,60 +12,22 @@ namespace WoWHelper
 
         private static class Input
         {
-            /*
-             * 2 Pull
-#showtooltip [mod:shift] Shoot; Charge
-/cast [nomod] Charge
-/cast [mod:shift] Shoot
-            */
             public const Keys CHARGE = Keys.D2;
             public const Keys SHIFT_SHOOT = Keys.D2;
 
-            /*
-             * 3 H/C
-#showtooltip [mod:shift] Cleave; Heroic Strike
-/cast [nomod] Heroic Strike
-/cast [mod:shift] Cleave
-            */
             public const Keys HEROIC_STRIKE = Keys.D3;
             public const Keys SHIFT_CLEAVE = Keys.D3;
 
-            /*
-             * 4 Buff
-#showtooltip [mod:shift] Berserker Rage; [mod:ctrl] Sweeping Strikes; Battle Shout
-/cast [nomod] Battle Shout
-/cast [mod:shift] Berserker Rage
-/cast [mod:ctrl] Sweeping Strikes
-            */
             public const Keys BATTLE_SHOUT = Keys.D4;
-            // TODO: add stance dancing to macros??
             public const Keys SHIFT_BERSERKER_RAGE = Keys.D4;
             public const Keys CTRL_SWEEPING_STRIKES = Keys.D4;
 
-            /*
-             * 5 Dmg
-#showtooltip [mod:shift] Sunder Armor; Mortal Strike
-/cast [nomod] Mortal Strike
-/cast [mod:shift] Sunder Armor
-            */
             public const Keys MORTALSTRIKE_BLOODTHIRST = Keys.D5;
             public const Keys SHIFT_SUNDER_ARMOR = Keys.D5;
 
-            /*
-             * 6 Rend
-#showtooltip [mod:shift] Execute; Mortal Strike
-/cast [nomod] Mortal Strike
-/cast [mod:shift] Execute
-            */
             public const Keys REND = Keys.D6;
             public const Keys SHIFT_OVERPOWER = Keys.D6;
 
-            /*
-             * 7 shit
-#showtooltip [mod:shift] Retaliation; Execute
-/cast [nomod] Execute
-/cast [mod:shift] Retaliation
-            */
             public const Keys EXECUTE = Keys.D7;
             public const Keys SHIFT_RETALIATION = Keys.D7;
         }

@@ -55,6 +55,8 @@ end
 -- or
 --   { label = "...", type = "selector", choices = { { id = ..., label = "..." }, ... },
 --     get = function() return currentId end, set = function(id) end }               -- cycling button
+-- or
+--   { label = "...", type = "button", onClick = function() end }                    -- one-shot action button
 -- Returns the frame, hidden by default -- the caller (YoyokazooUI.lua's
 -- /yyconfig handler) shows/hides it.
 --------------------------------------------------
@@ -93,7 +95,15 @@ function CreateSettingsMenu(options)
     for i, option in ipairs(options) do
         local rowY = -35 - ((i - 1) * ROW_HEIGHT)
 
-        if option.type == "selector" then
+        if option.type == "button" then
+            -- Full-width action button, no saved state behind it.
+            local button = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+            button:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, rowY)
+            button:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -15, rowY)
+            button:SetHeight(22)
+            button:SetText(option.label)
+            button:SetScript("OnClick", function() option.onClick() end)
+        elseif option.type == "selector" then
             -- Cycling button: each click advances to the next entry in
             -- option.choices (wrapping around), rather than a dropdown -- fewer
             -- moving parts for a handful of choices like the dynamite tiers.

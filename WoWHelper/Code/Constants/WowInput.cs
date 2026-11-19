@@ -10,67 +10,29 @@ namespace WoWHelper.Code
         // as it screws up regular bars if we bind a bar to shift
 
         #region Common
-        // Common Input
-        // For the sake of sharing tasks, forcing these common keys to be shared
 
-        // stopcasting so shamans who are pulling and interrupted by a wandering mob don't pull an extra
-        /*
-         * 1 Atk
-/stopcasting
-/startattack
-        */
+        // Macros
+
         public const Keys START_ATTACK = Keys.D1;
         public const Keys SHIFT_1 = Keys.D1;
 
-        /*
-         * 8 Eat
-#showtooltip [mod:shift] Conjured Crystal Water; Raw Bristle Whisker Catfish
-/use [nomod] Raw Bristle Whisker Catfish
-/use [mod:shift] Conjured Crystal Water
-/stopmacro [nomod][mod:shift]
-/sit
-/use Thick-shelled Clam
-        */
         public const Keys EAT_FOOD = Keys.D8;
         public const Keys SHIFT_DRINK_WATER = Keys.D8;
         public const Keys CTRL_SIT_AND_OPEN_CLAM = Keys.D8;
 
-        /*
-         * 9 Pot
-#showtooltip Healing Potion
-/use Healing Potion
-        */
         public const Keys HEALING_POTION = Keys.D9;
         public const Keys SHIFT_9 = Keys.D9;
 
-        /*
-         * 0 Targ -- body is rewritten per route by the addon's /yytarget command (see
-         * WowFarmingConfiguration.TargetMacroMobNames); the macro just has to exist.
-/cleartarget
-/stopmacro [mod:shift]
-/target Mottled
-        */
         public const Keys FIND_TARGET_MACRO = Keys.D0;
         public const Keys SHIFT_CLEAR_TARGET = Keys.D0;
 
-        /*
-         * - Dyn
-#showtooltip [mod:shift] Target Dummy; Rough Dynamite
-/use [nomod, @cursor] Rough Dynamite
-/use [mod:shift, @cursor] Target Dummy
-        */
         public const Keys THROW_DYNAMITE = Keys.OemMinus;
         public const Keys SHIFT_TARGET_DUMMY = Keys.OemMinus;
 
-        /*
-         * = Log
-#showtooltip [mod:shift] Flask of Petrification; Logout
-/cast [mod:shift] Flask of Petrification
-/stopmacro [mod:shift]
-/logout
-        */
         public const Keys LOGOUT_MACRO = Keys.Oemplus;
         public const Keys SHIFT_PETRIFICATION_FLASK = Keys.Oemplus;
+
+        // Other
 
         public const Keys ALT_FORCE_QUIT_KEY = Keys.F4;
 

@@ -115,3 +115,32 @@ SHAMAN_CLASS_BOOL_TWO_FIELDS = {
     "HasClearcasting",            -- 2 (R2)
     "CanCastFrostShock",          -- 3 (R3)
 }
+
+-- Shaman macros for CreateOrUpdateMacros() (WoWFunctions.lua) -- the source of
+-- truth for what's behind each WowShamanHandler.cs Input key.
+SHAMAN_MACROS = {
+    { name = "2 Bolt", lines = {
+        "#showtooltip [mod:shift] Lightning Bolt(Rank 1); Lightning Bolt",
+        "/cast [nomod] Lightning Bolt",
+        "/cast [mod:shift] Lightning Bolt(Rank 1)",
+    } },
+    { name = "3 Shock", lines = {
+        "#showtooltip [mod:shift] Flame Shock; Earth Shock",
+        "/use [nomod] Earth Shock",
+        "/use [mod:shift] Flame Shock",
+    } },
+    { name = "4 Buff", lines = {
+        "#showtooltip [mod:shift] Rockbiter Weapon; Lightning Shield",
+        "/use [nomod] Lightning Shield",
+        "/use [mod:shift] Rockbiter Weapon",
+    } },
+    { name = "5 Cure", lines = {
+        "#showtooltip [mod:shift] Cure Disease; Cure Poison",
+        "/use [nomod] Cure Poison",
+        "/use [mod:shift] Cure Disease",
+    } },
+    { name = "6 Frost Shock", lines = {
+        "#showtooltip Frost Shock",
+        "/cast Frost Shock",
+    } },
+}

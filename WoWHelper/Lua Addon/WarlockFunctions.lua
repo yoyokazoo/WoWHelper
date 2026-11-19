@@ -73,3 +73,22 @@ WARLOCK_CLASS_BOOL_ONE_FIELDS = {
 }
 
 WARLOCK_CLASS_BOOL_TWO_FIELDS = {}
+
+-- Warlock macros for CreateOrUpdateMacros() (WoWFunctions.lua) -- the source of
+-- truth for what's behind each WowWarlockHandler.cs Input key.
+WARLOCK_MACROS = {
+    { name = "2 Bolt", lines = {
+        "#showtooltip Shadow Bolt",
+        "/cast Shadow Bolt",
+    } },
+    { name = "3 Dot", lines = {
+        "#showtooltip [mod:shift] Immolate; Corruption",
+        "/use [nomod] Corruption",
+        "/use [mod:shift] Immolate",
+    } },
+    { name = "4 Buff", lines = {
+        "#showtooltip [mod:shift] Demon Skin; Summon Imp",
+        "/use [nomod] Summon Imp",
+        "/use [mod:shift] Demon Skin",
+    } },
+}

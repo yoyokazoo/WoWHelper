@@ -2509,9 +2509,9 @@ end
 -- to find mobs; its /target lines differ per farming route, so the bot types
 -- "/yytarget Mottled,Scorpid" (YoyokazooUI.lua) once it has resolved its route,
 -- and SetTargetMacroMobs() rewrites the macro's body in place -- in place, so
--- its keybind survives. The macro itself must already exist (the addon never
--- creates it); IsTargetMacroMissing() drives an on-screen alert on
--- PLAYER_ENTERING_WORLD (YoyokazooUI.lua) if it doesn't.
+-- its keybind survives. The macro itself must already exist (/yytarget never
+-- creates it -- the /yyconfig macros button below does); IsTargetMacroMissing()
+-- drives an on-screen alert on PLAYER_ENTERING_WORLD (YoyokazooUI.lua) if it doesn't.
 ------------------------------------------------------------
 TARGET_MACRO_NAME = "0 Targ"
 local MAX_MACRO_BODY_LENGTH = 255
@@ -2560,6 +2560,123 @@ function SetTargetMacroMobs(mobNamesCsv)
     end
 
     return true
+end
+
+------------------------------------------------------------
+-- Action-bar macros, created/updated by the /yyconfig "Create Macros" button
+-- (CreateOrUpdateMacros()). Each entry is { name, lines } (plus an optional
+-- createOnly), keyed by macro name: an existing macro with that name gets its
+-- body rewritten in place (name/icon/keybind kept), a missing one is created
+-- as a per-character macro with the question-mark icon, which together with
+-- #showtooltip shows the spell's own icon. These lists are the single source
+-- of truth for what's behind each key the C# side presses: COMMON_MACROS for
+-- WowInput.cs's common keys, <CLASS>_MACROS (in that class's Lua file) for
+-- each Wow*Handler's Input class.
+------------------------------------------------------------
+local DEFAULT_MACRO_ICON = 134400  -- INV_Misc_QuestionMark: "pick the icon from #showtooltip"
+
+COMMON_MACROS = {
+    -- /stopcasting so a caster pulling who gets interrupted by a wandering mob doesn't pull an extra
+    { name = "1 Atk", lines = {
+        "/stopcasting",
+        "/startattack",
+    } },
+    { name = "8 Eat", lines = {
+        "#showtooltip [mod:shift] Conjured Crystal Water; Raw Bristle Whisker Catfish",
+        "/use [nomod] Raw Bristle Whisker Catfish",
+        "/use [mod:shift] Conjured Crystal Water",
+        "/stopmacro [nomod][mod:shift]",
+        "/sit",
+        "/use Thick-shelled Clam",
+    } },
+    { name = "9 Pot", lines = {
+        "#showtooltip Healing Potion",
+        "/use Healing Potion",
+    } },
+    -- Body is per-route (rewritten by /yytarget, SetTargetMacroMobs() above), so
+    -- an existing one is left alone; this is just a placeholder for a new one.
+    { name = TARGET_MACRO_NAME, createOnly = true, lines = {
+        "/cleartarget",
+        "/stopmacro [mod:shift]",
+    } },
+    { name = "- Dyn", lines = {
+        "#showtooltip [mod:shift] Target Dummy; Rough Dynamite",
+        "/use [nomod, @cursor] Rough Dynamite",
+        "/use [mod:shift, @cursor] Target Dummy",
+    } },
+    { name = "= Log", lines = {
+        "#showtooltip [mod:shift] Flask of Petrification; Logout",
+        "/cast [mod:shift] Flask of Petrification",
+        "/stopmacro [mod:shift]",
+        "/logout",
+    } },
+}
+
+-- Returns "created", "updated", "unchanged", "skipped", or "failed" plus a reason.
+local function CreateOrUpdateMacro(macro)
+    local body = table.concat(macro.lines, "\n")
+    if #body > MAX_MACRO_BODY_LENGTH then
+        return "failed", "body is " .. #body .. " chars, over the " .. MAX_MACRO_BODY_LENGTH .. " limit"
+    end
+
+    local macroIndex = GetMacroIndexByName(macro.name)
+    if macroIndex == 0 then
+        local ok, err = pcall(CreateMacro, macro.name, DEFAULT_MACRO_ICON, body, true)
+        if not ok then
+            return "failed", "CreateMacro errored: " .. tostring(err)
+        end
+        if GetMacroIndexByName(macro.name) == 0 then
+            return "failed", "CreateMacro didn't take (character macro slots full?)"
+        end
+        return "created"
+    end
+
+    local name, icon, oldBody = GetMacroInfo(macroIndex)
+    if macro.createOnly then
+        return "skipped"
+    end
+    if oldBody == body then
+        return "unchanged"
+    end
+
+    -- Pass the existing name/icon back unchanged, so only the body changes.
+    EditMacro(macroIndex, name, icon, body)
+
+    local _, _, newBody = GetMacroInfo(GetMacroIndexByName(macro.name))
+    if newBody ~= body then
+        return "failed", "EditMacro didn't take -- body reads back as: " .. tostring(newBody)
+    end
+    return "updated"
+end
+
+-- Creates/updates COMMON_MACROS plus the player's class's <CLASS>_MACROS list,
+-- chat-printing each macro's result and a summary.
+function CreateOrUpdateMacros()
+    if InCombatLockdown() then
+        print("YoyokazooUI: can't edit macros in combat.")
+        return
+    end
+
+    local classMacros = GetPlayerClassFields("MACROS")
+    if #classMacros == 0 then
+        print("YoyokazooUI: no class-specific macros defined for this class -- doing common macros only.")
+    end
+
+    local counts = { created = 0, updated = 0, unchanged = 0, skipped = 0, failed = 0 }
+    for _, list in ipairs({ COMMON_MACROS, classMacros }) do
+        for _, macro in ipairs(list) do
+            local result, reason = CreateOrUpdateMacro(macro)
+            counts[result] = counts[result] + 1
+            if result == "failed" then
+                print("YoyokazooUI: macro \"" .. macro.name .. "\" FAILED: " .. reason)
+            elseif result ~= "unchanged" then
+                print("YoyokazooUI: macro \"" .. macro.name .. "\" " .. result .. ".")
+            end
+        end
+    end
+
+    print(string.format("YoyokazooUI: macros done -- %d created, %d updated, %d unchanged, %d skipped, %d failed.",
+        counts.created, counts.updated, counts.unchanged, counts.skipped, counts.failed))
 end
 
 ------------------------------------------------------------

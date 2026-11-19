@@ -1374,6 +1374,11 @@ SlashCmdList["YYCONFIG"] = function()
                     print("YoyokazooUI: Desired world buff set to " .. chosenLabel .. " (saved).")
                 end,
             },
+            {
+                label = "Create Macros",
+                type = "button",
+                onClick = CreateOrUpdateMacros,
+            },
         })
     end
 
