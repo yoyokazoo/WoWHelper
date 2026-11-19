@@ -934,5 +934,29 @@ namespace WoWHelper.Code.WorldState
         };
 
         #endregion
+
+        #region Dun Morogh
+
+        public static readonly WowRoute LEVEL_1_DUN_MOROGH_WOLVES_AND_TROGGS_ROUTE = new WowRoute
+        {
+            Name = "LEVEL_1_DUN_MOROGH_WOLVES_AND_TROGGS_ROUTE",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.CIRCULAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(28.44f, 72.82f),
+                new Vector2(27.49f, 73.18f),
+                new Vector2(26.12f, 73.65f),
+                new Vector2(27.07f, 76.01f),
+                new Vector2(28.73f, 75.61f),
+                new Vector2(30.28f, 74.51f),
+                new Vector2(29.44f, 73.29f),
+                new Vector2(28.92f, 72.71f),
+            },
+        };
+
+        #endregion
     }
 }

@@ -290,6 +290,16 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
+        #region Levels 1-10 Dun Morogh
+
+        public static readonly WowFarmingConfiguration LEVEL_1_DUN_MOROGH_WOLVES_AND_TROGGS = new WowFarmingConfiguration
+        {
+            Route = WowFarmingRoutes.LEVEL_1_DUN_MOROGH_WOLVES_AND_TROGGS_ROUTE,
+            TargetMacroMobNames = "Ragged,Rockjaw,Burly,Small",
+        };
+
+        #endregion
+
         // Every config above, via reflection. Mark one [ExcludeFromAll] to pull it out of auto-selection.
         private static readonly Lazy<IReadOnlyList<WowFarmingConfiguration>> ALL_LOCATIONS_LAZY = StaticConfigCollector.LazyCollect<WowFarmingConfiguration>(typeof(WowFarmingConfigs));
         public static IReadOnlyList<WowFarmingConfiguration> ALL_LOCATIONS => ALL_LOCATIONS_LAZY.Value;
