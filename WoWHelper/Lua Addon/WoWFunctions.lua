@@ -704,6 +704,7 @@ local ZONE_NAME_TO_ID = {
     ["Orgrimmar"] = 16,
     ["Teldrassil"] = 17,
     ["Elwynn Forest"] = 18,
+    ["Dun Morogh"] = 19,
 }
 
 -- 255 = current zone isn't one of the known farming zones on the decoding
