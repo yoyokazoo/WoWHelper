@@ -256,13 +256,6 @@ namespace WoWHelper
                 return;
             }
 
-            //if ()
-
-            //if ()
-            //{
-
-            //}
-
             if (!WorldState.AllSkillsKnownForThisLevel && WorldState.CanAffordToTrainAllSkills)
             {
                 await SetPlayerGoalTask(PlayerGoal.TRAIN);

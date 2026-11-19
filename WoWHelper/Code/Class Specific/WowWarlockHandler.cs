@@ -129,6 +129,13 @@ namespace WoWHelper
                 return;
             }
 
+            if (!WorldState.HasTakenDamageThisCombat || WorldState.AttackerCount == 1)
+            {
+                await WowInput.PressKey(Input.SHADOW_BOLT);
+                return;
+            }
+
+
             if (!startedWanding)
             {
                 await Player.StartAttackTask();

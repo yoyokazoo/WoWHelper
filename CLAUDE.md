@@ -75,7 +75,7 @@ order. Row N covers physical y = 3N to 3N+2 (read at y = 3N+1):
 | 5 | Map Y | fixed point | `MapY` |
 | 6 | Facing, degrees | fixed point | `FacingDegrees` |
 | 7 | `MultiBoolOne` — `MULTI_BOOL_ONE_FIELDS` (class-agnostic, all 24 boxes used or reserved) | bool fields | various `WowWorldState` bools |
-| 8 | `MultiBoolTwo` — `MULTI_BOOL_TWO_FIELDS` (class-agnostic — boxes 1-23 used so far) | bool fields | `IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable`/`Underwater`/`PlayerIsHorde`, plus the red error toast flags `FacingWrongWay`/`TargetNeedsToBeInFront`/`InvalidTarget`/`OutOfRange`/`NotInLineOfSight`/`NoPathAvailable` |
+| 8 | `MultiBoolTwo` — `MULTI_BOOL_TWO_FIELDS` (class-agnostic — all 24 boxes used) | bool fields | `IsTargetLongRangeCaster`/`LogoffMobSeen`/`IsCurrentlySkinning`/`IsTargetBleedImmune`/`IsTargetFearCaster`/`LogoutOnLowDynamiteEnabled`/`LogoutOnFullBagsEnabled`/`HasDesiredWorldBuff`/`HighLatency`/`CombatStalemate`/`AllSkillsKnownForThisLevel`/`CanAffordToTrainAllSkills`/`GearNeedsRepair`/`IsTargetAttackable`/`Underwater`/`PlayerIsHorde`/`HasTakenDamageThisCombat`, plus the red error toast flags `FacingWrongWay`/`TargetNeedsToBeInFront`/`InvalidTarget`/`OutOfRange`/`NotInLineOfSight`/`NoPathAvailable` |
 | 9 | `ClassBoolOne` — `<CLASS>_CLASS_BOOL_ONE_FIELDS` (class-specific) | bool fields | a `WowClassState` subtype (see C# architecture section) |
 | 10 | `ClassBoolTwo` — `<CLASS>_CLASS_BOOL_TWO_FIELDS` (class-specific — only Shaman's boxes 1-3 used so far) | bool fields | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 | 11 | `MultiIntOne` — attacker count, player level, zone ID | bytes | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
@@ -508,8 +508,22 @@ yet.
 B7 (box 23) is `WowWorldState.PlayerIsHorde` (`IsPlayerHorde()`,
 `WoWFunctions.lua`: `UnitFactionGroup("player") == "Horde"`; false means
 Alliance). It gates faction-tagged routes, NPCs and zone crossings — see the
-`Faction` note in the `Config/` bullet below. Box 24 is still free for the
-next class-agnostic bool.
+`Faction` note in the `Config/` bullet below.
+
+B8 (box 24) is `WowWorldState.HasTakenDamageThisCombat`
+(`HasTakenDamageThisCombat()`, `YoyokazooUI.lua`): a sticky per-fight flag.
+It's false when combat starts (`PLAYER_REGEN_DISABLED`), true from the first
+`UNIT_COMBAT` `"WOUND"` on the player, and it stays true after combat drops
+until the next fight. It uses `UNIT_COMBAT` (registered via
+`RegisterUnitEvent(..., "player")`, pcall'd) rather than the combat log,
+because Midnight-rules clients forbid the combat log. It's stored as two
+timestamps rather than a bool because the first hit's `UNIT_COMBAT` can land
+just *before* `PLAYER_REGEN_DISABLED`. A hit counts if it landed no more than
+`DAMAGE_BEFORE_COMBAT_GRACE_SECONDS` (1s) before combat started.
+`DAMAGE_TAKEN_DEBUG` (off by default) prints every `UNIT_COMBAT` event's args,
+marking secret ones. Whether `action` is readable on the Forever client isn't
+confirmed live yet. Nothing on the C# side consumes it yet. With box 24 used,
+`MultiBoolTwo` is full.
 
 **Per-route target macro:** the `"0 Targ"` macro (`TARGET_MACRO_NAME`) (`WowInput.FIND_TARGET_MACRO`) is the bot's target finder, and
 its `/target` lines are set per route: `WowFarmingConfiguration.TargetMacroMobNames`

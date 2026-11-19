@@ -42,6 +42,25 @@ local lastCombatActivityTime = nil
 local COMBAT_STALEMATE_DEBUG = false
 local combatStalemateAnnounced = false
 
+-- "Has the player taken damage since this fight started" -- see
+-- HasTakenDamageThisCombat() below. Driven by UNIT_COMBAT ("player", action
+-- "WOUND"), the event behind the player frame's floating damage text, rather
+-- than COMBAT_LOG_EVENT_UNFILTERED, which Midnight-rules clients forbid (see
+-- COMBAT_LOG_AVAILABLE). Stored as timestamps instead of a plain bool because
+-- the order of the first hit's UNIT_COMBAT and PLAYER_REGEN_DISABLED isn't
+-- guaranteed: a mob that hits first can land its WOUND a moment *before*
+-- combat officially starts, and resetting a bool on PLAYER_REGEN_DISABLED
+-- would wipe it. A hit counts for the current fight if it landed no earlier
+-- than DAMAGE_BEFORE_COMBAT_GRACE_SECONDS before combat started.
+local DAMAGE_BEFORE_COMBAT_GRACE_SECONDS = 1.0
+local lastDamageTakenTime = nil
+local combatStartTime = nil
+-- Set true to print every UNIT_COMBAT event on the player (action, flag text,
+-- amount, and whether each arg is secret), for checking in-game what this
+-- client actually sends -- notably whether the action arg is readable on
+-- Midnight-rules clients.
+local DAMAGE_TAKEN_DEBUG = false
+
 -- PLAYER_ENTERING_WORLD fires on every loading screen, not just the initial login --
 -- zoning, taxis, death+release, and hearthing all re-fire it. InitializeIndicators()/
 -- InitializePixelRow() build a fresh set of frames/textures every time they're called
@@ -359,6 +378,11 @@ if COMBAT_LOG_AVAILABLE then
 end
 frame:RegisterEvent("LOOT_BIND_CONFIRM")
 frame:RegisterEvent("PLAYER_REGEN_DISABLED")
+-- pcall'd like CHARACTER_POINTS_CHANGED below: an error here would abort the
+-- rest of this file's load. Player-only, so other units' events never arrive.
+if not pcall(frame.RegisterUnitEvent, frame, "UNIT_COMBAT", "player") then
+    print("YoyokazooUI: UNIT_COMBAT not available -- HasTakenDamageThisCombat will always read false.")
+end
 frame:RegisterEvent("MERCHANT_SHOW")
 frame:RegisterEvent("MERCHANT_CLOSED")
 frame:RegisterEvent("BAG_UPDATE_DELAYED")
@@ -854,6 +878,31 @@ frame:SetScript("OnEvent", function(self, event, ...)
     if event == "PLAYER_REGEN_DISABLED" then
         lastCombatActivityTime = GetTime()
         combatStalemateAnnounced = false
+        -- Starts a new fight for HasTakenDamageThisCombat().
+        combatStartTime = GetTime()
+    end
+
+    -- Player took a hit -- see DAMAGE_BEFORE_COMBAT_GRACE_SECONDS above.
+    -- pcall'd because on Midnight-rules clients the args may be secret values,
+    -- and comparing a secret throws.
+    if event == "UNIT_COMBAT" then
+        local unitTarget, action, flagText, amount = ...
+        local ok, err = pcall(function()
+            if DAMAGE_TAKEN_DEBUG then
+                local function describe(v)
+                    if issecretvalue and issecretvalue(v) then return "<secret>" end
+                    return tostring(v)
+                end
+                print(string.format("YoyokazooUI UNIT_COMBAT: unit=%s action=%s flag=%s amount=%s",
+                    describe(unitTarget), describe(action), describe(flagText), describe(amount)))
+            end
+            if unitTarget == "player" and action == "WOUND" then
+                lastDamageTakenTime = GetTime()
+            end
+        end)
+        if not ok and DAMAGE_TAKEN_DEBUG then
+            print("YoyokazooUI: UNIT_COMBAT handler error: " .. tostring(err))
+        end
     end
 
     if event == "COMBAT_LOG_EVENT_UNFILTERED" then
@@ -897,6 +946,11 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- start the stalemate clock from here instead so it can still trip.
         if UnitAffectingCombat("player") and not lastCombatActivityTime then
             lastCombatActivityTime = GetTime()
+        end
+        -- Same for HasTakenDamageThisCombat(): any hit before the reload is
+        -- unknown, so it reads false until the next one lands.
+        if UnitAffectingCombat("player") and not combatStartTime then
+            combatStartTime = GetTime()
         end
 
         -- Same as typing /console cameraDistanceMaxZoomFactor 2.6. pcall'd so a
@@ -1093,6 +1147,17 @@ function IsCombatStalemate()
     end
 
     return isStalemate
+end
+
+-- Sticky per-fight flag: false when combat starts (PLAYER_REGEN_DISABLED),
+-- true from the first UNIT_COMBAT "WOUND" on the player, and it stays true
+-- (even after combat drops) until the next fight starts. False before the
+-- first fight of the session. See DAMAGE_BEFORE_COMBAT_GRACE_SECONDS above.
+function HasTakenDamageThisCombat()
+    if not combatStartTime or not lastDamageTakenTime then
+        return false
+    end
+    return lastDamageTakenTime >= combatStartTime - DAMAGE_BEFORE_COMBAT_GRACE_SECONDS
 end
 
 -- /yydebug toggles the debug frame (InitializeIndicators()'s YoyokazooUIFrame,

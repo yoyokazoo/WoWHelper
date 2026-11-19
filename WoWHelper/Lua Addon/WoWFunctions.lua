@@ -2579,7 +2579,6 @@ local DEFAULT_MACRO_ICON = 134400  -- INV_Misc_QuestionMark: "pick the icon from
 COMMON_MACROS = {
     -- /stopcasting so a caster pulling who gets interrupted by a wandering mob doesn't pull an extra
     { name = "1 Atk", lines = {
-        "/stopcasting",
         "/startattack",
     } },
     { name = "8 Eat", lines = {
@@ -2795,6 +2794,7 @@ MULTI_BOOL_TWO_FIELDS = {
     "HasRecentNoPathError",         -- 21 (B5)
     "IsPlayerUnderwater",           -- 22 (B6) breath timer running
     "IsPlayerHorde",                -- 23 (B7) faction, for route/NPC/zone crossing picking
+    "HasTakenDamageThisCombat",     -- 24 (B8) YoyokazooUI.lua, sticky until the next fight
 }
 
 -- The player's class's list for one of the Class rows: listSuffix

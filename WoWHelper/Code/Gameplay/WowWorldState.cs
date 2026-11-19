@@ -153,6 +153,12 @@ namespace WoWHelper
         // crossings are eligible -- see WowFactionExtensions.AllowsPlayer.
         public bool PlayerIsHorde { get; private set; }
 
+        // MultiBoolTwo box 24. The player has taken damage since the current (or most
+        // recent) fight started (HasTakenDamageThisCombat() in YoyokazooUI.lua). Resets to
+        // false on entering combat, latches true on the first hit, and stays true after
+        // combat drops until the next fight starts.
+        public bool HasTakenDamageThisCombat { get; private set; }
+
         public Bitmap Bmp { get; private set; }
 
         public WowScreenConfiguration ScreenConfig { get; private set; }
@@ -291,6 +297,7 @@ namespace WoWHelper
             NoPathAvailable = bits[21];
             Underwater = bits[22];
             PlayerIsHorde = bits[23];
+            HasTakenDamageThisCombat = bits[24];
         }
 
         // Byte order MUST match the EncodeBytes call for row 11 in InitializePixelRow()
