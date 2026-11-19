@@ -46,9 +46,6 @@ namespace WoWHelper
             return handler.ExecuteEngageTask();
         }
 
-        public Task<bool> CombatLoopTask() =>
-            RequireClassHandler(nameof(CombatLoopTask)).CombatLoopTask();
-
         public Task PlayerSingleCombatTask() =>
             RequireClassHandler(nameof(PlayerSingleCombatTask)).SingleCombatTask();
 

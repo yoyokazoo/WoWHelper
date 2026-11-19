@@ -113,13 +113,6 @@ namespace WoWHelper
             EmergencyCombatActionTaken = false;
         }
 
-        public override async Task<bool> CombatLoopTask()
-        {
-            await SingleCombatTask();
-
-            return true;
-        }
-
         public override async Task SingleCombatTask()
         {
             // First do our "Make sure we're not standing around doing nothing" checks

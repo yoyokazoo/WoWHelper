@@ -15,7 +15,13 @@ namespace WoWHelper
             Player = player;
         }
 
+        public abstract Task<bool> ExecuteEngageTask();
+        public abstract Task SingleCombatTask();
+        public abstract bool CanEngageTarget();
         public abstract void UpdateFromBitmap(Bitmap bmp);
+
+        // Called when the player enters PlayerGoal.FIGHT, for per-fight state resets.
+        public virtual void OnEnterFight() { }
 
         public virtual bool ResourceIsMana => true;
 
@@ -60,14 +66,6 @@ namespace WoWHelper
             bool battleReady = hpRecovered && mpRecovered && potionIsCooledDown;
             return battleReady;
         }
-
-        public abstract Task<bool> ExecuteEngageTask();
-        public abstract Task<bool> CombatLoopTask();
-        public abstract Task SingleCombatTask();
-        public abstract bool CanEngageTarget();
-
-        // Called when the player enters PlayerGoal.FIGHT, for per-fight state resets.
-        public virtual void OnEnterFight() { }
 
         public static WowClassHandler Create(WowCombatConfiguration combatConfiguration, WowPlayer player)
         {

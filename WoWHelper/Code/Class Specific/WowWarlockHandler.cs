@@ -102,7 +102,7 @@ namespace WoWHelper
             return CanEngageTarget();
         }
 
-        public override async Task<bool> CombatLoopTask()
+        public override async Task SingleCombatTask()
         {
             Console.WriteLine("Kicking off core combat loop");
             bool emergencyActionTaken = false;
@@ -111,75 +111,65 @@ namespace WoWHelper
 
             bool startedWanding = false;
 
-            do
+            await Player.UpdateWorldStateAsync();
+
+            await Player.EveryWorldStateUpdateTasks();
+
+            if (ClassState.ShouldCastDemonArmor)
             {
-                await Player.UpdateWorldStateAsync();
+                await WowInput.PressKeyWithShift(Input.SHIFT_DEMON_ARMOR);
+                return;
+            }
 
-                await Player.EveryWorldStateUpdateTasks();
+            if (ShouldCastImmolate())
+            {
+                await WowInput.PressKeyWithShift(Input.SHIFT_IMMOLATE);
+                ImmolateCastTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                return;
+            }
 
-                if (ClassState.ShouldCastDemonArmor)
-                {
-                    await WowInput.PressKeyWithShift(Input.SHIFT_DEMON_ARMOR);
-                    continue;
-                }
+            if (ShouldCastCorruption())
+            {
+                await WowInput.PressKey(Input.CORRUPTION);
+                CorruptionCastTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                return;
+            }
 
-                if (ShouldCastImmolate())
-                {
-                    await WowInput.PressKeyWithShift(Input.SHIFT_IMMOLATE);
-                    ImmolateCastTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    continue;
-                }
+            // First do our "Make sure we're not standing around doing nothing" checks
+            if (!WorldState.IsTargetLongRangeCaster && await Player.MeleeMakeSureWeAreAttackingEnemyTask())
+            {
+                return;
+            }
 
-                if (ShouldCastCorruption())
-                {
-                    await WowInput.PressKey(Input.CORRUPTION);
-                    CorruptionCastTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    continue;
-                }
+            if (!startedWanding)
+            {
+                await Player.StartAttackTask();
+            }
 
-                // First do our "Make sure we're not standing around doing nothing" checks
-                if (!WorldState.IsTargetLongRangeCaster && await Player.MeleeMakeSureWeAreAttackingEnemyTask())
-                {
-                    continue;
-                }
+            if ((WorldState.IsTargetLongRangeCaster && !isFacingLongRangeCaster) ||
+                (WorldState.TargetNeedsToBeInFront && WorldState.IsTargetLongRangeCaster))
+            {
+                await Player.TurnToFaceTargetMarkerTask();
+                isFacingLongRangeCaster = true;
+                return;
+            }
 
-                if (!startedWanding)
-                {
-                    await Player.StartAttackTask();
-                }
+            // Next, check if we need to pop any big cooldowns
+            if (!emergencyActionTaken && await EmergencyTask())
+            {
+                emergencyActionTaken = true;
+                return;
+            }
 
-                if ((WorldState.IsTargetLongRangeCaster && !isFacingLongRangeCaster) ||
-                    (WorldState.TargetNeedsToBeInFront && WorldState.IsTargetLongRangeCaster))
-                {
-                    await Player.TurnToFaceTargetMarkerTask();
-                    isFacingLongRangeCaster = true;
-                    continue;
-                }
+            if (await Player.ThrowDynamiteTask())
+            {
+                return;
+            }
 
-                // Next, check if we need to pop any big cooldowns
-                if (!emergencyActionTaken && await EmergencyTask())
-                {
-                    emergencyActionTaken = true;
-                    continue;
-                }
-
-                if (await Player.ThrowDynamiteTask())
-                {
-                    continue;
-                }
-
-                if (await Player.UseHealingPotionTask())
-                {
-                    continue;
-                }
-            } while (WorldState.IsInCombat);
-
-            return true;
-        }
-
-        public override async Task SingleCombatTask()
-        {
-            await CombatLoopTask();
+            if (await Player.UseHealingPotionTask())
+            {
+                return;
+            }
         }
 
         public override bool CanEngageTarget()

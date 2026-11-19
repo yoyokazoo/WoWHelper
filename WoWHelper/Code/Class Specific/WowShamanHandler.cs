@@ -75,7 +75,7 @@ namespace WoWHelper
 
         #region Tasks
 
-        public override async Task<bool> CombatLoopTask()
+        public override async Task SingleCombatTask()
         {
             Console.WriteLine("Kicking off core combat loop");
             bool emergencyActionTaken = false;
@@ -83,103 +83,93 @@ namespace WoWHelper
 
             await Player.StartAttackTask();
 
-            do
+            await Player.UpdateWorldStateAsync();
+
+            await Player.EveryWorldStateUpdateTasks();
+
+            // Needs Battle Shout treatment
+            if (ClassState.ShouldCastRockbiterWeapon)
             {
-                await Player.UpdateWorldStateAsync();
+                await WowInput.PressKeyWithShift(Input.SHIFT_ROCKBITER_WEAPON);
+                return;
+            }
+            else if (ShouldCastLightningShield())
+            {
+                await WowInput.PressKey(Input.LIGHTNING_SHIELD);
+                return;
+            }
 
-                await Player.EveryWorldStateUpdateTasks();
+            // First do our "Make sure we're not standing around doing nothing" checks
+            if (!WorldState.IsTargetLongRangeCaster && await Player.MeleeMakeSureWeAreAttackingEnemyTask())
+            {
+                return;
+            }
 
-                // Needs Battle Shout treatment
-                if (ClassState.ShouldCastRockbiterWeapon)
-                {
-                    await WowInput.PressKeyWithShift(Input.SHIFT_ROCKBITER_WEAPON);
-                    continue;
-                }
-                else if (ShouldCastLightningShield())
-                {
-                    await WowInput.PressKey(Input.LIGHTNING_SHIELD);
-                    continue;
-                }
+            if ((WorldState.IsTargetLongRangeCaster && !isFacingLongRangeCaster) ||
+                (WorldState.TargetNeedsToBeInFront && WorldState.IsTargetLongRangeCaster))
+            {
+                await Player.TurnToFaceTargetMarkerTask();
+                isFacingLongRangeCaster = true;
+                return;
+            }
 
-                // First do our "Make sure we're not standing around doing nothing" checks
-                if (!WorldState.IsTargetLongRangeCaster && await Player.MeleeMakeSureWeAreAttackingEnemyTask())
-                {
-                    continue;
-                }
+            if (WorldState.IsTargetLongRangeCaster && !ClassState.IsInEarthShockRange)
+            {
+                await RunIntoEarthShockRange();
+            }
 
-                if ((WorldState.IsTargetLongRangeCaster && !isFacingLongRangeCaster) ||
-                    (WorldState.TargetNeedsToBeInFront && WorldState.IsTargetLongRangeCaster))
-                {
-                    await Player.TurnToFaceTargetMarkerTask();
-                    isFacingLongRangeCaster = true;
-                    continue;
-                }
+            // Next, check if we need to pop any big cooldowns
+            if (!emergencyActionTaken && await EmergencyTask())
+            {
+                emergencyActionTaken = true;
+                return;
+            }
 
-                if (WorldState.IsTargetLongRangeCaster && !ClassState.IsInEarthShockRange)
-                {
-                    await RunIntoEarthShockRange();
-                }
+            if (await Player.ThrowDynamiteTask())
+            {
+                return;
+            }
 
-                // Next, check if we need to pop any big cooldowns
-                if (!emergencyActionTaken && await EmergencyTask())
-                {
-                    emergencyActionTaken = true;
-                    continue;
-                }
+            if (await Player.UseHealingPotionTask())
+            {
+                return;
+            }
 
-                if (await Player.ThrowDynamiteTask())
-                {
-                    continue;
-                }
-
-                if (await Player.UseHealingPotionTask())
-                {
-                    continue;
-                }
-
-                if (ShouldCastFlameShock())
-                {
-                    Console.WriteLine($"Trying to Flame Shock!");
-                    await Player.WaitForGlobalCooldownTask();
-                    await WowInput.PressKeyWithShift(Input.SHIFT_FLAME_SHOCK);
-                }
-                else if (ShouldCastEarthShock())
-                {
-                    Console.WriteLine($"Trying to Earth Shock!");
-                    await Player.WaitForGlobalCooldownTask();
-                    await WowInput.PressKey(Input.EARTH_SHOCK);
-                }
-                else if (ShouldCastFrostShock())
-                {
-                    Console.WriteLine($"Trying to Frost Shock!");
-                    await Player.WaitForGlobalCooldownTask();
-                    await WowInput.PressKey(Input.FROST_SHOCK);
-                }
-                else if (ShouldCastCureDisease())
-                {
-                    Console.WriteLine($"Trying to Cure Disease!");
-                    await Player.WaitForGlobalCooldownTask();
-                    await WowInput.PressKeyWithShift(Input.SHIFT_CURE_DISEASE);
-                }
-                else if (ShouldCastCurePoison())
-                {
-                    Console.WriteLine($"Trying to Cure Poison!");
-                    await Player.WaitForGlobalCooldownTask();
-                    await WowInput.PressKey(Input.CURE_POISON);
-                }
-                else// if (WorldState.AttackerCount <= 1)
-                {
-                    // we should already be attacking
-                    //await WowInput.PressKey(WowInput.SHAMAN_ATTACK);
-                }
-            } while (WorldState.IsInCombat);
-
-            return true;
-        }
-
-        public override async Task SingleCombatTask()
-        {
-            await CombatLoopTask();
+            if (ShouldCastFlameShock())
+            {
+                Console.WriteLine($"Trying to Flame Shock!");
+                await Player.WaitForGlobalCooldownTask();
+                await WowInput.PressKeyWithShift(Input.SHIFT_FLAME_SHOCK);
+            }
+            else if (ShouldCastEarthShock())
+            {
+                Console.WriteLine($"Trying to Earth Shock!");
+                await Player.WaitForGlobalCooldownTask();
+                await WowInput.PressKey(Input.EARTH_SHOCK);
+            }
+            else if (ShouldCastFrostShock())
+            {
+                Console.WriteLine($"Trying to Frost Shock!");
+                await Player.WaitForGlobalCooldownTask();
+                await WowInput.PressKey(Input.FROST_SHOCK);
+            }
+            else if (ShouldCastCureDisease())
+            {
+                Console.WriteLine($"Trying to Cure Disease!");
+                await Player.WaitForGlobalCooldownTask();
+                await WowInput.PressKeyWithShift(Input.SHIFT_CURE_DISEASE);
+            }
+            else if (ShouldCastCurePoison())
+            {
+                Console.WriteLine($"Trying to Cure Poison!");
+                await Player.WaitForGlobalCooldownTask();
+                await WowInput.PressKey(Input.CURE_POISON);
+            }
+            else// if (WorldState.AttackerCount <= 1)
+            {
+                // we should already be attacking
+                //await WowInput.PressKey(WowInput.SHAMAN_ATTACK);
+            }
         }
 
         private async Task<bool> RunIntoEarthShockRange()
