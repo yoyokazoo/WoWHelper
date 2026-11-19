@@ -2612,6 +2612,45 @@ COMMON_MACROS = {
     } },
 }
 
+-- Debug: when an existing macro's body doesn't match ours, print where and how
+-- they differ (lengths, first differing position, byte values around it), to
+-- see what the client changes about a stored body across a relog (that's how
+-- the trailing-newline quirk below was found).
+MACRO_DEBUG = false
+
+-- The client appends a trailing "\n" to a macro body when it saves macros to
+-- disk (confirmed live via MACRO_DEBUG: after a relog the stored body was ours
+-- plus one byte 10), so an exact compare reads every macro as changed after a
+-- relog. Compare with trailing newlines stripped.
+local function MacroBodiesMatch(a, b)
+    return (a or ""):gsub("\n+$", "") == (b or ""):gsub("\n+$", "")
+end
+
+local function DescribeBytes(s, from, to)
+    local parts = {}
+    for i = math.max(1, from), math.min(#s, to) do
+        table.insert(parts, tostring(string.byte(s, i)))
+    end
+    return "[" .. table.concat(parts, " ") .. "]"
+end
+
+function PrintMacroBodyDifference(name, oldBody, newBody)
+    oldBody = oldBody or ""
+    local firstDiff = nil
+    for i = 1, math.max(#oldBody, #newBody) do
+        if string.byte(oldBody, i) ~= string.byte(newBody, i) then
+            firstDiff = i
+            break
+        end
+    end
+    print(string.format("YoyokazooUI macro debug \"%s\": stored %d chars, ours %d chars, first diff at %s",
+        name, #oldBody, #newBody, tostring(firstDiff)))
+    if firstDiff then
+        print("  stored bytes " .. (firstDiff - 3) .. "+: " .. DescribeBytes(oldBody, firstDiff - 3, firstDiff + 5))
+        print("  ours   bytes " .. (firstDiff - 3) .. "+: " .. DescribeBytes(newBody, firstDiff - 3, firstDiff + 5))
+    end
+end
+
 -- Returns "created", "updated", "unchanged", "skipped", or "failed" plus a reason.
 local function CreateOrUpdateMacro(macro)
     local body = table.concat(macro.lines, "\n")
@@ -2635,15 +2674,19 @@ local function CreateOrUpdateMacro(macro)
     if macro.createOnly then
         return "skipped"
     end
-    if oldBody == body then
+    if MacroBodiesMatch(oldBody, body) then
         return "unchanged"
+    end
+
+    if MACRO_DEBUG then
+        PrintMacroBodyDifference(macro.name, oldBody, body)
     end
 
     -- Pass the existing name/icon back unchanged, so only the body changes.
     EditMacro(macroIndex, name, icon, body)
 
     local _, _, newBody = GetMacroInfo(GetMacroIndexByName(macro.name))
-    if newBody ~= body then
+    if not MacroBodiesMatch(newBody, body) then
         return "failed", "EditMacro didn't take -- body reads back as: " .. tostring(newBody)
     end
     return "updated"
