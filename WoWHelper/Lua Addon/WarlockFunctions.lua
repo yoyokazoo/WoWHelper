@@ -87,8 +87,9 @@ WARLOCK_MACROS = {
         "/use [mod:shift] Immolate",
     } },
     { name = "4 Buff", lines = {
-        "#showtooltip [mod:shift] Demon Skin; Summon Imp",
+        "#showtooltip [mod:shift, known:Demon Armor] Demon Armor; [mod:shift, noknown:Demon Armor] Demon Skin; Summon Imp",
         "/use [nomod] Summon Imp",
-        "/use [mod:shift] Demon Skin",
+        "/use [mod:shift, known:Demon Armor] Demon Armor",
+        "/use [mod:shift, noknown:Demon Armor] Demon Skin",
     } },
 }
