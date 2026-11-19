@@ -294,6 +294,26 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
+        #region Dun Morogh
+
+        public static readonly WowRoute LEVEL_1_DUN_MOROGH_TO_MERCHANT = new WowRoute
+        {
+            Name = "LEVEL_1_DUN_MOROGH_TO_MERCHANT",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(28.92f, 72.71f),
+                new Vector2(29.72f, 72.27f),
+                new Vector2(29.98f, 71.52f),
+                new Vector2(30.09f, 71.55f),
+            },
+        };
+
+        #endregion
+
         // Every route above, via reflection.
         private static readonly Lazy<IReadOnlyList<WowRoute>> ALL_WALKING_ROUTES_LAZY = StaticConfigCollector.LazyCollect<WowRoute>(typeof(WowWalkingRoutes));
         public static IReadOnlyList<WowRoute> ALL_WALKING_ROUTES => ALL_WALKING_ROUTES_LAZY.Value;

@@ -82,6 +82,18 @@ namespace WoWHelper.Code.WorldState
             Roles = NPCRoles.Train
         };
 
+        public static readonly WowNPCConfiguration DUN_MOROGH_MERCHANT = new WowNPCConfiguration
+        {
+            Route = new WowRoute
+            {
+                Name = "DUN_MOROGH_MERCHANT",
+                Zone = WowZone.DunMorogh,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.LEVEL_1_DUN_MOROGH_TO_MERCHANT.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Sell
+        };
+
         // Every NPC above, via reflection.
         private static readonly Lazy<IReadOnlyList<WowNPCConfiguration>> ALL_NPCS_LAZY = StaticConfigCollector.LazyCollect<WowNPCConfiguration>(typeof(WowNPCConfigs));
         public static IReadOnlyList<WowNPCConfiguration> ALL_NPCS => ALL_NPCS_LAZY.Value;
