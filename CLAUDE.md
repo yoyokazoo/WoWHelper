@@ -386,7 +386,8 @@ this bit comes true, then Slack-alerts and logs out. Not wired to any
 `PlayerState` or button yet — call it from `WowPlayer.AdHocTestTask()` to
 run it. (The `AdHocTest` button currently runs `RecordRouteTask()`
 (`Gameplay/WowRouteRecorderTasks.cs`): Space records the player's map
-position as a waypoint, Enter finishes and prints a copy-pasteable
+position as a waypoint (skipped if it exactly matches the last recorded one,
+so jumping again in place is harmless), Enter finishes and prints a copy-pasteable
 `WowRoute` in one console write.)
 
 G4 is `WowWorldState.HighLatency` — unlike G1-G3 above, this is back to being
@@ -456,7 +457,10 @@ in for levels 1-60, generated from a `/yyspells` dump of a WoW Forever
 trainer (real per-row levels/costs/spell IDs — Forever's schedule differs
 from Classic Era's; starting/quest spells, talent rank 1s, and weapon skills
 aren't on the trainer, so they're excluded);
-Shaman/Warlock tables are empty, so they always read "all known".
+Shaman/Warlock are filled in for levels 1-60 too, but from the Classic Era
+schedule (levels/rank spell IDs) with Warrior's Forever per-level costs, not
+a `/yyspells` dump — regenerate them from a Forever trainer dump to pick up
+any Forever-specific differences.
 `/yytrain` (`PrintTrainerSpellDebug()`) prints the cached G6/G7 values next
 to a fresh uncached scan, listing each unlearned entry with its
 `IsPlayerSpell`/`IsSpellKnown` results.

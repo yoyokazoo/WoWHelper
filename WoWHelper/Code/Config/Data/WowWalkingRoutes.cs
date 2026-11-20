@@ -312,6 +312,20 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute LEVEL_1_DUN_MOROGH_TO_LEVEL_4 = new WowRoute
+        {
+            Name = "LEVEL_1_DUN_MOROGH_TO_LEVEL_4",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(27.07f, 76.01f),
+                new Vector2(26.55f, 77.74f),
+            },
+        };
+
         #endregion
 
         // Every route above, via reflection.

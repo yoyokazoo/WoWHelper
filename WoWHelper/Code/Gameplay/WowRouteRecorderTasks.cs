@@ -63,8 +63,15 @@ namespace WoWHelper
                     else
                     {
                         var point = new Vector2(WorldState.MapX, WorldState.MapY);
-                        waypoints.Add(point);
-                        Console.WriteLine($"Recorded waypoint {waypoints.Count}: {FormatRouteFloat(point.X)}, {FormatRouteFloat(point.Y)}");
+                        if (waypoints.Count > 0 && waypoints[waypoints.Count - 1] == point)
+                        {
+                            Console.WriteLine($"Same point as waypoint {waypoints.Count} -- skipped.");
+                        }
+                        else
+                        {
+                            waypoints.Add(point);
+                            Console.WriteLine($"Recorded waypoint {waypoints.Count}: {FormatRouteFloat(point.X)}, {FormatRouteFloat(point.Y)}");
+                        }
                     }
                 }
 

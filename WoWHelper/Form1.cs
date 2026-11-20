@@ -93,20 +93,8 @@ namespace WoWHelper
 
         private void button4_Click(object sender, EventArgs e)
         {
-            List<Vector2> points = new List<Vector2>();
-            points.Add(new Vector2(45.96f, 56.01f));
-            points.Add(new Vector2(44.58f, 53.73f));
-            points.Add(new Vector2(47.67f, 53.31f));
-            points.Add(new Vector2(45.96f, 56.01f));
-            float maxDistance = 1.0f;
-            var dividedPoints = PathSubdivision.Subdivide(points, maxDistance);
-            Console.WriteLine($"Waypoints = new List<Vector2>");
-            Console.WriteLine($"{{");
-            foreach (var point in dividedPoints)
-            {
-                Console.WriteLine($"new Vector2({point.X}f, {point.Y}f),");
-            }
-            Console.WriteLine($"}},");
+            WowPlayer player = new WowPlayer();
+            player.KickOffRouteRecording();
         }
     }
 }

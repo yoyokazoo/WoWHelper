@@ -957,6 +957,36 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute LEVEL_4_DUN_MOROGH_BOARS_AND_TROLLS_ROUTE = new WowRoute
+        {
+            Name = "LEVEL_4_DUN_MOROGH_BOARS_AND_TROLLS_ROUTE",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(26.94f, 78.53f),
+                new Vector2(26.55f, 77.74f),
+                new Vector2(26.05f, 78.14f),
+                new Vector2(25.50f, 78.30f),
+                new Vector2(25.54f, 79.61f),
+                new Vector2(24.37f, 79.95f),
+                new Vector2(23.61f, 79.79f),
+                new Vector2(23.26f, 78.72f),
+                new Vector2(22.48f, 77.98f),
+                new Vector2(21.71f, 77.43f),
+                new Vector2(21.64f, 76.00f),
+                new Vector2(20.77f, 74.65f),
+                new Vector2(20.77f, 74.65f),
+                new Vector2(20.66f, 73.40f),
+                new Vector2(21.21f, 71.91f),
+                new Vector2(21.66f, 70.85f),
+                new Vector2(22.11f, 69.77f),
+                new Vector2(22.78f, 69.02f),
+            },
+        };
+
         #endregion
     }
 }

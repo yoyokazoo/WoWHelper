@@ -172,6 +172,19 @@ namespace WoWHelper
             }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
+        public void KickOffRouteRecording()
+        {
+            EnableEscToQuit();
+
+            _ = FocusOnWindowTask().ContinueWith(a =>
+                UpdateWorldStateAsync().ContinueWith(b =>
+                RecordRouteTask().ContinueWith(t =>
+                {
+                    Console.WriteLine($"AdHocTestTask crashed: {t.Exception}");
+                    SlackHelper.SendMessageToChannel($"WoWHelper crashed: {t.Exception?.GetBaseException().Message}");
+                }, TaskContinuationOptions.OnlyOnFaulted)));
+        }
+
         public void KickOffAdHocTest()
         {
             EnableEscToQuit();
@@ -185,9 +198,15 @@ namespace WoWHelper
 
         public async Task<bool> AdHocTestTask()
         {
-            await FocusOnWindowTask();
-            await UpdateWorldStateAsync();
-            return await RecordRouteTask();
+            Vector2? startingPoint = null;
+            //startingPoint = new Vector2(43.80f, 68.36f);
+            var (boarsAndScorpsWaypoint, impsWaypoint, distance) = WowPathfinding.GetClosestWaypointsBetweenRoutes(
+                WowFarmingRoutes.LEVEL_1_DUN_MOROGH_WOLVES_AND_TROGGS_ROUTE, WowFarmingRoutes.LEVEL_4_DUN_MOROGH_BOARS_AND_TROLLS_ROUTE, startingPoint);
+            Console.WriteLine($"Closest waypoints: first {boarsAndScorpsWaypoint}, second {impsWaypoint}, distance {distance}");
+
+            //await FocusOnWindowTask();
+            //await UpdateWorldStateAsync();
+            //return await RecordRouteTask();
             //await Task.Delay(4000);
             //await MouseTurnRateSweepTask(startPixels: 1, stepPixels: 1);
             //var asdf = WowPathfinding.GetWaypointsToTarget(this);
@@ -198,6 +217,9 @@ namespace WoWHelper
             //var (boarsAndScorpsWaypoint, impsWaypoint, distance) = WowPathfinding.GetClosestWaypointsBetweenRoutes(
             //    WowWalkingRoutes.BOARS_AND_SCORPS_TO_MERCHANT_ROUTE, WowFarmingRoutes.LEVEL_6_DUROTAR_BOAR_RAZOR_HILL_LOOP_ROUTE, startingPoint);
             //Console.WriteLine($"Closest waypoints: boars and scorps {boarsAndScorpsWaypoint}, imps {impsWaypoint}, distance {distance}");
+
+            await Task.Delay(0);
+            return true;
         }
 
         public async Task<bool> CoreLoopTask()
