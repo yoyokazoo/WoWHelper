@@ -457,10 +457,12 @@ in for levels 1-60, generated from a `/yyspells` dump of a WoW Forever
 trainer (real per-row levels/costs/spell IDs — Forever's schedule differs
 from Classic Era's; starting/quest spells, talent rank 1s, and weapon skills
 aren't on the trainer, so they're excluded);
-Shaman/Warlock are filled in for levels 1-60 too, but from the Classic Era
-schedule (levels/rank spell IDs) with Warrior's Forever per-level costs, not
-a `/yyspells` dump — regenerate them from a Forever trainer dump to pick up
-any Forever-specific differences.
+Shaman and Warlock are also generated from Forever `/yyspells` dumps
+(Forever renames, adds and drops several of their spells, and prices differ
+per class — see each table's header). Shaman/Warlock gate talent/quest
+spells' later ranks with `requiresSpellId` set to the first trainer row's own
+ID — the gate is only used to get the spell's name, so this avoids relying
+on unverified rank-1 IDs.
 `/yytrain` (`PrintTrainerSpellDebug()`) prints the cached G6/G7 values next
 to a fresh uncached scan, listing each unlearned entry with its
 `IsPlayerSpell`/`IsSpellKnown` results.

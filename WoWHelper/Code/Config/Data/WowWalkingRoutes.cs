@@ -326,6 +326,54 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute DUN_MOROGH_COLDRIDGE_TO_KHARANOS = new WowRoute
+        {
+            Name = "DUN_MOROGH_COLDRIDGE_TO_KHARANOS",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(46.54f, 54.91f),
+                new Vector2(46.85f, 56.03f),
+                new Vector2(47.06f, 57.56f),
+                new Vector2(46.97f, 59.65f),
+                new Vector2(46.42f, 60.48f),
+                new Vector2(46.33f, 61.48f),
+                new Vector2(45.98f, 62.07f),
+                new Vector2(44.95f, 63.51f),
+                new Vector2(43.80f, 64.53f),
+                new Vector2(42.21f, 65.07f),
+                new Vector2(40.86f, 64.47f),
+                new Vector2(39.41f, 63.72f),
+                new Vector2(38.27f, 62.82f),
+                new Vector2(37.07f, 62.26f),
+                new Vector2(35.70f, 61.86f),
+                new Vector2(35.36f, 62.27f),
+                new Vector2(35.31f, 64.11f),
+                new Vector2(35.58f, 65.45f),
+                new Vector2(35.80f, 66.66f),
+                new Vector2(35.50f, 67.32f),
+                new Vector2(35.65f, 67.86f),
+                new Vector2(35.22f, 67.99f),
+                new Vector2(34.94f, 68.26f),
+                new Vector2(35.38f, 69.34f),
+                new Vector2(34.76f, 69.48f),
+                new Vector2(34.22f, 69.30f),
+                new Vector2(33.89f, 69.82f),
+                new Vector2(33.98f, 70.35f),
+                new Vector2(34.39f, 70.78f),
+                new Vector2(34.02f, 71.75f),
+                new Vector2(33.66f, 71.68f),
+                new Vector2(32.97f, 72.50f),
+                new Vector2(32.06f, 72.75f),
+                new Vector2(31.06f, 72.34f),
+                new Vector2(30.26f, 72.54f),
+                new Vector2(29.93f, 71.49f),
+            },
+        };
+
         #endregion
 
         // Every route above, via reflection.

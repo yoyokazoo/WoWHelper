@@ -2439,7 +2439,7 @@ local function DumpTrainerTable(lines)
 
     for _, spell in ipairs(trainerSpells) do
         table.insert(lines, string.format("table L%d | %s | spellId=%d | clientName=%s | IsPlayerSpell=%s | IsSpellKnown=%s",
-            spell.level, spell.name, spell.spellId, tostring(ClientSpellName(spell.spellId)),
+            spell.level, spell.name, spell.spellId, tostring((ClientSpellName(spell.spellId))),
             DescribeValue(IsPlayerSpell and IsPlayerSpell(spell.spellId)),
             DescribeValue(Compat_IsSpellKnown(spell.spellId))))
     end
