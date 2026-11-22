@@ -319,15 +319,17 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
-        public static readonly WowRoute LEVEL_7_TO_DOLANAAR = new WowRoute
+        public static readonly WowRoute TELDRASSIL_LEVEL_7_TO_DOLANAAR = new WowRoute
         {
-            Name = "LEVEL_7_TO_DOLANAAR",
+            Name = "TELDRASSIL_LEVEL_7_TO_DOLANAAR",
             Zone = WowZone.Teldrassil,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
 
             Waypoints = new List<Vector2>
             {
+                new Vector2(64.46f, 55.66f),
+                new Vector2(63.36f, 53.79f),
                 new Vector2(62.12f, 55.31f),
                 new Vector2(61.16f, 56.40f),
                 new Vector2(59.74f, 57.34f),

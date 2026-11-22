@@ -79,7 +79,8 @@ namespace WoWHelper.Code.WorldState
                 Faction = WowFaction.ALLIANCE,
                 Waypoints = new List<Vector2> { WowWalkingRoutes.TELDRASSIL_TRAINER_TO_WARRIOR_TRAINER_ROUTE.Waypoints.Last() }
             },
-            Roles = NPCRoles.Train
+            Roles = NPCRoles.Train,
+            MaximumLevel = 6,
         };
 
         public static readonly WowNPCConfiguration TELDRASSIL_ROGUE_TRAINER = new WowNPCConfiguration
@@ -91,6 +92,33 @@ namespace WoWHelper.Code.WorldState
                 Zone = WowZone.Teldrassil,
                 Faction = WowFaction.ALLIANCE,
                 Waypoints = new List<Vector2> { WowWalkingRoutes.TELDRASSIL_TRAINER_TO_ROGUE_TRAINER_ROUTE.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train,
+            MaximumLevel = 6,
+        };
+
+        public static readonly WowNPCConfiguration DOLANAAR_WARRIOR_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Warrior,
+            Route = new WowRoute
+            {
+                Name = "DOLANAAR_WARRIOR_TRAINER",
+                Zone = WowZone.Teldrassil,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.DOLANAAR_TO_WARRIOR_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train
+        };
+
+        public static readonly WowNPCConfiguration DOLANAAR_ROGUE_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Rogue,
+            Route = new WowRoute
+            {
+                Name = "DOLANAAR_ROGUE_TRAINER",
+                Zone = WowZone.Teldrassil,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.DOLANAAR_TO_ROGUE_TRAINER.Waypoints.Last() }
             },
             Roles = NPCRoles.Train
         };
