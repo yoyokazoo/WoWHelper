@@ -233,7 +233,7 @@ end
 -- on the C# side by WowWarlockClassState, in the same order.
 ------------------------------------------------------------
 WARLOCK_CLASS_BOOL_ONE_FIELDS = {
-    "CanSpellcastPullTarget",  -- 1 (R1) WoWFunctions.lua -- shared with Shaman
+    "CanSpellcastPullTarget",  -- 1 (R1) WoWFunctions.lua -- shared with other casters
     "ShouldCastDemonArmor",    -- 2 (R2)
     "ShouldSummonPet",         -- 3 (R3)
     "ShouldCastImmolate",      -- 4 (R4)

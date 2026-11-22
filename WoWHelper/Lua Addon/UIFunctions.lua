@@ -186,10 +186,11 @@ end
 --   Row  9  ClassBoolOne         bool fields (<CLASS>_CLASS_BOOL_ONE_FIELDS)
 --   Row 10  ClassBoolTwo         bool fields (<CLASS>_CLASS_BOOL_TWO_FIELDS)
 --   Row 11  MultiIntOne          bytes: attacker count, player level, zone ID
+--   Row 12  MultiIntTwo          bytes: player class ID, (unused), (unused)
 --
 -- Bars fill left to right, so the number of filled pixels is the percent --
 -- and a StatusBar accepts secret values (Midnight-rules clients), which Lua
--- itself can't do math on. Rows 4-11 are bit rows: PIXEL_ROW_BITS boxes,
+-- itself can't do math on. Rows 4-12 are bit rows: PIXEL_ROW_BITS boxes,
 -- green = 1, red = 0 (see MathFunctions.lua for the encodings).
 --
 -- Row order and every constant below MUST match WowPixelRows.cs. A one-sided
@@ -197,7 +198,7 @@ end
 --------------------------------------------------
 PIXEL_SIZE = 3
 PIXEL_BAR_WIDTH = 100  -- so each filled bar pixel is exactly 1%
-local PIXEL_ROW_COUNT = 12
+local PIXEL_ROW_COUNT = 13
 
 -- Exact-match sentinel: if the C# side sees exactly this color, the addon is
 -- loaded and the rows are real. Nothing else here ever draws it.
@@ -328,6 +329,9 @@ function InitializePixelRow()
 
         CreateBitRowElement(container, 11, function()
             return EncodeBytes(CountAttackers(), UnitLevel("player"), GetCurrentZoneId())
+        end),
+        CreateBitRowElement(container, 12, function()
+            return EncodeBytes(GetPlayerClassId(), 0, 0)
         end),
     }
 

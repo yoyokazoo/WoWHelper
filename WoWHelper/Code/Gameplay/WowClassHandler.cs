@@ -74,6 +74,12 @@ namespace WoWHelper
                 case WowCombatConfiguration.Warrior: return new WowWarriorHandler(player);
                 case WowCombatConfiguration.Shaman: return new WowShamanHandler(player);
                 case WowCombatConfiguration.Warlock: return new WowWarlockHandler(player);
+                case WowCombatConfiguration.Paladin: return new WowPaladinHandler(player);
+                case WowCombatConfiguration.Hunter: return new WowHunterHandler(player);
+                case WowCombatConfiguration.Rogue: return new WowRogueHandler(player);
+                case WowCombatConfiguration.Priest: return new WowPriestHandler(player);
+                case WowCombatConfiguration.Mage: return new WowMageHandler(player);
+                case WowCombatConfiguration.Druid: return new WowDruidHandler(player);
                 default: throw new System.NotImplementedException(
                     $"{nameof(WowClassHandler)}.{nameof(Create)}: no handler implemented for CombatConfiguration \"{combatConfiguration}\" -- " +
                     $"this should only be called with a resolved (non-Unknown) CombatConfiguration.");

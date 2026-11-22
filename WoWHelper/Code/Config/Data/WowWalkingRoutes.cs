@@ -235,7 +235,7 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
-        public static readonly WowRoute TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE = new WowRoute
+        public static readonly WowRoute TELDRASSIL_MERCHANT_TO_TRAINER_ROUTE = new WowRoute
         {
             Name = "TELDRASSIL_MERCHANT_TO_WARRIOR_TRAINER_ROUTE",
             Zone = WowZone.Teldrassil,
@@ -249,7 +249,34 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(59.16f, 40.27f),
                 new Vector2(59.21f, 39.64f),
                 new Vector2(59.27f, 39.10f),
+            },
+        };
+
+        public static readonly WowRoute TELDRASSIL_TRAINER_TO_WARRIOR_TRAINER_ROUTE = new WowRoute
+        {
+            Name = "TELDRASSIL_TRAINER_TO_WARRIOR_TRAINER_ROUTE",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(59.27f, 39.10f),
                 new Vector2(59.64f, 38.44f),
+            },
+        };
+
+        public static readonly WowRoute TELDRASSIL_TRAINER_TO_ROGUE_TRAINER_ROUTE = new WowRoute
+        {
+            Name = "TELDRASSIL_TRAINER_TO_ROGUE_TRAINER_ROUTE",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(59.27f, 39.10f),
+                new Vector2(59.64f, 38.66f),
             },
         };
 
@@ -323,6 +350,21 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(55.85f, 58.32f),
                 new Vector2(55.95f, 58.78f),
                 new Vector2(56.22f, 59.20f),
+            },
+        };
+
+        public static readonly WowRoute DOLANAAR_TO_ROGUE_TRAINER = new WowRoute
+        {
+            Name = "DOLANAAR_TO_ROGUE_TRAINER",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(55.85f, 58.32f),
+                new Vector2(55.95f, 58.78f),
+                new Vector2(56.38f, 60.14f),
             },
         };
 

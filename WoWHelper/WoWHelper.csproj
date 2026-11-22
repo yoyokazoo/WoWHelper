@@ -165,6 +165,12 @@
     <Compile Include="Code\Gameplay\WowClassHandler.cs" />
     <Compile Include="Code\Class Specific\WowShamanHandler.cs" />
     <Compile Include="Code\Class Specific\WowWarlockHandler.cs" />
+    <Compile Include="Code\Class Specific\WowPaladinHandler.cs" />
+    <Compile Include="Code\Class Specific\WowHunterHandler.cs" />
+    <Compile Include="Code\Class Specific\WowRogueHandler.cs" />
+    <Compile Include="Code\Class Specific\WowPriestHandler.cs" />
+    <Compile Include="Code\Class Specific\WowMageHandler.cs" />
+    <Compile Include="Code\Class Specific\WowDruidHandler.cs" />
     <Compile Include="Code\Class Specific\WowWarriorHandler.cs" />
     <Compile Include="Code\Shared\BitmapDifferenceVisualizer.cs" />
     <Compile Include="Code\Shared\GeneralHelpers.cs" />
@@ -178,6 +184,12 @@
     <Compile Include="Code\Class Specific\WowWarriorClassState.cs" />
     <Compile Include="Code\Class Specific\WowShamanClassState.cs" />
     <Compile Include="Code\Class Specific\WowWarlockClassState.cs" />
+    <Compile Include="Code\Class Specific\WowPaladinClassState.cs" />
+    <Compile Include="Code\Class Specific\WowHunterClassState.cs" />
+    <Compile Include="Code\Class Specific\WowRogueClassState.cs" />
+    <Compile Include="Code\Class Specific\WowPriestClassState.cs" />
+    <Compile Include="Code\Class Specific\WowMageClassState.cs" />
+    <Compile Include="Code\Class Specific\WowDruidClassState.cs" />
     <Compile Include="Code\Shared\PathSubdivision.cs" />
     <Compile Include="Code\Shared\TessaractSingleton.cs" />
     <Compile Include="Code\Shared\SlackFileUploadWorkaround.cs" />
@@ -224,6 +236,24 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Lua Addon\WarlockFunctions.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Lua Addon\PaladinFunctions.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Lua Addon\HunterFunctions.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Lua Addon\RogueFunctions.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Lua Addon\PriestFunctions.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Lua Addon\MageFunctions.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Lua Addon\DruidFunctions.lua">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Lua Addon\YoyokazooUI.lua">

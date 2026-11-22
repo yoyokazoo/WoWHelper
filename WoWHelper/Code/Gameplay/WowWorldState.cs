@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Numerics;
 using WindowsGameAutomationTools.ImageDetection;
 using WindowsGameAutomationTools.Images;
@@ -118,9 +119,9 @@ namespace WoWHelper
         // this can tell "valid but out of range" apart from "not a valid target".
         public bool IsTargetAttackable { get; private set; }
 
-        // Which supported class the player is, from whichever supported-class bit is on
-        // (MultiBoolOne box 18 Warrior / 20 Shaman, MultiBoolTwo box 4 Warlock). Null when
-        // none is -- an unsupported class, or the addon isn't rendering a real row yet.
+        // The player's class, from MultiIntTwo's first byte (Blizzard's class ID, which the
+        // enum's values match). Null when the byte isn't a known class ID -- e.g. the addon
+        // isn't rendering a real row yet.
         public WowCombatConfiguration? PlayerClass { get; private set; }
 
         // Red error toasts (UI_ERROR_MESSAGE). Each is true for 0.5s after the toast fires --
@@ -217,11 +218,10 @@ namespace WoWHelper
             PlayerLocation = new Vector2(MapX, MapY);
             FacingDegrees = WowPixelRows.ReadBits(bmp, PixelRow.FacingDegrees).FixedPoint;
 
-            // Set by whichever supported-class bit is on -- see PlayerClass.
-            PlayerClass = null;
             UpdateMultiBoolOne(WowPixelRows.ReadBits(bmp, PixelRow.MultiBoolOne));
             UpdateMultiBoolTwo(WowPixelRows.ReadBits(bmp, PixelRow.MultiBoolTwo));
             UpdateMultiIntOne(WowPixelRows.ReadBits(bmp, PixelRow.MultiIntOne));
+            UpdateMultiIntTwo(WowPixelRows.ReadBits(bmp, PixelRow.MultiIntTwo));
         }
 
         // Box numbers MUST match MULTI_BOOL_ONE_FIELDS in WoWFunctions.lua.
@@ -251,15 +251,7 @@ namespace WoWHelper
             // across.
             TargetRecentlyEvaded = bits[17];
 
-            // 18 and 20 are supported-class bits (19 reserved) -- see PlayerClass.
-            if (bits[18])
-            {
-                PlayerClass = WowCombatConfiguration.Warrior;
-            }
-            else if (bits[20])
-            {
-                PlayerClass = WowCombatConfiguration.Shaman;
-            }
+            // 18-20 reserved (formerly class bits -- see PlayerClass).
 
             PlayerIsPoisoned = bits[21];
             PlayerIsDiseased = bits[22];
@@ -274,11 +266,7 @@ namespace WoWHelper
             LogoffMobSeen = bits[2];
             IsCurrentlySkinning = bits[3];
 
-            if (bits[4])
-            {
-                PlayerClass = WowCombatConfiguration.Warlock;
-            }
-
+            // 4 reserved (formerly the Warlock class bit -- see PlayerClass).
             IsTargetBleedImmune = bits[5];
             IsTargetFearCaster = bits[6];
             FacingWrongWay = bits[7];
@@ -310,6 +298,16 @@ namespace WoWHelper
             AttackerCount = bits.Byte(0);
             PlayerLevel = bits.Byte(1);
             CurrentZone = (WowZone)bits.Byte(2); // see GetCurrentZoneId() in WoWFunctions.lua
+        }
+
+        // Byte order MUST match the EncodeBytes call for row 12 in InitializePixelRow()
+        // (UIFunctions.lua).
+        private void UpdateMultiIntTwo(PixelRowBits bits)
+        {
+            int classId = bits.Byte(0); // see GetPlayerClassId() in WoWFunctions.lua
+            PlayerClass = Enum.IsDefined(typeof(WowCombatConfiguration), classId)
+                ? (WowCombatConfiguration?)classId
+                : null;
         }
     }
 }

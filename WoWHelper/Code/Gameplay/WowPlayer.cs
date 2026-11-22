@@ -132,7 +132,7 @@ namespace WoWHelper
 
         private void UpdateClassState()
         {
-            if (ClassHandler == null && WorldState.IsBotInAValidState)
+            if (ClassHandler == null && WorldState.IsBotInAValidState && WorldState.PlayerClass.HasValue)
             {
                 CombatConfiguration = WorldState.PlayerClass.Value;
                 ClassHandler = WowClassHandler.Create(CombatConfiguration, this);

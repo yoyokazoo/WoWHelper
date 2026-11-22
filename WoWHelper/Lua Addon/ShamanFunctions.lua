@@ -288,7 +288,7 @@ SHAMAN_CLASS_BOOL_ONE_FIELDS = {
     "CanCastEarthShock",          -- 3 (R3)
     "ShouldCastFlameShock",       -- 4 (R4)
     "TargetHasFlameShock",        -- 5 (R5)
-    "CanSpellcastPullTarget",     -- 6 (R6) WoWFunctions.lua -- shared with Warlock
+    "CanSpellcastPullTarget",     -- 6 (R6) WoWFunctions.lua -- shared with other casters
     "CanCurePoison",              -- 7 (R7)
     "CanCureDisease",             -- 8 (R8)
 }

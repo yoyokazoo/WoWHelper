@@ -489,6 +489,12 @@ function GetGCDProbeSpell()
         return 6673 -- Battle Shout (Rank 1)
     elseif classFile == "WARLOCK" then
         return 686 -- Shadow Bolt (Rank 1) -- UNTESTED
+    elseif classFile == "MAGE" then
+        return 133 -- Fireball (Rank 1) -- UNTESTED
+    elseif classFile == "PRIEST" then
+        return 585 -- Smite (Rank 1) -- UNTESTED
+    elseif classFile == "DRUID" then
+        return 5176 -- Wrath (Rank 1) -- UNTESTED
     end
 
     return GCD_SPELL_ID -- no real probe picked for this class yet -- confirmed NOT to work
@@ -599,7 +605,7 @@ function SpellIsInRange(spellId)
     return true
 end
 
--- Shared between Shaman and Warlock (branches internally below), so it
+-- Shared between the caster classes (branches internally below), so it
 -- stays here rather than moving to a single class file -- see the note atop
 -- ShamanFunctions.lua/WarlockFunctions.lua about why it isn't split further.
 function CanSpellcastPullTarget()
@@ -615,6 +621,12 @@ function CanSpellcastPullTarget()
         spellId = 403 -- Lightning Bolt (Rank 1)
     elseif classFile == "WARLOCK" then
         spellId = 686 -- Shadow Bolt (Rank 1), known from level 1 -- TODO: verify in-game
+    elseif classFile == "MAGE" then
+        spellId = 133 -- Fireball (Rank 1) -- UNTESTED
+    elseif classFile == "PRIEST" then
+        spellId = 585 -- Smite (Rank 1) -- UNTESTED
+    elseif classFile == "DRUID" then
+        spellId = 5176 -- Wrath (Rank 1) -- UNTESTED
     else
         return false
     end
@@ -2736,9 +2748,13 @@ end
 -- pixel's R/G/B bytes: Rn = box n, Gn = box 8+n, Bn = box 16+n. CLAUDE.md
 -- still refers to boxes that way.
 ------------------------------------------------------------
-function IsPlayerWarrior() return select(2, UnitClass("player")) == "WARRIOR" end
-function IsPlayerShaman()  return select(2, UnitClass("player")) == "SHAMAN"  end
-function IsPlayerWarlock() return select(2, UnitClass("player")) == "WARLOCK" end
+-- MultiIntTwo byte 1, decoded into WowWorldState.PlayerClass. Blizzard's own
+-- class ID (1 Warrior, 2 Paladin, 3 Hunter, 4 Rogue, 5 Priest, 7 Shaman,
+-- 8 Mage, 9 Warlock, 11 Druid), which the C# WowCombatConfiguration enum's
+-- values match directly. 0 = unknown.
+function GetPlayerClassId()
+    return select(3, UnitClass("player")) or 0
+end
 -- MultiBoolTwo box 23 (B7), decoded into WowWorldState.PlayerIsHorde -- picks which
 -- faction's routes/NPCs/zone crossings the bot may use. False means Alliance.
 function IsPlayerHorde() return UnitFactionGroup("player") == "Horde" end
@@ -2761,9 +2777,9 @@ MULTI_BOOL_ONE_FIELDS = {
     "IsTargetRunnerMob",            -- 15 (G7)
     "IsTargetFireImmune",           -- 16 (G8)
     "HasRecentTargetEvade",         -- 17 (B1) YoyokazooUI.lua
-    "IsPlayerWarrior",              -- 18 (B2) supported-class bits: exactly one of these and
-    RESERVED,                       -- 19 (B3)   MultiBoolTwo's box 4 (Warlock) is true. 19 was
-    "IsPlayerShaman",               -- 20 (B4)   Mage, removed along with Mage support.
+    RESERVED,                       -- 18 (B2) formerly IsPlayerWarrior -- class is now MultiIntTwo byte 1
+    RESERVED,                       -- 19 (B3) formerly IsPlayerMage
+    RESERVED,                       -- 20 (B4) formerly IsPlayerShaman
     "IsPlayerPoisoned",             -- 21 (B5)
     "IsPlayerDiseased",             -- 22 (B6)
     "IsTargetNatureImmune",         -- 23 (B7)
@@ -2774,7 +2790,7 @@ MULTI_BOOL_TWO_FIELDS = {
     "IsTargetLongRangeCaster",      --  1 (R1)
     "IsLogoffMobSeen",              --  2 (R2)
     "IsCurrentlySkinning",          --  3 (R3)
-    "IsPlayerWarlock",              --  4 (R4) supported-class bit, see MultiBoolOne box 18
+    RESERVED,                       --  4 (R4) formerly IsPlayerWarlock -- class is now MultiIntTwo byte 1
     "IsTargetBleedImmune",          --  5 (R5)
     "IsTargetFearCaster",           --  6 (R6)
     "HasRecentFacingWrongWayError", --  7 (R7) red error toasts: YoyokazooUI.lua

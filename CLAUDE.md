@@ -79,6 +79,7 @@ order. Row N covers physical y = 3N to 3N+2 (read at y = 3N+1):
 | 9 | `ClassBoolOne` — `<CLASS>_CLASS_BOOL_ONE_FIELDS` (class-specific) | bool fields | a `WowClassState` subtype (see C# architecture section) |
 | 10 | `ClassBoolTwo` — `<CLASS>_CLASS_BOOL_TWO_FIELDS` (class-specific — only Shaman's boxes 1-3 used so far) | bool fields | a `WowClassState` subtype (Shaman: `IsInEarthShockRange`/`HasClearcasting`/`CanCastFrostShock`) |
 | 11 | `MultiIntOne` — attacker count, player level, zone ID | bytes | `AttackerCount`/`PlayerLevel`/`CurrentZone` |
+| 12 | `MultiIntTwo` — player class ID (bytes 2-3 unused, sent as 0) | bytes | `PlayerClass` |
 
 **Bars** (rows 0-2) are `PIXEL_BAR_WIDTH` (100) physical-pixel `StatusBar`s
 at x = 0, empty color `(0, 0, 0)`, filled left to right — filled pixel count
@@ -90,7 +91,7 @@ them itself (the bar value sources pass them through untouched).
 first unfilled pixel (at most 7 reads per bar), "filled" meaning the bar's
 fill channel is >= 128 (so a half-covered edge pixel rounds to nearest).
 
-**Bit rows** (rows 4-11) are 24 boxes, green `(0, 255, 0)` = 1 and red
+**Bit rows** (rows 4-12) are 24 boxes, green `(0, 255, 0)` = 1 and red
 `(255, 0, 0)` = 0, together one unsigned integer with **box 1 (leftmost) as
 bit 0**. C# reads a box as 1 when its green channel beats its red
 (`WowPixelRows.ReadBits()` → `PixelRowBits`). Three encodings, Lua helpers in
@@ -219,8 +220,8 @@ mechanisms in
 method run only from `PlayerState.RESOLVE_FARMING_CONFIGURATION`) because
 that state can be skipped entirely — see below:
 - `WowPlayer.UpdateClassState()` sets `CombatConfiguration` straight
-  from `WowWorldState.PlayerClass` (see the `MultiBoolOne` B-byte bits 2-4
-  note below) and builds the matching `WowClassHandler` subtype
+  from `WowWorldState.PlayerClass` (see the `MultiIntTwo` class ID note
+  below) and builds the matching `WowClassHandler` subtype
   (`WowPlayer.ClassHandler`, which owns its class's `WowClassState`). It's
   called every tick from `UpdateWorldState()` — **not** tied
   to `PlayerState.RESOLVE_FARMING_CONFIGURATION` — and does nothing once
@@ -285,21 +286,20 @@ the exact tick the miss fired. Consumed by `MeleeMakeSureWeAreAttackingEnemyTask
 (`WowCommonCombatTasks.cs`) as part of its "this target is stuck, back off/clear
 it" checks.
 
-B2 and B4 carry two of the three bot-supported classes the player might be
-playing — `IsPlayerWarrior()`/`IsPlayerShaman()` (`WoWFunctions.lua`), plain
-`UnitClass("player")` checks. (B3 is `RESERVED` — previously Mage, removed
-along with Mage support; not reused, to avoid confusing anything that expects
-the old meaning.) The 3rd class, Warlock, didn't fit here — this row was
-already full by the time Warlock support was added — so its bit
-(`IsPlayerWarlock()`) lives in `MultiBoolTwo`'s R4 instead (see below);
-`WowWorldState.UpdateMultiBoolTwo` overrides `PlayerClass` to `Warlock` there
-rather than duplicating the "exactly one true" logic across two rows. C#
-decodes these into `WowWorldState.PlayerClass` (nullable
-`WowCombatConfiguration` — null if none of the four bits are set, i.e. an
-unsupported class or the addon isn't rendering a real row yet), which
-`WowPlayer.ResolveFarmingConfigurationTask` uses to set
-`CombatConfiguration` automatically at startup — see "Automatic
-farming-config resolution" below.
+B2-B4 are `RESERVED` — formerly per-class "is the player X" bits
+(Warrior/Mage/Shaman, plus Warlock in `MultiBoolTwo`'s R4), retired when
+support expanded to all 9 classes and one bit per class no longer fit.
+
+**`MultiIntTwo`'s first byte is the player's class:** `GetPlayerClassId()`
+(`WoWFunctions.lua`) sends Blizzard's own class ID (`UnitClass("player")`'s
+third return: 1 Warrior, 2 Paladin, 3 Hunter, 4 Rogue, 5 Priest, 7 Shaman,
+8 Mage, 9 Warlock, 11 Druid; 0 if unknown). The `WowCombatConfiguration`
+enum's values are those same IDs, so there's no mirror table to keep in
+sync. C# decodes it into `WowWorldState.PlayerClass` (nullable — null when
+the byte isn't a defined enum value, e.g. the addon isn't rendering a real
+row yet), which `WowPlayer.UpdateClassState()` uses to set
+`CombatConfiguration` automatically — see "Automatic farming-config
+resolution" below. Bytes 2-3 are free.
 
 B5-B8 carry `IsPlayerPoisoned`/`IsPlayerDiseased` (from `PlayerHasDebuffType()`
 in `WoWFunctions.lua`, keyed off `UnitDebuff("player", i)`'s dispel-type return
@@ -332,8 +332,8 @@ regardless of player state, same as the level-up check there), and R3 is
 current cast, `UnitCastingInfo("player") == "Skinning"` — Skinning is a
 regular cast-bar action, not a channel, and isn't cast via a normal
 spellbook ID the way e.g. `CanCurePoison`'s `IsSpellKnownByName()` match is);
-and R4 is the 3rd "which supported class" bit, Warlock (see the `MultiBoolOne`
-B-box note above for why it landed here instead of there). R5 is
+and R4 is `RESERVED` (formerly the Warlock class bit — see the `MultiIntTwo`
+class ID note above). R5 is
 `WowWorldState.IsTargetBleedImmune` (per-mob, from `BLEED_IMMUNE_MOB_NAMES`
 in `CreatureConfig.lua` — mobs not worth (re)applying Rend to) and R6 is
 `IsTargetFearCaster` (per-mob, from `FEAR_CASTER_MOB_NAMES` in
@@ -613,8 +613,8 @@ box read as wrong flag), it won't fail loudly.
 Rockbiter, etc.) live only in the Class rows, never in `MultiBoolOne/Two`.
 `GetPlayerClassFields()` (`WoWFunctions.lua`) picks the player's class's list
 by name — `WARRIOR_CLASS_BOOL_ONE_FIELDS` in `WarriorFunctions.lua`,
-`SHAMAN_...` in `ShamanFunctions.lua`, `WARLOCK_...` in
-`WarlockFunctions.lua` (an unsupported class gets an empty, all-red row) — so
+`SHAMAN_...` in `ShamanFunctions.lua`, and so on — one `<Class>Functions.lua`
+per class, all 9 (a class with an empty or missing list gets an all-red row) — so
 the *same* box means something different depending on which class is
 playing. On the C# side, the class's `WowClassState` subtype (owned by its
 `WowClassHandler` — see the C# architecture section) decodes the
@@ -622,8 +622,8 @@ matching bits, selected once from `CombatConfiguration` —
 itself auto-set at startup from the player's detected class (see "Automatic
 farming-config resolution" below), not hardcoded. Note
 `CanSpellcastPullTarget()` stays in `WoWFunctions.lua` rather than being
-split into the class files — it's shared between Shaman and Warlock under
-the same name, and duplicating that name into multiple class files would
+split into the class files — it's shared between the caster classes
+(Shaman, Warlock, Priest, Mage, Druid) under the same name, and duplicating that name into multiple class files would
 collide (last-loaded file wins silently, since addon globals are one flat
 namespace). The C#-side mirror of that same constraint: `CanEngageTarget()`
 in `WowPlayerCombatConfig.cs` is a thin forwarder for
@@ -643,8 +643,20 @@ spell and the target doesn't already have that DoT on it -- same
 name-matched-against-`TargetHasDebuffSpellName()` pattern Shaman's
 `ShouldCastFlameShock`/`TargetHasFlameShock` use); the rest of
 `ClassBoolOne` and all of `ClassBoolTwo` are still free. The rest of the dispatch wiring (enum
-value, `WowClassHandler.Create`, `WowWarlockHandler`, the `MultiBoolTwo` R4
-class-detect bit) is also in place.
+value, `WowClassHandler.Create`, `WowWarlockHandler`) is also in place.
+
+**Paladin, Hunter, Rogue, Priest, Mage and Druid are stubs**: each has a
+`<Class>Functions.lua` (empty `<CLASS>_CLASS_BOOL_TWO_FIELDS` and
+`<CLASS>_MACROS`), a `Wow<Class>ClassState`, a `Wow<Class>Handler`, an enum
+value and a `WowClassHandler.Create` case. The casters (Priest/Mage/Druid)
+list `CanSpellcastPullTarget` as ClassBoolOne box 1 (Smite/Fireball/Wrath
+Rank 1, UNTESTED), decoded into their `ClassState` and returned by their
+`CanEngageTarget()`; those three also have GCD probe spells (the same rank 1
+spells, UNTESTED) in `GetGCDProbeSpell()`. Paladin/Hunter/Rogue have empty
+class rows and `CanEngageTarget()` returns `false`. Every stub's
+`ExecuteEngageTask()`/`SingleCombatTask()` throws `NotImplementedException`;
+Rogue overrides `ResourceIsMana` to `false`. None of them has a trainer
+table, talent build, auto-equip stat weights or macros yet.
 
 The `Screen.PrimaryScreen.Bounds`-based per-resolution lookup
 (`WowScreenConfigs.GetForPrimaryScreen()`) still selects a `WowScreenConfiguration`, but that
@@ -677,7 +689,9 @@ of truth — edits should be made here, not in the WoW install directory.
   half of the color-encoding contract above, in one place.
 - **`Gameplay/WowClassState.cs`** (abstract) / **`WowWarriorClassState.cs`** /
   **`WowShamanClassState.cs`** /
-  **`WowWarlockClassState.cs`** (stub — see "Class split" above) — the
+  **`WowWarlockClassState.cs`** (in progress), plus stub `Wow<Class>ClassState.cs`
+  files for the other six classes (see "Class split" above), all in
+  `Code/Class Specific/` — the
   class-specific counterpart to `WowWorldState`. `ClassBool`/`ClassInt` pixels
   mean something different per class, so rather than one flat object with
   every class's fields (where nothing would stop e.g. Shaman code from reading
@@ -689,7 +703,8 @@ of truth — edits should be made here, not in the WoW install directory.
   nothing has needed one yet) every tick alongside `WorldState`, off the
   same captured bitmap.
 - **`Gameplay/WowClassHandler.cs`** (abstract) / **`WowWarriorHandler.cs`** /
-  **`WowShamanHandler.cs`** / **`WowWarlockHandler.cs`** (in progress) —
+  **`WowShamanHandler.cs`** / **`WowWarlockHandler.cs`** (in progress) / the
+  six stub `Wow<Class>Handler.cs` files —
   everything class-specific: rotation, engage, rest/buff, plus that class's
   keybinds (a `private static class Input` nested in each handler), tuning
   constants (rage costs, DoT thresholds — private consts on the handler, not
@@ -1031,7 +1046,9 @@ of truth — edits should be made here, not in the WoW install directory.
 - **`YoyokazooUI.toc`** — addon manifest/load order. Loads
   `MathFunctions.lua` → `CreatureConfig.lua` → `TalentConfig.lua` → `WoWFunctions.lua` →
   `WarriorFunctions.lua` → `ShamanFunctions.lua` →
-  `WarlockFunctions.lua` → `UIFunctions.lua` → `YoyokazooUI.lua`. Load order doesn't actually matter
+  `WarlockFunctions.lua` → `PaladinFunctions.lua` → `HunterFunctions.lua` →
+  `RogueFunctions.lua` → `PriestFunctions.lua` → `MageFunctions.lua` →
+  `DruidFunctions.lua` → `UIFunctions.lua` → `YoyokazooUI.lua`. Load order doesn't actually matter
   for correctness here (everything is a plain global function/table,
   resolved at call time, and nothing calls any of these before
   `PLAYER_ENTERING_WORLD`, well after every file has finished loading) —
@@ -1188,11 +1205,11 @@ of truth — edits should be made here, not in the WoW install directory.
   `ShouldCastCorruption` for Warlock) plus that class's
   `<CLASS>_CLASS_BOOL_ONE/TWO_FIELDS` lists for the Class pixel rows (and,
   for Warrior, the `HasBattleShout()` wrapper its list names). Split out of `WoWFunctions.lua` to keep class-specific
-  logic physically separated as more classes/fields get added. (Mage support
-  — `MageFunctions.lua`/`WowMageClassState.cs`/`WowMageTasks.cs` — was
-  removed: the rotation never got working, and enough else has changed since
-  that it wasn't worth carrying forward. Re-add if it gets revisited; nothing
-  else was built to depend on Mage-specific behavior.)
+  logic physically separated as more classes/fields get added. The other six
+  classes' files (`PaladinFunctions.lua`, `HunterFunctions.lua`,
+  `RogueFunctions.lua`, `PriestFunctions.lua`, `MageFunctions.lua`,
+  `DruidFunctions.lua`) are stubs — see "Class split" above. (An earlier Mage
+  implementation was removed; the current `MageFunctions.lua` is a fresh stub.)
   `WarlockFunctions.lua` is a work in progress — `WARLOCK_CLASS_BOOL_ONE_FIELDS`
   lists `CanSpellcastPullTarget()` (shared, from `WoWFunctions.lua`),
   `ShouldCastDemonArmor()` (checks `HasBuffNamedOrRemembered("Demon Skin")`/

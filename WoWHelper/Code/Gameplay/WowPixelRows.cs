@@ -26,6 +26,7 @@ namespace WoWHelper
         ClassBoolOne = 9,
         ClassBoolTwo = 10,
         MultiIntOne = 11,
+        MultiIntTwo = 12,
     }
 
     // Layout constants and readers for the pixel rows. Every constant here MUST match its
@@ -54,7 +55,7 @@ namespace WoWHelper
 
         // The bottom-right-most pixel any reader here touches, for sizing the screen capture.
         public static Point FarthestReadPixel =>
-            new Point(Math.Max(AddonLoadedPosition.X, BoxCenterX(BitsPerRow - 1)), RowCenterY(PixelRow.MultiIntOne));
+            new Point(Math.Max(AddonLoadedPosition.X, BoxCenterX(BitsPerRow - 1)), RowCenterY(PixelRow.MultiIntTwo));
 
         public static bool ReadAddonLoaded(Bitmap bmp)
         {

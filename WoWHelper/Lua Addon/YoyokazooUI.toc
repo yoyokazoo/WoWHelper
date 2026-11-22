@@ -14,5 +14,11 @@ WoWFunctions.lua
 WarriorFunctions.lua
 ShamanFunctions.lua
 WarlockFunctions.lua
+PaladinFunctions.lua
+HunterFunctions.lua
+RogueFunctions.lua
+PriestFunctions.lua
+MageFunctions.lua
+DruidFunctions.lua
 UIFunctions.lua
 YoyokazooUI.lua
