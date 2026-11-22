@@ -717,6 +717,7 @@ local ZONE_NAME_TO_ID = {
     ["Teldrassil"] = 17,
     ["Elwynn Forest"] = 18,
     ["Dun Morogh"] = 19,
+    ["Anvilmar"] = 19, -- GetRealZoneText() returns this inside the Coldridge Valley inn, not "Dun Morogh"
 }
 
 -- 255 = current zone isn't one of the known farming zones on the decoding

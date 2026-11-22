@@ -162,6 +162,33 @@ namespace WoWHelper.Code.WorldState
             Roles = NPCRoles.Sell
         };
 
+        public static readonly WowNPCConfiguration DUN_MOROGH_SHAMAN_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Shaman,
+            Route = new WowRoute
+            {
+                Name = "DUN_MOROGH_SHAMAN_TRAINER",
+                Zone = WowZone.DunMorogh,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.DUN_MOROGH_ANVILMAR_TO_SHAMAN_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train,
+            MaximumLevel = 6,
+        };
+
+        public static readonly WowNPCConfiguration KHARANOS_SHAMAN_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Shaman,
+            Route = new WowRoute
+            {
+                Name = "DUN_MOROGH_SHAMAN_TRAINER",
+                Zone = WowZone.DunMorogh,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.DUN_MOROGH_COLDRIDGE_TO_KHARANOS.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train
+        };
+
         // Every NPC above, via reflection.
         private static readonly Lazy<IReadOnlyList<WowNPCConfiguration>> ALL_NPCS_LAZY = StaticConfigCollector.LazyCollect<WowNPCConfiguration>(typeof(WowNPCConfigs));
         public static IReadOnlyList<WowNPCConfiguration> ALL_NPCS => ALL_NPCS_LAZY.Value;

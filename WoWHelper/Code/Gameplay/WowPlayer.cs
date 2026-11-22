@@ -202,7 +202,7 @@ namespace WoWHelper
             Vector2? startingPoint = null;
             //startingPoint = new Vector2(43.80f, 68.36f);
             var (boarsAndScorpsWaypoint, impsWaypoint, distance) = WowPathfinding.GetClosestWaypointsBetweenRoutes(
-                WowFarmingRoutes.LEVEL_1_DUN_MOROGH_WOLVES_AND_TROGGS_ROUTE, WowFarmingRoutes.LEVEL_4_DUN_MOROGH_BOARS_AND_TROLLS_ROUTE, startingPoint);
+                WowWalkingRoutes.LEVEL_1_DUN_MOROGH_TO_MERCHANT, WowWalkingRoutes.DUN_MOROGH_COLDRIDGE_TO_KHARANOS, startingPoint);
             Console.WriteLine($"Closest waypoints: first {boarsAndScorpsWaypoint}, second {impsWaypoint}, distance {distance}");
 
             await FocusOnWindowTask();
@@ -221,7 +221,7 @@ namespace WoWHelper
 
             //await FocusOnWindowTask();
             //await AdHocRunToRouteTask(WowNPCConfigs.TELDRASSIL_DRUID_TRAINER.Route);
-            await AdHocRunToRouteTask(WowNPCConfigs.DOLANAAR_ROGUE_TRAINER.Route);
+            await AdHocRunToRouteTask(WowNPCConfigs.KHARANOS_SHAMAN_TRAINER.Route);
 
             await Task.Delay(0);
             return true;

@@ -145,7 +145,10 @@ some validated against bitmaps in `WoWHelperUnitTests/Source Images/`.
 WowHelper-defined numeric zone ID, NOT Blizzard's internal map ID (which
 doesn't fit in a byte). Lua's `GetCurrentZoneId()`
 (`WoWFunctions.lua`) looks up `GetRealZoneText()` against a
-`ZONE_NAME_TO_ID` table (255 = not a known zone); the numeric values there
+`ZONE_NAME_TO_ID` table (255 = not a known zone). `GetRealZoneText()` returns
+the subzone name in some spots (e.g. `"Anvilmar"` inside the Coldridge Valley
+inn, not `"Dun Morogh"`), so such names get an extra entry with their parent
+zone's ID. The numeric values there
 MUST stay in sync with the `WowZone` enum in `WowFarmingConfiguration.cs`
 (`Unknown = 255`) — two independent hardcoded tables that have to agree,
 same class of coupling as everything else in this contract. Each
