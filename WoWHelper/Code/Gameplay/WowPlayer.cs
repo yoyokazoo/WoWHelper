@@ -220,6 +220,7 @@ namespace WoWHelper
             //Console.WriteLine($"Closest waypoints: boars and scorps {boarsAndScorpsWaypoint}, imps {impsWaypoint}, distance {distance}");
 
             //await FocusOnWindowTask();
+            //await AdHocRunToRouteTask(WowNPCConfigs.TELDRASSIL_DRUID_TRAINER.Route);
             await AdHocRunToRouteTask(WowNPCConfigs.DOLANAAR_ROGUE_TRAINER.Route);
 
             await Task.Delay(0);

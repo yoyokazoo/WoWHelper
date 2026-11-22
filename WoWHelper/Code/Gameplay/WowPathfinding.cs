@@ -465,6 +465,7 @@ namespace WoWHelper.Code
             }
 
             string message = $"Unable to find a chain of intersecting routes from {startingRoute} to {destinationName} in {wowPlayer.WorldState.CurrentZone}";
+            Console.WriteLine($"Routes reachable from {startingRoute}:{Environment.NewLine}  {String.Join(Environment.NewLine + "  ", previousRoute.Keys)}");
             wowPlayer.SetLogoutVariablesAndSlack(message);
             return new List<WowRoute>();
         }

@@ -2230,6 +2230,8 @@ local function GetClassTrainerSpells()
         return WARLOCK_TRAINER_SPELLS
     elseif classFile == "ROGUE" then
         return ROGUE_TRAINER_SPELLS
+    elseif classFile == "DRUID" then
+        return DRUID_TRAINER_SPELLS
     end
 
     return nil

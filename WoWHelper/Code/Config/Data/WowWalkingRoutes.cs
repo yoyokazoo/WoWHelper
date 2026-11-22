@@ -280,6 +280,55 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        // TODO: this route can't be joined or started mid-way, only at its first/last waypoint. If this ever becomes a problem,
+        // add an EndpointsOnly flag to WowRoute that exposes just those two waypoints as EntryPoints, and have the
+        // nearest-route/nearest-waypoint/intersection logic in WowPathfinding and PickStartingWaypoint use them.
+        public static readonly WowRoute TELDRASSIL_BASE_OF_STAIRS_TO_DRUID_TRAINER = new WowRoute
+        {
+            Name = "TELDRASSIL_BASE_OF_STAIRS_TO_DRUID_TRAINER",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(57.43f, 41.96f),
+                new Vector2(57.54f, 41.65f),
+                new Vector2(57.77f, 41.10f),
+                new Vector2(57.98f, 40.63f),
+                new Vector2(58.06f, 40.25f),
+                new Vector2(58.08f, 39.81f),
+                new Vector2(58.11f, 39.38f),
+                new Vector2(58.25f, 38.98f),
+                new Vector2(58.47f, 38.72f),
+                new Vector2(58.77f, 38.60f),
+                new Vector2(58.80f, 38.88f),
+                new Vector2(58.59f, 38.97f),
+                new Vector2(58.36f, 39.37f),
+                new Vector2(58.24f, 39.86f),
+                new Vector2(58.31f, 40.60f),
+                new Vector2(58.49f, 40.78f),
+                new Vector2(58.61f, 40.48f),
+                new Vector2(58.62f, 40.28f),
+            },
+        };
+
+        public static readonly WowRoute TELDRASSIL_MERCHANTS_TO_BASE_OF_STAIRS = new WowRoute
+        {
+            Name = "TELDRASSIL_MERCHANTS_TO_BASE_OF_STAIRS",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(60.11f, 42.64f),
+                new Vector2(59.79f, 43.17f),
+                new Vector2(58.64f, 42.98f),
+                new Vector2(57.43f, 41.96f),
+            },
+        };
+
         public static readonly WowRoute TELDRASSIL_LEVEL_1_TO_4_ROUTE = new WowRoute
         {
             Name = "TELDRASSIL_LEVEL_1_TO_4_ROUTE",
@@ -367,6 +416,24 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(55.85f, 58.32f),
                 new Vector2(55.95f, 58.78f),
                 new Vector2(56.38f, 60.14f),
+            },
+        };
+
+        public static readonly WowRoute DOLANAAR_TO_DRUID_TRAINER = new WowRoute
+        {
+            Name = "DOLANAAR_TO_DRUID_TRAINER",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(55.85f, 58.32f),
+                new Vector2(56.39f, 58.35f),
+                new Vector2(56.99f, 58.81f),
+                new Vector2(57.24f, 60.10f),
+                new Vector2(56.80f, 61.22f),
+                new Vector2(55.94f, 61.57f),
             },
         };
 
