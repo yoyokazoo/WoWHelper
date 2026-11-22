@@ -471,7 +471,7 @@ in for levels 1-60, generated from a `/yyspells` dump of a WoW Forever
 trainer (real per-row levels/costs/spell IDs — Forever's schedule differs
 from Classic Era's; starting/quest spells, talent rank 1s, and weapon skills
 aren't on the trainer, so they're excluded);
-Shaman and Warlock are also generated from Forever `/yyspells` dumps
+Shaman, Warlock and Rogue (`ROGUE_TRAINER_SPELLS`) are also generated from Forever `/yyspells` dumps
 (Forever renames, adds and drops several of their spells, and prices differ
 per class — see each table's header). Shaman/Warlock gate talent/quest
 spells' later ranks with `requiresSpellId` set to the first trainer row's own
@@ -655,8 +655,8 @@ Rank 1, UNTESTED), decoded into their `ClassState` and returned by their
 spells, UNTESTED) in `GetGCDProbeSpell()`. Paladin/Hunter/Rogue have empty
 class rows and `CanEngageTarget()` returns `false`. Every stub's
 `ExecuteEngageTask()`/`SingleCombatTask()` throws `NotImplementedException`;
-Rogue overrides `ResourceIsMana` to `false`. None of them has a trainer
-table, talent build, auto-equip stat weights or macros yet.
+Rogue overrides `ResourceIsMana` to `false`. None of them has a talent build, auto-equip stat weights or macros yet, and only Rogue has a trainer
+table (`ROGUE_TRAINER_SPELLS`).
 
 The `Screen.PrimaryScreen.Bounds`-based per-resolution lookup
 (`WowScreenConfigs.GetForPrimaryScreen()`) still selects a `WowScreenConfiguration`, but that
