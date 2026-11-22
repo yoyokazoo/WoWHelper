@@ -260,6 +260,20 @@ that state can be skipped entirely — see below:
 concrete subtype; the class-dispatch wrappers in `WowPlayerCombatConfig.cs`
 throw if called before that.
 
+**`MultiBoolOne`'s G2 (box 10)** is `WowWorldState.StandingInFire`
+(`IsStandingInFire()`, `YoyokazooUI.lua`): true for
+`STANDING_IN_FIRE_WINDOW_SECONDS` (4s) after a `UNIT_COMBAT` `"WOUND"` on the
+player with `schoolMask == 4` (Fire) while **out of combat**, i.e. standing
+in a campfire. Campfire damage doesn't put the player in combat, and on
+Forever its `action`/`schoolMask` args are readable even though `amount` is
+secret (confirmed live). Ticks arrive in pairs about 0.4s apart, roughly
+3.2s between pairs, so the 4s window bridges the gap. Fire in combat is
+deliberately not detected, since it can't be told apart from a fire-school
+mob hit. `FIRE_DAMAGE_DEBUG` (off by default) prints every `UNIT_COMBAT`
+(with school and combat state) and, on Era, every combat-log damage event
+on the player. The box was `RESERVED` before this (formerly
+`IsInMeleeRange`). Nothing on the C# side consumes it yet.
+
 **`MultiBoolOne`'s B boxes (17-24):** B1 carries `TargetRecentlyEvaded` — true for a
 few seconds after the player's own attack drew an `EVADE` combat-log miss
 against the current target (i.e. the target is stuck evading, e.g. leashed on
@@ -760,8 +774,8 @@ of truth — edits should be made here, not in the WoW install directory.
   "we made it" signal trusted to actually stop the walk — an earlier
   `IsInMeleeRange` bool, decoded from a `CheckInteractDistance` check in the
   addon, didn't reliably reflect real melee range and was removed; the
-  `MultiBoolOne` box it used, G2, is `RESERVED` in `MULTI_BOOL_ONE_FIELDS`
-  in `WoWFunctions.lua`), caching the last-found marker
+  `MultiBoolOne` box it used, G2, now carries `StandingInFire` — see the
+  `MultiBoolOne` G2 note in the color-encoding contract), caching the last-found marker
   position in `WowPlayer.MostRecentTargetMarkerX`/`MostRecentTargetMarkerY`.
   It reuses
   the marker scan it already does each iteration (for the bearing) for two

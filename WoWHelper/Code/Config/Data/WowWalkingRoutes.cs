@@ -292,6 +292,55 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute LEVEL_7_TO_DOLANAAR = new WowRoute
+        {
+            Name = "LEVEL_7_TO_DOLANAAR",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(62.12f, 55.31f),
+                new Vector2(61.16f, 56.40f),
+                new Vector2(59.74f, 57.34f),
+                new Vector2(58.35f, 57.54f),
+                new Vector2(57.32f, 57.64f),
+                new Vector2(56.32f, 57.80f),
+                new Vector2(55.85f, 58.32f),
+            },
+        };
+
+        public static readonly WowRoute DOLANAAR_TO_WARRIOR_TRAINER = new WowRoute
+        {
+            Name = "DOLANAAR_TO_WARRIOR_TRAINER",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(55.85f, 58.32f),
+                new Vector2(55.95f, 58.78f),
+                new Vector2(56.22f, 59.20f),
+            },
+        };
+
+        public static readonly WowRoute DOLANAAR_TO_MERCHANT = new WowRoute
+        {
+            Name = "DOLANAAR_TO_MERCHANT",
+            Zone = WowZone.Teldrassil,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(55.85f, 58.32f),
+                new Vector2(55.95f, 58.78f),
+                new Vector2(55.89f, 59.21f),
+            },
+        };
+
         #endregion
 
         #region Dun Morogh

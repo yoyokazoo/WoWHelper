@@ -35,6 +35,7 @@ namespace WoWHelper
         public int LootY { get; private set; }
         public int? MostRecentTargetMarkerX { get; private set; }
         public int? MostRecentTargetMarkerY { get; private set; }
+        public long LastStandingInFireTime { get; private set; }
 
         public WowWorldState PreviousWorldState { get; private set; }
         public WowWorldState WorldState { get; private set; }

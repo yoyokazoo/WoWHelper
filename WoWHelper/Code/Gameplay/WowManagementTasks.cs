@@ -192,6 +192,17 @@ namespace WoWHelper
                 Keyboard.KeyUp(strafeKey);
             }
 
+            // Underwater
+            if (WorldState.Underwater)
+            {
+                await GetOutOfWater();
+            }
+
+            if (WorldState.StandingInFire)
+            {
+                await GetOutOfFire();
+            }
+
             // If we're about to die, petri alt+f4
             if (WorldState.PlayerHpPercent <= WowConstants.PETRI_ALTF4_HP_THRESHOLD && WorldState.PlayerLevel >= WowConstants.PETRIFICATION_FLASK_LEVEL)
             {

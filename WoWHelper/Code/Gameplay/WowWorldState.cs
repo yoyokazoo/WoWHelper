@@ -37,6 +37,9 @@ namespace WoWHelper
         public bool BagsAreFull { get; private set; }
         public bool IsPlayerPetrified { get; private set; }
         public bool HasUnseenWhisper { get; private set; }
+        // MultiBoolOne box 10 (G2). Out-of-combat Fire-school damage on the player within the
+        // last few seconds, i.e. standing in a campfire (IsStandingInFire() in YoyokazooUI.lua).
+        public bool StandingInFire { get; private set; }
         public bool IsCurrentlyCasting { get; private set; }
         public bool EnemyNameplatesAreTurnedOn { get; private set; }
         public bool CurrentTargetInCombatWithUs { get; private set; }
@@ -234,7 +237,7 @@ namespace WoWHelper
             IsPlayerPetrified = bits[8];
 
             HasUnseenWhisper = bits[9];
-            // 10 reserved
+            StandingInFire = bits[10];
             IsCurrentlyCasting = bits[11];
             EnemyNameplatesAreTurnedOn = bits[12];
             CurrentTargetInCombatWithUs = bits[13];

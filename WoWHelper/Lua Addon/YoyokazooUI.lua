@@ -60,6 +60,16 @@ local combatStartTime = nil
 -- client actually sends -- notably whether the action arg is readable on
 -- Midnight-rules clients.
 local DAMAGE_TAKEN_DEBUG = false
+-- Prints every damage event on the player (UNIT_COMBAT with school mask +
+-- combat state, and on Era every combat-log *_DAMAGE to the player).
+local FIRE_DAMAGE_DEBUG = false
+
+-- IsStandingInFire(): an out-of-combat Fire-school (schoolMask 4) WOUND on the
+-- player. Campfire ticks come in pairs ~0.4s apart, ~3.2s between pairs
+-- (Forever, confirmed live), so the window bridges the gap between pairs.
+local FIRE_SCHOOL_MASK = 4
+local STANDING_IN_FIRE_WINDOW_SECONDS = 1.0
+local lastOutOfCombatFireDamageTime = nil
 
 -- PLAYER_ENTERING_WORLD fires on every loading screen, not just the initial login --
 -- zoning, taxis, death+release, and hearthing all re-fire it. InitializeIndicators()/
@@ -886,18 +896,22 @@ frame:SetScript("OnEvent", function(self, event, ...)
     -- pcall'd because on Midnight-rules clients the args may be secret values,
     -- and comparing a secret throws.
     if event == "UNIT_COMBAT" then
-        local unitTarget, action, flagText, amount = ...
+        local unitTarget, action, flagText, amount, schoolMask = ...
         local ok, err = pcall(function()
-            if DAMAGE_TAKEN_DEBUG then
+            if DAMAGE_TAKEN_DEBUG or FIRE_DAMAGE_DEBUG then
                 local function describe(v)
                     if issecretvalue and issecretvalue(v) then return "<secret>" end
                     return tostring(v)
                 end
-                print(string.format("YoyokazooUI UNIT_COMBAT: unit=%s action=%s flag=%s amount=%s",
-                    describe(unitTarget), describe(action), describe(flagText), describe(amount)))
+                print(string.format("YoyokazooUI UNIT_COMBAT: t=%.2f unit=%s action=%s flag=%s amount=%s school=%s inCombat=%s",
+                    GetTime(), describe(unitTarget), describe(action), describe(flagText), describe(amount),
+                    describe(schoolMask), tostring(UnitAffectingCombat("player"))))
             end
             if unitTarget == "player" and action == "WOUND" then
                 lastDamageTakenTime = GetTime()
+                if not UnitAffectingCombat("player") and schoolMask == FIRE_SCHOOL_MASK then
+                    lastOutOfCombatFireDamageTime = GetTime()
+                end
             end
         end)
         if not ok and DAMAGE_TAKEN_DEBUG then
@@ -915,6 +929,17 @@ frame:SetScript("OnEvent", function(self, event, ...)
         -- trusting the SWING_MISSED-shaped unpack above.
         if subevent == "SPELL_MISSED" or subevent == "RANGE_MISSED" or subevent == "SPELL_PERIODIC_MISSED" then
             missType = select(15, CombatLogGetCurrentEventInfo())
+        end
+
+        if FIRE_DAMAGE_DEBUG and subevent:find("_DAMAGE$") and destGUID == UnitGUID("player") then
+            local info = { CombatLogGetCurrentEventInfo() }
+            local parts = {}
+            for i = 12, #info do
+                parts[#parts + 1] = i .. "=" .. tostring(info[i])
+            end
+            print(string.format("YoyokazooUI CLEU: t=%.2f %s src=%s inCombat=%s %s",
+                GetTime(), tostring(subevent), tostring(info[5]),
+                tostring(UnitAffectingCombat("player")), table.concat(parts, " ")))
         end
 
         if missType == "EVADE" and sourceGUID == UnitGUID("player") then
@@ -1158,6 +1183,11 @@ function HasTakenDamageThisCombat()
         return false
     end
     return lastDamageTakenTime >= combatStartTime - DAMAGE_BEFORE_COMBAT_GRACE_SECONDS
+end
+
+function IsStandingInFire()
+    return lastOutOfCombatFireDamageTime ~= nil
+        and GetTime() - lastOutOfCombatFireDamageTime <= STANDING_IN_FIRE_WINDOW_SECONDS
 end
 
 -- /yydebug toggles the debug frame (InitializeIndicators()'s YoyokazooUIFrame,

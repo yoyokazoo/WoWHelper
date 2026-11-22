@@ -769,6 +769,28 @@ namespace WoWHelper
             return true;
         }
 
+        public async Task<bool> GetOutOfFire()
+        {
+            var now = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            // Keep track of first tick of fire
+            if (!PreviousWorldState.StandingInFire)
+            {
+                LastStandingInFireTime = now;
+            }
+
+            // Try backing up first.  If we try for 5 seconds and we're still in fire, walk forward instead.
+            if (now - LastStandingInFireTime < 5000)
+            {
+                await ScootBackwardsTask();
+            }
+            else
+            {
+                await ScootForwardsTask();
+            }
+            
+            return true;
+        }
+
         public async Task<bool> AvoidObstacle(bool left)
         {
             // stop walking forward

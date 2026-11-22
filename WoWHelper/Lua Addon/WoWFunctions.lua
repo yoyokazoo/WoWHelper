@@ -2753,7 +2753,7 @@ MULTI_BOOL_ONE_FIELDS = {
     "IsInCombat",                   --  7 (R7)
     "IsPlayerPetrified",            --  8 (R8)
     "HasUnseenWhisper",             --  9 (G1) YoyokazooUI.lua
-    RESERVED,                       -- 10 (G2) was IsInMeleeRange -- CheckInteractDistance proved unreliable
+    "IsStandingInFire",             -- 10 (G2) YoyokazooUI.lua
     "IsPlayerCasting",              -- 11 (G3)
     "AreEnemyNameplatesTurnedOn",   -- 12 (G4)
     "CurrentTargetInCombatWithUs",  -- 13 (G5)
