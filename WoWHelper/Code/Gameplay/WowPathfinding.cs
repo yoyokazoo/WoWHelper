@@ -292,7 +292,19 @@ namespace WoWHelper.Code
 
                 if (crossings == null)
                 {
-                    wowPlayer.SetLogoutVariablesAndSlack($"Unable to find a chain of zone crossings from {currentZone} to {targetRoute.Zone} for {targetRoute}");
+                    string message = $"Unable to find a chain of zone crossings from {currentZone} to {targetRoute.Zone} for {targetRoute}";
+
+                    int playerLevel = wowPlayer.WorldState.PlayerLevel;
+                    List<WowZoneCrossing> crossingsIgnoringLevel = GetZoneCrossingsBetween(currentZone, targetRoute.Zone, int.MaxValue, wowPlayer.WorldState.PlayerIsHorde);
+                    if (crossingsIgnoringLevel != null)
+                    {
+                        string tooHigh = String.Join(", ", crossingsIgnoringLevel
+                            .Where(crossing => crossing.MinimumLevel > playerLevel)
+                            .Select(crossing => $"{crossing.FromZone}->{crossing.ToZone} needs {crossing.MinimumLevel}+"));
+                        message += $" -- level {playerLevel} too low, path exists ignoring level: {tooHigh}";
+                    }
+
+                    wowPlayer.SetLogoutVariablesAndSlack(message);
                 }
                 else
                 {
@@ -434,10 +446,41 @@ namespace WoWHelper.Code
                 .Where(route => route.Zone == wowPlayer.WorldState.CurrentZone)
                 .ToList();
 
+            List<WowRoute> routes = FindRouteChain(startingRoute, eligibleRoutes, isDestination, out IEnumerable<WowRoute> reachableRoutes);
+            if (routes != null)
+            {
+                return routes;
+            }
+
+            string message = $"Unable to find a chain of intersecting routes from {startingRoute} to {destinationName} in {wowPlayer.WorldState.CurrentZone}";
+            Console.WriteLine($"Routes reachable from {startingRoute}:{Environment.NewLine}  {String.Join(Environment.NewLine + "  ", reachableRoutes)}");
+
+            int playerLevel = wowPlayer.WorldState.PlayerLevel;
+            List<WowRoute> routesIgnoringLevel = GetAllSafeRoutes(wowPlayer, ignoreLevel: true)
+                .Where(route => route.Zone == wowPlayer.WorldState.CurrentZone)
+                .ToList();
+            List<WowRoute> chainIgnoringLevel = FindRouteChain(startingRoute, routesIgnoringLevel, isDestination, out _);
+            if (chainIgnoringLevel != null)
+            {
+                string tooHigh = String.Join(", ", chainIgnoringLevel
+                    .Where(route => route.MinimumLevel > playerLevel)
+                    .Select(route => $"{route} needs {route.MinimumLevel}+"));
+                Console.WriteLine($"Route chain ignoring level: {String.Join(" -> ", chainIgnoringLevel)}");
+                message += $" -- level {playerLevel} too low, path exists ignoring level: {tooHigh}";
+            }
+
+            wowPlayer.SetLogoutVariablesAndSlack(message);
+            return new List<WowRoute>();
+        }
+
+        // Returns null if no chain reaches a route isDestination accepts.
+        private static List<WowRoute> FindRouteChain(WowRoute startingRoute, List<WowRoute> eligibleRoutes, Func<WowRoute, bool> isDestination, out IEnumerable<WowRoute> reachableRoutes)
+        {
             // Each visited route maps to the route we reached it from (null for the start).
             Dictionary<WowRoute, WowRoute> previousRoute = new Dictionary<WowRoute, WowRoute> { { startingRoute, null } };
             Queue<WowRoute> routesToVisit = new Queue<WowRoute>();
             routesToVisit.Enqueue(startingRoute);
+            reachableRoutes = previousRoute.Keys;
 
             while (routesToVisit.Count > 0)
             {
@@ -464,10 +507,7 @@ namespace WoWHelper.Code
                 }
             }
 
-            string message = $"Unable to find a chain of intersecting routes from {startingRoute} to {destinationName} in {wowPlayer.WorldState.CurrentZone}";
-            Console.WriteLine($"Routes reachable from {startingRoute}:{Environment.NewLine}  {String.Join(Environment.NewLine + "  ", previousRoute.Keys)}");
-            wowPlayer.SetLogoutVariablesAndSlack(message);
-            return new List<WowRoute>();
+            return null;
         }
 
         private static WowRoute FindRouteClosestToPlayer(WowPlayer wowPlayer)
@@ -500,14 +540,14 @@ namespace WoWHelper.Code
                 .waypoint;
         }
 
-        private static List<WowRoute> GetAllSafeRoutes(WowPlayer wowPlayer)
+        private static List<WowRoute> GetAllSafeRoutes(WowPlayer wowPlayer, bool ignoreLevel = false)
         {
             List<WowRoute> safeRoutes = new List<WowRoute>();
             safeRoutes.AddRange(WowWalkingRoutes.ALL_WALKING_ROUTES);
             safeRoutes.AddRange(WowFarmingConfigs.ALL_LOCATIONS.Select(config => config.Route));
             safeRoutes.AddRange(WowNPCConfigs.ALL_NPCS.Select(config => config.Route));
             return safeRoutes
-                .Where(route => route.MinimumLevel <= 0 || wowPlayer.WorldState.PlayerLevel >= route.MinimumLevel)
+                .Where(route => ignoreLevel || route.MinimumLevel <= 0 || wowPlayer.WorldState.PlayerLevel >= route.MinimumLevel)
                 .Where(route => route.Faction.AllowsPlayer(wowPlayer.WorldState.PlayerIsHorde))
                 .ToList();
         }

@@ -533,7 +533,7 @@ namespace WoWHelper.Code.WorldState
             Zone = WowZone.DunMorogh,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
-            MinimumLevel = 6,
+            //MinimumLevel = 6,
 
             Waypoints = new List<Vector2>
             {
