@@ -576,6 +576,86 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute KHARANOS_TO_CLASS_BUILDING = new WowRoute
+        {
+            Name = "KHARANOS_TO_CLASS_BUILDING",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(46.54f, 54.91f),
+                new Vector2(46.46f, 53.02f),
+                new Vector2(46.44f, 52.61f),
+                new Vector2(46.97f, 52.49f),
+                new Vector2(46.96f, 51.92f),
+                new Vector2(47.26f, 51.95f),
+                new Vector2(47.49f, 51.96f),
+            },
+        };
+
+        public static readonly WowRoute KHARANOS_TO_MERCHANT = new WowRoute
+        {
+            Name = "KHARANOS_TO_MERCHANT",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(46.44f, 52.61f),
+                new Vector2(46.37f, 51.72f),
+                new Vector2(45.94f, 51.83f),
+                new Vector2(45.65f, 51.85f),
+                new Vector2(45.58f, 52.08f),
+                new Vector2(45.29f, 52.19f),
+            },
+        };
+
+        public static readonly WowRoute KHARANOS_TO_HUNTER_TRAINER = new WowRoute
+        {
+            Name = "KHARANOS_TO_HUNTER_TRAINER",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(46.44f, 52.61f),
+                new Vector2(45.92f, 52.51f),
+                new Vector2(45.81f, 53.04f),
+            },
+        };
+
+        public static readonly WowRoute KHARANOS_CLASS_BUILDING_TO_SHAMAN_TRAINER = new WowRoute
+        {
+            Name = "KHARANOS_CLASS_BUILDING_TO_SHAMAN_TRAINER",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(47.49f, 51.96f),
+                new Vector2(47.59f, 51.95f),
+            },
+        };
+
+        public static readonly WowRoute KHARANOS_CLASS_BUILDING_TO_PALADIN_TRAINER = new WowRoute
+        {
+            Name = "KHARANOS_CLASS_BUILDING_TO_PALADIN_TRAINER",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(47.49f, 51.96f),
+                new Vector2(47.60f, 52.07f),
+            },
+        };
+
         #endregion
 
         // Every route above, via reflection.

@@ -5,7 +5,7 @@ namespace WoWHelper.Code.WorldState
 {
     public class WowRoute
     {
-        public const float DEFAULT_DISTANCE_TOLERANCE = 0.2f;
+        public const float DEFAULT_DISTANCE_TOLERANCE = 0.1f;
 
         public enum WaypointTraversalMethod
         {

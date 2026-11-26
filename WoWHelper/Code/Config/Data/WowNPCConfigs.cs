@@ -7,6 +7,8 @@ namespace WoWHelper.Code.WorldState
 {
     public static class WowNPCConfigs
     {
+        #region Durotar
+
         public static readonly WowNPCConfiguration VALLEY_OF_TRIALS_MERCHANT = new WowNPCConfiguration
         {
             Route = new WowRoute {
@@ -56,6 +58,10 @@ namespace WoWHelper.Code.WorldState
             },
             Roles = NPCRoles.Train
         };
+
+        #endregion
+
+        #region Teldrassil
 
         public static readonly WowNPCConfiguration TELDRASSIL_MERCHANT = new WowNPCConfiguration
         {
@@ -150,6 +156,10 @@ namespace WoWHelper.Code.WorldState
             Roles = NPCRoles.Train
         };
 
+        #endregion
+
+        #region Dun Morogh
+
         public static readonly WowNPCConfiguration DUN_MOROGH_MERCHANT = new WowNPCConfiguration
         {
             Route = new WowRoute
@@ -184,10 +194,50 @@ namespace WoWHelper.Code.WorldState
                 Name = "DUN_MOROGH_SHAMAN_TRAINER",
                 Zone = WowZone.DunMorogh,
                 Faction = WowFaction.ALLIANCE,
-                Waypoints = new List<Vector2> { WowWalkingRoutes.DUN_MOROGH_COLDRIDGE_TO_KHARANOS.Waypoints.Last() }
+                Waypoints = new List<Vector2> { WowWalkingRoutes.KHARANOS_CLASS_BUILDING_TO_SHAMAN_TRAINER.Waypoints.Last() }
             },
             Roles = NPCRoles.Train
         };
+
+        public static readonly WowNPCConfiguration KHARANOS_PALADIN_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Paladin,
+            Route = new WowRoute
+            {
+                Name = "KHARANOS_PALADIN_TRAINER",
+                Zone = WowZone.DunMorogh,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.KHARANOS_CLASS_BUILDING_TO_PALADIN_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train
+        };
+
+        public static readonly WowNPCConfiguration KHARANOS_HUNTER_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Hunter,
+            Route = new WowRoute
+            {
+                Name = "KHARANOS_HUNTER_TRAINER",
+                Zone = WowZone.DunMorogh,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.KHARANOS_TO_HUNTER_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train
+        };
+
+        public static readonly WowNPCConfiguration KHARANOS_MERCHANT = new WowNPCConfiguration
+        {
+            Route = new WowRoute
+            {
+                Name = "KHARANOS_MERCHANT",
+                Zone = WowZone.DunMorogh,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.KHARANOS_TO_MERCHANT.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Sell | NPCRoles.Repair
+        };
+
+        #endregion
 
         // Every NPC above, via reflection.
         private static readonly Lazy<IReadOnlyList<WowNPCConfiguration>> ALL_NPCS_LAZY = StaticConfigCollector.LazyCollect<WowNPCConfiguration>(typeof(WowNPCConfigs));
