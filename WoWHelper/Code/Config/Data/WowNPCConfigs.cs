@@ -169,7 +169,7 @@ namespace WoWHelper.Code.WorldState
                 Faction = WowFaction.ALLIANCE,
                 Waypoints = new List<Vector2> { WowWalkingRoutes.LEVEL_1_DUN_MOROGH_TO_MERCHANT.Waypoints.Last() }
             },
-            Roles = NPCRoles.Sell
+            Roles = NPCRoles.Sell | NPCRoles.Arrows | NPCRoles.Bullets
         };
 
         public static readonly WowNPCConfiguration DUN_MOROGH_SHAMAN_TRAINER = new WowNPCConfiguration

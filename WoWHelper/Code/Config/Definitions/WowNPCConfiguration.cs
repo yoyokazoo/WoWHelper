@@ -13,6 +13,7 @@ namespace WoWHelper.Code.WorldState
         Repair = 1 << 1, // 2
         Train = 1 << 2,  // 4
         Arrows = 1 << 3, // 8
+        Bullets = 1 << 4, // 16
     }
 
     public class WowNPCConfiguration

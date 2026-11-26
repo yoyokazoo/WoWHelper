@@ -474,7 +474,7 @@ in for levels 1-60, generated from a `/yyspells` dump of a WoW Forever
 trainer (real per-row levels/costs/spell IDs — Forever's schedule differs
 from Classic Era's; starting/quest spells, talent rank 1s, and weapon skills
 aren't on the trainer, so they're excluded);
-Shaman, Warlock, Rogue (`ROGUE_TRAINER_SPELLS`), Druid (`DRUID_TRAINER_SPELLS`) and Paladin (`PALADIN_TRAINER_SPELLS`) are also generated from Forever `/yyspells` dumps
+Shaman, Warlock, Rogue (`ROGUE_TRAINER_SPELLS`), Druid (`DRUID_TRAINER_SPELLS`), Paladin (`PALADIN_TRAINER_SPELLS`) and Hunter (`HUNTER_TRAINER_SPELLS`) are also generated from Forever `/yyspells` dumps
 (Forever renames, adds and drops several of their spells, and prices differ
 per class — see each table's header). Shaman/Warlock/Druid/Paladin gate talent/quest
 spells' later ranks with `requiresSpellId` set to the first trainer row's own
@@ -658,8 +658,8 @@ Rank 1, UNTESTED), decoded into their `ClassState` and returned by their
 spells, UNTESTED) in `GetGCDProbeSpell()`. Paladin/Hunter/Rogue have empty
 class rows and `CanEngageTarget()` returns `false`. Every stub's
 `ExecuteEngageTask()`/`SingleCombatTask()` throws `NotImplementedException`;
-Rogue overrides `ResourceIsMana` to `false`. None of them has a talent build, auto-equip stat weights or macros yet, and only Rogue, Druid and Paladin have a trainer
-table (`ROGUE_TRAINER_SPELLS`/`DRUID_TRAINER_SPELLS`/`PALADIN_TRAINER_SPELLS`).
+Rogue overrides `ResourceIsMana` to `false`. None of them has a talent build, auto-equip stat weights or macros yet, and only Rogue, Druid, Paladin and Hunter have a trainer
+table (`ROGUE_TRAINER_SPELLS`/`DRUID_TRAINER_SPELLS`/`PALADIN_TRAINER_SPELLS`/`HUNTER_TRAINER_SPELLS`).
 
 The `Screen.PrimaryScreen.Bounds`-based per-resolution lookup
 (`WowScreenConfigs.GetForPrimaryScreen()`) still selects a `WowScreenConfiguration`, but that

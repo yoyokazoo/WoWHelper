@@ -2235,6 +2235,8 @@ local function GetClassTrainerSpells()
         return DRUID_TRAINER_SPELLS
     elseif classFile == "PALADIN" then
         return PALADIN_TRAINER_SPELLS
+    elseif classFile == "HUNTER" then
+        return HUNTER_TRAINER_SPELLS
     end
 
     return nil
