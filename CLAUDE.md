@@ -474,9 +474,9 @@ in for levels 1-60, generated from a `/yyspells` dump of a WoW Forever
 trainer (real per-row levels/costs/spell IDs — Forever's schedule differs
 from Classic Era's; starting/quest spells, talent rank 1s, and weapon skills
 aren't on the trainer, so they're excluded);
-Shaman, Warlock, Rogue (`ROGUE_TRAINER_SPELLS`) and Druid (`DRUID_TRAINER_SPELLS`) are also generated from Forever `/yyspells` dumps
+Shaman, Warlock, Rogue (`ROGUE_TRAINER_SPELLS`), Druid (`DRUID_TRAINER_SPELLS`) and Paladin (`PALADIN_TRAINER_SPELLS`) are also generated from Forever `/yyspells` dumps
 (Forever renames, adds and drops several of their spells, and prices differ
-per class — see each table's header). Shaman/Warlock/Druid gate talent/quest
+per class — see each table's header). Shaman/Warlock/Druid/Paladin gate talent/quest
 spells' later ranks with `requiresSpellId` set to the first trainer row's own
 ID — the gate is only used to get the spell's name, so this avoids relying
 on unverified rank-1 IDs.
@@ -658,8 +658,8 @@ Rank 1, UNTESTED), decoded into their `ClassState` and returned by their
 spells, UNTESTED) in `GetGCDProbeSpell()`. Paladin/Hunter/Rogue have empty
 class rows and `CanEngageTarget()` returns `false`. Every stub's
 `ExecuteEngageTask()`/`SingleCombatTask()` throws `NotImplementedException`;
-Rogue overrides `ResourceIsMana` to `false`. None of them has a talent build, auto-equip stat weights or macros yet, and only Rogue and Druid have a trainer
-table (`ROGUE_TRAINER_SPELLS`/`DRUID_TRAINER_SPELLS`).
+Rogue overrides `ResourceIsMana` to `false`. None of them has a talent build, auto-equip stat weights or macros yet, and only Rogue, Druid and Paladin have a trainer
+table (`ROGUE_TRAINER_SPELLS`/`DRUID_TRAINER_SPELLS`/`PALADIN_TRAINER_SPELLS`).
 
 The `Screen.PrimaryScreen.Bounds`-based per-resolution lookup
 (`WowScreenConfigs.GetForPrimaryScreen()`) still selects a `WowScreenConfiguration`, but that
@@ -1413,8 +1413,10 @@ of truth — edits should be made here, not in the WoW install directory.
 
   Also auto-picks a class trainer's training gossip option: on `GOSSIP_SHOW`,
   `FindTrainerGossipOption()` (`WoWFunctions.lua`) scans
-  `C_GossipInfo.GetOptions()` for a name matching the Lua pattern
-  `^i require .+ training%.?$` (lowercased), and the handler selects it a
+  `C_GossipInfo.GetOptions()` for a name containing `train` but not
+  `unlearn` (lowercased — trainers word it differently per class, e.g.
+  Paladin's "I would like to train further in the ways of the Light."), and
+  the handler selects it a
   frame later via `C_GossipInfo.SelectOption(gossipOptionID)` (falling back
   to `SelectOptionByIndex`). Holding Shift when the gossip opens skips it
   (e.g. to unlearn talents). Confirmed working live. Lua-only.

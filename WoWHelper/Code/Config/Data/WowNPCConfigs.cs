@@ -186,6 +186,34 @@ namespace WoWHelper.Code.WorldState
             MaximumLevel = 6,
         };
 
+        public static readonly WowNPCConfiguration DUN_MOROGH_PALADIN_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Paladin,
+            Route = new WowRoute
+            {
+                Name = "DUN_MOROGH_PALADIN_TRAINER",
+                Zone = WowZone.DunMorogh,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.DUN_MOROGH_ANVILMAR_TO_PALADIN_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train,
+            MaximumLevel = 6,
+        };
+
+        public static readonly WowNPCConfiguration DUN_MOROGH_HUNTER_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Hunter,
+            Route = new WowRoute
+            {
+                Name = "DUN_MOROGH_HUNTER_TRAINER",
+                Zone = WowZone.DunMorogh,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.DUN_MOROGH_ANVILMAR_TO_HUNTER_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train,
+            MaximumLevel = 6,
+        };
+
         public static readonly WowNPCConfiguration KHARANOS_SHAMAN_TRAINER = new WowNPCConfiguration
         {
             Class = Gameplay.WowCombatConfiguration.Shaman,

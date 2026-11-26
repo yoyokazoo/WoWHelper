@@ -493,6 +493,35 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute DUN_MOROGH_ANVILMAR_TO_HUNTER_TRAINER = new WowRoute
+        {
+            Name = "DUN_MOROGH_ANVILMAR_TO_HUNTER_TRAINER",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(28.98f, 67.90f),
+                new Vector2(29.18f, 67.45f),
+            },
+        };
+
+        public static readonly WowRoute DUN_MOROGH_ANVILMAR_TO_PALADIN_TRAINER = new WowRoute
+        {
+            Name = "DUN_MOROGH_ANVILMAR_TO_PALADIN_TRAINER",
+            Zone = WowZone.DunMorogh,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(28.98f, 67.90f),
+                new Vector2(28.98f, 68.24f),
+                new Vector2(28.83f, 68.33f),
+            },
+        };
+
         public static readonly WowRoute DUN_MOROGH_ANVILMAR_TO_SHAMAN_TRAINER = new WowRoute
         {
             Name = "DUN_MOROGH_ANVILMAR_TO_SHAMAN_TRAINER",

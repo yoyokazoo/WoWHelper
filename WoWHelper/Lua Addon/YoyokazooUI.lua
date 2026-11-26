@@ -794,8 +794,8 @@ frame:SetScript("OnEvent", function(self, event, ...)
     end
 
     if event == "GOSSIP_SHOW" then
-        -- Class trainers open a gossip menu first; pick its "I require
-        -- <Class> training." option (FindTrainerGossipOption,
+        -- Class trainers open a gossip menu first; pick its training
+        -- option (FindTrainerGossipOption,
         -- WoWFunctions.lua) so the trainer window opens on its own. Hold
         -- Shift while right-clicking the NPC to skip this and get the menu
         -- as normal (e.g. to unlearn talents).

@@ -2233,6 +2233,8 @@ local function GetClassTrainerSpells()
         return ROGUE_TRAINER_SPELLS
     elseif classFile == "DRUID" then
         return DRUID_TRAINER_SPELLS
+    elseif classFile == "PALADIN" then
+        return PALADIN_TRAINER_SPELLS
     end
 
     return nil
@@ -2833,16 +2835,15 @@ end
 -- talents, etc.). Driven by GOSSIP_SHOW in YoyokazooUI.lua. Lua-only;
 -- nothing reaches the pixel row. Confirmed working live.
 
--- Case-insensitive, any class name in the middle, trailing period optional.
--- Lua patterns, not regex: "%." is a literal period, ".+" is one or more of
--- anything.
-local TRAINER_GOSSIP_PATTERN = "^i require .+ training%.?$"
-
+-- Wording varies per class ("I require Warrior training.", "I would like to
+-- train further in the ways of the Light.", "I seek training as a druid"), so
+-- match any option mentioning "train" except the unlearn-talents one.
 function IsTrainerGossipOptionText(text)
     if type(text) ~= "string" then
         return false
     end
-    return string.lower(text):match(TRAINER_GOSSIP_PATTERN) ~= nil
+    local lower = string.lower(text)
+    return lower:find("train", 1, true) ~= nil and lower:find("unlearn", 1, true) == nil
 end
 
 -- Returns the matching C_GossipInfo.GetOptions() entry and its position in
