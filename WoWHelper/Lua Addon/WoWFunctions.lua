@@ -716,6 +716,7 @@ local ZONE_NAME_TO_ID = {
     ["Orgrimmar"] = 16,
     ["Teldrassil"] = 17,
     ["Elwynn Forest"] = 18,
+    ["Lion's Pride Inn"] = 18, -- GetRealZoneText() returns this inside the Goldshire inn, not "Elwynn Forest"
     ["Dun Morogh"] = 19,
     ["Anvilmar"] = 19, -- GetRealZoneText() returns this inside the Coldridge Valley inn, not "Dun Morogh"
 }
@@ -2237,6 +2238,8 @@ local function GetClassTrainerSpells()
         return PALADIN_TRAINER_SPELLS
     elseif classFile == "HUNTER" then
         return HUNTER_TRAINER_SPELLS
+    elseif classFile == "PRIEST" then
+        return PRIEST_TRAINER_SPELLS
     end
 
     return nil

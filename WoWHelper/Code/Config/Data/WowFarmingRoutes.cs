@@ -909,32 +909,6 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
-        #region Elwynn Forest
-
-        public static readonly WowRoute LEVEL_1_ELWYNN_ANIMALS_ROUTE = new WowRoute
-        {
-            Name = "LEVEL_1_ELWYNN_ANIMALS",
-            Zone = WowZone.ElwynnForest,
-            Faction = WowFaction.ALLIANCE,
-            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
-
-            Waypoints = new List<Vector2>
-            {
-                new Vector2(52.75f, 39.24f),
-                new Vector2(51.72f, 38.07f),
-                new Vector2(51.58f, 36.33f),
-                new Vector2(50.14f, 35.91f),
-                new Vector2(48.55f, 36.08f),
-                new Vector2(47.29f, 38.85f),
-                new Vector2(47.15f, 39.23f),
-                new Vector2(46.41f, 40.53f),
-                new Vector2(45.90f, 43.24f),
-                new Vector2(45.58f, 44.66f),
-            },
-        };
-
-        #endregion
-
         #region Dun Morogh
 
         public static readonly WowRoute LEVEL_1_DUN_MOROGH_WOLVES_AND_TROGGS_ROUTE = new WowRoute
@@ -984,6 +958,32 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(21.66f, 70.85f),
                 new Vector2(22.11f, 69.77f),
                 new Vector2(22.78f, 69.02f),
+            },
+        };
+
+        #endregion
+
+        #region Elwynn Forest
+
+        public static readonly WowRoute ELWYNN_FOREST_LEVEL_1_ANIMALS_ROUTE = new WowRoute
+        {
+            Name = "ELWYNN_FOREST_LEVEL_1_ANIMALS_ROUTE",
+            Zone = WowZone.ElwynnForest,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(52.75f, 39.24f),
+                new Vector2(51.72f, 38.07f),
+                new Vector2(51.58f, 36.33f),
+                new Vector2(50.14f, 35.91f),
+                new Vector2(48.55f, 36.08f),
+                new Vector2(47.29f, 38.85f),
+                new Vector2(47.15f, 39.23f),
+                new Vector2(46.41f, 40.53f),
+                new Vector2(45.90f, 43.24f),
+                new Vector2(45.58f, 44.66f),
             },
         };
 

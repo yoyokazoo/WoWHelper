@@ -284,7 +284,7 @@ namespace WoWHelper.Code.WorldState
 
         public static readonly WowFarmingConfiguration LEVEL_1_ELWYNN_FOREST_ANIMALS = new WowFarmingConfiguration
         {
-            Route = WowFarmingRoutes.LEVEL_1_ELWYNN_ANIMALS_ROUTE,
+            Route = WowFarmingRoutes.ELWYNN_FOREST_LEVEL_1_ANIMALS_ROUTE,
             TargetMacroMobNames = "Young,Timber,Kobold",
         };
 

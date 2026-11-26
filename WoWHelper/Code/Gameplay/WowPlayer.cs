@@ -175,6 +175,12 @@ namespace WoWHelper
 
         public void KickOffRouteRecording()
         {
+            Vector2? startingPoint = null;
+            startingPoint = new Vector2(47.86f, 42.28f);
+            var (boarsAndScorpsWaypoint, impsWaypoint, distance) = WowPathfinding.GetClosestWaypointsBetweenRoutes(
+                WowFarmingRoutes.ELWYNN_FOREST_LEVEL_1_ANIMALS_ROUTE, WowWalkingRoutes.ELWYNN_FOREST_STARTING_TO_REPAIR, startingPoint);
+            Console.WriteLine($"Closest waypoints: first {boarsAndScorpsWaypoint}, second {impsWaypoint}, distance {distance}");
+
             EnableEscToQuit();
 
             _ = FocusOnWindowTask().ContinueWith(a =>
@@ -199,12 +205,6 @@ namespace WoWHelper
 
         public async Task<bool> AdHocTestTask()
         {
-            Vector2? startingPoint = null;
-            //startingPoint = new Vector2(43.80f, 68.36f);
-            var (boarsAndScorpsWaypoint, impsWaypoint, distance) = WowPathfinding.GetClosestWaypointsBetweenRoutes(
-                WowWalkingRoutes.LEVEL_1_DUN_MOROGH_TO_MERCHANT, WowWalkingRoutes.DUN_MOROGH_COLDRIDGE_TO_KHARANOS, startingPoint);
-            Console.WriteLine($"Closest waypoints: first {boarsAndScorpsWaypoint}, second {impsWaypoint}, distance {distance}");
-
             await FocusOnWindowTask();
             await UpdateWorldStateAsync();
             //return await RecordRouteTask();

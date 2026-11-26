@@ -456,9 +456,9 @@ namespace WoWHelper.Code.WorldState
 
         #region Dun Morogh
 
-        public static readonly WowRoute LEVEL_1_DUN_MOROGH_TO_MERCHANT = new WowRoute
+        public static readonly WowRoute DUN_MOROGH_LEVEL_1_TO_MERCHANT = new WowRoute
         {
-            Name = "LEVEL_1_DUN_MOROGH_TO_MERCHANT",
+            Name = "DUN_MOROGH_LEVEL_1_TO_MERCHANT",
             Zone = WowZone.DunMorogh,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
@@ -542,9 +542,9 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
-        public static readonly WowRoute LEVEL_1_DUN_MOROGH_TO_LEVEL_4 = new WowRoute
+        public static readonly WowRoute DUN_MOROGH_LEVEL_1_TO_LEVEL_4 = new WowRoute
         {
-            Name = "LEVEL_1_DUN_MOROGH_TO_LEVEL_4",
+            Name = "DUN_MOROGH_LEVEL_1_TO_LEVEL_4",
             Zone = WowZone.DunMorogh,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
@@ -562,7 +562,7 @@ namespace WoWHelper.Code.WorldState
             Zone = WowZone.DunMorogh,
             Faction = WowFaction.ALLIANCE,
             TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
-            //MinimumLevel = 6,
+            MinimumLevel = 6,
 
             Waypoints = new List<Vector2>
             {
@@ -682,6 +682,108 @@ namespace WoWHelper.Code.WorldState
             {
                 new Vector2(47.49f, 51.96f),
                 new Vector2(47.60f, 52.07f),
+            },
+        };
+
+        #endregion
+
+        #region Elwynn Forest
+
+        public static readonly WowRoute ELWYNN_FOREST_STARTING_TO_LEVEL_1_ANIMALS = new WowRoute
+        {
+            Name = "ELWYNN_FOREST_STARTING_TO_LEVEL_1_ANIMALS",
+            Zone = WowZone.ElwynnForest,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(47.86f, 42.28f),
+                new Vector2(45.90f, 43.24f),
+            },
+        };
+
+        public static readonly WowRoute ELWYNN_FOREST_STARTING_TO_REPAIR = new WowRoute
+        {
+            Name = "ELWYNN_FOREST_STARTING_TO_REPAIR",
+            Zone = WowZone.ElwynnForest,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(47.86f, 42.28f),
+                new Vector2(47.69f, 41.42f),
+            },
+        };
+
+        public static readonly WowRoute ELWYNN_FOREST_STARTING_TO_PRIEST_TRAINER = new WowRoute
+        {
+            Name = "ELWYNN_FOREST_STARTING_TO_PRIEST_TRAINER",
+            Zone = WowZone.ElwynnForest,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(47.86f, 42.28f),
+                new Vector2(48.80f, 41.67f),
+                new Vector2(48.92f, 41.15f),
+                new Vector2(49.19f, 40.97f),
+                new Vector2(49.35f, 40.40f),
+                new Vector2(49.67f, 40.54f),
+                new Vector2(49.83f, 39.93f),
+                new Vector2(49.81f, 39.49f),
+            },
+        };
+
+        public static readonly WowRoute ELWYNN_FOREST_STARTING_TO_GOLDSHIRE = new WowRoute
+        {
+            Name = "ELWYNN_FOREST_STARTING_TO_GOLDSHIRE",
+            Zone = WowZone.ElwynnForest,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(47.86f, 42.28f),
+                new Vector2(47.62f, 42.57f),
+                new Vector2(47.43f, 44.66f),
+                new Vector2(46.66f, 45.97f),
+                new Vector2(47.19f, 47.29f),
+                new Vector2(46.82f, 48.07f),
+                new Vector2(45.55f, 47.85f),
+                new Vector2(45.44f, 48.98f),
+                new Vector2(46.13f, 50.10f),
+                new Vector2(47.55f, 53.22f),
+                new Vector2(47.27f, 55.67f),
+                new Vector2(46.10f, 58.25f),
+                new Vector2(45.55f, 60.90f),
+                new Vector2(42.95f, 64.42f),
+                new Vector2(42.44f, 65.58f),
+            },
+        };
+
+        public static readonly WowRoute GOLDSHIRE_TO_PRIEST_TRAINER = new WowRoute
+        {
+            Name = "GOLDSHIRE_TO_PRIEST_TRAINER",
+            Zone = WowZone.ElwynnForest,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(42.44f, 65.58f),
+                new Vector2(42.81f, 65.63f),
+                new Vector2(43.20f, 65.69f),
+                new Vector2(43.18f, 66.07f),
+                new Vector2(43.53f, 66.00f),
+                new Vector2(43.50f, 66.38f),
+                new Vector2(43.85f, 66.46f),
+                new Vector2(43.87f, 66.21f),
+                new Vector2(43.58f, 66.15f),
+                new Vector2(43.40f, 65.71f),
+                new Vector2(43.28f, 65.72f),
             },
         };
 

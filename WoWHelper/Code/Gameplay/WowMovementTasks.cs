@@ -985,7 +985,7 @@ namespace WoWHelper
         // walking state in between (combat, NPC interaction, goal change, looting...), so the
         // next call starts a fresh stuck episode instead of measuring against a stale anchor.
         // Comfortably longer than a normal tick, including a blocking AvoidObstacle wiggle.
-        private const int STUCK_CHECK_STALE_MILLIS = 6000;
+        private const int STUCK_CHECK_STALE_MILLIS = 1500;
 
         // Re-anchors stuck detection at our current position with a fresh clock, and
         // re-arms the full jump -> wiggle -> wiggle -> give-up escalation.

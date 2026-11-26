@@ -167,7 +167,7 @@ namespace WoWHelper.Code.WorldState
                 Name = "DUN_MOROGH_MERCHANT",
                 Zone = WowZone.DunMorogh,
                 Faction = WowFaction.ALLIANCE,
-                Waypoints = new List<Vector2> { WowWalkingRoutes.LEVEL_1_DUN_MOROGH_TO_MERCHANT.Waypoints.Last() }
+                Waypoints = new List<Vector2> { WowWalkingRoutes.DUN_MOROGH_LEVEL_1_TO_MERCHANT.Waypoints.Last() }
             },
             Roles = NPCRoles.Sell | NPCRoles.Arrows | NPCRoles.Bullets
         };
