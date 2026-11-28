@@ -719,6 +719,7 @@ local ZONE_NAME_TO_ID = {
     ["Lion's Pride Inn"] = 18, -- GetRealZoneText() returns this inside the Goldshire inn, not "Elwynn Forest"
     ["Dun Morogh"] = 19,
     ["Anvilmar"] = 19, -- GetRealZoneText() returns this inside the Coldridge Valley inn, not "Dun Morogh"
+    ["Zephras Isle"] = 20,
 }
 
 -- 255 = current zone isn't one of the known farming zones on the decoding
@@ -2240,6 +2241,8 @@ local function GetClassTrainerSpells()
         return HUNTER_TRAINER_SPELLS
     elseif classFile == "PRIEST" then
         return PRIEST_TRAINER_SPELLS
+    elseif classFile == "MAGE" then
+        return MAGE_TRAINER_SPELLS
     end
 
     return nil

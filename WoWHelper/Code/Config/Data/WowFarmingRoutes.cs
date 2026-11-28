@@ -988,5 +988,27 @@ namespace WoWHelper.Code.WorldState
         };
 
         #endregion
+
+        #region Zephras Isle
+
+        public static readonly WowRoute ZEPHRAS_ISLE_LEVEL_1_ANIMALS = new WowRoute
+        {
+            Name = "ZEPHRAS_ISLE_LEVEL_1_ANIMALS",
+            Zone = WowZone.ZephrasIsle,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(43.87f, 21.62f),
+                new Vector2(44.69f, 21.75f),
+                new Vector2(45.66f, 22.06f),
+                new Vector2(45.33f, 23.88f),
+                new Vector2(46.45f, 24.81f),
+                new Vector2(45.84f, 27.94f),
+            },
+        };
+
+        #endregion
     }
 }

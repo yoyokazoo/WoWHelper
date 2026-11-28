@@ -300,6 +300,16 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
+        #region Levels 1-10 Zephras Isle
+
+        public static readonly WowFarmingConfiguration LEVEL_1_ZEPHRAS_ISLE_ANIMALS = new WowFarmingConfiguration
+        {
+            Route = WowFarmingRoutes.ZEPHRAS_ISLE_LEVEL_1_ANIMALS,
+            TargetMacroMobNames = "Pesky,Juvenile",
+        };
+
+        #endregion
+
         // Every config above, via reflection. Mark one [ExcludeFromAll] to pull it out of auto-selection.
         private static readonly Lazy<IReadOnlyList<WowFarmingConfiguration>> ALL_LOCATIONS_LAZY = StaticConfigCollector.LazyCollect<WowFarmingConfiguration>(typeof(WowFarmingConfigs));
         public static IReadOnlyList<WowFarmingConfiguration> ALL_LOCATIONS => ALL_LOCATIONS_LAZY.Value;

@@ -19,6 +19,8 @@ namespace WoWHelper.Code.WorldState
                 WowFarmingConfigs.LEVEL_1_TELDRASSIL_ANIMALS,
                 WowFarmingConfigs.LEVEL_1_ELWYNN_FOREST_ANIMALS,
                 WowFarmingConfigs.LEVEL_1_DUN_MOROGH_WOLVES_AND_TROGGS,
+                WowFarmingConfigs.LEVEL_1_ELWYNN_FOREST_ANIMALS,
+                WowFarmingConfigs.LEVEL_1_ZEPHRAS_ISLE_ANIMALS
             },
         };
 

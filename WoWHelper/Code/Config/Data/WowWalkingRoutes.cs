@@ -789,6 +789,110 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
+        #region Zephras Isle
+
+        public static readonly WowRoute ZEPHRAS_ISLE_STARTING_TO_MAGE_TRAINER = new WowRoute
+        {
+            Name = "ZEPHRAS_ISLE_STARTING_TO_MAGE_TRAINER",
+            Zone = WowZone.ZephrasIsle,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(42.53f, 23.52f),
+                new Vector2(42.12f, 23.49f),
+                new Vector2(41.83f, 23.49f),
+                new Vector2(41.70f, 23.66f),
+                new Vector2(41.54f, 23.68f),
+            },
+        };
+
+        public static readonly WowRoute ZEPHRAS_ISLE_STARTING_TO_MERCHANT = new WowRoute
+        {
+            Name = "ZEPHRAS_ISLE_STARTING_TO_MERCHANT",
+            Zone = WowZone.ZephrasIsle,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(42.53f, 23.52f),
+                new Vector2(42.97f, 23.35f),
+                new Vector2(43.31f, 23.65f),
+                new Vector2(43.43f, 23.50f),
+            },
+        };
+
+        public static readonly WowRoute ZEPHRAS_ISLE_STARTING_TO_LEVEL_1_FARMING = new WowRoute
+        {
+            Name = "ZEPHRAS_ISLE_STARTING_TO_LEVEL_1_FARMING",
+            Zone = WowZone.ZephrasIsle,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(42.53f, 23.52f),
+                new Vector2(43.49f, 22.10f),
+                new Vector2(43.87f, 21.62f),
+            },
+        };
+
+        public static readonly WowRoute ZEPHRAS_ISLE_STARTING_TO_SHENDAR_VILLAGE = new WowRoute
+        {
+            Name = "ZEPHRAS_ISLE_STARTING_TO_SHENDAR_VILLAGE",
+            Zone = WowZone.ZephrasIsle,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(42.53f, 23.52f),
+                new Vector2(42.66f, 24.04f),
+                new Vector2(42.98f, 24.63f),
+                new Vector2(42.87f, 26.16f),
+                new Vector2(42.35f, 27.45f),
+                new Vector2(40.45f, 28.95f),
+                new Vector2(39.04f, 29.88f),
+                new Vector2(38.26f, 30.95f),
+                new Vector2(37.99f, 32.67f),
+                new Vector2(38.48f, 33.76f),
+                new Vector2(39.37f, 34.28f),
+                new Vector2(40.78f, 35.11f),
+                new Vector2(41.51f, 36.08f),
+                new Vector2(41.68f, 37.33f),
+                new Vector2(41.12f, 39.30f),
+                new Vector2(40.76f, 40.72f),
+                new Vector2(40.65f, 42.22f),
+                new Vector2(41.00f, 43.48f),
+                new Vector2(41.77f, 44.27f),
+                new Vector2(42.75f, 44.70f),
+                new Vector2(43.31f, 44.85f),
+                new Vector2(43.59f, 44.47f),
+            },
+        };
+
+        public static readonly WowRoute SHENDAR_VILLAGE_TO_MAGE_TRAINER = new WowRoute
+        {
+            Name = "SHENDAR_VILLAGE_TO_MAGE_TRAINER",
+            Zone = WowZone.ZephrasIsle,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(43.59f, 44.47f),
+                new Vector2(44.00f, 44.58f),
+                new Vector2(44.26f, 45.15f),
+                new Vector2(44.78f, 45.28f),
+                new Vector2(44.99f, 45.49f),
+                new Vector2(45.10f, 45.87f),
+            },
+        };
+
+        #endregion
+
         // Every route above, via reflection.
         private static readonly Lazy<IReadOnlyList<WowRoute>> ALL_WALKING_ROUTES_LAZY = StaticConfigCollector.LazyCollect<WowRoute>(typeof(WowWalkingRoutes));
         public static IReadOnlyList<WowRoute> ALL_WALKING_ROUTES => ALL_WALKING_ROUTES_LAZY.Value;

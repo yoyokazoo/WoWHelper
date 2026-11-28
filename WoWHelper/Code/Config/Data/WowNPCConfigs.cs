@@ -267,6 +267,43 @@ namespace WoWHelper.Code.WorldState
 
         #endregion
 
+        #region Elwynn Forest
+
+
+
+        #endregion
+
+        #region Zephras Isle
+
+        public static readonly WowNPCConfiguration ZEPHRAS_ISLE_MAGE_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Mage,
+            Route = new WowRoute
+            {
+                Name = "ZEPHRAS_ISLE_MAGE_TRAINER",
+                Zone = WowZone.ZephrasIsle,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.ZEPHRAS_ISLE_STARTING_TO_MAGE_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train,
+            MaximumLevel = 6,
+        };
+
+        public static readonly WowNPCConfiguration SHENDAR_VILLAGE_MAGE_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Mage,
+            Route = new WowRoute
+            {
+                Name = "SHENDAR_VILLAGE_MAGE_TRAINER",
+                Zone = WowZone.ZephrasIsle,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.SHENDAR_VILLAGE_TO_MAGE_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train
+        };
+
+        #endregion
+
         // Every NPC above, via reflection.
         private static readonly Lazy<IReadOnlyList<WowNPCConfiguration>> ALL_NPCS_LAZY = StaticConfigCollector.LazyCollect<WowNPCConfiguration>(typeof(WowNPCConfigs));
         public static IReadOnlyList<WowNPCConfiguration> ALL_NPCS => ALL_NPCS_LAZY.Value;

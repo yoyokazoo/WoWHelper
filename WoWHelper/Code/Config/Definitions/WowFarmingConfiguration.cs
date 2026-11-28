@@ -24,6 +24,7 @@ namespace WoWHelper.Code.WorldState
         Teldrassil = 17,
         ElwynnForest = 18,
         DunMorogh = 19,
+        ZephrasIsle = 20,
 
         Unknown = 255, // current zone doesn't match any known entry
     }
