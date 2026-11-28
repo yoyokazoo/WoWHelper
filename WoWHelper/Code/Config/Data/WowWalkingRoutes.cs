@@ -737,6 +737,23 @@ namespace WoWHelper.Code.WorldState
             },
         };
 
+        public static readonly WowRoute ELWYNN_FOREST_STARTING_TO_WARLOCK_TRAINER = new WowRoute
+        {
+            Name = "ELWYNN_FOREST_STARTING_TO_WARLOCK_TRAINER",
+            Zone = WowZone.ElwynnForest,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(47.86f, 42.28f),
+                new Vector2(48.00f, 42.74f),
+                new Vector2(49.42f, 43.82f),
+                new Vector2(49.56f, 43.29f),
+                new Vector2(49.87f, 42.65f),
+            },
+        };
+
         public static readonly WowRoute ELWYNN_FOREST_STARTING_TO_GOLDSHIRE = new WowRoute
         {
             Name = "ELWYNN_FOREST_STARTING_TO_GOLDSHIRE",
@@ -773,7 +790,7 @@ namespace WoWHelper.Code.WorldState
 
             Waypoints = new List<Vector2>
             {
-                new Vector2(42.44f, 65.58f),
+                new Vector2(42.45f, 65.54f),
                 new Vector2(42.81f, 65.63f),
                 new Vector2(43.20f, 65.69f),
                 new Vector2(43.18f, 66.07f),
@@ -784,6 +801,29 @@ namespace WoWHelper.Code.WorldState
                 new Vector2(43.58f, 66.15f),
                 new Vector2(43.40f, 65.71f),
                 new Vector2(43.28f, 65.72f),
+            },
+        };
+
+        public static readonly WowRoute GOLDSHIRE_TO_WARLOCK_TRAINER = new WowRoute
+        {
+            Name = "GOLDSHIRE_TO_WARLOCK_TRAINER",
+            Zone = WowZone.ElwynnForest,
+            Faction = WowFaction.ALLIANCE,
+            TraversalMethod = WowRoute.WaypointTraversalMethod.LINEAR,
+
+            Waypoints = new List<Vector2>
+            {
+                new Vector2(42.45f, 65.54f),
+                new Vector2(42.77f, 65.61f),
+                new Vector2(43.20f, 65.69f),
+                new Vector2(43.17f, 66.09f),
+                new Vector2(43.32f, 66.02f),
+                new Vector2(43.55f, 66.03f),
+                new Vector2(43.75f, 66.05f),
+                new Vector2(44.07f, 66.07f),
+                new Vector2(44.10f, 65.67f),
+                new Vector2(44.57f, 65.76f),
+                new Vector2(44.39f, 66.24f),
             },
         };
 

@@ -221,7 +221,7 @@ namespace WoWHelper
 
             //await FocusOnWindowTask();
             //await AdHocRunToRouteTask(WowNPCConfigs.TELDRASSIL_DRUID_TRAINER.Route);
-            await AdHocRunToRouteTask(WowNPCConfigs.KHARANOS_PALADIN_TRAINER);
+            await AdHocRunToRouteTask(WowNPCConfigs.ELWYNN_FOREST_WARLOCK_TRAINER);
 
             await Task.Delay(0);
             return true;

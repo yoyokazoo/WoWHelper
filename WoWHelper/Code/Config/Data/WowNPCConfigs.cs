@@ -269,7 +269,59 @@ namespace WoWHelper.Code.WorldState
 
         #region Elwynn Forest
 
+        public static readonly WowNPCConfiguration ELWYNN_FOREST_PRIEST_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Priest,
+            Route = new WowRoute
+            {
+                Name = "ELWYNN_FOREST_PRIEST_TRAINER",
+                Zone = WowZone.ElwynnForest,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.ELWYNN_FOREST_STARTING_TO_PRIEST_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train,
+            MaximumLevel = 6
+        };
 
+        public static readonly WowNPCConfiguration ELWYNN_FOREST_WARLOCK_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Priest,
+            Route = new WowRoute
+            {
+                Name = "ELWYNN_FOREST_WARLOCK_TRAINER",
+                Zone = WowZone.ElwynnForest,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.ELWYNN_FOREST_STARTING_TO_WARLOCK_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train,
+            MaximumLevel = 6
+        };
+
+        public static readonly WowNPCConfiguration GOLDSHIRE_PRIEST_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Priest,
+            Route = new WowRoute
+            {
+                Name = "GOLDSHIRE_PRIEST_TRAINER",
+                Zone = WowZone.ElwynnForest,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.GOLDSHIRE_TO_PRIEST_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train
+        };
+
+        public static readonly WowNPCConfiguration GOLDSHIRE_WARLOCK_TRAINER = new WowNPCConfiguration
+        {
+            Class = Gameplay.WowCombatConfiguration.Warlock,
+            Route = new WowRoute
+            {
+                Name = "GOLDSHIRE_WARLOCK_TRAINER",
+                Zone = WowZone.ElwynnForest,
+                Faction = WowFaction.ALLIANCE,
+                Waypoints = new List<Vector2> { WowWalkingRoutes.GOLDSHIRE_TO_WARLOCK_TRAINER.Waypoints.Last() }
+            },
+            Roles = NPCRoles.Train
+        };
 
         #endregion
 
